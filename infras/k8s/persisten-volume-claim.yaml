@@ -22,7 +22,7 @@ spec:
   storageClassName: ebs-sc
   resources:
     requests:
-      storage: 100Mb 
+      storage: 200Mb 
 
 ---
 
