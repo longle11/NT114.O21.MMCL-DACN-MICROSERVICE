@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: client-network-loadbalancer-srv
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+spec: 
+  type: LoadBalancer 
+  selector:
+    app: client
+  ports:
+    - name: client
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

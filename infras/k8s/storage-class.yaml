@@ -1,0 +1,8 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-sc
+provisioner: ebs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true  # Cho phép mở rộng dung lượng
+reclaimPolicy: Retain # Giữ lại PersistentVolume sau khi pod bị xóa

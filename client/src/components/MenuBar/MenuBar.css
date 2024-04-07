@@ -1,0 +1,85 @@
+nav {
+    height: 100%;
+    background-color: rgb(244, 245, 247);
+}
+nav .logo {
+    display: flex;
+    align-items: center;
+    background-color: blue;
+}
+
+.logo .menu-icon {
+    color: #333;
+    font-size: 24px;
+    margin-right: 14px;
+    cursor: pointer;
+}
+
+.logo .logo-name {
+    color: #333;
+    font-size: 22px;
+    font-weight: 500;
+}
+
+nav .sidebar {
+    top: 0;
+    height: 100%;
+    width: 260px;
+    box-shadow: 0 5px 1px rgba(0, 0, 0, 0.1);
+    transition: all 0.4s ease;
+}
+
+nav.open .sidebar {
+    left: 0;
+}
+
+.sidebar .sidebar-content {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 30px 16px;
+}
+
+.sidebar-content .list {
+    list-style: none;
+}
+
+.list .nav-link {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+    padding: 14px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+.lists .nav-link:hover {
+    background-color: #4070f4;
+}
+
+.lists .nav-link.active {
+    background-color: #4070f4;
+}
+
+.lists .nav-link.active i,
+.lists .nav-link.active .link {
+    color: #fff;
+}
+
+.nav-link .icon {
+    margin-right: 14px;
+    font-size: 20px;
+    color: #707070;
+}
+
+.nav-link .link {
+    font-size: 16px;
+    color: #707070;
+    font-weight: 400;
+}
+
+.lists .nav-link:hover i,
+.lists .nav-link:hover .link {
+    color: #fff;
+}

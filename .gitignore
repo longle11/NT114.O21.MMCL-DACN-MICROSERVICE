@@ -1,0 +1,13 @@
+infras/k8s/ingress-srv.yaml
+auth/node_modules
+auth/package-lock.json
+category/node_modules
+category/package-lock.json
+client/node_modules
+client/package-lock.json
+comment/node_modules
+comment/package-lock.json
+Issue/node_modules
+Issue/package-lock.json
+ProjectManagement/node_modules
+ProjectManagement/package-lock.json

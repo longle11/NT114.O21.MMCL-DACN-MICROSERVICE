@@ -1,0 +1,116 @@
+.main {
+    padding-left: 2%;
+}
+
+.main .header .breadcrumb {
+    margin-bottom: 0;
+    padding-left: 0px;
+}
+
+.main h3 {
+    margin-bottom: 20px;
+}
+
+.main .info .search-block {
+    position: relative;
+}
+
+.main .info .search-block .search {
+    height: 32px;
+    width: 200px;
+    background-color: rgb(250, 251, 252);
+    border: 2px solid rgb(223, 225, 230);
+    border-radius: 3px;
+    padding-left: 32px;
+}
+
+.main .info .search-block .fa-search {
+    position: absolute;
+    left: 5%;
+    top: 15%;
+    color: #67748b;
+}
+
+.main .info .avatar-group {
+    margin-left: 20px;
+}
+
+.avatar-group .avatar img {
+    width: 40px;
+    border: 1px solid transparent;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.avatar img {
+    width: 40px;
+    border: 1px solid transparent;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.main .info .text {
+    text-align: center;
+    line-height: 35px;
+}
+
+.main .content {
+    margin-top: 20px;
+}
+
+.main .content .card {
+    margin-right: 10px;
+    background-color: #f4f5f7;
+}
+
+.main .content .card .card-header {
+    border: none;
+    background-color: transparent;
+    color: #5e6c84;
+}
+
+.main .content .card .list-group {
+    border: none;
+}
+
+.main .content .card .list-group .list-group-item {
+    margin: 5px;
+}
+
+.list-group-item p {
+    font-size: 14px;
+}
+
+.list-group-item .block {
+    justify-content: space-between;
+}
+
+.list-group-item .block .block-left {
+    line-height: 40px;
+}
+
+.list-group-item .block .block-left .svg-inline--fa {
+    margin-right: 5px;
+}
+
+.fa-bookmark {
+    color: #5fb03e;
+}
+
+.fa-arrow-up {
+    color: #d85463;
+}
+
+.fa-check-square {
+    color: #62a0ce;
+}
+
+.title {
+    display: flex;
+    justify-content: space-between;
+}
+.title button {
+    margin-right: 125px;
+    display: flex;
+    align-items: center;
+}

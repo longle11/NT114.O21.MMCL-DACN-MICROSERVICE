@@ -1,0 +1,57 @@
+apiVersion: skaffold/v4beta5
+kind: Config
+manifests:
+  rawYaml:
+    - "./infras/k8s/*"
+build:
+  local:
+    push: true
+  artifacts:
+    - image: longle2003/auth
+      context: auth
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - dest: .
+            src: 'src/**/*.js'
+    - image: longle2003/client
+      context: client
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - dest: .
+            src: 'src/**/*.js'
+    - image: longle2003/comment
+      context: comment
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - dest: .
+            src: 'src/**/*.js'
+    - image: longle2003/issue
+      context: issue
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - dest: .
+            src: 'src/**/*.js'
+    - image: longle2003/projectmanagement
+      context: projectmanagement
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - dest: .
+            src: 'src/**/*.js'
+    - image: longle2003/category
+      context: category
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - dest: .
+            src: 'src/**/*.js'
