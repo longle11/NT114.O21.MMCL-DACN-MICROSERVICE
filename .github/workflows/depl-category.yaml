@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - "main"
-    # paths:
-    #   - "category/**"
+    paths:
+      - "category/**"
 jobs:
   build:
     env:
@@ -24,4 +24,4 @@ jobs:
         
       - run: docker push longle2003/category
       - run: aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name ${{secrets.AWS_CLUSTER_NAME}}
-      # - run: kubectl rollout restart deployment category-depl
+      - run: kubectl rollout restart deployment category-depl

@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - "main"
-    # paths:
-    #   - "Issue/**"
+    paths:
+      - "Issue/**"
 jobs:
   build:
     env:
@@ -25,4 +25,4 @@ jobs:
         
       - run: docker push longle2003/issue
       - run: aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name ${{secrets.AWS_CLUSTER_NAME}}
-      # - run: kubectl rollout restart deployment issue-depl
+      - run: kubectl rollout restart deployment issue-depl
