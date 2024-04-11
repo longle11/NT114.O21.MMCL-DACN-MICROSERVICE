@@ -2,14 +2,14 @@ import Axios from "axios"
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
 import { GET_INFO_ISSUE, USER_LOGGED_IN } from "../constants/constant"
 import { GetProjectAction } from "./ListProjectAction"
-
+import domainName from '../../util/Config'
 export const createIssue = (props) => {
     return async dispatch => {
         try {
-            const res = await Axios.post('https://jira.dev/api/issue/create', props)
+            const res = await Axios.post(`${domainName}/api/issue/create`, props)
 
             //sau khi tao thanh cong issue thi tien hanh cap nhat lai danh sach project
-            await Axios.put('https://jira.dev/api/projectmanagement/insert/issue', { project_id: props.projectId, issue_id: res.data?.data._id })
+            await Axios.put(`${domainName}/api/projectmanagement/insert/issue`, { project_id: props.projectId, issue_id: res.data?.data._id })
 
             //cap nhat lai thong tin ve project
             dispatch(GetProjectAction(props.projectId, ""))
@@ -34,7 +34,7 @@ export const createIssue = (props) => {
 export const getInfoIssue = (id) => {
     return async dispatch => {
         try {
-            const res = await Axios.get(`https://jira.dev/api/issue/${id}`)
+            const res = await Axios.get(`${domainName}/api/issue/${id}`)
             dispatch({
                 type: GET_INFO_ISSUE,
                 issueInfo: res.data.data
@@ -49,7 +49,7 @@ export const getInfoIssue = (id) => {
 export const updateInfoIssue = (issueId, projectId, props) => {
     return async dispatch => {
         try {
-            await Axios.put(`https://jira.dev/api/issue/update/${issueId}`, { ...props })
+            await Axios.put(`${domainName}/api/issue/update/${issueId}`, { ...props })
 
             //lấy ra danh sách issue sau khi thay đổi
             dispatch(getInfoIssue(issueId))
@@ -79,7 +79,7 @@ export const updateInfoIssue = (issueId, projectId, props) => {
 export const deleteAssignee = (issueId, projectId, userId) => {
     return async dispatch => {
         try {
-            await Axios.put(`https://jira.dev/api/issue/delete/assignee/${issueId}`, { userId })
+            await Axios.put(`${domainName}/api/issue/delete/assignee/${issueId}`, { userId })
             //lấy ra danh sách issue sau khi thay đổi
             dispatch(getInfoIssue(issueId))
 
@@ -108,7 +108,7 @@ export const deleteAssignee = (issueId, projectId, userId) => {
 export const deleteIssue = (issueId) => {
     return async dispatch => {
         try {
-            await Axios.delete(`https://jira.dev/api/issue/delete/${issueId}`)
+            await Axios.delete(`${domainName}/api/issue/delete/${issueId}`)
             //lấy ra danh sách issue sau khi thay đổi
             dispatch(getInfoIssue(issueId))
 

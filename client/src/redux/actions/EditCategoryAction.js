@@ -3,7 +3,7 @@ import { GET_CATEGORY_TO_EDIT_DRAWER, GET_ITEM_CATEGORY_DRAWER, USER_LOGGED_IN }
 import { ListProjectAction } from "./ListProjectAction"
 import { drawerAction } from "./DrawerAction"
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
-
+import domainName from '../../util/Config'
 export const getCategory = (props) => {
     return dispatch => {
         dispatch({
@@ -26,7 +26,7 @@ export const getItemCategory = (props) => {
 export const updateItemCategory = (props) => {
     return async dispatch => {
         try {
-            const {data: result, status} = await Axios.put(`https://jira.dev/api/projectmanagement/update/${props.id}`, { props })
+            const {data: result, status} = await Axios.put(`${domainName}/api/projectmanagement/update/${props.id}`, { props })
 
             dispatch(ListProjectAction())
             dispatch(drawerAction(true))
@@ -47,7 +47,7 @@ export const updateItemCategory = (props) => {
 export const deleteItemCategory = (id) => {
     return async dispatch => {
         try {
-            await Axios.delete(`https://jira.dev/api/projectmanagement/delete/${id}`)
+            await Axios.delete(`${domainName}/api/projectmanagement/delete/${id}`)
 
             dispatch(ListProjectAction())
             showNotificationWithIcon('success', '', 'Successfully created project')

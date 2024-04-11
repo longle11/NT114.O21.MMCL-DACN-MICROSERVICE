@@ -11,3 +11,4 @@ Issue/node_modules
 Issue/package-lock.json
 ProjectManagement/node_modules
 ProjectManagement/package-lock.json
+skaffold.yaml
