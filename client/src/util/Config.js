@@ -1,2 +1,2 @@
-const domainName = "http://52.90.69.121:31280"
+const domainName = "http://3.231.221.76:31280"
 module.export = domainName

@@ -15,7 +15,8 @@ spec:
       containers:
         - name: client
           image: longle2003/client
-
+          ports:
+            - containerPort: 3000
 ---
 
 apiVersion: v1
