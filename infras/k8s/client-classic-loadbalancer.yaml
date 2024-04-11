@@ -10,5 +10,6 @@ spec:
     app: client
   ports:
     - name: client
+      protocol: TCP
       port: 3000
       targetPort: 3000
