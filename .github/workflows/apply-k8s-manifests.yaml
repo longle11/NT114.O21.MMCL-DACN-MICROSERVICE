@@ -21,3 +21,4 @@ jobs:
       - name: Get pods
         run: kubectl get pods
       - run: kubectl apply -f infras/k8s
+      - run: kubectl create secret generic jwt-secret --from-literal=jwt_key=longle

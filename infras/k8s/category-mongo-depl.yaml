@@ -15,13 +15,13 @@ spec:
       containers: 
         - name: db
           image: mongo
-          volumeMounts:
-            - name: category-persistent-storage
-              mountPath: /data
-      volumes:
-        - name: category-persistent-storage
-          persistentVolumeClaim:
-            claimName: ebs-category-pvc
+          # volumeMounts:
+          #   - name: category-persistent-storage
+          #     mountPath: /data
+      # volumes:
+      #   - name: category-persistent-storage
+      #     persistentVolumeClaim:
+      #       claimName: ebs-category-pvc
 ---
 apiVersion: v1
 kind: Service
