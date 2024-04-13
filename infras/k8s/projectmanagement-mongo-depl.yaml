@@ -15,13 +15,13 @@ spec:
       containers: 
         - name: db
           image: mongo
-          # volumeMounts:
-          #   - name: projectmanagement-persistent-storage
-          #     mountPath: /data
-      # volumes:
-      #   - name: projectmanagement-persistent-storage
-      #     persistentVolumeClaim:
-      #       claimName: ebs-projectmanagement-pvc
+          volumeMounts:
+            - name: projectmanagement-persistent-storage
+              mountPath: /data
+      volumes:
+        - name: projectmanagement-persistent-storage
+          persistentVolumeClaim:
+            claimName: ebs-projectmanagement-pvc
 ---
 apiVersion: v1
 kind: Service

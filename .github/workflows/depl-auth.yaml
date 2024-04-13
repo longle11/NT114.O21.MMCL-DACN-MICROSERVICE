@@ -24,4 +24,6 @@ jobs:
       - run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
       - run: docker push longle2003/auth
       - run: aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name ${{secrets.AWS_CLUSTER_NAME}}
-      - run: kubectl rollout restart deployment auth-depl
+      # - run: kubectl rollout restart deployment auth-depl
+      - run: kubectl delete deployment deploy-auth
+      - run: kubectl apply -f infras/k8s/auth-depl.yaml

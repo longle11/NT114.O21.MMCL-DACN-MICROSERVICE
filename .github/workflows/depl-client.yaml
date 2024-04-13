@@ -27,3 +27,6 @@ jobs:
       - run: kubectl delete deploy client-depl
       - run: kubectl apply -f infras/k8s/client-depl.yaml
       # - run: kubectl rollout restart deployment client-depl
+      - run: kubectl delete deployment client-depl
+      - run: kubectl apply -f infras/k8s/client-depl.yaml
+

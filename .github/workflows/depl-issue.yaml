@@ -25,4 +25,7 @@ jobs:
         
       - run: docker push longle2003/issue
       - run: aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name ${{secrets.AWS_CLUSTER_NAME}}
-      - run: kubectl rollout restart deployment issue-depl
+      # - run: kubectl rollout restart deployment issue-depl
+      - run: kubectl delete deployment issue-depl
+      - run: kubectl apply -f infras/k8s/issue-depl.yaml
+

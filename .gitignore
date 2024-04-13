@@ -1,4 +1,4 @@
-infras/k8s/ingress-srv.yaml
+infras/k8s/ingress-client.yaml
 auth/node_modules
 auth/package-lock.json
 category/node_modules

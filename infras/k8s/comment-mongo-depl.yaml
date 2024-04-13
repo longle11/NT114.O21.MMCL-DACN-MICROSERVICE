@@ -15,14 +15,16 @@ spec:
       containers: 
         - name: db
           image: mongo
-          # volumeMounts:
-          #   - name: comment-persistent-storage
-          #     mountPath: /data
-      # volumes:
-      #   - name: comment-persistent-storage
-      #     persistentVolumeClaim:
-      #       claimName: ebs-comment-pvc
+          volumeMounts:
+            - name: comment-persistent-storage
+              mountPath: /data
+      volumes:
+        - name: comment-persistent-storage
+          persistentVolumeClaim:
+            claimName: ebs-comment-pvc
+            
 ---
+
 apiVersion: v1
 kind: Service
 metadata:

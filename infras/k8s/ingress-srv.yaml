@@ -1,0 +1,74 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-srv
+  annotations:
+    # Load Balancer Name
+    alb.ingress.kubernetes.io/load-balancer-name: ingress-service
+    # Ingress Core Settings
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    # Health Check Settings
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP 
+    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/healthcheck-path: /index.html    
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '15'
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
+    alb.ingress.kubernetes.io/success-codes: '200'
+    alb.ingress.kubernetes.io/healthy-threshold-count: '2'
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: '2'
+
+    ## SSL Settings
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}, {"HTTP":80}]'
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:533267074549:certificate/8f989ab3-05bc-481d-9c23-67df39bf7674
+
+    # SSL Redirect Setting
+    alb.ingress.kubernetes.io/ssl-redirect: '443'  
+    # Target Type: IP (Defaults to Instance if not specified)
+    alb.ingress.kubernetes.io/target-type: ip 
+spec: 
+  rules:
+      - host: nt533uitjiradev.click
+        http:
+          paths:
+            - path: /api/users/?(.*)
+              pathType: Prefix
+              backend:
+                service:
+                  name: auth-srv
+                  port: 
+                    number: 4000
+            - path: /api/comment/?(.*)
+              pathType: Prefix
+              backend: 
+                service:  
+                  name: comment-srv
+                  port:
+                    number: 4001
+            - path: /api/issue/?(.*)
+              pathType: Prefix
+              backend: 
+                service:  
+                  name: issue-srv
+                  port:
+                    number: 4002
+            - path: /api/projectmanagement/?(.*)
+              pathType: Prefix
+              backend: 
+                service:  
+                  name: projectmanagement-srv
+                  port:
+                    number: 4003
+            - path: /api/category/?(.*)
+              pathType: Prefix
+              backend:
+                service:
+                  name: category-srv
+                  port: 
+                    number: 4004
+            - path: /?(.*)
+              pathType: Prefix
+              backend:
+                service:
+                  name:  client-srv
+                  port: 
+                    number: 3000

@@ -24,4 +24,7 @@ jobs:
   
       - run: docker push longle2003/comment
       - run: aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name ${{secrets.AWS_CLUSTER_NAME}}
-      - run: kubectl rollout restart deployment comment-depl
+      # - run: kubectl rollout restart deployment comment-depl
+      - run: kubectl delete deployment comment-depl
+      - run: kubectl apply -f infras/k8s/comment-depl.yaml
+
