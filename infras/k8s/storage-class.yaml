@@ -4,5 +4,5 @@ metadata:
   name: ebs-sc
 provisioner: ebs.csi.aws.com
 volumeBindingMode: WaitForFirstConsumer
-allowVolumeExpansion: true  # Cho phép mở rộng dung lượng
+allowVolumeExpansion: true # Cho phép mở rộng dung lượng
 reclaimPolicy: Retain # Giữ lại PersistentVolume sau khi pod bị xóa
