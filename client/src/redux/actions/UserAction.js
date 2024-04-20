@@ -85,19 +85,23 @@ export const userLoginAction = (email, password) => {
 }
 export const userLoggedInAction = () => {
     return async dispatch => {
-        const res = await Axios.get(`${domainName}/api/users/currentuser`)
-        if (!res.data.currentUser) {
-            dispatch({
-                type: USER_LOGGED_IN,
-                status: false,
-                userInfo: null
-            })
-        } else {
-            dispatch({
-                type: USER_LOGGED_IN,
-                status: true,
-                userInfo: res.data.currentUser
-            })
+        try {
+            const res = await Axios.get(`${domainName}/api/users/currentuser`)
+            if (!res.data.currentUser) {
+                dispatch({
+                    type: USER_LOGGED_IN,
+                    status: false,
+                    userInfo: null
+                })
+            } else {
+                dispatch({
+                    type: USER_LOGGED_IN,
+                    status: true,
+                    userInfo: res.data.currentUser
+                })
+            }
+        } catch (error) {
+            console.log(error);
         }
     }
 }
