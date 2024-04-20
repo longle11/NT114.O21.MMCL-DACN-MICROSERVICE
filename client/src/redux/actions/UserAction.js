@@ -43,7 +43,8 @@ export const signUpUserAction = (props) => {
                 showNotificationWithIcon("success", "Register", "Successfully created the user")
             }
         } catch (error) {
-            showNotificationWithIcon("error", "Register", error.response.data.message)
+            console.log(error);
+            // showNotificationWithIcon("error", "Register", error.response.data.message)
         }
     }
 }
