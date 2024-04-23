@@ -1,7 +1,7 @@
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
-name: hpa-comment
+  name: hpa-comment
 spec:
 scaleTargetRef:
   apiVersion: apps/v1
@@ -16,7 +16,7 @@ targetCPUUtilizationPercentage: 50
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
-name: hpa-issue
+  name: hpa-issue
 spec:
 scaleTargetRef:
   apiVersion: apps/v1
@@ -31,7 +31,7 @@ targetCPUUtilizationPercentage: 50
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
-name: hpa-projectmanagement
+  name: hpa-projectmanagement
 spec:
 scaleTargetRef:
   apiVersion: apps/v1
@@ -46,7 +46,7 @@ targetCPUUtilizationPercentage: 50
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
-name: hpa-auth
+  name: hpa-auth
 spec:
 scaleTargetRef:
   apiVersion: apps/v1
@@ -61,7 +61,7 @@ targetCPUUtilizationPercentage: 50
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
-name: hpa-client
+  name: hpa-client
 spec:
 scaleTargetRef:
   apiVersion: apps/v1
