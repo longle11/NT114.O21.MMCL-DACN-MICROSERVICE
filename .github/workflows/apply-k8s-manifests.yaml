@@ -24,7 +24,7 @@ jobs:
 
       - name: Create Certificate for domain name
         run: |
-          if kubectl get secret -n default | grep "ca-ingress-tls";then
+          if kubectl get secret -n default | grep "ca-ingress-tls"; then
             echo "This secret is already existed"
           else
             openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out ca-ingress-tls.crt -keyout ca-ingress-tls.key -subj "/CN=nt533uitjiradev.click/O=ca-ingress-tls"\
@@ -57,7 +57,7 @@ jobs:
 
       - name: Create secret for jwt token to authenticate
         run: |
-          if kubectl get secret -n default | grep "jwt-secret";then
+          if kubectl get secret -n default | grep "jwt-secret"; then
             echo "This secret is already existed"
           else
             kubectl create secret generic jwt-secret --from-literal=jwt_key=${{secrets.SECRET_JWT_KEY}}
