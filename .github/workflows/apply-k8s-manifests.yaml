@@ -32,11 +32,11 @@ jobs:
             kubectl create secret tls ca-ingress-tls --namespace default --key ca-ingress-tls.key --cert ca-ingress-tls.crt
           fi
       # Initial AWS CloudWatch Agent
-      - name: Create AWS Agent
-        run: kubectl apply -f infras/cloud_watch/cw-agent.yaml
-
       - name: Create Namespace for AWS CloudWatch Agent
         run: kubectl apply -f https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/cloudwatch-namespace.yaml
+      
+      - name: Create AWS Agent
+        run: kubectl apply -f infras/cloud_watch/cw-agent.yaml
 
       - name: Create a Service Account for AWS CloudWatch Agent
         run: kubectl apply -f https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/cwagent/cwagent-serviceaccount.yaml
