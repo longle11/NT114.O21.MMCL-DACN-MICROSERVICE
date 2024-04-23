@@ -21,7 +21,6 @@ router.delete("/delete/:id", currentUserMiddleware, async (req, res) => {
                 //publish sự kiện để issue trong projectmanagement service
                 await issuePublisher(currentIssue, "issue:deleted")
 
-
                 if (currentIssue.comments.length > 0) {
                     //xoa cac comment cua issue
                     await commentModel.deleteMany({ _id: { $in: currentIssue.comments } })

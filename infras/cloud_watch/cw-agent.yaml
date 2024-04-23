@@ -1,0 +1,18 @@
+# create configmap for cwagent config
+apiVersion: v1
+data:
+  cwagentconfig.json: |
+    {
+      "logs": {
+        "metrics_collected": {
+          "kubernetes": {
+            "metrics_collection_interval": 60
+          }
+        },
+        "force_flush_interval": 5
+      }
+    }
+kind: ConfigMap
+metadata:
+  name: cwagentconfig
+  namespace: amazon-cloudwatch

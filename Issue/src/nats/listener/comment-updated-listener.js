@@ -7,7 +7,7 @@ const commentUpdatedListener = () => {
         const options = natsWrapper.client.subscriptionOptions()
             .setManualAckMode(true)
 
-        const subscription = natsWrapper.client.subscribe('comment:updated', options)
+        const subscription = natsWrapper.client.subscribe('comment:updated', 'issue-comment-updated-group', options)
 
         subscription.on('message', async (msg) => {
             if (typeof msg.getData() === 'string') {

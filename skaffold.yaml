@@ -2,7 +2,7 @@ apiVersion: skaffold/v4beta5
 kind: Config
 manifests:
   rawYaml:
-    - "./infras/k8s/*"
+    - "./infras/k8s_test/"
 build:
   local:
     push: true

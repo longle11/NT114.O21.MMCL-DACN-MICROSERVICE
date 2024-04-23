@@ -6,7 +6,7 @@ const commentDeletedListener = () => {
         const options = natsWrapper.client.subscriptionOptions()
             .setManualAckMode(true)
 
-        const subscription = natsWrapper.client.subscribe('issue-comment:deleted', options)
+        const subscription = natsWrapper.client.subscribe('issue-comment:deleted', 'comment-issue-deleted-queue-group', options)
 
         subscription.on('message', async (msg) => {
             if (typeof msg.getData() === 'string') {

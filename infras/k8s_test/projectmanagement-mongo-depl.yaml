@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: projectmanagement-mongo-depl
+spec: 
+  replicas: 1
+  selector:
+    matchLabels:
+      app: projectmanagement-mongo
+  template: 
+    metadata:
+      labels: 
+        app: projectmanagement-mongo
+    spec: 
+      containers: 
+        - name: db
+          image: mongo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: projectmanagement-mongo-srv
+spec:
+  selector: 
+    app: projectmanagement-mongo
+  ports:  
+    - name: projectmanagement-db
+      protocol: TCP
+      port: 27017
+      targetPort: 27017

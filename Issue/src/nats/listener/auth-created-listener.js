@@ -6,7 +6,7 @@ const authCreatedListener = () => {
         const options = natsWrapper.client.subscriptionOptions()
             .setManualAckMode(true)
 
-        const subscription = natsWrapper.client.subscribe('auth:created', options)
+        const subscription = natsWrapper.client.subscribe('auth:created', 'issue-auth-created-group', options)
 
         subscription.on('message', async (msg) => {
 

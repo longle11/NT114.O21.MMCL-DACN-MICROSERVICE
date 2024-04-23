@@ -1,0 +1,72 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+name: hpa-comment
+spec:
+scaleTargetRef:
+  apiVersion: apps/v1
+  kind: Deployment
+  name: comment-depl
+minReplicas: 1
+maxReplicas: 10
+targetCPUUtilizationPercentage: 50
+
+---
+
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+name: hpa-issue
+spec:
+scaleTargetRef:
+  apiVersion: apps/v1
+  kind: Deployment
+  name: issue-depl
+minReplicas: 1
+maxReplicas: 10
+targetCPUUtilizationPercentage: 50
+
+---
+
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+name: hpa-projectmanagement
+spec:
+scaleTargetRef:
+  apiVersion: apps/v1
+  kind: Deployment
+  name: projectmanagement-depl
+minReplicas: 1
+maxReplicas: 10
+targetCPUUtilizationPercentage: 50
+
+---
+
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+name: hpa-auth
+spec:
+scaleTargetRef:
+  apiVersion: apps/v1
+  kind: Deployment
+  name: auth-depl
+minReplicas: 1
+maxReplicas: 10
+targetCPUUtilizationPercentage: 50
+
+---
+
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+name: hpa-client
+spec:
+scaleTargetRef:
+  apiVersion: apps/v1
+  kind: Deployment
+  name: client-depl
+minReplicas: 1
+maxReplicas: 10
+targetCPUUtilizationPercentage: 50

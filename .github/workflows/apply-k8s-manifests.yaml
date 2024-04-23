@@ -5,7 +5,8 @@ on:
     branches:
       - "main"
     paths:
-      - "infras/**"
+      - "infras/k8s/**"
+      - "infras/cloud_watch/**"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,5 +21,47 @@ jobs:
       - run: aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name ${{secrets.AWS_CLUSTER_NAME}}
       - name: Get pods
         run: kubectl get pods
-      - run: kubectl apply -f infras/k8s
-      - run: kubectl create secret generic jwt-secret --from-literal=jwt_key=longle
+
+      - name: Create Certificate for domain name
+        run: |
+          if kubectl get secret -n default | grep "ca-ingress-tls";then
+            echo "This secret is already existed"
+          else
+            openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out ca-ingress-tls.crt -keyout ca-ingress-tls.key -subj "/CN=nt533uitjiradev.click/O=ca-ingress-tls"\
+            kubectl create secret tls ca-ingress-tls --namespace default --key ca-ingress-tls.key --cert ca-ingress-tls.crt
+          fi
+      # Initial AWS CloudWatch Agent
+      - name: Create AWS Agent
+        run: kubectl apply -f infras/cloud_watch/cw-agent.yaml
+
+      - name: Create Namespace for AWS CloudWatch Agent
+        run: kubectl apply -f https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/cloudwatch-namespace.yaml
+
+      - name: Create a Service Account for AWS CloudWatch Agent
+        run: kubectl apply -f https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/cwagent/cwagent-serviceaccount.yaml
+      
+      - name: Deploy the AWS CloudWatch agent as a DaemonSet 
+        run: kubectl apply -f https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/cwagent/cwagent-daemonset.yaml
+
+
+      # Deploy FluentBit
+      - name: Create FluentBit ConfigMap
+        run: kubectl apply -f infras/cloud_watch/cw-fluentbit.yaml
+
+      - name: Deploy FluentBit Optimized Configuration
+        run: kubectl apply -f https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/fluent-bit/fluent-bit.yaml
+
+      - name: Apply k8s
+        run: kubectl apply -f infras/k8s
+
+
+      - name: Create secret for jwt token to authenticate
+        run: |
+          if kubectl get secret -n default | grep "jwt-secret";then
+            echo "This secret is already existed"
+          else
+            kubectl create secret generic jwt-secret --from-literal=jwt_key=${{secrets.SECRET_JWT_KEY}}
+          fi
+
+
+      

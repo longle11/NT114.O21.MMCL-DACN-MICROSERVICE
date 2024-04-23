@@ -9,8 +9,8 @@ const authCreatedListener = require("./nats/listener/auth-created-listener")
 const commentCreatedListener = require("./nats/listener/comment-created-listener")
 const commentDeletedListener = require("./nats/listener/comment-deleted-listener")
 const commentUpdatedListener = require("./nats/listener/comment-updated-listener")
-const issueDeletedAssignee = require("./nats/listener/issue-deletedassignee-listener")
-const issueDeletedCreator = require("./nats/listener/issue-deletedcreator-listener")
+const issueDeletedAssignee = require("../../ProjectManagement/src/nats/listener/issue-deletedassignee-listener")
+const issueDeletedCreator = require("../../ProjectManagement/src/nats/listener/issue-deletedcreator-listener")
 const projectManagementDeletedListener = require("./nats/listener/projectManagement-deleted-listener")
 
 const app = express()
@@ -46,8 +46,6 @@ async function connectToNats() {
         commentCreatedListener()
         commentDeletedListener()
         commentUpdatedListener()
-        issueDeletedAssignee()
-        issueDeletedCreator()
         projectManagementDeletedListener()
 
         console.log("Successfully connected to nats");

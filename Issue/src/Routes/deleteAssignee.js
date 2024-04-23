@@ -4,13 +4,14 @@ const issueModel = require('../models/issueModel')
 const issuePublisher = require("../nats/publisher/issue-publisher")
 const UnauthorizedError = require("../Errors/UnAuthorized-Error")
 const BadRequestError = require("../Errors/Bad-Request-Error")
+const commentModel = require("../models/commentModel")
 const router = express.Router()
 
 router.put("/delete/assignee/:id", currentUserMiddleware, async (req, res, next) => {
     try {
         if (req.currentUser) {
             const { id } = req.params
-            const currentIssue = await issueModel.findById(id)
+            const currentIssue = await issueModel.findById(id).populate({ path: 'comments' })
             if (!currentIssue) {
                 throw new BadRequestError("Issue not found")
             } else {
@@ -29,8 +30,24 @@ router.put("/delete/assignee/:id", currentUserMiddleware, async (req, res, next)
                         assignees: currentIssue.assignees
                     }
 
-                    issuePublisher(copyIssue, 'issue:updated')
+                    //lấy ra các comment của assignee này trong issue
+                    let listComments = currentIssue.comments
 
+                    if (listComments.length > 0) {
+                        listComments = listComments.filter(ele => {
+                            if (ele?.creator.toString() === req.body.userId) {
+                                return true
+                            }
+                            return false
+                        })
+                        //xoa cac comment cua issue
+                        await commentModel.deleteMany({ _id: { $in: listComments } })
+
+                        //publish su kien xoa cac comment trong comment service
+                        await issuePublisher(listComments, 'issue-comment:deleted')
+                    }
+
+                    await issuePublisher(copyIssue, 'issue:updated')
                     return res.status(200).json({
                         message: "Successfully deleted user from this issue",
                         data: currentIssue

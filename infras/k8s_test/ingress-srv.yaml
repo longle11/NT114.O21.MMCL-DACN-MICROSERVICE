@@ -6,12 +6,8 @@ metadata:
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec: 
   ingressClassName: nginx
-  tls:
-    - hosts: 
-      - www.nt533uitjiradev.click
-      secretName: ac-ingress-tls
   rules:
-    - host: www.nt533uitjiradev.click
+    - host: jira.dev
       http:
         paths:
           - path: /api/users/?(.*)

@@ -7,7 +7,7 @@ const commentCreatedListener = () => {
         const options = natsWrapper.client.subscriptionOptions()
             .setManualAckMode(true)
 
-        const subscription = natsWrapper.client.subscribe('comment:created', options)
+        const subscription = natsWrapper.client.subscribe('comment:created', 'issue-comment-created-group', options)
 
         subscription.on('message', async (msg) => {
             if (typeof msg.getData() === 'string') {
