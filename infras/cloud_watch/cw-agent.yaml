@@ -1,4 +1,4 @@
-# create configmap for cwagent  config
+# create configmap for cwagent config
 apiVersion: v1
 data:
   cwagentconfig.json: |
