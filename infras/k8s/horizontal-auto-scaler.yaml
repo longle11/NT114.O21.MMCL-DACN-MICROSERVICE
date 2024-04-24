@@ -9,7 +9,7 @@ spec:
     name: comment-depl
   minReplicas: 1
   maxReplicas: 10
-  targetCPUUtilizationPercentage: 50
+  targetCPUUtilizationPercentage: 80
 
 ---
 
@@ -24,7 +24,7 @@ spec:
     name: issue-depl
   minReplicas: 1
   maxReplicas: 10
-  targetCPUUtilizationPercentage: 50
+  targetCPUUtilizationPercentage: 80
 
 ---
 
@@ -39,7 +39,7 @@ spec:
     name: projectmanagement-depl
   minReplicas: 1
   maxReplicas: 10
-  targetCPUUtilizationPercentage: 50
+  targetCPUUtilizationPercentage: 80
 
 ---
 
@@ -54,7 +54,7 @@ spec:
     name: auth-depl
   minReplicas: 1
   maxReplicas: 10
-  targetCPUUtilizationPercentage: 50
+  targetCPUUtilizationPercentage: 80
 
 ---
 
@@ -69,4 +69,4 @@ spec:
     name: client-depl
   minReplicas: 1
   maxReplicas: 10
-  targetCPUUtilizationPercentage: 50
+  targetCPUUtilizationPercentage: 80

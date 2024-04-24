@@ -15,6 +15,13 @@ spec:
       containers:
         - name: projectmanagement
           image: longle2003/projectmanagement
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
           env:
             - name: JWT_KEY
               valueFrom:

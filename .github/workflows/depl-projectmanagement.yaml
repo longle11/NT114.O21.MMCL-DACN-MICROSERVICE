@@ -21,6 +21,5 @@ jobs:
       - run: docker push longle2003/projectmanagement
       - run: aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name ${{secrets.AWS_CLUSTER_NAME}}
       # - run: kubectl rollout restart deployment projectmanagement-depl
-      - run: kubectl delete deployment projectmanagement-depl
       - run: kubectl apply -f infras/k8s/projectmanagement-depl.yaml
 
