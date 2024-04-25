@@ -28,7 +28,7 @@ jobs:
             echo "This secret is already existed"
           else
             echo "no secret"
-            openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out ca-ingress-tls.crt -keyout ca-ingress-tls.key -subj "/CN=nt533uitjiradev.click/O=ca-ingress-tls"; 
+            openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out ca-ingress-tls.crt -keyout ca-ingress-tls.key -subj "/CN=www.nt533uitjiradev.click/O=ca-ingress-tls"; 
             kubectl create secret tls ca-ingress-tls --namespace default --key ca-ingress-tls.key --cert ca-ingress-tls.crt
           fi
       # Initial AWS CloudWatch Agent
