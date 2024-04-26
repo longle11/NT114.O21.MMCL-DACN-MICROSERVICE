@@ -33,7 +33,7 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                     assignees: currentIssue.assignees
                 }
                 //public su kien toi projectmanagement service
-                issuePublisher(copyIssue, 'issue:updated')
+                await issuePublisher(copyIssue, 'issue:updated')
 
                 return res.status(200).json({
                     message: "Successfully updated this issue",

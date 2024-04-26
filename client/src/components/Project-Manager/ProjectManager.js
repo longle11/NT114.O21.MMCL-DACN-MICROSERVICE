@@ -81,7 +81,7 @@ export default function ProjectManager() {
                 }
 
                 return <span onClick={() => {
-                    showNotificationWithIcon('error', '', 'Ban chua tham gia vao trong du an nay')
+                    showNotificationWithIcon('error', '', 'You have not participated in this project ')
                 }}>{record.nameProject}</span>
             }
         },
@@ -195,6 +195,9 @@ export default function ProjectManager() {
                             okText="Yes"
                             cancelText="No"
                             onConfirm={() => {
+                                if(record?._id === localStorage.getItem('projectid')) {
+                                    localStorage.setItem('projectid', undefined)
+                                }
                                 dispatch(deleteItemCategory(record?._id))
                             }}
                         >

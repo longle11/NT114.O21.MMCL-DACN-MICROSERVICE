@@ -37,7 +37,6 @@ router.get('/:id', async (req, res, next) => {
         });
 
         currentProject.issues = filteredIssues
-        console.log("currentProject", currentProject);
         if (!currentProject) {
             throw new BadRequestError("Project not found")
         } else {

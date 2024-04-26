@@ -10,6 +10,7 @@ const commentCreatedListener = require("./nats/listener/comment-created-listener
 const commentDeletedListener = require("./nats/listener/comment-deleted-listener")
 const commentUpdatedListener = require("./nats/listener/comment-updated-listener")
 const projectManagementDeletedListener = require("./nats/listener/projectManagement-deleted-listener")
+const projectManagementUpdatedListener = require("./nats/listener/projectManagement-updated-listener")
 
 const app = express()
 app.use(bodyParser.json())
@@ -45,6 +46,7 @@ async function connectToNats() {
         commentDeletedListener()
         commentUpdatedListener()
         projectManagementDeletedListener()
+        projectManagementUpdatedListener()
 
         console.log("Successfully connected to nats");
     } catch (error) {

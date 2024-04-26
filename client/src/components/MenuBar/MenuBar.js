@@ -1,6 +1,9 @@
 import React from 'react'
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { showNotificationWithIcon } from '../../util/NotificationUtil';
 export default function MenuBar() {
+    const navigate = useNavigate()
+
     return (
         <div className="page-content">
             <div className='d-flex' style={{ height: '100%' }}>
@@ -8,11 +11,11 @@ export default function MenuBar() {
                     <div className="sidebar">
                         <div className="logo pt-3 pb-3 justify-content-center">
                             <i className="bx bx-menu menu-icon" />
-                            <span className="logo-name text-light">My Project</span>
+                            <span className="logo-name text-light">Jira Project</span>
                         </div>
                         <div className="sidebar-content">
                             <ul className="lists p-0">
-                                <li className="list">
+                                <li className="list" style={{ pointerEvents: localStorage.getItem('projectid').length >= 10 ? "auto" : "none" }}>
                                     <NavLink to={`/projectDetail/${localStorage.getItem('projectid')}`} className="nav-link">
                                         <i className="fa fa-home mr-3"></i>
                                         <span className="link">Dashboard</span>
@@ -30,37 +33,7 @@ export default function MenuBar() {
                                         <span className="link">Project management</span>
                                     </NavLink>
                                 </li>
-                                <hr />
-                                {/* <li className="list">
-                                    <a href="#" className="nav-link">
-                                        <i className="bx bx-bell icon" />
-                                        <span className="link">Notifications</span>
-                                    </a>
-                                </li>
-                                <li className="list">
-                                    <a href="#" className="nav-link">
-                                        <i className="bx bx-message-rounded icon" />
-                                        <span className="link">Messages</span>
-                                    </a>
-                                </li>
-                                <li className="list">
-                                    <a href="#" className="nav-link">
-                                        <i className="bx bx-pie-chart-alt-2 icon" />
-                                        <span className="link">Analytics</span>
-                                    </a>
-                                </li>
-                                <li className="list">
-                                    <a href="#" className="nav-link">
-                                        <i className="bx bx-heart icon" />
-                                        <span className="link">Likes</span>
-                                    </a>
-                                </li>
-                                <li className="list">
-                                    <a href="#" className="nav-link">
-                                        <i className="bx bx-folder-open icon" />
-                                        <span className="link">Files</span>
-                                    </a>
-                                </li> */}
+                                <hr />         
                             </ul>
                         </div>
                     </div>

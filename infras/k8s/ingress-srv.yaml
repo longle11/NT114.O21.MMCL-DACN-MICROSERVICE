@@ -4,14 +4,12 @@ metadata:
   name: ingress-srv
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
 spec: 
   ingressClassName: nginx
-  tls:
-    - hosts: 
-      - www.nt533uitjiradev.click
-      secretName: ca-ingress-tls
+  # tls:
+  #   - hosts: 
+  #     - www.nt533uitjiradev.click
+  #     secretName: ca-ingress-tls
   rules:
     - host: www.nt533uitjiradev.click
       http:

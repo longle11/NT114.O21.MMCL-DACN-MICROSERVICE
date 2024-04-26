@@ -13,33 +13,48 @@ function SignUp(props) {
     } = props;
 
     return (
-        <div className='container'>
-            <form onSubmit={handleSubmit}>
-                <div className='from-group'>
-                    <label>Username</label>
-                    <input className='form-control' placeholder='Input Username' onChange={handleChange} name="username" />
-                    <span className='text-danger'>{errors.username}</span>
+        <section className="vh-100 bg-image" style={{ backgroundImage: 'url("https://mdbcdn.b-cdn.net/img/Photos/new-templates/search-box/img4.webp")' }}>
+            <div className="mask d-flex align-items-center h-100 gradient-custom-3">
+                <div className="container h-100">
+                    <div className="row d-flex justify-content-center align-items-center h-100">
+                        <div className="col-12 col-md-9 col-lg-7 col-xl-6">
+                            <div className="card" style={{ borderRadius: 15 }}>
+                                <div className="card-body p-5">
+                                    <h2 className="text-uppercase text-center mb- text-primary">Create an account</h2>
+                                    <form onSubmit={handleSubmit}>
+                                        <div data-mdb-input-init className="form-outline mb-3">
+                                            <label className="form-label" htmlFor="username">Username</label>
+                                            <input onChange={handleChange} type="text" id="username" className="form-control form-control-lg" placeholder='Input your username'/>
+                                            <span className='text-danger'>{errors.username}</span>
+                                        </div>
+                                        <div data-mdb-input-init className="form-outline mb-3">
+                                            <label className="form-label" htmlFor="email">Email</label>
+                                            <input onChange={handleChange} type="email" id="email" className="form-control form-control-lg" placeholder='Input your email'/>
+                                            <span className='text-danger'>{errors.email}</span>
+                                        </div>
+                                        <div data-mdb-input-init className="form-outline mb-3">
+                                            <label className="form-label" htmlFor="password">Password</label>
+                                            <input onChange={handleChange} type="password" id="password" className="form-control form-control-lg"  placeholder='Input your password'/>
+                                            <span className='text-danger'>{errors.password}</span>
+                                        </div>
+                                        <div data-mdb-input-init className="form-outline mb-4">
+                                            <label className="form-label" htmlFor="confirmpassword">Confirm your password</label>
+                                            <input onChange={handleChange} type="password" id="confirmpassword" className="form-control form-control-lg" placeholder='Confirm your password'/>
+                                            <span className='text-danger'>{errors.confirmpassword}</span>
+                                        </div>
+                                        <div className="d-flex justify-content-center">
+                                            <button type="submit" data-mdb-button-init data-mdb-ripple-init className="btn btn-success btn-block btn-lg gradient-custom-4 text-body text-light">Register</button>
+                                        </div>
+                                        <p className="text-center text-muted mt-3 mb-0">Have already an account? <NavLink to="/login" className="fw-bold text-body"><u className='text-primary'>Login here</u></NavLink></p>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div className='from-group'>
-                    <label>Email</label>
-                    <input className='form-control' placeholder='Input Email' onChange={handleChange} name="email" />
-                    <span className='text-danger'>{errors.email}</span>
-                </div>
-                <div className='from-group'>
-                    <label>Password</label>
-                    <input className='form-control' type='password' placeholder='Input Password' onChange={handleChange} name="password" />
-                    <span className='text-danger'>{errors.password}</span>
-                </div>
-                <div className='from-group'>
-                    <label>Confirm Password</label>
-                    <input className='form-control' type='password' placeholder='Confirm Pasword' onChange={handleChange} name="confirmpassword" />
-                    <span className='text-danger'>{errors.confirmpassword}</span>
-                </div>
-                <button type="submit" className="btn btn-primary mt-3" style={{ width: '50%' }}>Submit</button>
-            </form>
+            </div>
+        </section>
 
-            <NavLink to="/login">Login</NavLink>
-        </div>
     )
 }
 const handleSignUpForm = withFormik({

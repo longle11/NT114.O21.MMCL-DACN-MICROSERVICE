@@ -16,8 +16,7 @@ const commentDeletedListener = () => {
                     const parseData = JSON.parse(msg.getData())
 
                     //tien hanh xoa cac comment lien quan
-                    const result = await commentModel.deleteMany({ _id: { $in: parseData } })
-                    console.log("xóa", result);
+                    await commentModel.deleteMany({ _id: { $in: parseData } })
                     msg.ack()
                 } catch (error) {
                     console.log('something went wrong ', error);

@@ -111,7 +111,7 @@ function TaskForm(props) {
                 </div>
 
                 <div className='row mt-2'>
-                    <label>Short summary</label>
+                    <label>Short summary <span style={{color: 'red'}}>(*)</span></label>
                     <Input placeholder="Input content" onChange={handleChange} name="shortSummary" />
                 </div>
 
@@ -161,7 +161,7 @@ function TaskForm(props) {
 
                 <div className='row mt-2'>
                     <div className='col-6 p-0 pr-4'>
-                        <label>Original Estimate (Hours)</label>
+                        <label>Original Estimate (Hours) <span style={{color: 'red'}}>(*)</span></label>
                         <InputNumber min={0} defaultValue={0} style={{ width: '100%' }} onChange={(value) => {
                             setFieldValue('timeOriginalEstimate', value)
                         }} name="timeOriginalEstimate" />
@@ -169,7 +169,7 @@ function TaskForm(props) {
                     <div className='col-6 p-0'>
                         <div className='row'>
                             <div className='col-6  pr-4'>
-                                <label>Time spent</label>
+                                <label>Time spent <span style={{color: 'red'}}>(*)</span></label>
                                 <InputNumber value={timeTracking.timeSpent} name="timeSpent" min={0} onChange={(value) => {
                                     setTimeTracking({
                                         ...timeTracking,
@@ -180,7 +180,7 @@ function TaskForm(props) {
                                 }} />
                             </div>
                             <div className='col-6 p-0'>
-                                <label>Time remaining</label>
+                                <label>Time remaining <span style={{color: 'red'}}>(*)</span></label>
                                 <InputNumber value={timeTracking.timeRemaining} min={0} name="timeRemaining" onChange={(value) => {
                                     setTimeTracking({
                                         ...timeTracking,
@@ -218,21 +218,9 @@ const handleSubmitTaskForm = withFormik({
     handleSubmit: (values, { props, setSubmitting }) => {
         console.log(values);
         let checkSubmit = true
-        if(values.shortSummary.trim() === '') {
+        if(values.shortSummary.trim() === '' || values.timeOriginalEstimate === 0 || values.timeSpent === 0 || values.timeRemaining === 0) {
             checkSubmit = false
-            showNotificationWithIcon('error', 'Tạo vấn đề', 'Trường Short Summary không được để trống')
-        }
-        if(values.timeOriginalEstimate === 0) {
-            checkSubmit = false
-            showNotificationWithIcon('error', 'Tạo vấn đề', 'Trường Short Time Original Estimate không được để trống')
-        }
-        if(values.timeSpent === 0) {
-            checkSubmit = false
-            showNotificationWithIcon('error', 'Tạo vấn đề', 'Trường Time Spent không được để trống')
-        }
-        if(values.timeRemaining === 0) {
-            checkSubmit = false
-            showNotificationWithIcon('error', 'Tạo vấn đề', 'Trường Time Remaining không được để trống')
+            showNotificationWithIcon('error', 'Create Issue', 'Fields containing (*) can\'t left blank')
         }
         if(checkSubmit) {
             props.dispatch(createIssue(values))

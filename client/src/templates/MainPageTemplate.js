@@ -18,15 +18,15 @@ export default function MainPageTemplate({ Component }) {
     useEffect(() => {
         dispatch(userLoggedInAction())
         //lay ra project hien tai
-        console.log("typeof ", typeof localStorage.getItem('projectid'));
-        if (typeof localStorage.getItem('projectid') === 'string' && localStorage.getItem('projectid').length >= 5) {
+        console.log("typeof ", typeof localStorage.getItem('projectid'));   
+        if (typeof localStorage.getItem('projectid') === 'string' && localStorage.getItem('projectid').length >= 10) {
             dispatch(GetProjectAction(localStorage.getItem('projectid'), ""))
         }
     }, [])
     return (
         !isLoading ? (
             status ? (
-                <div className='d-flex'>
+                <div className='d-flex' style={{ overflow: 'hidden' }}>
                     <DrawerHOC />
                     <SideBar />
                     <MenuBar />

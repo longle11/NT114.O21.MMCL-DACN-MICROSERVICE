@@ -14,21 +14,21 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: auth-nodeport-srv
+                name: auth-srv
                 port: 
                   number: 4000
           - path: /api/comment/?(.*)
             pathType: Prefix
             backend: 
               service:  
-                name: comment-nodeport-srv
+                name: comment-srv
                 port:
                   number: 4001
           - path: /api/issue/?(.*)
             pathType: Prefix
             backend: 
               service:  
-                name: issue-nodeport-srv
+                name: issue-srv
                 port:
                   number: 4002
           - path: /api/projectmanagement/?(.*)
@@ -42,13 +42,13 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: category-nodeport-srv
+                name: category-srv
                 port: 
                   number: 4004
           - path: /?(.*)
             pathType: Prefix
             backend:
               service:
-                name: client-nodeport-srv
+                name: client-srv
                 port: 
                   number: 3000

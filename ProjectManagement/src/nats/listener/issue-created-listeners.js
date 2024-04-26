@@ -13,7 +13,7 @@ const issueCreatedListener = () => {
                 console.log(`Received event issue:created ${msg.getSequence()}`);
                 const parseData = JSON.parse(msg.getData())
                 //tien hanh luu vao database sau khi lay du lieu thanh cong
-                const issue = await issueModel.create(parseData)
+                await issueModel.create(parseData)
                 msg.ack()
             }
         })

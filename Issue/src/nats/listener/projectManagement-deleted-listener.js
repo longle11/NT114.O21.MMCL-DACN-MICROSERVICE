@@ -20,15 +20,14 @@ const projectManagementDeletedListener = () => {
 
             //tien hanh xoa cac comment trong cac issue nay
             for (const issue of issueList) {
-                // await commentModel.deleteMany({ _id: { $in: issue.comments } })
-
+                const deleteComments = await commentModel.deleteMany({ _id: { $in: issue.comments } })
+                console.log(deleteComments);
                 await issuePublisher(issue.comments, 'issue-comment:deleted')
             }
 
             //xoa cac issue thuoc project
-            const result = await issueModel.deleteMany({ _id: { $in: parseData } })
+            await issueModel.deleteMany({ _id: { $in: parseData } })
 
-            console.log("So issue da xoa: ", result);
             msg.ack()
         }
     })

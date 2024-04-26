@@ -2,10 +2,10 @@ apiVersion: skaffold/v4beta5
 kind: Config
 manifests:
   rawYaml:
-    - "./infras/k8s_test/"
+    - "./infras/k8s_test/*"
 build:
   local:
-    push: true
+    push: false
   artifacts:
     - image: longle2003/auth
       context: auth
@@ -32,7 +32,7 @@ build:
           - dest: .
             src: 'src/**/*.js'
     - image: longle2003/issue
-      context: issue
+      context: Issue
       docker:
         dockerfile: Dockerfile
       sync:
@@ -40,7 +40,7 @@ build:
           - dest: .
             src: 'src/**/*.js'
     - image: longle2003/projectmanagement
-      context: projectmanagement
+      context: Projectmanagement
       docker:
         dockerfile: Dockerfile
       sync:

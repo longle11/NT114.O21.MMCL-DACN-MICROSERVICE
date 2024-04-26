@@ -17,8 +17,8 @@ spec:
           image: longle2003/client
           resources:
             requests:
-              memory: "1Gi"
-              cpu: "1"
+              memory: "500Mi"
+              cpu: "400m"
             limits:
               memory: "2Gi"
               cpu: "2"
