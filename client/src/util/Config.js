@@ -1,2 +1,2 @@
-const domainName = "https://jira.dev"
+const domainName = "https://www.nt533uitjiradev.click/"
 module.exports = domainName
