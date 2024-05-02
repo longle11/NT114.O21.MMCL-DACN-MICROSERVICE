@@ -17,7 +17,7 @@ spec:
           image: mongo
           volumeMounts:
             - name: projectmanagement-persistent-storage
-              mountPath: /data
+              mountPath: /data/db
       volumes:
         - name: projectmanagement-persistent-storage
           persistentVolumeClaim:

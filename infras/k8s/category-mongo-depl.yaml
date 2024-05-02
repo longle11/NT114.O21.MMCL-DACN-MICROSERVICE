@@ -17,7 +17,7 @@ spec:
           image: mongo
           volumeMounts:
             - name: category-persistent-storage
-              mountPath: /data
+              mountPath: /data/db
       volumes:
         - name: category-persistent-storage
           persistentVolumeClaim:
