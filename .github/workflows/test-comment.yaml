@@ -1,7 +1,9 @@
 name: test-comment
 
 on:
-  pull_request
+  pull_request:
+    paths:
+      - "comment/**"
 jobs:
   build:  
     runs-on: ubuntu-latest

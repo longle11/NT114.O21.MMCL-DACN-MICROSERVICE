@@ -1,7 +1,9 @@
 name: test-issue
 
 on:
-  pull_request
+  pull_request:
+    paths:
+      - "Issue/**"
 
 jobs:
   build:  
