@@ -1,5 +1,4 @@
 const express = require('express')
-const userModel = require('../models/userModel')
 const projectModel = require('../models/projectModel')
 const BadRequestError = require('../Errors/Bad-Request-Error')
 const currentUserMiddleware = require('../Middlewares/currentUser-Middleware')

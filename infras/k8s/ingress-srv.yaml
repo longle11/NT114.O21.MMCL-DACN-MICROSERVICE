@@ -4,12 +4,13 @@ metadata:
   name: ingress-srv
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec: 
   ingressClassName: nginx
-  # tls:
-  #   - hosts: 
-  #     - www.nt533uitjiradev.click
-  #     secretName: ca-ingress-tls
+  tls:
+    - hosts: 
+      - www.nt533uitjiradev.click
+      secretName: ca-ingress-tls
   rules:
     - host: www.nt533uitjiradev.click
       http:

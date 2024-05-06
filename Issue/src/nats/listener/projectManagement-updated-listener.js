@@ -17,8 +17,8 @@ const projectManagementUpdatedListener = () => {
 
             let currentIssue = await issueModel.findById(parseData.issue._id)
 
-            //kiểm tra xem issue này có phải do người dùng đó tạo ra hay không
             if (currentIssue) {
+                //kiểm tra xem issue này có phải do người dùng đó tạo ra hay không
                 if (currentIssue.creator.toString() === parseData.userId) {
                     const listComments = currentIssue.comments
 
@@ -27,8 +27,7 @@ const projectManagementUpdatedListener = () => {
                     //xóa danh sách comment trong chính issue đó
                     if (listComments.length > 0) {
                         //tiến hành xóa các commnet đó trong comment model
-                        const deleteComments = await commentModel.deleteMany({ _id: { $in: listComments } })
-                        console.log("thằng chính",deleteComments);
+                        await commentModel.deleteMany({ _id: { $in: listComments } })
 
                         await issuePublisher(listComments, 'issue-comment:deleted')
                     }
@@ -60,7 +59,6 @@ const projectManagementUpdatedListener = () => {
                             //xóa các comment trong comment model
                             
                             const deleteComments = await commentModel.deleteMany({_id: {$in: userComments}})
-                            console.log("Xóa cmt phụ", deleteComments);
                             await issueModel.updateOne({ _id: currentIssue._id }, { comments: userCommentsBelongToIssue })
                             await issuePublisher(userComments, 'issue-comment:deleted')
                         }

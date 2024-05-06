@@ -26,10 +26,7 @@ function Login(props) {
                                         <span style={{ color: 'hsl(218, 81%, 75%)' }}>for your business</span>
                                     </h1>
                                     <p className="mb-4 opacity-70" style={{ color: 'hsl(218, 81%, 85%)' }}>
-                                        Lorem ipsum dolor, sit amet consectetur adipisicing elit.
-                                        Temporibus, expedita iusto veniam atque, magni tempora mollitia
-                                        dolorum consequatur nulla, neque debitis eos reprehenderit quasi
-                                        ab ipsum nisi dolorem modi. Quos?
+                                        Jira is a proprietary product developed by Atlassian that allows bug tracking, issue tracking and agile project management. Jira is used by a large number of clients and users globally for project, time, requirements, task, bug, change, code, test, release, sprint management
                                     </p>
                                 </div>
                                 <div className="col-lg-6 mb-5 mb-lg-0 position-relative">
@@ -38,7 +35,7 @@ function Login(props) {
                                     <div className="card bg-glass">
                                         <div className="card-body px-4 py-5 px-md-5">
                                             <div>
-                                                <h1 style={{fontWeight: 'bold', marginBottom: '20px', color: "blueviolet"}}>SIGN IN</h1>
+                                                <h1 style={{ fontWeight: 'bold', marginBottom: '20px', color: "blueviolet" }}>SIGN IN</h1>
                                             </div>
                                             <form onSubmit={handleSubmit}>
                                                 <div data-mdb-input-init className="form-outline mb-4" style={{ width: '100%', textAlign: 'left' }}>

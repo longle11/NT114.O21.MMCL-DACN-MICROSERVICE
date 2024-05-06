@@ -36,7 +36,7 @@ router.post("/create", currentUserMiddleware, async (req, res, next) => {
             } else {
                 throw new BadRequestError("Short summary field is already existed")
             }
-        }else {
+        } else {
             throw new UnauthorizedError("Authentication failed")
         }
 

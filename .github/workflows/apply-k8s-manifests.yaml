@@ -19,18 +19,27 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
       - run: aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name ${{secrets.AWS_CLUSTER_NAME}}
-      - name: Get pods
-        run: kubectl get pods
 
       - name: Create Certificate for domain name
         run: |
-          if kubectl get secret -n default | grep "ca-ingress-tls"; then
+          if kubectl get pods -n cert-manager | grep "cert-manager"; then
+            echo "This cert-manager is already existed"
+          else 
+            kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.2/cert-manager.yaml
+          fi
+
+          
+      - name: Create secret for jwt token to authenticate
+        run: |
+          if kubectl get secret -n default | grep "jwt-secret"; then
             echo "This secret is already existed"
           else
-            echo "no secret"
-            openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out ca-ingress-tls.crt -keyout ca-ingress-tls.key -subj "/CN=www.nt533uitjiradev.click/O=ca-ingress-tls"; 
-            kubectl create secret tls ca-ingress-tls --namespace default --key ca-ingress-tls.key --cert ca-ingress-tls.crt
+            kubectl create secret generic jwt-secret --from-literal=jwt_key=${{secrets.SECRET_JWT_KEY}}
           fi
+
+
+      - name: Get pods
+        run: kubectl get pods
       # Initial AWS CloudWatch Agent
       - name: Create Namespace for AWS CloudWatch Agent
         run: kubectl apply -f https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/cloudwatch-namespace.yaml
@@ -54,15 +63,6 @@ jobs:
 
       - name: Apply k8s
         run: kubectl apply -f infras/k8s
-
-
-      - name: Create secret for jwt token to authenticate
-        run: |
-          if kubectl get secret -n default | grep "jwt-secret"; then
-            echo "This secret is already existed"
-          else
-            kubectl create secret generic jwt-secret --from-literal=jwt_key=${{secrets.SECRET_JWT_KEY}}
-          fi
 
 
       

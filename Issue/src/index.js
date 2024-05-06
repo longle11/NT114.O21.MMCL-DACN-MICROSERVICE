@@ -1,9 +1,4 @@
-const express = require("express")
-const bodyParser = require("body-parser")
-const cors = require("cors")
 const mongoose = require("mongoose")
-const cookieSession = require("cookie-session")
-const errorHandler = require("./Middlewares/Error-handler")
 const natsWrapper = require("./nats-wrapper")
 const authCreatedListener = require("./nats/listener/auth-created-listener")
 const commentCreatedListener = require("./nats/listener/comment-created-listener")
@@ -11,24 +6,7 @@ const commentDeletedListener = require("./nats/listener/comment-deleted-listener
 const commentUpdatedListener = require("./nats/listener/comment-updated-listener")
 const projectManagementDeletedListener = require("./nats/listener/projectManagement-deleted-listener")
 const projectManagementUpdatedListener = require("./nats/listener/projectManagement-updated-listener")
-
-const app = express()
-app.use(bodyParser.json())
-app.use(cors())
-
-app.set('trust proxy', 1)
-
-app.use(cookieSession({
-    signed: false,
-    secure: true
-}))
-
-app.use('/api/issue', require('./Routes/create'))
-app.use('/api/issue', require('./Routes/getIsuue'))
-app.use('/api/issue', require('./Routes/delete'))
-app.use('/api/issue', require('./Routes/insertIssue'))
-app.use('/api/issue', require('./Routes/update'))
-app.use('/api/issue', require('./Routes/deleteAssignee'))
+const app = require('./app')
 
 async function connectToNats() {
     try {
@@ -68,7 +46,6 @@ async function connectToMongoDb() {
 connectToMongoDb()
 connectToNats()
 
-app.use(errorHandler)
 
 app.listen(4002, () => {
     console.log("Listening on port 4002 update");

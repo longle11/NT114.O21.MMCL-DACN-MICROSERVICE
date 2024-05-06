@@ -11,7 +11,7 @@ const currentUserMiddleware = async (req, res, next) => {
             }
         }
     }catch(error) {
-        
+       req.currentUser = null
     }
 
     next()

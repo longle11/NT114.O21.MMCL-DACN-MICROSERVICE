@@ -73,7 +73,6 @@ export default function ProjectManager() {
             render: (text, record, index) => {
                 if (record?.creator?._id === userInfo.id || record.members.findIndex(user => user._id === userInfo.id) !== -1) {
                     return <NavLink to={`/projectDetail/${record._id}`} onClick={() => {
-                        console.log(`/projectDetail/${record._id}`);
                         dispatch(GetProjectAction(record._id, ""))
                     }} style={{ textDecoration: 'none' }}>
                         <span>{record.nameProject}</span>

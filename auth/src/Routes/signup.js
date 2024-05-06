@@ -2,9 +2,8 @@ const express = require("express")
 const userModel = require("../models/users")
 const BadRequestError = require("../Errors/Bad-Request-Error")
 const router = express.Router()
-const jwt = require('jsonwebtoken')
+const bcrypt = require("bcrypt")
 const authPublisher = require("../nats/auth-published")
-
 router.post("/signup", async (req, res, next) => {
     try {
         const { username, email, password } = req.body
@@ -15,7 +14,6 @@ router.post("/signup", async (req, res, next) => {
             ]
         })
 
-
         //kiem tra xem user da ton tai hay chua
         if (!existedUser) {
             const newUser = {
@@ -24,6 +22,8 @@ router.post("/signup", async (req, res, next) => {
                 password,
                 avatar: `https://ui-avatars.com/api/?name=${username}`
             }
+            const salt = bcrypt.genSaltSync(10)
+            newUser.password = bcrypt.hashSync(newUser.password, salt)
             const user = await userModel.create(newUser)
             await user.save()
 
@@ -34,7 +34,7 @@ router.post("/signup", async (req, res, next) => {
                 avatar: user.avatar
             }
 
-            //đăng ký sự kiện publish lên nats
+            // đăng ký sự kiện publish lên nats
             authPublisher(data, 'auth:created')
 
             res.status(201).json({

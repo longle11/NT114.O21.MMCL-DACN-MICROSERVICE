@@ -7,11 +7,9 @@ const jwt = require('jsonwebtoken')
 router.post("/login", async (req, res, next) => {
     try {
         const { email, password } = req.body
-
         const currentUser = await userModel.findOne({ email })
         if (currentUser) {
-            const checkPassword = bcrypt.compare(currentUser.password, password)
-
+            const checkPassword = await bcrypt.compare(password, currentUser.password)
             if (checkPassword) {
                 //khởi tạo jwt
                 const userJwt = jwt.sign({
@@ -19,7 +17,7 @@ router.post("/login", async (req, res, next) => {
                     email: currentUser.email,
                     avatar: currentUser.avatar,
                     username: currentUser.username
-                }, process.env.JWT_KEY)
+                }, process.env.JWT_KEY, {expiresIn: '3h'})
 
                 //luu tru jwt trong cookie
                 req.session = {

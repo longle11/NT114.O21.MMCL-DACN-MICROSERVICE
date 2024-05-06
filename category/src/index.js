@@ -8,9 +8,6 @@ const app = express()
 app.use(bodyParser.json())
 app.use(cors())
 
-app.use('/api/category', require('./Routes/create'))
-app.use('/api/category', require('./Routes/delete'))
-app.use('/api/category', require('./Routes/getList'))
 
 async function connectToNats() {
     try {
@@ -37,10 +34,13 @@ async function connectToMongoDb() {
         console.log("Kết nối thất bại tới database");
     }
 }
-
 connectToNats()
-
 connectToMongoDb()
+
+
+app.use('/api/category', require('./Routes/create'))
+app.use('/api/category', require('./Routes/delete'))
+app.use('/api/category', require('./Routes/getList'))
 
 app.listen(4004, () => {
     console.log("Listening on port 4004 test");

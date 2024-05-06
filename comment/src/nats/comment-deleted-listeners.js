@@ -1,13 +1,11 @@
 const commentModel = require('../models/commentModel')
 const natsWrapper = require('../nats-wrapper')
 
-const commentDeletedListener = () => {
+const commentDeletedListener = async () => {
     try {
         const options = natsWrapper.client.subscriptionOptions()
             .setManualAckMode(true)
-
         const subscription = natsWrapper.client.subscribe('issue-comment:deleted', 'comment-issue-deleted-queue-group', options)
-
         subscription.on('message', async (msg) => {
             if (typeof msg.getData() === 'string') {
                 try {

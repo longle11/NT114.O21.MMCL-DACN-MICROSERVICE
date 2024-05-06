@@ -13,7 +13,7 @@ router.post("/create", currentUserMiddleware, async (req, res, next) => {
         }
         const result = await commentModel.create(req.body);
         //public toi issue service
-        await commentPublisher(result, "comment:created")
+        commentPublisher("comment:created", result)
         res.status(201).json({
             message: "Successfully created comment",
             data: result

@@ -11,10 +11,12 @@ router.put("/delete/assignee/:id", currentUserMiddleware, async (req, res, next)
     try {
         if (req.currentUser) {
             const { id } = req.params
-            const currentIssue = await issueModel.findById(id).populate({ path: 'comments' })
-            if (!currentIssue) {
-                throw new BadRequestError("Issue not found")
+            const issueIds = await issueModel.find({})
+            const ids = issueIds.map(issue => issue._id.toString());
+            if (!ids.includes(id)) {
+                throw new BadRequestError("ID is invalid")
             } else {
+                const currentIssue = await issueModel.findById(id).populate({ path: 'comments' })
                 let listAssignees = currentIssue.assignees
                 const index = listAssignees.findIndex(ele => ele.toString() === req.body.userId)
                 if (index !== -1) {
@@ -48,7 +50,7 @@ router.put("/delete/assignee/:id", currentUserMiddleware, async (req, res, next)
                     }
 
                     await issuePublisher(copyIssue, 'issue:updated')
-                    return res.status(200).json({
+                    return res.status(201).json({
                         message: "Successfully deleted user from this issue",
                         data: currentIssue
                     })

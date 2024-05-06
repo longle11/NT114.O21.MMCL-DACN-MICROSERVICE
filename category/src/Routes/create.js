@@ -4,15 +4,15 @@ const categoryPublisher = require('../nats/category-publisher')
 const router = express.Router()
 
 const objects = [
-    "Kinh te chinh tri",
-    "Thuong mai dien tu",
-    "Cong nghe thong tin",
-    "Buu chinh vien thong",
-    "Cong nghe thuc pham",
-    "Mang may tinh va truyen thong",
-    "An toan thong tin",
-    "Khoa hoc may tinh",
-    "Khoa hoc du lieu"
+    "Kinh tế chính trị",
+    "Thương mại điện tử",
+    "Công nghệ thông tin",
+    "Bưu chính viễn thông",
+    "Công nghệ thực phẩm",
+    "Mạng tính và truyền thông",
+    "An toàn thông tin",
+    "Khoa học máy tính",
+    "Khoa học dữ liệu"
 ]
 
 router.get('/create', async (req, res) => {

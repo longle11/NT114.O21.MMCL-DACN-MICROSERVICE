@@ -10,10 +10,12 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
     try {
         if (req.currentUser) {
             const id = req.params.id
-            let currentIssue = await issueModel.findById(id)
-            if (!currentIssue) {
+            const issueIds = await issueModel.find({})
+            const ids = issueIds.map(issue => issue._id.toString());
+            if (!ids.includes(id)) {
                 throw new BadRequestError("Issue not found")
             } else {
+                let currentIssue = await issueModel.findById(id)
                 //kiem tra xem assignees co duoc them vao hay khong
                 let listAssignees = currentIssue.assignees
                 if (req.body.assignees != null) {

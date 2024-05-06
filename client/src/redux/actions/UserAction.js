@@ -42,9 +42,10 @@ export const signUpUserAction = (props) => {
             if (res.status === 201) {
                 showNotificationWithIcon("success", "Register", "Successfully created the user")
             }
-        } catch (error) {
-            console.log(error);
-            // showNotificationWithIcon("error", "Register", error.response.data.message)
+        } catch (errors) {
+            if (errors?.response?.status === 400) {
+                showNotificationWithIcon("error", "Login", errors?.response?.data.message)
+            }
         }
     }
 }
@@ -79,7 +80,7 @@ export const userLoginAction = (email, password) => {
                 }
             }
         } catch (errors) {
-            showNotificationWithIcon("error", "Login", "Logged in failed")
+
         }
     }
 }

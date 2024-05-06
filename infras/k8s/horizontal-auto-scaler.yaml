@@ -61,12 +61,12 @@ spec:
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: hpa-clinet
+  name: hpa-client
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: clinet-depl
+    name: client-depl
   minReplicas: 1
   maxReplicas: 10
   targetCPUUtilizationPercentage: 60

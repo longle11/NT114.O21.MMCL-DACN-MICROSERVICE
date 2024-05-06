@@ -17,7 +17,7 @@ const commentSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     }
-})
+}, { suppressReservedKeysWarning: true })
 
 commentSchema.virtual('issueRefComments', {
     ref: 'issues',

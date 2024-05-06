@@ -8,28 +8,29 @@ router.get("/:id", currentUserMiddleware, async (req, res, next) => {
     try {
         const { id } = req.params
 
-        const issue = await issueModel.findById(id)
-            .populate({
-                path: 'creator',
-                select: '-__v'
-            })
-            .populate({
-                path: 'assignees',
-                select: '-__v'
-            })
-            .populate({
-                path: 'comments',
-                select: '-__v',
-                populate: ({
+        const issueIds = await issueModel.find({})
+        const ids = issueIds.map(issue => issue._id.toString());
+        if (ids.includes(id)) {
+            const issue = await issueModel.findById(id)
+                .populate({
                     path: 'creator',
                     select: '-__v'
-                }),
-                options: {
-                    sort: { timeStamp: -1 }
-                }
-            })
-
-        if (issue) {
+                })
+                .populate({
+                    path: 'assignees',
+                    select: '-__v'
+                })
+                .populate({
+                    path: 'comments',
+                    select: '-__v',
+                    populate: ({
+                        path: 'creator',
+                        select: '-__v'
+                    }),
+                    options: {
+                        sort: { timeStamp: -1 }
+                    }
+                })
             return res.status(200).json({
                 message: "Successfully retrieve the issue",
                 data: issue

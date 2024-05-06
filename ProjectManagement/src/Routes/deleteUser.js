@@ -11,12 +11,15 @@ router.put('/delete/user/:id', currentUserMiddleware, async (req, res, next) => 
     try {
         if (req.currentUser) {
             const id = req.params.id
-
-            const currentProject = await projectModel.findById(id)
-                .populate({
-                    path: 'issues'
-                })
-            if (currentProject) {
+            const projects = await projectModel.find({})
+            const ids = projects.map(project => project._id.toString());
+            console.log("ids", ids);
+            console.log("id", id);
+            if (ids.includes(id)) {
+                const currentProject = await projectModel.findById(id)
+                    .populate({
+                        path: 'issues'
+                    })
                 let listMembers = currentProject.members
                 const index = listMembers.findIndex(user => user._id.toString() === req.body.userId)
                 if (index !== -1) {
@@ -48,7 +51,7 @@ router.put('/delete/user/:id', currentUserMiddleware, async (req, res, next) => 
                         }
                     }
 
-                    return res.status(201).json({
+                    return res.status(200).json({
                         message: "Successfully deleted this user"
                     })
                 } else {
@@ -56,10 +59,7 @@ router.put('/delete/user/:id', currentUserMiddleware, async (req, res, next) => 
                 }
 
             } else {
-                return res.status(400).json({
-                    message: "Project not found",
-                    data: null
-                })
+                throw new BadRequestError("Project not found")
             }
         } else {
             throw new UnauthorizedError("Authentication failed")

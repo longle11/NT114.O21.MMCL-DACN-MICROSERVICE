@@ -12,7 +12,7 @@ export const getListCategories = () => {
                 })
             } 
         }catch(errors) {
-            console.log(`loi o ${GET_CATEGORY_API} `);
+            
         }
     }
 }

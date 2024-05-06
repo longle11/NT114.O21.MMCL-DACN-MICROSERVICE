@@ -18,7 +18,7 @@ const commentSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     }
-})
+}, { suppressReservedKeysWarning: true })
 
 const commentModel = mongoose.model("comments", commentSchema);
 

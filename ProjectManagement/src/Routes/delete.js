@@ -12,18 +12,21 @@ router.delete('/delete/:id', currentUserMiddleware, async (req, res, next) => {
     try {
         if (req.currentUser) {
             const id = req.params.id
-            const currentProject = await projectModel.findById(id)
-
-            if (!currentProject) {
+            const projects = await projectModel.find({})
+            const ids = projects.map(project => project._id.toString());
+            if (!ids.includes(id)) {
                 throw new BadRequestError("Project not found")
             } else {
+                const currentProject = await projectModel.findById(id)
+
                 const deletedProject = await projectModel.deleteOne({ _id: id })
 
-                //xóa các issue thuộc project này
-                await issueModel.deleteMany({ _id: { $in: currentProject.issues } })
-
-                //publish sự kiện xóa các issues trong issue service
-                await projectManagementPublisher(currentProject.issues, 'projectmanagement:deleted')
+                if (currentProject.issues.length > 0) {
+                    //xóa các issue thuộc project này
+                    await issueModel.deleteMany({ _id: { $in: currentProject.issues } })
+                    //publish sự kiện xóa các issues trong issue service
+                    await projectManagementPublisher(currentProject.issues, 'projectmanagement:deleted')
+                }
                 res.status(200).json({
                     message: "Suscessfully deleted this project",
                     data: deletedProject

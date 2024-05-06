@@ -10,9 +10,10 @@ router.post('/create', currentUserMiddleware, async (req, res, next) => {
     try {
         if (req.currentUser) {
             const { nameProject, description, category, creator } = req.body;
-            const existedProject = await projectModel.findOne({ nameProject })
+            const projects = await projectModel.find({})
+            const listNames = projects.map(project => project.nameProject);
             //neu project chua ton tai
-            if (existedProject) {
+            if (listNames.includes(nameProject)) {
                 throw new BadRequestError("Project already existed")
             } else {
                 let members = []
@@ -29,10 +30,6 @@ router.post('/create', currentUserMiddleware, async (req, res, next) => {
                     data: project
                 })
             }
-
-            res.status(200).json({
-                message: "Something went wrong",
-            })
         } else {
             throw new UnauthorizedError("Authentication failed")
         }

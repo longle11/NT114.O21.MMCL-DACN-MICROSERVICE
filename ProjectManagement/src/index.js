@@ -1,38 +1,13 @@
-const express = require("express")
-const bodyParser = require("body-parser")
-const cors = require("cors")
-const mongoose = require("mongoose")
-const cookieSession = require("cookie-session")
-const errorHandler = require("./Middlewares/Error-handler")
+
+const app = require("./app")
 const natsWrapper = require("./nats-wrapper")
+const mongoose = require("mongoose")
 
 const issueCreatedListener = require("./nats/listener/issue-created-listeners")
 const authCreatedListener = require("./nats/listener/auth-created-listener")
 const categoryCreatedListener = require("./nats/listener/category-created-listener")
 const issueUpdatedListener = require("./nats/listener/issue-updated-listener")
 const issueDeleteddListener = require("./nats/listener/issue-deleted-listener")
-
-
-const app = express()
-app.use(bodyParser.json())
-app.use(cors())
-
-app.set('trust proxy', 1)
-
-app.use(cookieSession({
-    signed: false,
-    secure: true
-}))
-
-app.use('/api/projectmanagement', require("./Routes/create"))
-app.use('/api/projectmanagement', require("./Routes/getList"))
-app.use('/api/projectmanagement', require("./Routes/listUser"))
-app.use('/api/projectmanagement', require("./Routes/insertUser"))
-app.use('/api/projectmanagement', require("./Routes/update"))
-app.use('/api/projectmanagement', require("./Routes/delete"))
-app.use('/api/projectmanagement', require("./Routes/getProject"))
-app.use('/api/projectmanagement', require("./Routes/insertIssue"))
-app.use('/api/projectmanagement', require("./Routes/deleteUser"))
 
 async function connectToMongoDb() {
     try {
@@ -73,7 +48,6 @@ async function connectToNats() {
 
 connectToMongoDb()
 connectToNats()
-app.use(errorHandler)
 
 app.listen(4003, () => {
     console.log("Listening on port 4003 update");

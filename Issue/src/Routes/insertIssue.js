@@ -2,18 +2,21 @@ const express = require("express")
 const currentUserMiddleware = require("../Middlewares/currentUser-Middleware")
 const UnauthorizedError = require("../Errors/UnAuthorized-Error")
 const BadRequestError = require("../Errors/Bad-Request-Error")
+const issueModel = require("../models/issueModel")
 
 const router = express.Router()
 router.put("/comments/insert/:id", currentUserMiddleware, async (req, res, next) => {
     try {
         if (req.currentUser) {
-            const { id } = req.params.id
-            const commentId = req.body
-            const currentIssue = await issueModel.findById(id)
-            if (!currentIssue) {
+            const { id } = req.params
+            const issueIds = await issueModel.find({})
+            const ids = issueIds.map(issue => issue._id.toString());
+
+            if (!ids.includes(id)) {
                 throw new BadRequestError("Issue not found")
             } else {
-
+                const { commentId } = req.body
+                const currentIssue = await issueModel.findById(id)
                 let comments = currentIssue.comments
 
                 comments.push(commentId)
