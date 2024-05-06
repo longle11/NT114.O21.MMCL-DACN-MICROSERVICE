@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - pull_request
+    paths:
+      - "ProjectManagement/**"
 jobs:
   build:  
     runs-on: ubuntu-latest
