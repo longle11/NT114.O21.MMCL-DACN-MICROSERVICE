@@ -1,11 +1,7 @@
 name: test-projectmanagement
 
 on:
-  push:
-    branches:
-      - pull_request
-    paths:
-      - "ProjectManagement/**"
+  pull_request
 jobs:
   build:  
     runs-on: ubuntu-latest

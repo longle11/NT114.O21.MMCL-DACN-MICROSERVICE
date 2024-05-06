@@ -1,11 +1,7 @@
 name: test-comment
 
 on:
-  push:
-    branches:
-      - pull_request
-    paths:
-      - "comment/**"
+  pull_request
 jobs:
   build:  
     runs-on: ubuntu-latest
