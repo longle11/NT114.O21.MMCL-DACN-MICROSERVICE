@@ -33,7 +33,7 @@ it('check whether data has been stored in database or not', async () => {
     const data = await userModel.find({})
 
     expect(data[0]).toBeDefined()
-    expect(data[0].username).not.toEqual("testuser")
+    expect(data[0].username).toEqual("testuser")
 })
 
 it('acks the event', async() => {
