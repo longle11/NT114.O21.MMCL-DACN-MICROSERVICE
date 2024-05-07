@@ -13,8 +13,6 @@ router.put('/delete/user/:id', currentUserMiddleware, async (req, res, next) => 
             const id = req.params.id
             const projects = await projectModel.find({})
             const ids = projects.map(project => project._id.toString());
-            console.log("ids", ids);
-            console.log("id", id);
             if (ids.includes(id)) {
                 const currentProject = await projectModel.findById(id)
                     .populate({

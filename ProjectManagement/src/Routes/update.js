@@ -11,9 +11,10 @@ router.put('/update/:id', currentUserMiddleware, async (req, res, next) => {
         if (req.currentUser) {
             const { category, description, nameProject } = req.body.props
             const id = req.params.id
-            const currentProject = await projectModel.findById(id)
+            const projects = await projectModel.find({})
+            const ids = projects.map(project => project._id.toString());
 
-            if (!currentProject) {
+            if (!ids.includes(id)) {
                 throw new BadRequestError("Project not found")
             } else {
                 const updatedProject = await projectModel.updateOne(

@@ -9,7 +9,6 @@ const router = express.Router()
 
 router.post("/create", currentUserMiddleware, async (req, res, next) => {
     try {
-
         if (req.currentUser) {
             const currentIssue = await issueModel.find({ shortSummary: req.body.shortSummary })
             if (currentIssue.length === 0) {

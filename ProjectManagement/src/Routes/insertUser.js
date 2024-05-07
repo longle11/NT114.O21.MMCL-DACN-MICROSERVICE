@@ -10,10 +10,12 @@ router.post('/insert', currentUserMiddleware, async (req, res, next) => {
     try {
         if (req.currentUser) {
             const { project_id, user_id } = req.body.props
-            const currentProject = await projectModel.findById(project_id)
-            if (!currentProject) {
+            const projects = await projectModel.find({})
+            const ids = projects.map(project => project._id.toString());
+            if (!ids.includes(project_id)) {
                 throw new BadRequestError("Project not found")
             } else {
+                const currentProject = await projectModel.findById(project_id)
                 const listMembers = currentProject.members
                 const isExisted = listMembers.findIndex(userId => userId.toString() === user_id)
                 if (isExisted === -1) {
@@ -28,10 +30,9 @@ router.post('/insert', currentUserMiddleware, async (req, res, next) => {
                         message: "Successfully added user in this project",
                         data: updatedProject
                     })
+                }else {
+                    throw new BadRequestError("User is already existed in this project")
                 }
-                return res.status(400).json({
-                    message: "User da duoc them vao du an nay"
-                })
             }
         } else {
             throw new UnauthorizedError("Authentication failed")

@@ -2,9 +2,7 @@ const app = require('../../app')
 const request = require('supertest')
 const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken')
-const userModel = require('../../models/userModel')
 const projectModel = require('../../models/projectModel')
-const issueModel = require('../../models/issueModel')
 const userInfo = () => {
     return {
         id: new mongoose.Types.ObjectId().toHexString(),
@@ -30,38 +28,46 @@ const createFakeCookie = () => {
 
 it('returns 401 if authentication is failed', async () => {
     return await request(app)
-        .put("/api/projectmanagement/insert/issue")
+        .put("/api/projectmanagement/update/1")
         .expect(401)
 })
 
-it('returns 200 if inserted successfully an issue to the project', async () => {
+it('returns 400 if project is not found', async () => {
+    await request(app)
+        .put("/api/projectmanagement/update/1")
+        .set('Cookie', createFakeCookie())
+        .send({
+            props: {
+                nameProject: "Project 1",
+                description: "Test dự án 1",
+                category: new mongoose.Types.ObjectId().toHexString()
+            }
+        })
+        .expect(400)
+})
 
+it('returns 200 if an project is successfully updated', async () => {
     const currentProject = await projectModel.create({
         nameProject: "Project 1",
         description: "Test dự án 1",
         category: new mongoose.Types.ObjectId().toHexString(),
         creator: userInfo().id
-    })
-
-    const issue = await issueModel.create({
-        projectId: currentProject._id,
-        creator: new mongoose.Types.ObjectId().toHexString(),
-        priority: 0,
-        timeSpent: 1,
-        timeRemaining: 1,
-        timeOriginalEstimate: 1,
-        shortSummary: "Day la noi dung tom tat",
-        issueType: 0,
     })
 
     return await request(app)
-        .put("/api/projectmanagement/insert/issue")
+        .put(`/api/projectmanagement/update/${currentProject._id.toString()}`)
         .set('Cookie', createFakeCookie())
-        .send({ project_id: currentProject._id.toString(), issue_id: issue._id.toString() })
+        .send({
+            props: {
+                nameProject: "updated project name",
+                description: "updated description",
+                category: new mongoose.Types.ObjectId().toHexString(),
+            }
+        })
         .expect(200)
 })
-it('check whether data has been inserted to project or not', async () => {
 
+it('check whether data has been updated in database or not', async () => {
     const currentProject = await projectModel.create({
         nameProject: "Project 1",
         description: "Test dự án 1",
@@ -69,25 +75,21 @@ it('check whether data has been inserted to project or not', async () => {
         creator: userInfo().id
     })
 
-    const issue = await issueModel.create({
-        projectId: currentProject._id,
-        creator: new mongoose.Types.ObjectId().toHexString(),
-        priority: 0,
-        timeSpent: 1,
-        timeRemaining: 1,
-        timeOriginalEstimate: 1,
-        shortSummary: "Day la noi dung tom tat",
-        issueType: 0,
-    })
-
     await request(app)
-        .put("/api/projectmanagement/insert/issue")
+        .put(`/api/projectmanagement/update/${currentProject._id.toString()}`)
         .set('Cookie', createFakeCookie())
-        .send({ project_id: currentProject._id.toString(), issue_id: issue._id.toString() })
+        .send({
+            props: {
+                nameProject: "updated project name",
+                description: "updated description",
+                category: new mongoose.Types.ObjectId().toHexString(),
+            }
+        })
         .expect(200)
 
-    const project = await projectModel.findById(currentProject._id.toString())
-
-    expect(project).toBeDefined()
-    expect(project.issues.length).toEqual(1)
+    const data = await projectModel.findById(currentProject._id.toString())
+    expect(data).toBeDefined()
+    expect(data.nameProject).not.toEqual(currentProject.nameProject)
+    expect(data.description).not.toEqual(currentProject.description)
+    expect(data.category).not.toEqual(currentProject.category)
 })

@@ -31,7 +31,6 @@ router.put("/delete/assignee/:id", currentUserMiddleware, async (req, res, next)
                         issueStatus: currentIssue.issueStatus,
                         assignees: currentIssue.assignees
                     }
-
                     //lấy ra các comment của assignee này trong issue
                     let listComments = currentIssue.comments
 
@@ -41,14 +40,20 @@ router.put("/delete/assignee/:id", currentUserMiddleware, async (req, res, next)
                                 return true
                             }
                             return false
-                        })
+                        }).map(comment => comment._id)
+                        
+                        for(let comment of listComments) {
+                            const index = currentIssue.comments.map(comment => comment._id).indexOf(comment)
+                            if(index !== -1) {
+                                currentIssue.comments.splice(index, 1)
+                            }
+                        }
+                        await currentIssue.save()
                         //xoa cac comment cua issue
                         await commentModel.deleteMany({ _id: { $in: listComments } })
-
                         //publish su kien xoa cac comment trong comment service
                         await issuePublisher(listComments, 'issue-comment:deleted')
                     }
-
                     await issuePublisher(copyIssue, 'issue:updated')
                     return res.status(201).json({
                         message: "Successfully deleted user from this issue",

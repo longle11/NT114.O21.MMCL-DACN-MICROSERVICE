@@ -9,7 +9,7 @@ const router = express.Router()
 router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
     try {
         if (req.currentUser) {
-            const id = req.params.id
+            const { id } = req.params
             const issueIds = await issueModel.find({})
             const ids = issueIds.map(issue => issue._id.toString());
             if (!ids.includes(id)) {
