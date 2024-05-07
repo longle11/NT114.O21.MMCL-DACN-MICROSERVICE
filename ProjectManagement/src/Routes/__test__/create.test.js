@@ -2,6 +2,7 @@ const app = require('../../app')
 const request = require('supertest')
 const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken')
+const projectModel = require('../../models/projectModel')
 const userInfo = () => {
     return {
         id: new mongoose.Types.ObjectId().toHexString(),
@@ -66,4 +67,22 @@ it('returns 201 if an project is successfully created', async () => {
         creator: userInfo().id
     })
     .expect(201)
+})
+
+it('check whether data has been stored in database or not', async() => {
+    const response = await request(app)
+    .post("/api/projectmanagement/create")
+    .set('Cookie', createFakeCookie())
+    .send({
+        nameProject: "Project 1",
+        description: "Test dự án 1",
+        category: new mongoose.Types.ObjectId().toHexString(),
+        creator: userInfo().id
+    })
+    .expect(201)
+
+    const data = await projectModel.findById(response.body.data._id.toString())
+
+    expect(data).toBeDefined()
+    expect(data.nameProject).toEqual("Project 1")
 })

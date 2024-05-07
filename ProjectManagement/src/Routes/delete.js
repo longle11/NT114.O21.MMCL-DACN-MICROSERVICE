@@ -20,7 +20,6 @@ router.delete('/delete/:id', currentUserMiddleware, async (req, res, next) => {
                 const currentProject = await projectModel.findById(id)
 
                 const deletedProject = await projectModel.deleteOne({ _id: id })
-
                 if (currentProject.issues.length > 0) {
                     //xóa các issue thuộc project này
                     await issueModel.deleteMany({ _id: { $in: currentProject.issues } })

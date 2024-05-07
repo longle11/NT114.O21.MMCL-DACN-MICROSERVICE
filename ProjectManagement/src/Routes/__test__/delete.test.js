@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken')
 const natsWrapper = require('../../nats-wrapper')
 const projectModel = require('../../models/projectModel')
+const issueModel = require('../../models/issueModel')
 const userInfo = () => {
     return {
         id: new mongoose.Types.ObjectId().toHexString(),
@@ -40,7 +41,7 @@ it('returns 400 if project is not found', async () => {
         .expect(400)
 })
 
-it('returns 200 if an project is successfully deleted', async () => {
+it('returns 200 if an project is successfully deleted (only project without deleted issues)', async () => {
     const project = await projectModel.create({
         nameProject: "Project 1",
         description: "Test dự án 1",
@@ -52,4 +53,103 @@ it('returns 200 if an project is successfully deleted', async () => {
         .delete(`/api/projectmanagement/delete/${project._id.toString()}`)
         .set('Cookie', createFakeCookie())
         .expect(200)
+})
+
+it('emits the event', async () => {
+    const issueData1 = await issueModel.create({
+        projectId: new mongoose.Types.ObjectId().toHexString(),
+        creator: new mongoose.Types.ObjectId().toHexString(),
+        priority: 0,
+        timeSpent: 1,
+        timeRemaining: 1,
+        timeOriginalEstimate: 1,
+        shortSummary: "Day la noi dung tom tat 2",
+        issueType: 0,
+    })
+    const issueData2 = await issueModel.create({
+        projectId: new mongoose.Types.ObjectId().toHexString(),
+        creator: new mongoose.Types.ObjectId().toHexString(),
+        priority: 0,
+        timeSpent: 1,
+        timeRemaining: 1,
+        timeOriginalEstimate: 1,
+        shortSummary: "Day la noi dung tom tat 2",
+        issueType: 0,
+    })
+    const project = await projectModel.create({
+        nameProject: "Project 1",
+        description: "Test dự án 1",
+        category: new mongoose.Types.ObjectId().toHexString(),
+        creator: userInfo().id,
+        issues: [issueData1._id, issueData2._id]
+    })
+
+    console.log("vao được ngang này nè 12");
+
+    await request(app)
+        .delete(`/api/projectmanagement/delete/${project._id.toString()}`)
+        .set('Cookie', createFakeCookie())
+        .expect(200)
+
+    expect(natsWrapper.client.publish).toHaveBeenCalled()
+})
+
+it('check whether data has been deleted in project without issues', async () => {
+    const project = await projectModel.create({
+        nameProject: "Project 1",
+        description: "Test dự án 1",
+        category: new mongoose.Types.ObjectId().toHexString(),
+        creator: userInfo().id,
+    })
+
+    await request(app)
+        .delete(`/api/projectmanagement/delete/${project._id.toString()}`)
+        .set('Cookie', createFakeCookie())
+        .expect(200)
+
+    const data = await projectModel.findById(project._id.toString())
+
+    expect(data).toEqual(null)
+})
+
+it('check whether data has been deleted in project with issues', async () => {
+    const issueData1 = await issueModel.create({
+        projectId: new mongoose.Types.ObjectId().toHexString(),
+        creator: new mongoose.Types.ObjectId().toHexString(),
+        priority: 0,
+        timeSpent: 1,
+        timeRemaining: 1,
+        timeOriginalEstimate: 1,
+        shortSummary: "Day la noi dung tom tat 2",
+        issueType: 0,
+    })
+    const issueData2 = await issueModel.create({
+        projectId: new mongoose.Types.ObjectId().toHexString(),
+        creator: new mongoose.Types.ObjectId().toHexString(),
+        priority: 0,
+        timeSpent: 1,
+        timeRemaining: 1,
+        timeOriginalEstimate: 1,
+        shortSummary: "Day la noi dung tom tat 2",
+        issueType: 0,
+    })
+    const project = await projectModel.create({
+        nameProject: "Project 1",
+        description: "Test dự án 1",
+        category: new mongoose.Types.ObjectId().toHexString(),
+        creator: userInfo().id,
+        issues: [issueData1._id, issueData2._id]
+    })
+
+    await request(app)
+        .delete(`/api/projectmanagement/delete/${project._id.toString()}`)
+        .set('Cookie', createFakeCookie())
+        .expect(200)
+
+    const data = await projectModel.findById(project._id.toString())
+
+    expect(data).toEqual(null)
+
+    const issueData = await issueModel.find({})
+    expect(issueData.length).toEqual(0)
 })
