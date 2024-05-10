@@ -21,7 +21,7 @@ router.post("/create", currentUserMiddleware, [
             throw new BadRequestError('Information is invalid')
         }
         const { issueId, creator, content } = req.body
-        const result = await commentModel.create({ issueId, creator, content })
+        const result = await commentModel.create({ issueId, creator, content }).exec()
         //public toi issue service
         commentPublisher("comment:created", result)
         res.status(201).json({
