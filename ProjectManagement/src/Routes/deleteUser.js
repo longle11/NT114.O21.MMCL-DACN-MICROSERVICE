@@ -33,7 +33,7 @@ router.put('/delete/user/:id', currentUserMiddleware, async (req, res, next) => 
                             if (issue.creator.toString() === req.body.userId) {
                                 await issueModel.deleteOne({ _id: issue._id })
 
-                                await projectManagementPublisher({ issue, userId: req.body.userId }, "projectManagement:updated")
+                                projectManagementPublisher({ issue, userId: req.body.userId }, "projectManagement:updated")
                             } else {
                                 const index = issue.assignees.findIndex(user => user._id.toString() === req.body.userId)
 
@@ -43,7 +43,7 @@ router.put('/delete/user/:id', currentUserMiddleware, async (req, res, next) => 
                                     await issueModel.updateOne({ _id: issue._id }, { $set: { assignees: issue.assignees } })
 
                                     //gui kem theo id cua nguoi assignee de xoa cac comment lien quan toi ho
-                                    await projectManagementPublisher({ issue, userId: req.body.userId }, "projectManagement:updated")
+                                    projectManagementPublisher({ issue, userId: req.body.userId }, "projectManagement:updated")
                                 }
                             }
                         }

@@ -6,8 +6,13 @@ const errorHandler = require("./Middlewares/Error-handler")
 
 
 const app = express()
+app.disable('x-powered-by')
+
+app.use(cors({
+    origin: ['https://nt533uitjiradev.click'],
+    methods: ['GET', 'POST']
+}))
 app.use(bodyParser.json())
-app.use(cors())
 
 app.set('trust proxy', 1)
 

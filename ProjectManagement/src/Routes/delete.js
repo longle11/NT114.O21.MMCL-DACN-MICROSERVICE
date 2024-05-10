@@ -24,7 +24,7 @@ router.delete('/delete/:id', currentUserMiddleware, async (req, res, next) => {
                     //xóa các issue thuộc project này
                     await issueModel.deleteMany({ _id: { $in: currentProject.issues } })
                     //publish sự kiện xóa các issues trong issue service
-                    await projectManagementPublisher(currentProject.issues, 'projectmanagement:deleted')
+                    projectManagementPublisher(currentProject.issues, 'projectmanagement:deleted')
                 }
                 res.status(200).json({
                     message: "Suscessfully deleted this project",
