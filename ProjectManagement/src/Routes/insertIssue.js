@@ -19,7 +19,7 @@ router.put('/insert/issue', currentUserMiddleware, async (req, res, next) => {
                 const filter = { "_id": project_id };
                 const update = { $set: { issues: listIssue } };
 
-                await projectModel.updateOne(filter, update);
+                await projectModel.updateOne(filter, update).exec();
 
                 return res.status(200).json({
                     message: "Successfully added issue in this project",

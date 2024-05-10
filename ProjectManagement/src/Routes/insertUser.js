@@ -24,7 +24,7 @@ router.post('/insert', currentUserMiddleware, async (req, res, next) => {
                     const updatedProject = await projectModel.updateOne(
                         { "_id": project_id },
                         { $set: { "members": listMembers } }
-                    )
+                    ).exec()
 
                     return res.status(200).json({
                         message: "Successfully added user in this project",
