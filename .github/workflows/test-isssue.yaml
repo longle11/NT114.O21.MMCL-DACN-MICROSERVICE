@@ -21,4 +21,4 @@ jobs:
           args: >
             -Dsonar.organization=longle11
             -Dsonar.projectKey=longle11_NT114.O21.MMCL-DACN-MICROSERVICE
-            -Dsonar.sources=Issue/
+            -Dsonar.sources=./Issue
