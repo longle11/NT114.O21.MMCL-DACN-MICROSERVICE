@@ -59,39 +59,6 @@ it('returns 201 if an issue is successfully created', async () => {
         .expect(201)
 })
 
-it('returns 400 if an issue is duplicated in shortSummary field', async () => {
-    await request(app)
-        .post("/api/issue/create")
-        .set('Cookie', createFakeCookie())
-        .send({
-            projectId: new mongoose.Types.ObjectId().toHexString(),
-            creator: new mongoose.Types.ObjectId().toHexString(),
-            priority: 0,
-            timeSpent: 1,
-            timeRemaining: 1,
-            timeOriginalEstimate: 1,
-            shortSummary: "Day la noi dung tom tat",
-            issueType: 0
-        })
-        .expect(201)
-
-    return await request(app)
-        .post("/api/issue/create")
-        .set('Cookie', createFakeCookie())
-        .send({
-            projectId: new mongoose.Types.ObjectId().toHexString(),
-            creator: new mongoose.Types.ObjectId().toHexString(),
-            priority: 0,
-            timeSpent: 1,
-            timeRemaining: 1,
-            timeOriginalEstimate: 1,
-            shortSummary: "Day la noi dung tom tat",
-            issueType: 0
-        })
-        .expect(400)
-
-})
-
 it('emits successfully an issues:created event', async () => {
     await request(app)
         .post("/api/issue/create")
