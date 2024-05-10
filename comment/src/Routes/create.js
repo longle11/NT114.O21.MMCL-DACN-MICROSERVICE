@@ -4,14 +4,27 @@ const commentPublisher = require("../nats/comment-publisher")
 const currentUserMiddleware = require("../Middlewares/currentUser-Middleware")
 const UnauthorizedError = require('../Errors/UnAuthorized-Error')
 const router = express.Router()
+const { check, validationResult } = require('express-validator');
+const { default: mongoose } = require("mongoose")
 
 
-router.post("/create", currentUserMiddleware, async (req, res, next) => {
+
+router.post("/create", currentUserMiddleware, [
+    check('issueId')
+        .custom(id => id.toString().length > 5).withMessage('issueId is invalid ObjectId'),
+    check('creator')
+        .custom(id => id.toString().length > 5).withMessage('creator is invalid ObjectId')
+], async (req, res, next) => {
     try {
-        if(!req.currentUser) {
+        if (!req.currentUser) {
             throw new UnauthorizedError("Failed authentication")
         }
-        const result = await commentModel.create(req.body);
+        if (!validationResult(req).isEmpty()) {
+            throw new BadRequestError('Information is invalid')
+        }
+
+        const { issueId, creator, content } = req.body
+        const result = await commentModel.create({ issueId, creator, content })
         //public toi issue service
         commentPublisher("comment:created", result)
         res.status(201).json({
