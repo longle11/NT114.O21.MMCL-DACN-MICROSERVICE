@@ -17,7 +17,3 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           projectBaseDir: comment/
-          args: >
-            -Dsonar.organization=longle11
-            -Dsonar.projectKey=longle11_NT114.O21.MMCL-DACN-MICROSERVICE
-            -Dsonar.sources=./comment
