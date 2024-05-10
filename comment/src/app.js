@@ -6,6 +6,7 @@ const cors = require('cors')
 const errorHandler = require("./Middlewares/Error-handler")
 
 const app = express()
+app.disable('x-powered-by')
 
 app.set('trust proxy', 1)
 
@@ -15,7 +16,10 @@ app.use(cookieSession({
 }))
 
 app.use(bodyParser.json())
-app.use(cors())
+app.use(cors({
+    origin: ['https://nt533uitjiradev.click'],
+    methods: ['GET', 'POST']
+}))
 
 app.use('/api/comments', require("./Routes/create"))
 app.use('/api/comments', require("./Routes/update"))
