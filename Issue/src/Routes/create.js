@@ -26,31 +26,27 @@ router.post("/create", currentUserMiddleware, [
                 throw new BadRequestError('Information is invalid')
             } else {
                 const { shortSummary } = req.body
-                const currentIssue = await issueModel.findOne({ shortSummary })
-                if (currentIssue === null) {
-                    const newIssue = await issueModel.create(req.body)
+                const issue = new issueModel(req.body)
+                const newIssue = await issue.save()
 
-                    const issueCopy = {
-                        _id: newIssue._id,
-                        projectId: newIssue.projectId,
-                        priority: newIssue.priority,
-                        shortSummary: newIssue.shortSummary,
-                        positionList: newIssue.positionList,
-                        issueType: newIssue.issueType,
-                        issueStatus: newIssue.issueStatus,
-                        assignees: newIssue.assignees,
-                        creator: newIssue.creator
-                    }
-
-                    await issuePublisher(issueCopy, 'issue:created')
-
-                    return res.status(201).json({
-                        message: "Successfully created an issue",
-                        data: newIssue
-                    })
-                } else {
-                    throw new BadRequestError("Short summary field is already existed")
+                const issueCopy = {
+                    _id: newIssue._id,
+                    projectId: newIssue.projectId,
+                    priority: newIssue.priority,
+                    shortSummary: newIssue.shortSummary,
+                    positionList: newIssue.positionList,
+                    issueType: newIssue.issueType,
+                    issueStatus: newIssue.issueStatus,
+                    assignees: newIssue.assignees,
+                    creator: newIssue.creator
                 }
+
+                await issuePublisher(issueCopy, 'issue:created')
+
+                return res.status(201).json({
+                    message: "Successfully created an issue",
+                    data: newIssue
+                })
             }
         } else {
             throw new UnauthorizedError("Authentication failed")
