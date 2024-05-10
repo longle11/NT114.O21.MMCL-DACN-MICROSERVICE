@@ -1,8 +1,8 @@
 const natsWrapper = require("../../nats-wrapper")
 
-const issuePublisher = (data, type) => {
+const issuePublisher = async (data, type) => {
     data = JSON.stringify(data)
-    natsWrapper.client.publish(type, data, () => {
+    await natsWrapper.client.publish(type, data, () => {
         console.log(`Event ${type} is published`);
     })
 }

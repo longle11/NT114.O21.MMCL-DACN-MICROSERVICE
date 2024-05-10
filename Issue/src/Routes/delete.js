@@ -16,15 +16,16 @@ router.delete("/delete/:id", currentUserMiddleware, async (req, res, next) => {
             if (ids.includes(id)) {
                 const currentIssue = await issueModel.findById(id)
                 await issueModel.deleteOne({ _id: id })
+
                 //publish sự kiện để issue trong projectmanagement service
-                issuePublisher(currentIssue, "issue:deleted")
+                await issuePublisher(currentIssue, "issue:deleted")
 
                 if (currentIssue.comments.length > 0) {
                     //xoa cac comment cua issue
                     await commentModel.deleteMany({ _id: { $in: currentIssue.comments } })
 
                     //publish su kien xoa cac comment trong comment service
-                    issuePublisher(currentIssue.comments, 'issue-comment:deleted')
+                    await issuePublisher(currentIssue.comments, 'issue-comment:deleted')
                 }
                 return res.status(200).json({
                     message: "Successfully deleted this issue"

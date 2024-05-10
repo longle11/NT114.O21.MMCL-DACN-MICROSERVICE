@@ -36,10 +36,7 @@ router.put("/delete/assignee/:id", currentUserMiddleware, async (req, res, next)
 
                     if (listComments.length > 0) {
                         listComments = listComments.filter(ele => {
-                            if (ele?.creator.toString() === req.body.userId) {
-                                return true
-                            }
-                            return false
+                            return ele?.creator.toString() === req.body.userId
                         }).map(comment => comment._id)
                         
                         currentIssue.comments = currentIssue.comments.filter(comment => !listComments.some(c => c._id === comment._id))

@@ -10,8 +10,8 @@ const router = express.Router()
 router.post("/create", currentUserMiddleware, async (req, res, next) => {
     try {
         if (req.currentUser) {
-            const currentIssue = await issueModel.find({ shortSummary: req.body.shortSummary }).exec()
-            if (currentIssue.length === 0) {
+            const currentIssue = await issueModel.findOne({ shortSummary: req.body.shortSummary }).exec()
+            if (currentIssue === null) {
                 const newIssue = await issueModel.create(req.body)
 
                 const issueCopy = {
