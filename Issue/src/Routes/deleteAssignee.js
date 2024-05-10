@@ -15,8 +15,8 @@ router.put("/delete/assignee/:id", currentUserMiddleware, async (req, res, next)
             const ids = issueIds.map(issue => issue._id.toString());
             if (!ids.includes(id)) {
                 throw new BadRequestError("ID is invalid")
-            } else {
-                const currentIssue = await issueModel.findById(id).populate({ path: 'comments' })
+            }
+            const currentIssue = await issueModel.findById(id).populate({ path: 'comments' })
                 let listAssignees = currentIssue.assignees
                 const index = listAssignees.findIndex(ele => ele.toString() === req.body.userId)
                 if (index !== -1) {
@@ -36,36 +36,26 @@ router.put("/delete/assignee/:id", currentUserMiddleware, async (req, res, next)
 
                     if (listComments.length > 0) {
                         listComments = listComments.filter(ele => {
-                            if (ele?.creator.toString() === req.body.userId) {
-                                return true
-                            }
-                            return false
+                            return ele?.creator.toString() === req.body.userId
                         }).map(comment => comment._id)
                         
-                        for(let comment of listComments) {
-                            const index = currentIssue.comments.map(comment => comment._id).indexOf(comment)
-                            if(index !== -1) {
-                                currentIssue.comments.splice(index, 1)
-                            }
-                        }
+                        currentIssue.comments = currentIssue.comments.filter(comment => !listComments.some(c => c._id === comment._id))
+
                         await currentIssue.save()
                         //xoa cac comment cua issue
                         await commentModel.deleteMany({ _id: { $in: listComments } })
                         //publish su kien xoa cac comment trong comment service
-                        await issuePublisher(listComments, 'issue-comment:deleted')
+                        issuePublisher(listComments, 'issue-comment:deleted')
                     }
-                    await issuePublisher(copyIssue, 'issue:updated')
+                    issuePublisher(copyIssue, 'issue:updated')
                     return res.status(201).json({
                         message: "Successfully deleted user from this issue",
                         data: currentIssue
                     })
-                } else {
-                    throw new BadRequestError("User not found")
-                }
-            }
-        } else {
-            throw new UnauthorizedError("Authentication failed")
-        }
+                } 
+                throw new BadRequestError("User not found")
+        } 
+        throw new UnauthorizedError("Authentication failed")
     } catch (error) {
         next(error)
     }

@@ -16,6 +16,7 @@ router.delete("/delete/:id", currentUserMiddleware, async (req, res, next) => {
             if (ids.includes(id)) {
                 const currentIssue = await issueModel.findById(id)
                 await issueModel.deleteOne({ _id: id })
+
                 //publish sự kiện để issue trong projectmanagement service
                 await issuePublisher(currentIssue, "issue:deleted")
 
