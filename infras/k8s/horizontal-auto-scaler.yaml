@@ -69,4 +69,4 @@ spec:
     name: client-depl
   minReplicas: 1
   maxReplicas: 10
-  targetCPUUtilizationPercentage: 60
+  targetCPUUtilizationPercentage: 80
