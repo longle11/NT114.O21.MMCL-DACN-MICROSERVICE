@@ -28,7 +28,8 @@ router.post("/create", currentUserMiddleware, [
                 const { shortSummary } = req.body
                 const currentIssue = await issueModel.findOne({ shortSummary })
                 if (currentIssue === null) {
-                    const newIssue = await issueModel.create(req.body)
+                    const issue = new issueModel(req.body)
+                    const newIssue = await issue.save()
 
                     const issueCopy = {
                         _id: newIssue._id,
