@@ -24,14 +24,13 @@ const userSchema = new mongoose.Schema({
 const userModel = new mongoose.model('users', userSchema)
 
 userSchema.pre("save", function(next) {
-    if(this.isModified("password")) {
-        //tien hanh ma hoa 
-        const salt = bcrypt.genSaltSync(10)
-        this.password = bcrypt.hashSync(this.password, salt)
+    // if(this.isModified("password")) {
+    //     //tien hanh ma hoa 
+    //     const salt = bcrypt.genSaltSync(10)
+    //     this.password = bcrypt.hashSync(this.password, salt)
 
-        next()
-    }
-
+    //     next()
+    // }
     next()
 })
 

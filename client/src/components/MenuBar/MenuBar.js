@@ -1,9 +1,6 @@
 import React from 'react'
-import { NavLink, useNavigate } from 'react-router-dom';
-import { showNotificationWithIcon } from '../../util/NotificationUtil';
+import { NavLink } from 'react-router-dom';
 export default function MenuBar() {
-    const navigate = useNavigate()
-
     return (
         <div className="page-content">
             <div className='d-flex' style={{ height: '100%' }}>
@@ -15,7 +12,7 @@ export default function MenuBar() {
                         </div>
                         <div className="sidebar-content">
                             <ul className="lists p-0">
-                                <li className="list" style={{ pointerEvents: localStorage.getItem('projectid').length >= 10 ? "auto" : "none" }}>
+                                <li className="list" style={{ pointerEvents: localStorage.getItem('projectid')?.length >= 10 ? "auto" : "none" }}>
                                     <NavLink to={`/projectDetail/${localStorage.getItem('projectid')}`} className="nav-link">
                                         <i className="fa fa-home mr-3"></i>
                                         <span className="link">Dashboard</span>

@@ -2,6 +2,7 @@ name: test-projectmanagement
 
 on:
   pull_request:
+    types: [opened, synchronize, edited, ready_for_review]
     paths: 
       - "ProjectManagement/**"
 jobs:
@@ -9,4 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: cd ProjectManagement && npm install && npm run test:ci
+      - run: cd ProjectManagement && npm install && npm run test:coverage
+      # - name: SonarCloud Scan
+      #   uses: sonarsource/sonarcloud-github-action@master
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #   with:
+      #     projectBaseDir: ProjectManagement/
