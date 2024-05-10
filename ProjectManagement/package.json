@@ -6,7 +6,8 @@
   "scripts": {
     "start": "nodemon src/index.js",
     "test": "jest --watchAll --no-cache",
-    "test:ci": "jest"
+    "test:ci": "jest",
+    "test:coverage": "jest --coverage"
   },
   "jest": {
     "testEnvironment": "node",
