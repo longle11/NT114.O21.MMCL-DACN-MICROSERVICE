@@ -5,8 +5,6 @@ const currentUserMiddleware = require("../Middlewares/currentUser-Middleware")
 const UnauthorizedError = require('../Errors/UnAuthorized-Error')
 const router = express.Router()
 const { check, validationResult } = require('express-validator');
-const { default: mongoose } = require("mongoose")
-
 
 
 router.post("/create", currentUserMiddleware, [
@@ -24,7 +22,7 @@ router.post("/create", currentUserMiddleware, [
         }
 
         const { issueId, creator, content } = req.body
-        const result = await commentModel.create({ issueId, creator, content })
+        const result = await commentModel.create({ issueId, creator, content }).save()
         //public toi issue service
         commentPublisher("comment:created", result)
         res.status(201).json({
