@@ -18,7 +18,7 @@ app.use(cookieSession({
 app.use(bodyParser.json())
 app.use(cors({
     origin: ['https://nt533uitjiradev.click'],
-    methods: ['GET', 'POST']
+    methods: ['GET', 'POST', 'PUT', 'DELETE']
 }))
 
 app.use('/api/comments', require("./Routes/create"))
