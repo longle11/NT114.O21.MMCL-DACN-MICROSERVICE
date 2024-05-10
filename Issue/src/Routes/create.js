@@ -11,7 +11,6 @@ const router = express.Router()
 
 router.post("/create", currentUserMiddleware, [
     check('shortSummary')
-        .isEmpty().withMessage("shortSummary is not empty")
         .isLength({ min: 5 }).withMessage('must be at least 5 characters long'),
     check('timeSpent')
         .isInt({ min: 1 }).withMessage("timeSpent must be a integer number and greater than or equal to 1"),
