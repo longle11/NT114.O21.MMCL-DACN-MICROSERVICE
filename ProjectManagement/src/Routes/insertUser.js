@@ -20,19 +20,14 @@ router.post('/insert', currentUserMiddleware, async (req, res, next) => {
                 const isExisted = listMembers.findIndex(userId => userId.toString() === user_id)
                 if (isExisted === -1) {
                     listMembers.push(user_id)
-
-                    const updatedProject = await projectModel.updateOne(
-                        { "_id": project_id },
-                        { $set: { "members": listMembers } }
-                    ).exec()
+                    await db.collection("projects").updateOne({ "_id": project_id }, { $set: { "members": listMembers } }, (err, result) => {});
 
                     return res.status(200).json({
                         message: "Successfully added user in this project",
                         data: updatedProject
                     })
-                }else {
-                    throw new BadRequestError("User is already existed in this project")
                 }
+                throw new BadRequestError("User is already existed in this project")
             }
         } else {
             throw new UnauthorizedError("Authentication failed")

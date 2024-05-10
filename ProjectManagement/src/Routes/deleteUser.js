@@ -48,20 +48,15 @@ router.put('/delete/user/:id', currentUserMiddleware, async (req, res, next) => 
                             }
                         }
                     }
-
                     return res.status(200).json({
                         message: "Successfully deleted this user"
                     })
-                } else {
-                    throw new BadRequestError("User not found")
-                }
-
-            } else {
-                throw new BadRequestError("Project not found")
-            }
-        } else {
-            throw new UnauthorizedError("Authentication failed")
-        }
+                } 
+                throw new BadRequestError("User not found")
+            } 
+            throw new BadRequestError("Project not found")
+        } 
+        throw new UnauthorizedError("Authentication failed")
     } catch (error) {
         next(error)
     }
