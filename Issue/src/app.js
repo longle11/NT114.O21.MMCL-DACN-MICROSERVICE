@@ -5,10 +5,18 @@ const cookieSession = require("cookie-session")
 const errorHandler = require("./Middlewares/Error-handler")
 
 const app = express()
+app.disable('x-powered-by')
+
 app.use(bodyParser.json())
-app.use(cors())
+
+app.use(cors({
+    origin: ['https://nt533uitjiradev.click'],
+    methods: ['GET', 'POST']
+}))
 
 app.set('trust proxy', 1)
+
+
 
 app.use(cookieSession({
     signed: false,
