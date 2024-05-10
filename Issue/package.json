@@ -7,7 +7,7 @@
     "start": "nodemon src/index.js",
     "test": "jest --watchAll --detectOpenHandles --no-cache",
     "test:ci": "jest",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage --watchAll --detectOpenHandles"
   },
   "jest": {
     "testEnvironment": "node",

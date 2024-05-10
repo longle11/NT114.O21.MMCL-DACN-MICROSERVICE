@@ -6,14 +6,20 @@
   "scripts": {
     "start": "nodemon src/index.js",
     "test": "jest --watchAll --no-cache",
-    "test:ci": "jest",
     "test:coverage": "jest --coverage"
   },
   "jest": {
     "testEnvironment": "node",
     "setupFilesAfterEnv": [
       "./src/test/setup.js"
-    ]
+    ],
+    "collectCoverage": true,
+    "verbose": true,
+    "testTimeout": 30000,
+    "roots": [
+      "<rootDir>/src"
+    ],
+    "testRegex": "((\\.|/*.)(test))\\.js?$"
   },
   "keywords": [],
   "author": "",
