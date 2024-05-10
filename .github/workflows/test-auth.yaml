@@ -2,6 +2,7 @@ name: test-auth
 
 on:
   pull_request:
+    types: [opened, synchronize, edited, ready_for_review]
     paths:
       - "auth/**"
 jobs:
