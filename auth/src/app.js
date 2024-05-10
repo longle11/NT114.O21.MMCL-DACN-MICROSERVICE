@@ -4,8 +4,12 @@ const cors = require("cors")
 const errorHandler = require("./Middlewares/Error-handler")
 const cookieSession = require('cookie-session')
 const app = express()
+app.disable('x-powered-by')
 
-app.use(cors())
+app.use(cors({
+    origin: ['https://nt533uitjiradev.click'],
+    methods: ['GET', 'POST']
+}))
 app.use(bodyParser.json())
 
 app.set('trust proxy', 1) // trust first proxy
