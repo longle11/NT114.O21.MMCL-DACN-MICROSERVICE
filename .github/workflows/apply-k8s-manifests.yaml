@@ -54,6 +54,9 @@ jobs:
       - name: Deploy the AWS CloudWatch agent as a DaemonSet 
         run: kubectl apply -f https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/cwagent/cwagent-daemonset.yaml
 
+      - name: Deploy argocd yaml file
+        run: kubectl apply -f infras/argocd.yaml
+
       # - name: Apply k8s
       #   run: kubectl apply -f infras/k8s
 
