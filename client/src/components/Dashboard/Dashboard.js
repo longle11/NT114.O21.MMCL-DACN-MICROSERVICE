@@ -127,10 +127,10 @@ export default function Dashboard() {
             .sort((issue1, issue2) => issue1.priority - issue2.priority)
             .map((value, index) => {
                 return (<li key={value._id} className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }}>
+                    {/* eslint-disable-next-line */}
                     <div onClick={() => {
                         dispatch(getInfoIssue(value._id))
-                    }} onKeyDown={() => {}}
-                    role="button">
+                    }} onKeyDown={() => {}}>
                         {value.shortSummary}
                     </div>
                     <div className="block" style={{ display: 'flex' }}>
