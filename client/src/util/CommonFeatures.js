@@ -30,5 +30,16 @@ const iTagForPriorities = (priority) => {
         return <i className="fa-solid fa-arrow-down" style={{ color: '#57a55a', fontSize: '20px' }} />
     }
 }
-
-module.exports = {iTagForIssueTypes, iTagForPriorities}
+const priorityTypeOptions = [
+    { label: <>{iTagForPriorities(0)} Highest</>, value: 0 },
+    { label: <>{iTagForPriorities(1)} High</>, value: 1 },
+    { label: <>{iTagForPriorities(2)} Medium</>, value: 2 },
+    { label: <>{iTagForPriorities(3)} Low</>, value: 3 },
+    { label: <>{iTagForPriorities(4)} Lowest</>, value: 4 }
+]
+const issueTypeOptions = [
+    { label: <>{iTagForIssueTypes(0)} Story</>, value: 0 },
+    { label: <>{iTagForIssueTypes(1)} Task</>, value: 1 },
+    { label: <>{iTagForIssueTypes(2)} Bug</>, value: 2 }
+]
+module.exports = {iTagForIssueTypes, iTagForPriorities, priorityTypeOptions, issueTypeOptions}

@@ -7,7 +7,7 @@ import { withFormik } from 'formik';
 import { createIssue } from '../../redux/actions/IssueAction';
 import { submit_edit_form_action } from '../../redux/actions/DrawerAction';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
-import { iTagForIssueTypes, iTagForPriorities } from '../../util/CommonFeatures';
+import { priorityTypeOptions, issueTypeOptions } from '../../util/CommonFeatures';
 import PropTypes from 'prop-types';
 TaskForm.propTypes = {
     handleSubmit: PropTypes.func.isRequired,
@@ -31,18 +31,7 @@ function TaskForm(props) {
         setFieldValue('description', content)
     }
 
-    const priorityTypeOptions = [
-        { label: <>{iTagForPriorities(0)} Highest</>, value: 0 },
-        { label: <>{iTagForPriorities(1)} High</>, value: 1 },
-        { label: <>{iTagForPriorities(2)} Medium</>, value: 2 },
-        { label: <>{iTagForPriorities(3)} Low</>, value: 3 },
-        { label: <>{iTagForPriorities(4)} Lowest</>, value: 4 }
-    ]
-    const issueTypeOptions = [
-        { label: <>{iTagForIssueTypes(0)} Story</>, value: 0 },
-        { label: <>{iTagForIssueTypes(1)} Task</>, value: 1 },
-        { label: <>{iTagForIssueTypes(2)} Bug</>, value: 2 }
-    ]
+    
     const { id } = useParams()
 
     useEffect(() => {

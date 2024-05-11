@@ -11,7 +11,6 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
 import { deleteUserInProject } from '../../redux/actions/CreateProjectAction';
 export default function ProjectManager() {
-
     const dispatch = useDispatch()
     const listProject = useSelector(state => state.listProject.listProject)
     const listUser = useSelector(state => state.user.list)
