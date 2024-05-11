@@ -156,10 +156,7 @@ export default function InfoModal() {
             const isExisted = issueInfo?.assignees?.findIndex((user) => {
                 return user._id === value._id
             })
-            if (issueInfo?.creator._id === value._id || isExisted !== -1) {
-                return false
-            }
-            return true
+            return !(issueInfo?.creator._id === value._id || isExisted !== -1)
         }).map((value, index) => {
             return <Option key={value._id} value={value._id}>{value.username}</Option>
         })
@@ -334,7 +331,7 @@ export default function InfoModal() {
                                     <h6>ASSIGNEES</h6>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)' }}>
                                         {issueInfo?.assignees?.map((value, index) => {
-                                            return <div style={{ display: 'flex', alignItems: 'center', marginRight: '5px' }} className="item mt-2">
+                                            return <div key={value._id} style={{ display: 'flex', alignItems: 'center', marginRight: '5px' }} className="item mt-2">
                                                 <div className="avatar">
                                                     <Avatar key={value._id} src={value.avatar} />
                                                 </div>

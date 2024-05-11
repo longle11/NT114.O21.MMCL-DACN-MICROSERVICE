@@ -7,7 +7,5 @@ export const UserLoginTemplate = ({ Component }) => {
     useEffect(() => {
         dispatch(userLoggedInAction())
     }, [])
-    return <>
-        <Login />
-    </>
+    return <Login />
 } 

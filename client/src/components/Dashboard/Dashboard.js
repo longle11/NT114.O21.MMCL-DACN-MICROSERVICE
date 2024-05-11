@@ -107,10 +107,7 @@ export default function Dashboard() {
     const countEleStatus = (position, type) => {
         if (type === 1) {
             return projectInfo?.issues?.filter(issue => {
-                if ((issue.assignees.findIndex(value => value._id === userInfo.id) !== -1) || (issue.creator._id === userInfo.id)) {
-                    return true
-                }
-                return false
+                return (issue.assignees.findIndex(value => value._id === userInfo.id) !== -1) || (issue.creator._id === userInfo.id)
             }).filter(value => value.issueStatus === position).length
         }
         return projectInfo?.issues?.filter(value => value.issueStatus === position).length
@@ -121,10 +118,7 @@ export default function Dashboard() {
         let listIssues = projectInfo?.issues
         if (type === 1) {
             listIssues = listIssues?.filter(issue => {
-                if ((issue.assignees.findIndex(value => value._id === userInfo.id) !== -1) || (issue.creator._id === userInfo.id)) {
-                    return true
-                }
-                return false
+                return (issue.assignees.findIndex(value => value._id === userInfo.id) !== -1) || (issue.creator._id === userInfo.id)
             })
         }
         return listIssues?.filter(issue => {
@@ -132,7 +126,7 @@ export default function Dashboard() {
         })
             .sort((issue1, issue2) => issue1.priority - issue2.priority)
             .map((value, index) => {
-                return (<li key={index} className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }}>
+                return (<li key={value._id} className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }}>
                     <div onClick={() => {
                         dispatch(getInfoIssue(value._id))
                     }}>
@@ -149,9 +143,9 @@ export default function Dashboard() {
                                 {
                                     value?.assignees?.map((user, index) => {
                                         if (index === 3) {
-                                            return <Avatar key={index} size={40}>...</Avatar>
+                                            return <Avatar key={value._id} size={40}>...</Avatar>
                                         } else if (index <= 2) {
-                                            return <Avatar size={30} key={index} src={user.avatar} />
+                                            return <Avatar size={30} key={value._id} src={user.avatar} />
                                         }
                                         return null
                                     })
@@ -205,7 +199,7 @@ export default function Dashboard() {
                         //     </Popover>
                         // </div>
                         return <Popover content={() => {
-                            return <Table columns={memberColumns} rowKey={index} dataSource={projectInfo?.members} />
+                            return <Table columns={memberColumns} rowKey={value._id} dataSource={projectInfo?.members} />
                         }} title="Members">
                             <Avatar src={value.avatar} key={value._id} />
                         </Popover>

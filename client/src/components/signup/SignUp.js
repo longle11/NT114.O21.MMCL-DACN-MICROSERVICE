@@ -4,8 +4,19 @@ import { connect } from 'react-redux';
 import * as Yup from "yup";
 import { signUpUserAction } from '../../redux/actions/UserAction';
 import { NavLink } from 'react-router-dom';
-
+import PropTypes from 'prop-types';
+SignUp.propTypes = {
+    handleSubmit: PropTypes.func.isRequired,
+    handleChange: PropTypes.func.isRequired,
+    setFieldValue: PropTypes.func.isRequired,
+  };
 function SignUp(props) {
+    const {
+        handleChange,
+        handleSubmit,
+        errors
+    } = props;
+
     return (
         <section className="vh-100 bg-image" style={{ backgroundImage: 'url("https://mdbcdn.b-cdn.net/img/Photos/new-templates/search-box/img4.webp")' }}>
             <div className="mask d-flex align-items-center h-100 gradient-custom-3">
@@ -15,26 +26,26 @@ function SignUp(props) {
                             <div className="card" style={{ borderRadius: 15 }}>
                                 <div className="card-body p-5">
                                     <h2 className="text-uppercase text-center mb- text-primary">Create an account</h2>
-                                    <form onSubmit={props.handleSubmit}>
+                                    <form onSubmit={handleSubmit}>
                                         <div data-mdb-input-init className="form-outline mb-3">
                                             <label className="form-label" htmlFor="username">Username</label>
-                                            <input onChange={props.handleChange} type="text" id="username" className="form-control form-control-lg" placeholder='Input your username'/>
-                                            <span className='text-danger'>{props.errors.username}</span>
+                                            <input onChange={handleChange} type="text" id="username" className="form-control form-control-lg" placeholder='Input your username'/>
+                                            <span className='text-danger'>{errors.username}</span>
                                         </div>
                                         <div data-mdb-input-init className="form-outline mb-3">
                                             <label className="form-label" htmlFor="email">Email</label>
-                                            <input onChange={props.handleChange} type="email" id="email" className="form-control form-control-lg" placeholder='Input your email'/>
-                                            <span className='text-danger'>{props.errors.email}</span>
+                                            <input onChange={handleChange} type="email" id="email" className="form-control form-control-lg" placeholder='Input your email'/>
+                                            <span className='text-danger'>{errors.email}</span>
                                         </div>
                                         <div data-mdb-input-init className="form-outline mb-3">
                                             <label className="form-label" htmlFor="password">Password</label>
-                                            <input onChange={props.handleChange} type="password" id="password" className="form-control form-control-lg"  placeholder='Input your password'/>
-                                            <span className='text-danger'>{props.errors.password}</span>
+                                            <input onChange={handleChange} type="password" id="password" className="form-control form-control-lg"  placeholder='Input your password'/>
+                                            <span className='text-danger'>{errors.password}</span>
                                         </div>
                                         <div data-mdb-input-init className="form-outline mb-4">
                                             <label className="form-label" htmlFor="confirmpassword">Confirm your password</label>
-                                            <input onChange={props.handleChange} type="password" id="confirmpassword" className="form-control form-control-lg" placeholder='Confirm your password'/>
-                                            <span className='text-danger'>{props.errors.confirmpassword}</span>
+                                            <input onChange={handleChange} type="password" id="confirmpassword" className="form-control form-control-lg" placeholder='Confirm your password'/>
+                                            <span className='text-danger'>{errors.confirmpassword}</span>
                                         </div>
                                         <div className="d-flex justify-content-center">
                                             <button type="submit" data-mdb-button-init data-mdb-ripple-init className="btn btn-success btn-block btn-lg gradient-custom-4 text-body text-light">Register</button>

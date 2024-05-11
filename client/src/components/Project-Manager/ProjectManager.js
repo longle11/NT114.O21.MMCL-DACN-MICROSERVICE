@@ -110,7 +110,7 @@ export default function ProjectManager() {
                         <div>
                             {
                                 record.members?.slice(0, 3).map((user, index) => {
-                                    return <Popover content={() => {
+                                    return <Popover key={user._id} content={() => {
                                         const pos = record?.members.findIndex(user => user._id === record.creator._id)
                                         if (pos !== -1) {
                                             record?.members.splice(pos, 1)
@@ -119,9 +119,9 @@ export default function ProjectManager() {
                                         const newMembers = record?.members.map(value => {
                                             return { ...value, projectId: record._id }
                                         })
-                                        return <Table columns={memberColumns} rowKey={index} dataSource={newMembers} />
+                                        return <Table columns={memberColumns} rowKey={user._id} dataSource={newMembers} />
                                     }} title="Members">
-                                        <Avatar key={index} src={<img src={user.avatar} alt="avatar" />} />
+                                        <Avatar key={user._id} src={<img src={user.avatar} alt="avatar" />} />
                                     </Popover>
                                 })
                             }

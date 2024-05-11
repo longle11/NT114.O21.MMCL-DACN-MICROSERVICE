@@ -55,7 +55,7 @@ function FormEdit(props) {
                                     if (props?.list?.category.name === value.name) {
                                         return <option selected value={value._id} key={value._id}>{value.name}</option>
                                     }
-                                    return <option value={value._id} key={index}>{value.name}</option>
+                                    return <option value={value._id} key={value._id}>{value.name}</option>
                                 })}
                             </select>
                         </div>
