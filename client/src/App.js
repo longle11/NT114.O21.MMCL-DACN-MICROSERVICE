@@ -1,4 +1,3 @@
-import './App.css';
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { UserLoginTemplate } from './templates/UserLoginTemplate';
 import Login from './components/Login/Login';
