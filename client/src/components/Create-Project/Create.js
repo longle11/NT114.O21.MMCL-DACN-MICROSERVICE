@@ -6,11 +6,7 @@ import { getListCategories } from '../../redux/actions/CategoryAction';
 import { createProjectAction } from '../../redux/actions/CreateProjectAction';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
 import PropTypes from 'prop-types';
-Create.propTypes = {
-    handleSubmit: PropTypes.func.isRequired,
-    handleChange: PropTypes.func.isRequired,
-    setFieldValue: PropTypes.func.isRequired,
-  };
+
 function Create(props) {
     const { handleSubmit, handleChange, setFieldValue } = props;
     const handlEditorChange = (content, editor) => {
@@ -73,8 +69,11 @@ function Create(props) {
         </div>
     )
 }
-
-
+Create.propTypes = {
+    handleSubmit: PropTypes.func.isRequired,
+    handleChange: PropTypes.func.isRequired,
+    setFieldValue: PropTypes.func.isRequired,
+  };
 
 const handleCreateProject = withFormik({
     enableReinitialize: true,

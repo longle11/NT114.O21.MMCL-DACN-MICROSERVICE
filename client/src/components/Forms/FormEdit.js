@@ -6,17 +6,7 @@ import { submit_edit_form_action } from '../../redux/actions/DrawerAction';
 import { getListCategories } from '../../redux/actions/CategoryAction';
 import { updateItemCategory } from '../../redux/actions/EditCategoryAction';
 import PropTypes from 'prop-types';
-FormEdit.propTypes = {
-    handleSubmit: PropTypes.func.isRequired,
-    handleChange: PropTypes.func.isRequired,
-    setFieldValue: PropTypes.func.isRequired,
-    list: PropTypes.shape({
-        _id: PropTypes.objectOf(PropTypes.any),
-        nameProject: PropTypes.string,
-        description: PropTypes.string,
-        category: PropTypes.objectOf(PropTypes.any),
-    })
-};
+
 function FormEdit(props) {
     const handlEditorChange = (content, editor) => {
         setFieldValue('description', content)
@@ -92,7 +82,17 @@ function FormEdit(props) {
         </div>
     )
 }
-
+FormEdit.propTypes = {
+    handleSubmit: PropTypes.func.isRequired,
+    handleChange: PropTypes.func.isRequired,
+    setFieldValue: PropTypes.func.isRequired,
+    list: PropTypes.shape({
+        _id: PropTypes.objectOf(PropTypes.any),
+        nameProject: PropTypes.string,
+        description: PropTypes.string,
+        category: PropTypes.objectOf(PropTypes.any),
+    })
+};
 
 const handleSubmitForm = withFormik({
     enableReinitialize: true,
