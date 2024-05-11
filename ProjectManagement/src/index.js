@@ -50,5 +50,5 @@ connectToMongoDb()
 connectToNats()
 
 app.listen(4003, () => {
-    console.log("Listening on port 4003 ");
+    console.log("Listening on port 4003 updated");
 })

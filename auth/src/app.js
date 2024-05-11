@@ -8,7 +8,7 @@ app.disable('x-powered-by')
 
 app.use(cors({
     origin: ['https://nt533uitjiradev.click'],
-    methods: ['GET', 'POST']
+    methods: ['GET', 'POST', 'PUT', 'DELETE']
 }))
 app.use(bodyParser.json())
 
