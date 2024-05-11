@@ -127,11 +127,11 @@ export default function Dashboard() {
             .sort((issue1, issue2) => issue1.priority - issue2.priority)
             .map((value, index) => {
                 return (<li key={value._id} className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }}>
-                    <div tabIndex={0} onClick={() => {
+                    <button class="btn bg-transparent" onClick={() => {
                         dispatch(getInfoIssue(value._id))
                     }} onKeyDown={() => {}}>
                         {value.shortSummary}
-                    </div>
+                    </button>
                     <div className="block" style={{ display: 'flex' }}>
                         <div className="block-left">
                             {renderIssueType(value.issueType)}
