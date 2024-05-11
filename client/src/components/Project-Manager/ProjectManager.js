@@ -39,6 +39,34 @@ export default function ProjectManager() {
         }, 500)
     }
 
+    const renderPopupAddUser = (record) => {
+        return <AutoComplete
+            style={{ width: '100%' }}
+            onSearch={(value) => {
+                waitingUserPressKey()
+            }}
+            value={value}
+            onChange={(value) => {
+                setValue(value)
+            }}
+            defaultValue=''
+            options={listUser?.reduce((newListUser, user) => {
+                if (user._id !== userInfo.id) {
+                    return [...newListUser, { label: user.username, value: user._id }]
+                }
+                return newListUser
+            }, [])}
+            onSelect={(value, option) => {
+                setValue(option.label)
+                dispatch(insertUserIntoProject({
+                    project_id: record?._id,  //id cua project
+                    user_id: value   //id cua username
+                }))
+            }}
+            placeholder="input here"
+        />
+    }
+
     //su dung cho truong hien thi member
     const memberColumns = [
         {
@@ -100,9 +128,9 @@ export default function ProjectManager() {
                     </NavLink>
                 }
 
-                return <div onClick={() => {
+                return <button className='btn bg-transparent' onKeyDown={() => {}} onClick={() => {
                     showNotificationWithIcon('error', '', 'You have not participated in this project ')
-                }}>{record.nameProject}</div>
+                }}>{record.nameProject}</button>
             }
         },
         {
@@ -139,34 +167,7 @@ export default function ProjectManager() {
                                 })
                             }
                             {record.members?.length >= 3 ? <Avatar>...</Avatar> : ''}
-                            <Popover placement="right" title="Add User" content={() => {
-                                return <AutoComplete
-                                    style={{ width: '100%' }}
-                                    onSearch={(value) => {
-
-                                        waitingUserPressKey()
-                                    }}
-                                    value={value}
-                                    onChange={(value) => {
-                                        setValue(value)
-                                    }}
-                                    defaultValue=''
-                                    options={listUser?.reduce((newListUser, user) => {
-                                        if (user._id !== userInfo.id) {
-                                            return [...newListUser, { label: user.username, value: user._id }]
-                                        }
-                                        return newListUser
-                                    }, [])}
-                                    onSelect={(value, option) => {
-                                        setValue(option.label)
-                                        dispatch(insertUserIntoProject({
-                                            project_id: record?._id,  //id cua project
-                                            user_id: value   //id cua username
-                                        }))
-                                    }}
-                                    placeholder="input here"
-                                />
-                            }} trigger="click">
+                            <Popover placement="right" title="Add User" content={renderPopupAddUser(record)} trigger="click">
                                 <Avatar style={{ backgroundColor: '#87d068' }}>
                                     <i className="fa fa-plus"></i>
                                 </Avatar>

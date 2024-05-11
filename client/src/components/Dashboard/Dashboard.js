@@ -71,6 +71,14 @@ export default function Dashboard() {
         }
     ];
 
+    const renderAvatarMembers = (value, table) => {
+        return <Popover key={value._id} content={() => {
+            return <>{table}</>
+        }} title="Members">
+            <Avatar src={value.avatar} key={value._id} />
+        </Popover>
+    }
+
     const renderIssueType = (type) => {
         //0 la story
         if (type === 0) {
@@ -127,7 +135,7 @@ export default function Dashboard() {
             .sort((issue1, issue2) => issue1.priority - issue2.priority)
             .map((value, index) => {
                 return (<li key={value._id} className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }}>
-                    <button className="btn bg-transparent"  onClick={() => {
+                    <button className="btn bg-transparent" onClick={() => {
                         dispatch(getInfoIssue(value._id))
                     }} onKeyDown={() => {}}>
                         {value.shortSummary}
@@ -192,11 +200,7 @@ export default function Dashboard() {
                 <div className="avatar-group" style={{ display: 'flex' }}>
                     {projectInfo?.members?.map((value, index) => {
                         const table = <Table columns={memberColumns} rowKey={value._id} dataSource={projectInfo?.members} />
-                        return <Popover key={value._id} content={() => {
-                            return <>{table}</>
-                        }} title="Members">
-                            <Avatar src={value.avatar} key={value._id} />
-                        </Popover>
+                        return renderAvatarMembers(value, table)
                     })}
 
                     <Popover placement="right" title="Add User" content={() => {

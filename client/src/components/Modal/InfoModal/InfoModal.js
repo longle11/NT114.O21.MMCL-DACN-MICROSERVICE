@@ -109,13 +109,13 @@ export default function InfoModal() {
                                 {value.content}
                             </p>
                             {
-                                value.creator._id === userInfo.id ? (<button className="btn bg-transparent mb-2" onKeyDown={() => { }}><div onClick={() => {
+                                value.creator._id === userInfo.id ? (<div className="mb-2"><button className="btn bg-transparent mr-3" onClick={() => {
                                     setEditContentComment(value.content);
                                     setEditComment(value._id.toString());
-                                }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }} className='mr-3'>Edit</div>
+                                }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }}>Edit</button>
                                     <button className="btn bg-transparent" onKeyDown={() => { }} onClick={() => {
                                         dispatch(deleteCommentAction({ commentId: value._id.toString(), issueId: issueInfo?._id.toString() }));
-                                    }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }}>Delete</button></button>) : <div className='mt-3'></div>
+                                    }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }}>Delete</button></div>) : <div className='mt-3'></div>
 
                             }
                         </div>
@@ -245,13 +245,13 @@ export default function InfoModal() {
                                 <p className="issue" style={{ fontSize: '24px', fontWeight: 'bold' }}>{issueInfo?.shortSummary}</p>
                                 <div className="description">
                                     <p style={{ fontWeight: 'bold', fontSize: '15px' }}>Description</p>
-                                    {editDescription ? (<div onKeyDown={() => { }} onDoubleClick={() => {
+                                    {editDescription ? (<button className='btn bg-transparent' onKeyDown={() => { }} onDoubleClick={() => {
                                         if (issueInfo?.creator._id === userInfo.id) {
                                             setEditDescription(false)
                                         }
                                     }}>
                                         {renderContentModal()}
-                                    </div>) : (
+                                    </button>) : (
                                         <>
                                             <Editor name='description'
                                                 apiKey='golyll15gk3kpiy6p2fkqowoismjya59a44ly52bt1pf82oe'

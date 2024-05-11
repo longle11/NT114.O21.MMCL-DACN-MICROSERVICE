@@ -34,22 +34,24 @@ export default function MainPageTemplate({ Component }) {
         setIsModalOpen(false);
         navigate("/login")
     };
-    const content = isLoading ? (
-        status ? (
-            <div className='d-flex' style={{ overflow: 'hidden' }}>
-                <DrawerHOC />
-                <SideBar />
-                <MenuBar />
-                <div style={{ width: '100%' }} className='main'>
-                    <Component />
+    const content = () => {
+        if (isLoading) {
+            if (status) {
+                return <div className='d-flex' style={{ overflow: 'hidden' }}>
+                    <DrawerHOC />
+                    <SideBar />
+                    <MenuBar />
+                    <div style={{ width: '100%' }} className='main'>
+                        <Component />
+                    </div>
+                    <InfoModal />
                 </div>
-                <InfoModal />
-            </div>
-        ) : (
-            <Modal title="Thông báo" open={isModalOpen} onCancel={handleLogin} onOk={handleLogin} centered>
-                <p>Phiên đăng nhập của bạn đã hết hạn, vui lòng đăng nhập lại</p>
+            }
+            return <Modal title="Thông báo" open={isModalOpen} onCancel={handleLogin} onOk={handleLogin} centered>
+                <p>Your login session has expired, please log in again</p>
             </Modal>
-        )
-    ) : null;
-    return <>{content}</>
+        }
+        return null
+    }
+    return <>{content()}</>
 }
