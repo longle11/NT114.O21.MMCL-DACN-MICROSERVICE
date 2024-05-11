@@ -130,7 +130,7 @@ export default function Dashboard() {
                     <div onClick={() => {
                         dispatch(getInfoIssue(value._id))
                     }} onKeyDown={() => {}}
-                    role="presentation">
+                    role="button">
                         {value.shortSummary}
                     </div>
                     <div className="block" style={{ display: 'flex' }}>

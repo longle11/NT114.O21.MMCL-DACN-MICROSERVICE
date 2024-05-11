@@ -40,7 +40,7 @@ const SideBar = () => {
                                     </h6>
                                 </div>
                             </div>
-                            <div id="close-sidebar" onClick={closeSidebar}>
+                            <div id="close-sidebar" role='button' onKeyDown={() => {}} onClick={closeSidebar}>
                                 <i className="fas fa-times text-light" />
                             </div>
                         </div>

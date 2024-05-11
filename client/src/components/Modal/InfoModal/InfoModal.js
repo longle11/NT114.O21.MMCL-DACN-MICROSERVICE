@@ -73,6 +73,10 @@ export default function InfoModal() {
         }
     }
 
+    const renderContentModal = () => {
+        return issueInfo?.description.trim() !== '' ? Parser(`${issueInfo?.description}`) : issueInfo?.creator._id === userInfo.id ? <p style={{ color: 'blue' }}>Add Your Description</p> : <p>There is no description yet</p>
+    }
+
     const renderComments = () => {
         let listComments = issueInfo?.comments.map((value, index) => {
             return (<li className='comment d-flex' key={value._id}>
@@ -105,11 +109,11 @@ export default function InfoModal() {
                                 {value.content}
                             </p>
                             {
-                                value.creator._id === userInfo.id ? (<div className='mb-2'><div onClick={() => {
+                                value.creator._id === userInfo.id ? (<div role='button' onKeyDown={() => { }} className='mb-2'><div onClick={() => {
                                     setEditContentComment(value.content);
                                     setEditComment(value._id.toString());
                                 }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }} className='mr-3'>Edit</div>
-                                    <div onClick={() => {
+                                    <div role='button' onKeyDown={() => { }} onClick={() => {
                                         dispatch(deleteCommentAction({ commentId: value._id.toString(), issueId: issueInfo?._id.toString() }));
                                     }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }}>Delete</div></div>) : <div className='mt-3'></div>
 
@@ -241,12 +245,12 @@ export default function InfoModal() {
                                 <p className="issue" style={{ fontSize: '24px', fontWeight: 'bold' }}>{issueInfo?.shortSummary}</p>
                                 <div className="description">
                                     <p style={{ fontWeight: 'bold', fontSize: '15px' }}>Description</p>
-                                    {editDescription ? (<div onDoubleClick={() => {
+                                    {editDescription ? (<div role='button' onKeyDown={()=>{}} onDoubleClick={() => {
                                         if (issueInfo?.creator._id === userInfo.id) {
                                             setEditDescription(false)
                                         }
                                     }}>
-                                        {issueInfo?.description.trim() !== '' ? Parser(`${issueInfo?.description}`) : issueInfo?.creator._id === userInfo.id ? <p style={{ color: 'blue' }}>Add Your Description</p> : <p>There is no description yet</p>}
+                                        {renderContentModal()}
                                     </div>) : (
                                         <>
                                             <Editor name='description'
@@ -354,7 +358,7 @@ export default function InfoModal() {
                                                 <div style={{ display: 'flex', alignItems: 'center', width: '100px' }}>
 
                                                     <span className='text-primary mt-2 mb-2' style={{ fontSize: '12px', margin: '0px', cursor: 'pointer' }}>
-                                                        <i className="fa fa-plus" style={{ marginRight: 5 }} onClick={() => {
+                                                        <i className="fa fa-plus" style={{ marginRight: 5 }} role='button' onKeyDown={() => {}} onClick={() => {
                                                             setAddAssignee(false)
                                                         }} />Add more
                                                     </span>
@@ -426,6 +430,7 @@ export default function InfoModal() {
                                             <div className="progress">
                                                 <progress
                                                     className="progress-bar"
+                                                    onKeyDown={() => {}}
                                                     style={{ width: (issueInfo?.timeSpent / (issueInfo?.timeSpent + issueInfo?.timeRemaining)) * 100 + '%' }}
                                                     onDoubleClick={() => {
                                                         setTime(true);
