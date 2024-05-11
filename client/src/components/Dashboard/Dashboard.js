@@ -129,7 +129,8 @@ export default function Dashboard() {
                 return (<li key={value._id} className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }}>
                     <div onClick={() => {
                         dispatch(getInfoIssue(value._id))
-                    }} onKeyDown={() => {}}>
+                    }} onKeyDown={() => {}}
+                    role="presentation">
                         {value.shortSummary}
                     </div>
                     <div className="block" style={{ display: 'flex' }}>
