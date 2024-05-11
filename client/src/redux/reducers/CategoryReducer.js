@@ -5,13 +5,9 @@ const initialState = {
 }
 /* eslint-disable import/no-anonymous-default-export */
 export default (state = initialState, action) => {
-    switch (action.type) {
-
-        case GET_CATEGORY_API:
-            state.categoryList = action.data
-            return { ...state }
-
-        default:
-            return state
+    if (action.type === GET_CATEGORY_API) {
+        state.categoryList = action.data
+        return { ...state }
     }
+    return state
 }

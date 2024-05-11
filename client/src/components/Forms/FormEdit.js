@@ -11,7 +11,7 @@ FormEdit.propTypes = {
     handleChange: PropTypes.func.isRequired,
     setFieldValue: PropTypes.func.isRequired,
     list: PropTypes.shape({
-        id: PropTypes.objectOf(PropTypes.any),
+        _id: PropTypes.objectOf(PropTypes.any),
         nameProject: PropTypes.string,
         description: PropTypes.string,
         category: PropTypes.objectOf(PropTypes.any),

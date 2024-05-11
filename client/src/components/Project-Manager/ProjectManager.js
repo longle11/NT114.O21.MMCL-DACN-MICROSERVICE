@@ -143,7 +143,7 @@ export default function ProjectManager() {
                                 return <AutoComplete
                                     style={{ width: '100%' }}
                                     onSearch={(value) => {
-                                        
+
                                         waitingUserPressKey()
                                     }}
                                     value={value}
@@ -174,7 +174,7 @@ export default function ProjectManager() {
                         </div>) : (
                         <div>
                             {record.members?.slice(0, 3).map((user, index) => {
-                                return <Avatar key={index} src={<img src={user.avatar} alt="avatar" />} />
+                                return <Avatar key={user._id} src={<img src={user.avatar} alt="avatar" />} />
                             })}
                             {record.members?.length >= 3 ? <Avatar>...</Avatar> : ''}
                         </div>)
@@ -218,23 +218,21 @@ export default function ProjectManager() {
         }
     ];
     return (
-        <>
-            <div className='container-fluid'>
-                <div className="header">
-                    <nav aria-label="breadcrumb">
-                        <ol className="breadcrumb" style={{ backgroundColor: 'white' }}>
-                            <li className="breadcrumb-item">Project</li>
-                            <li className="breadcrumb-item active" aria-current="page">
-                                Project management
-                            </li>
-                        </ol>
-                    </nav>
-                </div>
-                <h3>Project management</h3>
-                <div className="content">
-                    <Table columns={columns} rowKey={"id"} dataSource={listProject} />
-                </div>
+        <div className='container-fluid'>
+            <div className="header">
+                <nav aria-label="breadcrumb">
+                    <ol className="breadcrumb" style={{ backgroundColor: 'white' }}>
+                        <li className="breadcrumb-item">Project</li>
+                        <li className="breadcrumb-item active" aria-current="page">
+                            Project management
+                        </li>
+                    </ol>
+                </nav>
             </div>
-        </>
+            <h3>Project management</h3>
+            <div className="content">
+                <Table columns={columns} rowKey={"id"} dataSource={listProject} />
+            </div>
+        </div>
     )
 }
