@@ -7,6 +7,7 @@ on:
     paths:
       - "infras/k8s/**"
       - "infras/cloud_watch/**"
+      - "infras/argocd.yaml"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -53,8 +54,8 @@ jobs:
       - name: Deploy the AWS CloudWatch agent as a DaemonSet 
         run: kubectl apply -f https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/cwagent/cwagent-daemonset.yaml
 
-      - name: Apply k8s
-        run: kubectl apply -f infras/k8s
+      # - name: Apply k8s
+      #   run: kubectl apply -f infras/k8s
 
 
       

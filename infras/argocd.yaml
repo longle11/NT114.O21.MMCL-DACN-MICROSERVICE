@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubernetes-argocd
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/longle11/NT114.O21.MMCL-DACN-MICROSERVICE
+    targetRevision: HEAD
+    path: infras/k8s
+  destination: 
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
