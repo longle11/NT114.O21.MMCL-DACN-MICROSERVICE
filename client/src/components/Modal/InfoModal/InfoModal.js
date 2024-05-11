@@ -109,13 +109,13 @@ export default function InfoModal() {
                                 {value.content}
                             </p>
                             {
-                                value.creator._id === userInfo.id ? (<div role='button' onKeyDown={() => { }} className='mb-2'><div onClick={() => {
+                                value.creator._id === userInfo.id ? (<button className="btn bg-transparent mb-2" onKeyDown={() => { }}><div onClick={() => {
                                     setEditContentComment(value.content);
                                     setEditComment(value._id.toString());
                                 }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }} className='mr-3'>Edit</div>
-                                    <div role='button' onKeyDown={() => { }} onClick={() => {
+                                    <button className="btn bg-transparent" onKeyDown={() => { }} onClick={() => {
                                         dispatch(deleteCommentAction({ commentId: value._id.toString(), issueId: issueInfo?._id.toString() }));
-                                    }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }}>Delete</div></div>) : <div className='mt-3'></div>
+                                    }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }}>Delete</button></button>) : <div className='mt-3'></div>
 
                             }
                         </div>
@@ -245,7 +245,7 @@ export default function InfoModal() {
                                 <p className="issue" style={{ fontSize: '24px', fontWeight: 'bold' }}>{issueInfo?.shortSummary}</p>
                                 <div className="description">
                                     <p style={{ fontWeight: 'bold', fontSize: '15px' }}>Description</p>
-                                    {editDescription ? (<div role='button' onKeyDown={()=>{}} onDoubleClick={() => {
+                                    {editDescription ? (<div onKeyDown={() => { }} onDoubleClick={() => {
                                         if (issueInfo?.creator._id === userInfo.id) {
                                             setEditDescription(false)
                                         }
@@ -356,12 +356,11 @@ export default function InfoModal() {
                                         {
                                             issueInfo?.creator._id === userInfo.id ? (
                                                 <div style={{ display: 'flex', alignItems: 'center', width: '100px' }}>
-
-                                                    <span className='text-primary mt-2 mb-2' style={{ fontSize: '12px', margin: '0px', cursor: 'pointer' }}>
-                                                        <i className="fa fa-plus" style={{ marginRight: 5 }} role='button' onKeyDown={() => {}} onClick={() => {
-                                                            setAddAssignee(false)
-                                                        }} />Add more
-                                                    </span>
+                                                    <button onKeyDown={() => { }} className='text-primary mt-2 mb-2 btn bg-transparent' style={{ fontSize: '12px', margin: '0px', cursor: 'pointer' }} onClick={() => {
+                                                        setAddAssignee(false)
+                                                    }} >
+                                                        <i className="fa fa-plus" style={{ marginRight: 5 }} />Add more
+                                                    </button>
                                                 </div>
                                             ) : <></>
                                         }
@@ -430,7 +429,7 @@ export default function InfoModal() {
                                             <div className="progress">
                                                 <progress
                                                     className="progress-bar"
-                                                    onKeyDown={() => {}}
+                                                    onKeyDown={() => { }}
                                                     style={{ width: (issueInfo?.timeSpent / (issueInfo?.timeSpent + issueInfo?.timeRemaining)) * 100 + '%' }}
                                                     onDoubleClick={() => {
                                                         setTime(true);
