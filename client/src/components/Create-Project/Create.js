@@ -5,9 +5,16 @@ import { connect, useDispatch, useSelector } from 'react-redux';
 import { getListCategories } from '../../redux/actions/CategoryAction';
 import { createProjectAction } from '../../redux/actions/CreateProjectAction';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
+import PropTypes from 'prop-types';
+Create.propTypes = {
+    handleSubmit: PropTypes.func.isRequired,
+    handleChange: PropTypes.func.isRequired,
+    setFieldValue: PropTypes.func.isRequired,
+  };
 function Create(props) {
+    const { handleSubmit, handleChange, setFieldValue } = props;
     const handlEditorChange = (content, editor) => {
-        props.setFieldValue('description', content)
+        setFieldValue('description', content)
     }
     const dispatch = useDispatch()
     const categoryList = useSelector(state => state.categories.categoryList)
@@ -30,10 +37,10 @@ function Create(props) {
             </div>
             <h3>Create Project</h3>
             <div className="info">
-                <form onSubmit={props.handleSubmit}>
+                <form onSubmit={handleSubmit}>
                     <div className='form-group'>
                         <p>Name</p>
-                        <input onChange={props.handleChange} className='form-control' name='nameProject' />
+                        <input onChange={handleChange} className='form-control' name='nameProject' />
                     </div>
                     <div className='form-group'>
                         <p>Description</p>
@@ -54,9 +61,9 @@ function Create(props) {
                         />
                     </div>
                     <div className='form-group'>
-                        <select name='category' className='form-control' onChange={props.handleChange} >
+                        <select name='category' className='form-control' onChange={handleChange} >
                             {categoryList.map((value, index) => {
-                                return <option value={value._id} key={index}>{value.name}</option>
+                                return <option value={value._id} key={value.id}>{value.name}</option>
                             })}
                         </select>
                     </div>
@@ -66,6 +73,7 @@ function Create(props) {
         </div>
     )
 }
+
 
 
 const handleCreateProject = withFormik({

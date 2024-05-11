@@ -75,7 +75,7 @@ export default function InfoModal() {
 
     const renderComments = () => {
         let listComments = issueInfo?.comments.map((value, index) => {
-            return (<li className='comment d-flex' key={index}>
+            return (<li className='comment d-flex' key={value._id}>
                 <div className="avatar">
                     <Avatar src={value.creator.avatar} size={40} />
                 </div>
@@ -156,15 +156,12 @@ export default function InfoModal() {
             const isExisted = issueInfo?.assignees?.findIndex((user) => {
                 return user._id === value._id
             })
-            if (isExisted !== -1) {
-                return false
-            }
-            if (issueInfo?.creator._id === value._id) {
+            if (issueInfo?.creator._id === value._id || isExisted !== -1) {
                 return false
             }
             return true
         }).map((value, index) => {
-            return <Option value={value._id}>{value.username}</Option>
+            return <Option key={value._id} value={value._id}>{value.username}</Option>
         })
     }
 
@@ -247,13 +244,13 @@ export default function InfoModal() {
                                 <p className="issue" style={{ fontSize: '24px', fontWeight: 'bold' }}>{issueInfo?.shortSummary}</p>
                                 <div className="description">
                                     <p style={{ fontWeight: 'bold', fontSize: '15px' }}>Description</p>
-                                    {editDescription ? (<p tabIndex={0} onDoubleClick={() => {
+                                    {editDescription ? (<div onDoubleClick={() => {
                                         if (issueInfo?.creator._id === userInfo.id) {
                                             setEditDescription(false)
                                         }
                                     }}>
                                         {issueInfo?.description.trim() !== '' ? Parser(`${issueInfo?.description}`) : issueInfo?.creator._id === userInfo.id ? <p style={{ color: 'blue' }}>Add Your Description</p> : <p>There is no description yet</p>}
-                                    </p>) : (
+                                    </div>) : (
                                         <>
                                             <Editor name='description'
                                                 apiKey='golyll15gk3kpiy6p2fkqowoismjya59a44ly52bt1pf82oe'
@@ -339,7 +336,7 @@ export default function InfoModal() {
                                         {issueInfo?.assignees?.map((value, index) => {
                                             return <div style={{ display: 'flex', alignItems: 'center', marginRight: '5px' }} className="item mt-2">
                                                 <div className="avatar">
-                                                    <Avatar src={value.avatar} />
+                                                    <Avatar key={value._id} src={value.avatar} />
                                                 </div>
                                                 <p className="name d-flex align-items-center ml-1" style={{ fontWeight: 'bold' }}>
                                                     {value.username}
@@ -361,10 +358,10 @@ export default function InfoModal() {
                                             issueInfo?.creator._id === userInfo.id ? (
                                                 <div style={{ display: 'flex', alignItems: 'center', width: '100px' }}>
 
-                                                    <span tabIndex={0} onClick={() => {
+                                                    <span className='text-primary mt-2 mb-2' style={{ fontSize: '12px', margin: '0px', cursor: 'pointer' }}>
+                                                        <i className="fa fa-plus" style={{ marginRight: 5 }} onClick={() => {
                                                         setAddAssignee(false)
-                                                    }} className='text-primary mt-2 mb-2' style={{ fontSize: '12px', margin: '0px', cursor: 'pointer' }}>
-                                                        <i className="fa fa-plus" style={{ marginRight: 5 }} />Add more
+                                                    }} />Add more
                                                     </span>
                                                 </div>
                                             ) : <></>
@@ -449,7 +446,7 @@ export default function InfoModal() {
                                                 <div>
                                                     <div className='row'>
                                                         <div className='col-6 p-0'>
-                                                            <label>Time spent</label>
+                                                            <label htmlFor='timeSpent'>Time spent</label>
                                                             <InputNumber value={issueInfo?.timeSpent} name="timeSpent" min={0} onChange={(value) => {
                                                                 setTrackingTime({
                                                                     timeSpent: value,
@@ -458,7 +455,7 @@ export default function InfoModal() {
                                                             }} />
                                                         </div>
                                                         <div className='col-6 p-0 text-center'>
-                                                            <label>Time remaining</label>
+                                                            <label htmlFor='timeRemaining'>Time remaining</label>
                                                             <InputNumber value={issueInfo?.timeRemaining} min={0} defaultValue={0} name="timeRemaining" onChange={(value) => {
                                                                 setTrackingTime({
                                                                     timeRemaining: value,

@@ -13,6 +13,7 @@
     "formik": "^2.4.5",
     "html-react-parser": "^5.1.8",
     "luxon": "^3.4.4",
+    "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-highlight-words": "^0.20.0",

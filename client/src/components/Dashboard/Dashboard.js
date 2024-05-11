@@ -25,13 +25,13 @@ export default function Dashboard() {
     const search = useRef(null)
 
     useEffect(() => {
-        if(typeof localStorage.getItem('projectid') === 'string' && localStorage.getItem('projectid').length >= 8) {
+        if (typeof localStorage.getItem('projectid') === 'string' && localStorage.getItem('projectid').length >= 8) {
             localStorage.setItem('projectid', projectInfo?._id)
-        }else {
+        } else {
             localStorage.setItem('projectid', null)
             showNotificationWithIcon('error', 'Vui lòng tham gia vào dự án trước')
             navigate('/manager')
-        } 
+        }
     }, [])
 
     //su dung cho truong hien thi member
@@ -107,9 +107,7 @@ export default function Dashboard() {
     const countEleStatus = (position, type) => {
         if (type === 1) {
             return projectInfo?.issues?.filter(issue => {
-                if (issue.assignees.findIndex(value => value._id === userInfo.id) !== -1) {
-                    return true
-                } else if (issue.creator._id === userInfo.id) {
+                if ((issue.assignees.findIndex(value => value._id === userInfo.id) !== -1) || (issue.creator._id === userInfo.id)) {
                     return true
                 }
                 return false
@@ -123,28 +121,23 @@ export default function Dashboard() {
         let listIssues = projectInfo?.issues
         if (type === 1) {
             listIssues = listIssues?.filter(issue => {
-                if (issue.assignees.findIndex(value => value._id === userInfo.id) !== -1) {
-                    return true
-                } else if (issue.creator._id === userInfo.id) {
+                if ((issue.assignees.findIndex(value => value._id === userInfo.id) !== -1) || (issue.creator._id === userInfo.id)) {
                     return true
                 }
                 return false
             })
         }
         return listIssues?.filter(issue => {
-            if (issue.issueStatus === position) {
-                return true
-            }
-            return false
+            return issue.issueStatus === position
         })
             .sort((issue1, issue2) => issue1.priority - issue2.priority)
             .map((value, index) => {
-                return (<li tabIndex={0} className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }} onClick={() => {
-                    dispatch(getInfoIssue(value._id))
-                }}>
-                    <p>
+                return (<li key={index} className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }}>
+                    <div onClick={() => {
+                        dispatch(getInfoIssue(value._id))
+                    }}>
                         {value.shortSummary}
-                    </p>
+                    </div>
                     <div className="block" style={{ display: 'flex' }}>
                         <div className="block-left">
                             {renderIssueType(value.issueType)}
@@ -156,7 +149,7 @@ export default function Dashboard() {
                                 {
                                     value?.assignees?.map((user, index) => {
                                         if (index === 3) {
-                                            return <Avatar size={40}>...</Avatar>
+                                            return <Avatar key={index} size={40}>...</Avatar>
                                         } else if (index <= 2) {
                                             return <Avatar size={30} key={index} src={user.avatar} />
                                         }
@@ -204,13 +197,18 @@ export default function Dashboard() {
                 </div>
                 <div className="avatar-group" style={{ display: 'flex' }}>
                     {projectInfo?.members?.map((value, index) => {
-                        return <div className="avatar">
-                            <Popover content={() => {
-                                return <Table columns={memberColumns} rowKey={index} dataSource={projectInfo?.members} />
-                            }} title="Members">
-                                <Avatar src={value.avatar} key={index} />
-                            </Popover>
-                        </div>
+                        // return <div key={index} className="avatar">
+                        //     <Popover content={() => {
+                        //         return <Table columns={memberColumns} rowKey={index} dataSource={projectInfo?.members} />
+                        //     }} title="Members">
+                        //         <Avatar src={value.avatar} key={index} />
+                        //     </Popover>
+                        // </div>
+                        return <Popover content={() => {
+                            return <Table columns={memberColumns} rowKey={index} dataSource={projectInfo?.members} />
+                        }} title="Members">
+                            <Avatar src={value.avatar} key={value._id} />
+                        </Popover>
                     })}
 
                     <Popover placement="right" title="Add User" content={() => {

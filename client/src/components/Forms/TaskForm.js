@@ -7,7 +7,14 @@ import { withFormik } from 'formik';
 import { createIssue } from '../../redux/actions/IssueAction';
 import { submit_edit_form_action } from '../../redux/actions/DrawerAction';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
+import PropTypes from 'prop-types';
+TaskForm.propTypes = {
+    handleSubmit: PropTypes.func.isRequired,
+    handleChange: PropTypes.func.isRequired,
+    setFieldValue: PropTypes.func.isRequired
+};
 function TaskForm(props) {
+    const { handleChange, handleSubmit, setFieldValue } = props
     //theo doi thoi gian cua 1 task
     const [timeTracking, setTimeTracking] = useState({
         timeSpent: 0,
@@ -16,7 +23,7 @@ function TaskForm(props) {
     const userInfo = useSelector(state => state.user.userInfo)
 
     const handlEditorChange = (content, editor) => {
-        props.setFieldValue('description', content)
+        setFieldValue('description', content)
     }
     const iTagForIssueTypes = (type) => {
         //0 la story
@@ -69,40 +76,40 @@ function TaskForm(props) {
     useEffect(() => {
         if (id !== undefined) {
             //thiet lap id project cho withformik
-            props.setFieldValue('projectId', id)
+            setFieldValue('projectId', id)
             // //submit sự kiện để gửi lên form
-            dispatch(submit_edit_form_action(props.handleSubmit))
+            dispatch(submit_edit_form_action(handleSubmit))
         }
     }, [])
     const dispatch = useDispatch()
     return (
         <div className='container-fluid'>
-            <form onSubmit={props.handleSubmit}>
+            <form onSubmit={handleSubmit}>
                 <div className='row'>
-                    <label>Project Name</label>
-                    <Input value={props?.projectInfo?.nameProject} disabled />
+                    <label htmlFor='nameProject'>Project Name</label>
+                    <Input value={props.projectInfo?.nameProject} disabled name='nameProject' />
                 </div>
                 <div className='row mt-2'>
                     <div className='col-6 p-0 pr-5'>
-                        <label>Issue Type</label>
+                        <label htmlFor='issueType'>Issue Type</label>
                         <Select
                             defaultValue={issueTypeOptions[0]}
                             style={{ width: '100%' }}
                             options={issueTypeOptions}
                             onSelect={(value, option) => {
-                                props.setFieldValue('issueType', value)
+                                setFieldValue('issueType', value)
                             }}
                             name="issueType"
                         />
                     </div>
                     <div className='col-6 p-0'>
-                        <label>Priority</label>
+                        <label htmlFor='priority'>Priority</label>
                         <Select
-                            defaultValue={priorityTypeOptions[0]}          
+                            defaultValue={priorityTypeOptions[0]}
                             style={{ width: '100%' }}
                             options={priorityTypeOptions}
                             onSelect={(value, option) => {
-                                props.setFieldValue('priority', value)
+                                setFieldValue('priority', value)
                             }}
                             name="priority"
                         />
@@ -110,12 +117,12 @@ function TaskForm(props) {
                 </div>
 
                 <div className='row mt-2'>
-                    <label>Short summary <span style={{color: 'red'}}>(*)</span></label>
-                    <Input placeholder="Input content" onChange={props.handleChange} name="shortSummary" />
+                    <label htmlFor='shortSummary'>Short summary <span style={{ color: 'red' }}>(*)</span></label>
+                    <Input placeholder="Input content" onChange={handleChange} name="shortSummary" />
                 </div>
 
                 <div className='row mt-2 d-flex flex-column'>
-                    <label>Description</label>
+                    <label htmlFor='description'>Description</label>
                     <Editor name='description'
                         apiKey='golyll15gk3kpiy6p2fkqowoismjya59a44ly52bt1pf82oe'
                         init={{
@@ -134,23 +141,23 @@ function TaskForm(props) {
                 </div>
                 <div className='row mt-2'>
                     <div className='col-6 p-0 pr-4'>
-                        <label>Assignees</label>
+                        <label htmlFor='assignees'>Assignees</label>
                         <Select mode={'multiple'}
                             style={{ width: '100%' }}
-                            options={props?.projectInfo?.members?.filter(value => value._id !== userInfo.id).map(value => {
+                            options={props.projectInfo?.members?.filter(value => value._id !== userInfo.id).map(value => {
                                 return { label: value.username, value: value._id }
                             })}
                             placeholder={'Select Item...'}
                             maxTagCount={'responsive'}
                             onChange={(value) => {
-                                props.setFieldValue('assignees', value)
+                                setFieldValue('assignees', value)
                             }}
                             name="assignees"
                         />
                     </div>
                     <div className='col-6 p-0'>
-                        <label>Time Tracking</label>
-                        <Slider defaultValue={0} value={timeTracking.timeSpent} max={timeTracking.timeRemaining + timeTracking.timeSpent} />
+                        <label htmlFor='totalTime'>Time Tracking</label>
+                        <Slider name="totalTime" defaultValue={0} value={timeTracking.timeSpent} max={timeTracking.timeRemaining + timeTracking.timeSpent} />
                         <div className='row'>
                             <span className='col-6 text-left'>{timeTracking.timeSpent} logged</span>
                             <span className='col-6 text-right'>{timeTracking.timeRemaining} remaining</span>
@@ -160,32 +167,32 @@ function TaskForm(props) {
 
                 <div className='row mt-2'>
                     <div className='col-6 p-0 pr-4'>
-                        <label>Original Estimate (Hours) <span style={{color: 'red'}}>(*)</span></label>
+                        <label htmlFor='timeOriginalEstimate'>Original Estimate (Hours) <span style={{ color: 'red' }}>(*)</span></label>
                         <InputNumber min={0} defaultValue={0} style={{ width: '100%' }} onChange={(value) => {
-                            props.setFieldValue('timeOriginalEstimate', value)
+                            setFieldValue('timeOriginalEstimate', value)
                         }} name="timeOriginalEstimate" />
                     </div>
                     <div className='col-6 p-0'>
                         <div className='row'>
                             <div className='col-6  pr-4'>
-                                <label>Time spent <span style={{color: 'red'}}>(*)</span></label>
+                                <label htmlFor='timeSpent'>Time spent <span style={{ color: 'red' }}>(*)</span></label>
                                 <InputNumber value={timeTracking.timeSpent} name="timeSpent" min={0} onChange={(value) => {
                                     setTimeTracking({
                                         ...timeTracking,
                                         timeSpent: value
                                     })
 
-                                    props.setFieldValue('timeSpent', value)
+                                    setFieldValue('timeSpent', value)
                                 }} />
                             </div>
                             <div className='col-6 p-0'>
-                                <label>Time remaining <span style={{color: 'red'}}>(*)</span></label>
+                                <label htmlFor='timeRemaining'>Time remaining <span style={{ color: 'red' }}>(*)</span></label>
                                 <InputNumber value={timeTracking.timeRemaining} min={0} name="timeRemaining" onChange={(value) => {
                                     setTimeTracking({
                                         ...timeTracking,
                                         timeRemaining: value
                                     })
-                                    props.setFieldValue('timeRemaining', value)
+                                    setFieldValue('timeRemaining', value)
                                 }} />
                             </div>
                         </div>
@@ -199,8 +206,8 @@ const handleSubmitTaskForm = withFormik({
     enableReinitialize: true,
     mapPropsToValues: (props) => {
         return {
-            projectId: props?.projectInfo?._id,
-            creator: props?.userInfo?.id,
+            projectId: props.projectInfo?._id,
+            creator: props.userInfo?.id,
             issueType: 0,
             priority: 0,
             shortSummary: '',
@@ -215,12 +222,13 @@ const handleSubmitTaskForm = withFormik({
         }
     },
     handleSubmit: (values, { props, setSubmitting }) => {
+        console.log(values);
         let checkSubmit = true
-        if(values.shortSummary.trim() === '' || values.timeOriginalEstimate === 0 || values.timeSpent === 0 || values.timeRemaining === 0) {
+        if (values.shortSummary.trim() === '' || values.timeOriginalEstimate === 0 || values.timeSpent === 0 || values.timeRemaining === 0) {
             checkSubmit = false
             showNotificationWithIcon('error', 'Create Issue', 'Fields containing (*) can\'t left blank')
         }
-        if(checkSubmit) {
+        if (checkSubmit) {
             props.dispatch(createIssue(values))
         }
     },
