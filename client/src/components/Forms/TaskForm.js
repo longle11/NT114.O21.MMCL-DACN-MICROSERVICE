@@ -11,7 +11,11 @@ import PropTypes from 'prop-types';
 TaskForm.propTypes = {
     handleSubmit: PropTypes.func.isRequired,
     handleChange: PropTypes.func.isRequired,
-    setFieldValue: PropTypes.func.isRequired
+    setFieldValue: PropTypes.func.isRequired,
+    projectInfo: PropTypes.shape({
+        nameProject: PropTypes.string,
+        members: PropTypes.array
+    })
 };
 function TaskForm(props) {
     const { handleChange, handleSubmit, setFieldValue } = props

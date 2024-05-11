@@ -9,7 +9,10 @@ import PropTypes from 'prop-types';
 Login.propTypes = {
     handleSubmit: PropTypes.func.isRequired,
     handleChange: PropTypes.func.isRequired,
-    setFieldValue: PropTypes.func.isRequired,
+    errors: PropTypes.shape({
+        email: PropTypes.string,
+        password: PropTypes.string
+    }),
 };
 function Login(props) {
     const {

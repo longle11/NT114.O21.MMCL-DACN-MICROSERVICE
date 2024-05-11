@@ -10,7 +10,13 @@ FormEdit.propTypes = {
     handleSubmit: PropTypes.func.isRequired,
     handleChange: PropTypes.func.isRequired,
     setFieldValue: PropTypes.func.isRequired,
-  };
+    list: PropTypes.shape({
+        id: PropTypes.objectOf(PropTypes.any),
+        nameProject: PropTypes.string,
+        description: PropTypes.string,
+        category: PropTypes.objectOf(PropTypes.any),
+    })
+};
 function FormEdit(props) {
     const handlEditorChange = (content, editor) => {
         setFieldValue('description', content)
