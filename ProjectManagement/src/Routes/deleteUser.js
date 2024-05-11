@@ -33,7 +33,7 @@ router.put('/delete/user/:id', currentUserMiddleware, async (req, res, next) => 
                             if (issue.creator.toString() === req.body.userId) {
                                 await issueModel.deleteOne({ _id: issue._id })
 
-                                await projectManagementPublisher({ issue, userId: req.body.userId }, "projectManagement:updated")
+                                projectManagementPublisher({ issue, userId: req.body.userId }, "projectManagement:updated")
                             } else {
                                 const index = issue.assignees.findIndex(user => user._id.toString() === req.body.userId)
 
@@ -43,25 +43,20 @@ router.put('/delete/user/:id', currentUserMiddleware, async (req, res, next) => 
                                     await issueModel.updateOne({ _id: issue._id }, { $set: { assignees: issue.assignees } })
 
                                     //gui kem theo id cua nguoi assignee de xoa cac comment lien quan toi ho
-                                    await projectManagementPublisher({ issue, userId: req.body.userId }, "projectManagement:updated")
+                                    projectManagementPublisher({ issue, userId: req.body.userId }, "projectManagement:updated")
                                 }
                             }
                         }
                     }
-
                     return res.status(200).json({
                         message: "Successfully deleted this user"
                     })
-                } else {
-                    throw new BadRequestError("User not found")
-                }
-
-            } else {
-                throw new BadRequestError("Project not found")
-            }
-        } else {
-            throw new UnauthorizedError("Authentication failed")
-        }
+                } 
+                throw new BadRequestError("User not found")
+            } 
+            throw new BadRequestError("Project not found")
+        } 
+        throw new UnauthorizedError("Authentication failed")
     } catch (error) {
         next(error)
     }

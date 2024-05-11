@@ -18,16 +18,16 @@ router.post('/create', currentUserMiddleware, async (req, res, next) => {
             } else {
                 let members = []
                 members.push(creator)
-                const project = await projectModel.create({
+                const newProject = await new projectModel({
                     nameProject,
                     description,
                     category,
                     creator,
                     members
-                })
+                }).save()
                 res.status(201).json({
                     message: "Initial success project",
-                    data: project
+                    data: newProject
                 })
             }
         } else {
