@@ -283,37 +283,35 @@ export default function InfoModal() {
 
                                     {/* Kiểm tra xem nếu người đó thuộc về issue thì mới có thể đăng bình luận */}
                                     {issueInfo?.creator._id === userInfo.id || issueInfo?.assignees.findIndex(value => value._id === userInfo.id) !== -1 ? (
-                                        <>
-                                            <div className="block-comment" style={{ display: 'flex', flexDirection: 'column' }}>
-                                                <div className="input-comment d-flex">
-                                                    <div className="avatar">
-                                                        <Avatar src={userInfo?.avatar} size={40} />
-                                                    </div>
-                                                    <div style={{ width: '100%' }}>
-                                                        <Input type='text' placeholder='Add a comment...' defaultValue="" value={comment.content} onChange={(e) => {
-                                                            setComment({
-                                                                content: e.target.value,
-                                                                isSubmit: false
-                                                            })
-                                                        }} />
-                                                        <Button type="primary" onClick={() => {
-                                                            if (comment.content.trim() === '') {
-                                                                showNotificationWithIcon('error', 'Tạo bình luận', 'Vui lòng nhập nội dung trước khi gửi')
-                                                            } else {
-                                                                dispatch(createCommentAction({ content: comment.content, issueId: issueInfo._id, creator: userInfo?.id }))
-                                                                setComment({
-                                                                    content: '',
-                                                                    isSubmit: true
-                                                                })
-                                                            }
-                                                        }} className='mt-2'>Send</Button>
-                                                    </div>
+                                        <div className="block-comment" style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <div className="input-comment d-flex">
+                                                <div className="avatar">
+                                                    <Avatar src={userInfo?.avatar} size={40} />
                                                 </div>
-                                                <ul className="display-comment mt-2 p-0" style={{ display: 'flex', flexDirection: 'column', height: '35rem', overflow: 'overlay', scrollbarWidth: 'none' }}>
-                                                    {renderComments()}
-                                                </ul>
+                                                <div style={{ width: '100%' }}>
+                                                    <Input type='text' placeholder='Add a comment...' defaultValue="" value={comment.content} onChange={(e) => {
+                                                        setComment({
+                                                            content: e.target.value,
+                                                            isSubmit: false
+                                                        })
+                                                    }} />
+                                                    <Button type="primary" onClick={() => {
+                                                        if (comment.content.trim() === '') {
+                                                            showNotificationWithIcon('error', 'Tạo bình luận', 'Vui lòng nhập nội dung trước khi gửi')
+                                                        } else {
+                                                            dispatch(createCommentAction({ content: comment.content, issueId: issueInfo._id, creator: userInfo?.id }))
+                                                            setComment({
+                                                                content: '',
+                                                                isSubmit: true
+                                                            })
+                                                        }
+                                                    }} className='mt-2'>Send</Button>
+                                                </div>
                                             </div>
-                                        </>
+                                            <ul className="display-comment mt-2 p-0" style={{ display: 'flex', flexDirection: 'column', height: '35rem', overflow: 'overlay', scrollbarWidth: 'none' }}>
+                                                {renderComments()}
+                                            </ul>
+                                        </div>
                                     ) : <p className='text-danger'>Plese join in this issue to read comments</p>}
 
                                 </div>
@@ -357,8 +355,8 @@ export default function InfoModal() {
 
                                                     <span className='text-primary mt-2 mb-2' style={{ fontSize: '12px', margin: '0px', cursor: 'pointer' }}>
                                                         <i className="fa fa-plus" style={{ marginRight: 5 }} onClick={() => {
-                                                        setAddAssignee(false)
-                                                    }} />Add more
+                                                            setAddAssignee(false)
+                                                        }} />Add more
                                                     </span>
                                                 </div>
                                             ) : <></>

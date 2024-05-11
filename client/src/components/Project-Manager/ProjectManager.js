@@ -29,6 +29,16 @@ export default function ProjectManager() {
     //su dung cho debounce search
     const search = useRef(null)
 
+    const waitingUserPressKey = () => {
+        //kiem tra gia tri co khac null khong, khac thi xoa
+        if (search.current) {
+            clearTimeout(search.current)
+        }
+        search.current = setTimeout(() => {
+            dispatch(getUserKeyword(value))
+        }, 500)
+    }
+
     //su dung cho truong hien thi member
     const memberColumns = [
         {
@@ -60,6 +70,17 @@ export default function ProjectManager() {
             }
         }
     ];
+    const renderMembers = (record, user) => {
+        const pos = record?.members.filter(user => user._id === record.creator._id)
+        if (pos !== -1) {
+            record?.members.splice(pos, 1)
+        }
+        //chèn id của project vào từng giá trị
+        const newMembers = record?.members.map(value => {
+            return { ...value, projectId: record._id }
+        })
+        return <Table columns={memberColumns} rowKey={user._id} dataSource={newMembers} />
+    }
     const columns = [
         {
             title: 'ID',
@@ -111,15 +132,7 @@ export default function ProjectManager() {
                             {
                                 record.members?.slice(0, 3).map((user, index) => {
                                     return <Popover key={user._id} content={() => {
-                                        const pos = record?.members.findIndex(user => user._id === record.creator._id)
-                                        if (pos !== -1) {
-                                            record?.members.splice(pos, 1)
-                                        }
-                                        //chèn id của project vào từng giá trị
-                                        const newMembers = record?.members.map(value => {
-                                            return { ...value, projectId: record._id }
-                                        })
-                                        return <Table columns={memberColumns} rowKey={user._id} dataSource={newMembers} />
+                                        renderMembers(record, user)
                                     }} title="Members">
                                         <Avatar key={user._id} src={<img src={user.avatar} alt="avatar" />} />
                                     </Popover>
@@ -130,13 +143,8 @@ export default function ProjectManager() {
                                 return <AutoComplete
                                     style={{ width: '100%' }}
                                     onSearch={(value) => {
-                                        //kiem tra gia tri co khac null khong, khac thi xoa
-                                        if (search.current) {
-                                            clearTimeout(search.current)
-                                        }
-                                        search.current = setTimeout(() => {
-                                            dispatch(getUserKeyword(value))
-                                        }, 500)
+                                        
+                                        waitingUserPressKey()
                                     }}
                                     value={value}
                                     onChange={(value) => {
@@ -194,7 +202,7 @@ export default function ProjectManager() {
                             okText="Yes"
                             cancelText="No"
                             onConfirm={() => {
-                                if(record?._id === localStorage.getItem('projectid')) {
+                                if (record?._id === localStorage.getItem('projectid')) {
                                     localStorage.setItem('projectid', undefined)
                                 }
                                 dispatch(deleteItemCategory(record?._id))

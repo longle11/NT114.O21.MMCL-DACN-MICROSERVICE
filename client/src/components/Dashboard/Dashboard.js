@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import DrawerHOC from '../../HOC/DrawerHOC'
-import { useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AutoComplete, Avatar, Button, Popover, Table } from 'antd';
 import { getInfoIssue } from '../../redux/actions/IssueAction';
@@ -172,12 +172,12 @@ export default function Dashboard() {
             </div>
             <div className='title'>
                 <h3>Dashboard</h3>
-                <a href="https://github.com/longle1/NT114.O21.MMCL-DACN" target="_blank" style={{ textDecoration: 'none' }}>
+                <NavLink to="https://github.com/longle11/NT114.O21.MMCL-DACN-MICROSERVICE" target="_blank" style={{ textDecoration: 'none' }}>
                     <button className="btn btn-light btn-git">
                         <i className="fab fa-github mr-2"></i>
                         <div>Github Repo</div>
                     </button>
-                </a>
+                </NavLink>
             </div>
             <div className="info" style={{ display: 'flex' }}>
                 <div className="search-block">
@@ -191,15 +191,9 @@ export default function Dashboard() {
                 </div>
                 <div className="avatar-group" style={{ display: 'flex' }}>
                     {projectInfo?.members?.map((value, index) => {
-                        // return <div key={index} className="avatar">
-                        //     <Popover content={() => {
-                        //         return <Table columns={memberColumns} rowKey={index} dataSource={projectInfo?.members} />
-                        //     }} title="Members">
-                        //         <Avatar src={value.avatar} key={index} />
-                        //     </Popover>
-                        // </div>
+                        const table = <Table columns={memberColumns} rowKey={value._id} dataSource={projectInfo?.members} />
                         return <Popover content={() => {
-                            return <Table columns={memberColumns} rowKey={value._id} dataSource={projectInfo?.members} />
+                            return <>{table}</>
                         }} title="Members">
                             <Avatar src={value.avatar} key={value._id} />
                         </Popover>
