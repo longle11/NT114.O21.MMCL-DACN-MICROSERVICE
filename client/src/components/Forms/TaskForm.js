@@ -9,15 +9,7 @@ import { submit_edit_form_action } from '../../redux/actions/DrawerAction';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
 import { priorityTypeOptions, issueTypeOptions } from '../../util/CommonFeatures';
 import PropTypes from 'prop-types';
-TaskForm.propTypes = {
-    handleSubmit: PropTypes.func.isRequired,
-    handleChange: PropTypes.func.isRequired,
-    setFieldValue: PropTypes.func.isRequired,
-    projectInfo: PropTypes.shape({
-        nameProject: PropTypes.string,
-        members: PropTypes.array
-    })
-};
+
 function TaskForm(props) {
     const { handleChange, handleSubmit, setFieldValue } = props
     //theo doi thoi gian cua 1 task
@@ -163,6 +155,15 @@ function TaskForm(props) {
         </div>
     )
 }
+TaskForm.propTypes = {
+    handleSubmit: PropTypes.func.isRequired,
+    handleChange: PropTypes.func.isRequired,
+    setFieldValue: PropTypes.func.isRequired,
+    projectInfo: PropTypes.shape({
+        nameProject: PropTypes.string,
+        members: PropTypes.array
+    })
+};
 const handleSubmitTaskForm = withFormik({
     enableReinitialize: true,
     mapPropsToValues: (props) => {

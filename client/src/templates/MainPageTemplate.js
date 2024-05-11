@@ -13,9 +13,7 @@ import { userLoggedInAction } from '../redux/actions/UserAction'
 import { GetProjectAction } from '../redux/actions/ListProjectAction'
 import { Modal } from 'antd'
 import PropTypes from 'prop-types';
-MainPageTemplate.propTypes = {
-    Component: PropTypes.elementType.isRequired
-};
+
 export default function MainPageTemplate({ Component }) {
     const status = useSelector(state => state.user.status)
     const isLoading = useSelector(state => state.loading.isLoading)
@@ -55,3 +53,6 @@ export default function MainPageTemplate({ Component }) {
     }
     return <>{content()}</>
 }
+MainPageTemplate.propTypes = {
+    Component: PropTypes.elementType.isRequired
+};
