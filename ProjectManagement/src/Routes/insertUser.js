@@ -20,7 +20,11 @@ router.post('/insert', currentUserMiddleware, async (req, res, next) => {
                 const isExisted = listMembers.findIndex(userId => userId.toString() === user_id)
                 if (isExisted === -1) {
                     listMembers.push(user_id)
-                    await db.collection("projects").updateOne({ "_id": project_id }, { $set: { "members": listMembers } }, (err, result) => {});
+
+                    const updatedProject = await projectModel.findByIdAndUpdate(
+                        { "_id": project_id },
+                        { $set: { "members": listMembers } }
+                    )
 
                     return res.status(200).json({
                         message: "Successfully added user in this project",

@@ -18,15 +18,7 @@ router.put('/insert/issue', currentUserMiddleware, async (req, res, next) => {
                 listIssue.push(issue_id)
                 const filter = { "_id": project_id };
                 const update = { $set: { issues: listIssue } };
-
-                await db.collection("projects").updateOne(filter, update, (err, result) => {
-                    if (err) {
-                      // Xử lý lỗi
-                    } else {
-                      // Xử lý kết quả
-                    }
-                  });
-
+                await projectModel.findByIdAndUpdate(filter, update, { new: true })
                 return res.status(200).json({
                     message: "Successfully added issue in this project",
                     data: currentProject
