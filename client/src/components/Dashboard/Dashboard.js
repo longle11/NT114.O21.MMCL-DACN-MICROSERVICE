@@ -139,7 +139,7 @@ export default function Dashboard() {
         })
             .sort((issue1, issue2) => issue1.priority - issue2.priority)
             .map((value, index) => {
-                return (<li className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }} onClick={() => {
+                return (<li tabIndex={0} className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }} onClick={() => {
                     dispatch(getInfoIssue(value._id))
                 }}>
                     <p>

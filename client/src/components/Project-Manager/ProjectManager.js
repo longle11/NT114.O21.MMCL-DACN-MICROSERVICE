@@ -79,7 +79,7 @@ export default function ProjectManager() {
                     </NavLink>
                 }
 
-                return <span onClick={() => {
+                return <span tabIndex={0} onClick={() => {
                     showNotificationWithIcon('error', '', 'You have not participated in this project ')
                 }}>{record.nameProject}</span>
             }

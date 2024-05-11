@@ -2,7 +2,7 @@ import React from 'react'
 
 export default function SearchModal() {
     return (
-        <div className="modal fade" id="searchModal" tabIndex={-1} role="dialog" aria-labelledby="searchModal" aria-hidden="true">
+        <dialog className="modal fade" id="searchModal" tabIndex={-1} aria-labelledby="searchModal" aria-hidden="true">
             <div className="modal-dialog modal-search">
                 <div className="modal-content">
                     <div className="modal-header">
@@ -28,6 +28,6 @@ export default function SearchModal() {
                     </div>
                 </div>
             </div>
-        </div>
+        </dialog>
     )
 }

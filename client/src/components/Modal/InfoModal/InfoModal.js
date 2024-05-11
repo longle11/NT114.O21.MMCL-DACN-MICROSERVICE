@@ -16,8 +16,8 @@ export default function InfoModal() {
     const projectInfo = useSelector(state => state.listProject.projectInfo)
     const userInfo = useSelector(state => state.user.userInfo)
 
-    const [time, editTime] = useState(false)
-    const [trackingTime, editTrackingTime] = useState({
+    const [time, setTime] = useState(false)
+    const [trackingTime, setTrackingTime] = useState({
         timeSpent: issueInfo?.timeSpent,
         timeRemaining: issueInfo?.timeRemaining
     })
@@ -59,11 +59,14 @@ export default function InfoModal() {
 
         if (diff.hours >= 1) {
             return `${Math.round(diff.hours)} hour ago`
-        } else if (diff.minutes >= 1) {
+        }
+        if (diff.minutes >= 1) {
             return `${Math.round(diff.minutes)} minutes ago`
-        } if (diff.days >= 1) {
+        }
+        if (diff.days >= 1) {
             return `${Math.round(diff.days)} days ago`
-        } if (diff.months >= 1) {
+        }
+        if (diff.months >= 1) {
             return `${Math.round(diff.months)} months ago`
         } else {
             return 'a few second ago'
@@ -102,12 +105,13 @@ export default function InfoModal() {
                                 {value.content}
                             </p>
                             {
-                                value.creator._id === userInfo.id ? (<div className='mb-2'><span onClick={() => {
+                                value.creator._id === userInfo.id ? (<div className='mb-2'><div onClick={() => {
                                     setEditContentComment(value.content);
                                     setEditComment(value._id.toString());
-                                }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }} className='mr-3'>Edit</span><span onClick={() => {
-                                    dispatch(deleteCommentAction({ commentId: value._id.toString(), issueId: issueInfo?._id.toString() }));
-                                }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }}>Delete</span></div>) : <div className='mt-3'></div>
+                                }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }} className='mr-3'>Edit</div>
+                                    <div onClick={() => {
+                                        dispatch(deleteCommentAction({ commentId: value._id.toString(), issueId: issueInfo?._id.toString() }));
+                                    }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }}>Delete</div></div>) : <div className='mt-3'></div>
 
                             }
                         </div>
@@ -195,7 +199,7 @@ export default function InfoModal() {
     ]
 
 
-    return <div className="modal fade" id="infoModal" tabIndex={-1} role="dialog" aria-labelledby="infoModal" aria-hidden="true">
+    return <dialog className="modal fade" id="infoModal" tabIndex={-1} aria-labelledby="infoModal" aria-hidden="true">
         <div className="modal-dialog modal-info">
             <div className="modal-content">
                 <div className="modal-header align-items-center">
@@ -243,7 +247,7 @@ export default function InfoModal() {
                                 <p className="issue" style={{ fontSize: '24px', fontWeight: 'bold' }}>{issueInfo?.shortSummary}</p>
                                 <div className="description">
                                     <p style={{ fontWeight: 'bold', fontSize: '15px' }}>Description</p>
-                                    {editDescription ? (<p onDoubleClick={() => {
+                                    {editDescription ? (<p tabIndex={0} onDoubleClick={() => {
                                         if (issueInfo?.creator._id === userInfo.id) {
                                             setEditDescription(false)
                                         }
@@ -357,7 +361,7 @@ export default function InfoModal() {
                                             issueInfo?.creator._id === userInfo.id ? (
                                                 <div style={{ display: 'flex', alignItems: 'center', width: '100px' }}>
 
-                                                    <span onClick={() => {
+                                                    <span tabIndex={0} onClick={() => {
                                                         setAddAssignee(false)
                                                     }} className='text-primary mt-2 mb-2' style={{ fontSize: '12px', margin: '0px', cursor: 'pointer' }}>
                                                         <i className="fa fa-plus" style={{ marginRight: 5 }} />Add more
@@ -418,7 +422,7 @@ export default function InfoModal() {
                                             clearTimeout(inputTimeOriginal.current)
                                         }
                                         inputTimeOriginal.current = setTimeout(() => {
-                                            dispatch(updateInfoIssue(issueInfo?._id, projectInfo?._id, {timeOriginalEstimate: e.target.value}))
+                                            dispatch(updateInfoIssue(issueInfo?._id, projectInfo?._id, { timeOriginalEstimate: e.target.value }))
                                         }, 500)
                                     }} disabled={issueInfo?.creator._id !== userInfo.id} defaultValue="" value={issueInfo?.timeOriginalEstimate} />
                                 </div>
@@ -428,9 +432,13 @@ export default function InfoModal() {
                                         <i className="fa fa-clock" />
                                         <div style={{ width: '100%' }}>
                                             <div className="progress">
-                                                <div className="progress-bar" role="progressbar" style={{ width: (issueInfo?.timeSpent / (issueInfo?.timeSpent + issueInfo?.timeRemaining)) * 100 + '%' }} onDoubleClick={() => {
-                                                    editTime(true)
-                                                }} />
+                                                <progress
+                                                    className="progress-bar"
+                                                    style={{ width: (issueInfo?.timeSpent / (issueInfo?.timeSpent + issueInfo?.timeRemaining)) * 100 + '%' }}
+                                                    onDoubleClick={() => {
+                                                        setTime(true);
+                                                    }}
+                                                />
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                                 <p className="logged">{issueInfo?.timeSpent}h logged</p>
@@ -443,7 +451,7 @@ export default function InfoModal() {
                                                         <div className='col-6 p-0'>
                                                             <label>Time spent</label>
                                                             <InputNumber value={issueInfo?.timeSpent} name="timeSpent" min={0} onChange={(value) => {
-                                                                editTrackingTime({
+                                                                setTrackingTime({
                                                                     timeSpent: value,
                                                                     ...trackingTime
                                                                 })
@@ -452,7 +460,7 @@ export default function InfoModal() {
                                                         <div className='col-6 p-0 text-center'>
                                                             <label>Time remaining</label>
                                                             <InputNumber value={issueInfo?.timeRemaining} min={0} defaultValue={0} name="timeRemaining" onChange={(value) => {
-                                                                editTrackingTime({
+                                                                setTrackingTime({
                                                                     timeRemaining: value,
                                                                     ...trackingTime
                                                                 })
@@ -462,10 +470,10 @@ export default function InfoModal() {
                                                         <div className='col-12 mt-3 p-0'>
                                                             <Button type='primary mr-2' onClick={() => {
                                                                 dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { timeSpent: trackingTime.timeSpent, timeRemaining: trackingTime.timeRemaining }))
-                                                                editTime(false)
+                                                                setTime(false)
                                                             }}>Save</Button>
                                                             <Button type='default' onClick={() => {
-                                                                editTime(false)
+                                                                setTime(false)
                                                             }}>Cancel</Button>
                                                         </div>
                                                     </div>
@@ -482,5 +490,5 @@ export default function InfoModal() {
                 </div>
             </div>
         </div>
-    </div >
+    </dialog >
 }

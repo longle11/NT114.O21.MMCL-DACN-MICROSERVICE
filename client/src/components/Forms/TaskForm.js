@@ -16,7 +16,7 @@ function TaskForm(props) {
     const userInfo = useSelector(state => state.user.userInfo)
 
     const handlEditorChange = (content, editor) => {
-        setFieldValue('description', content)
+        props.setFieldValue('description', content)
     }
     const iTagForIssueTypes = (type) => {
         //0 la story
@@ -64,24 +64,23 @@ function TaskForm(props) {
         { label: <>{iTagForIssueTypes(1)} Task</>, value: 1 },
         { label: <>{iTagForIssueTypes(2)} Bug</>, value: 2 }
     ]
-    const { handleChange, handleSubmit, setFieldValue } = props
     const { id } = useParams()
 
     useEffect(() => {
         if (id !== undefined) {
             //thiet lap id project cho withformik
-            setFieldValue('projectId', id)
+            props.setFieldValue('projectId', id)
             // //submit sự kiện để gửi lên form
-            dispatch(submit_edit_form_action(handleSubmit))
+            dispatch(submit_edit_form_action(props.handleSubmit))
         }
     }, [])
     const dispatch = useDispatch()
     return (
         <div className='container-fluid'>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={props.handleSubmit}>
                 <div className='row'>
                     <label>Project Name</label>
-                    <Input value={props.projectInfo?.nameProject} disabled />
+                    <Input value={props?.projectInfo?.nameProject} disabled />
                 </div>
                 <div className='row mt-2'>
                     <div className='col-6 p-0 pr-5'>
@@ -91,7 +90,7 @@ function TaskForm(props) {
                             style={{ width: '100%' }}
                             options={issueTypeOptions}
                             onSelect={(value, option) => {
-                                setFieldValue('issueType', value)
+                                props.setFieldValue('issueType', value)
                             }}
                             name="issueType"
                         />
@@ -103,7 +102,7 @@ function TaskForm(props) {
                             style={{ width: '100%' }}
                             options={priorityTypeOptions}
                             onSelect={(value, option) => {
-                                setFieldValue('priority', value)
+                                props.setFieldValue('priority', value)
                             }}
                             name="priority"
                         />
@@ -112,7 +111,7 @@ function TaskForm(props) {
 
                 <div className='row mt-2'>
                     <label>Short summary <span style={{color: 'red'}}>(*)</span></label>
-                    <Input placeholder="Input content" onChange={handleChange} name="shortSummary" />
+                    <Input placeholder="Input content" onChange={props.handleChange} name="shortSummary" />
                 </div>
 
                 <div className='row mt-2 d-flex flex-column'>
@@ -138,13 +137,13 @@ function TaskForm(props) {
                         <label>Assignees</label>
                         <Select mode={'multiple'}
                             style={{ width: '100%' }}
-                            options={props.projectInfo?.members?.filter(value => value._id !== userInfo.id).map(value => {
+                            options={props?.projectInfo?.members?.filter(value => value._id !== userInfo.id).map(value => {
                                 return { label: value.username, value: value._id }
                             })}
                             placeholder={'Select Item...'}
                             maxTagCount={'responsive'}
                             onChange={(value) => {
-                                setFieldValue('assignees', value)
+                                props.setFieldValue('assignees', value)
                             }}
                             name="assignees"
                         />
@@ -163,7 +162,7 @@ function TaskForm(props) {
                     <div className='col-6 p-0 pr-4'>
                         <label>Original Estimate (Hours) <span style={{color: 'red'}}>(*)</span></label>
                         <InputNumber min={0} defaultValue={0} style={{ width: '100%' }} onChange={(value) => {
-                            setFieldValue('timeOriginalEstimate', value)
+                            props.setFieldValue('timeOriginalEstimate', value)
                         }} name="timeOriginalEstimate" />
                     </div>
                     <div className='col-6 p-0'>
@@ -176,7 +175,7 @@ function TaskForm(props) {
                                         timeSpent: value
                                     })
 
-                                    setFieldValue('timeSpent', value)
+                                    props.setFieldValue('timeSpent', value)
                                 }} />
                             </div>
                             <div className='col-6 p-0'>
@@ -186,7 +185,7 @@ function TaskForm(props) {
                                         ...timeTracking,
                                         timeRemaining: value
                                     })
-                                    setFieldValue('timeRemaining', value)
+                                    props.setFieldValue('timeRemaining', value)
                                 }} />
                             </div>
                         </div>
@@ -200,8 +199,8 @@ const handleSubmitTaskForm = withFormik({
     enableReinitialize: true,
     mapPropsToValues: (props) => {
         return {
-            projectId: props.projectInfo?._id,
-            creator: props.userInfo?.id,
+            projectId: props?.projectInfo?._id,
+            creator: props?.userInfo?.id,
             issueType: 0,
             priority: 0,
             shortSummary: '',
@@ -216,7 +215,6 @@ const handleSubmitTaskForm = withFormik({
         }
     },
     handleSubmit: (values, { props, setSubmitting }) => {
-        console.log(values);
         let checkSubmit = true
         if(values.shortSummary.trim() === '' || values.timeOriginalEstimate === 0 || values.timeSpent === 0 || values.timeRemaining === 0) {
             checkSubmit = false

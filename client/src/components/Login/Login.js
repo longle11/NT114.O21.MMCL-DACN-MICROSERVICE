@@ -6,11 +6,6 @@ import { NavLink, Navigate } from 'react-router-dom';
 import { userLoginAction } from '../../redux/actions/UserAction';
 import './Login.css'
 function Login(props) {
-    const {
-        errors,
-        handleChange,
-        handleSubmit,
-    } = props;
     var status = useSelector(state => state.user.status)
     return (
         <>
@@ -37,17 +32,17 @@ function Login(props) {
                                             <div>
                                                 <h1 style={{ fontWeight: 'bold', marginBottom: '20px', color: "blueviolet" }}>SIGN IN</h1>
                                             </div>
-                                            <form onSubmit={handleSubmit}>
+                                            <form onSubmit={props.handleSubmit}>
                                                 <div data-mdb-input-init className="form-outline mb-4" style={{ width: '100%', textAlign: 'left' }}>
                                                     <label className="form-label" htmlFor="email">Email address</label>
-                                                    <input onChange={handleChange} type="email" id="email" className="form-control" placeholder='Input your email' />
-                                                    <span className='text-danger'>{errors.email}</span>
+                                                    <input onChange={props.handleChange} type="email" id="email" className="form-control" placeholder='Input your email' />
+                                                    <span className='text-danger'>{props?.errors?.email}</span>
                                                 </div>
                                                 {/* Password input */}
                                                 <div data-mdb-input-init className="form-outline mb-4" style={{ width: '100%', textAlign: 'left' }}>
                                                     <label className="form-label" htmlFor="password">Password</label>
-                                                    <input onChange={handleChange} type="password" id="password" className="form-control" placeholder='Input your password' />
-                                                    <span className='text-danger'>{errors.password}</span>
+                                                    <input onChange={props.handleChange} type="password" id="password" className="form-control" placeholder='Input your password' />
+                                                    <span className='text-danger'>{props?.errors?.password}</span>
                                                 </div>
                                                 {/* Submit button */}
                                                 <button type="submit" data-mdb-button-init data-mdb-ripple-init className="btn btn-primary btn-block mb-4">
@@ -83,7 +78,7 @@ const LoginWithFormik = withFormik({
 
     handleSubmit: (values, { props }) => {
         props.dispatch(userLoginAction(values.email, values.password))
-    },
+    }
 
 })(Login);
 

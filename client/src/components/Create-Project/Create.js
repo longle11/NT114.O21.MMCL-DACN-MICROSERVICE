@@ -7,16 +7,10 @@ import { createProjectAction } from '../../redux/actions/CreateProjectAction';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
 function Create(props) {
     const handlEditorChange = (content, editor) => {
-        setFieldValue('description', content)
+        props.setFieldValue('description', content)
     }
     const dispatch = useDispatch()
     const categoryList = useSelector(state => state.categories.categoryList)
-
-    const {
-        handleChange,
-        handleSubmit,
-        setFieldValue   //giúp set lại giá trị value mà không thông qua hàm handlechange
-    } = props;
 
     useEffect(() => {
         dispatch(getListCategories())
@@ -36,10 +30,10 @@ function Create(props) {
             </div>
             <h3>Create Project</h3>
             <div className="info">
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={props.handleSubmit}>
                     <div className='form-group'>
                         <p>Name</p>
-                        <input onChange={handleChange} className='form-control' name='nameProject' />
+                        <input onChange={props.handleChange} className='form-control' name='nameProject' />
                     </div>
                     <div className='form-group'>
                         <p>Description</p>
@@ -60,7 +54,7 @@ function Create(props) {
                         />
                     </div>
                     <div className='form-group'>
-                        <select name='category' className='form-control' onChange={handleChange} >
+                        <select name='category' className='form-control' onChange={props.handleChange} >
                             {categoryList.map((value, index) => {
                                 return <option value={value._id} key={index}>{value.name}</option>
                             })}

@@ -22,7 +22,7 @@ const SideBar = () => {
     const { id } = useParams()
     return (
         <div className={`page-wrapper ${isSidebarOpen ? 'toggled' : ''}`}>
-            <a id="show-sidebar" className="btn btn-sm btn-dark" href="#" onClick={toggleSidebar} style={{ zIndex: 9999 }}>
+            <a id="show-sidebar" className="btn btn-sm btn-dark" href="#" onClick={toggleSidebar} style={{ zIndex: 9999 }} role="button">
                 <i className="fas fa-bars"></i>
             </a>
             <nav id="sidebar" className="sidebar-wrapper bg-dark">
@@ -49,7 +49,7 @@ const SideBar = () => {
                                 <li className="header-menu">
                                     <span>General</span>
                                 </li>
-                                <li className="sidebar-dropdown font-weight-bold" style={{ fontSize: '17px' }} onClick={() => {
+                                <li tabIndex={0} className="sidebar-dropdown font-weight-bold" style={{ fontSize: '17px' }} onClick={() => {
                                     if (id) {
                                         dispatch(drawer_edit_form_action(<TaskForm />))
                                     } else {
@@ -61,7 +61,7 @@ const SideBar = () => {
                                         <span className='text-light'>Create Issue</span>
                                     </NavLink>
                                 </li>
-                                <li className="sidebar-dropdown font-weight-bold" style={{ fontSize: '17px' }}>
+                                <li tabIndex={0} className="sidebar-dropdown font-weight-bold" style={{ fontSize: '17px' }}>
                                     <NavLink href="#">
                                         <i style={{ fontSize: '17px' }} className="fa-solid fa-magnifying-glass  text-light"></i>
                                         <span className='text-light'>Search Issues</span>
