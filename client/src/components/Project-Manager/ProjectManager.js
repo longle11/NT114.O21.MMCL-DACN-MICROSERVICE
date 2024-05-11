@@ -21,7 +21,7 @@ export default function ProjectManager() {
         navigate('/manager')
     }, [])
 
-    const [value, setValue] = useState('')
+    const [valueProject, setValueProject] = useState('')
 
     //lấy ra người dùng hiện tại đang đăng nhập
     const userInfo = useSelector(state => state.user.userInfo)
@@ -35,7 +35,7 @@ export default function ProjectManager() {
             clearTimeout(search.current)
         }
         search.current = setTimeout(() => {
-            dispatch(getUserKeyword(value))
+            dispatch(getUserKeyword(valueProject))
         }, 500)
     }
 
@@ -45,9 +45,9 @@ export default function ProjectManager() {
             onSearch={(value) => {
                 waitingUserPressKey()
             }}
-            value={value}
+            value={valueProject}
             onChange={(value) => {
-                setValue(value)
+                setValueProject(value)
             }}
             defaultValue=''
             options={listUser?.reduce((newListUser, user) => {
@@ -57,7 +57,7 @@ export default function ProjectManager() {
                 return newListUser
             }, [])}
             onSelect={(value, option) => {
-                setValue(option.label)
+                setValueProject(option.label)
                 dispatch(insertUserIntoProject({
                     project_id: record?._id,  //id cua project
                     user_id: value   //id cua username

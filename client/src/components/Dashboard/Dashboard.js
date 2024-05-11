@@ -19,7 +19,7 @@ export default function Dashboard() {
     const [type, setType] = useState(0)
 
     const projectInfo = useSelector(state => state.listProject.projectInfo)
-    const [value, setValue] = useState('')
+    const [valueDashboard, setValueDashboard] = useState('')
     const listUser = useSelector(state => state.user.list)
     const userInfo = useSelector(state => state.user.userInfo)
     //su dung cho debounce search
@@ -185,9 +185,9 @@ export default function Dashboard() {
                                     dispatch(getUserKeyword(value))
                                 }, 500)
                             }}
-                            value={value}
+                            value={valueDashboard}
                             onChange={(value) => {
-                                setValue(value)
+                                setValueDashboard(value)
                             }}
                             defaultValue=''
                             options={listUser?.reduce((newListUser, user) => {
@@ -197,7 +197,7 @@ export default function Dashboard() {
                                 return newListUser
                             }, [])}
                             onSelect={async (value, option) => {
-                                setValue(option.label)
+                                setValueDashboard(option.label)
                                 await dispatch(insertUserIntoProject({
                                     project_id: projectInfo?._id,  //id cua project
                                     user_id: value   //id cua username
