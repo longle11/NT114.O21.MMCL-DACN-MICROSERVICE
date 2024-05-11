@@ -13,8 +13,7 @@ export default function DrawerHOC() {
         dispatch(drawerAction(true))
     }
     return (
-        <>
-            <Drawer
+        <Drawer
                 title="Create a new account"
                 width={720}
                 onClose={handleClose}
@@ -35,6 +34,5 @@ export default function DrawerHOC() {
             >
                 {component}
             </Drawer>
-        </>
     );
 }

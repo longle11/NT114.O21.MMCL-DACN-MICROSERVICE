@@ -5,13 +5,22 @@ import { connect, useSelector } from 'react-redux'
 import { NavLink, Navigate } from 'react-router-dom';
 import { userLoginAction } from '../../redux/actions/UserAction';
 import './Login.css'
+import PropTypes from 'prop-types';
+Login.propTypes = {
+    handleSubmit: PropTypes.func.isRequired,
+    handleChange: PropTypes.func.isRequired,
+    errors: PropTypes.shape({
+        email: PropTypes.string,
+        password: PropTypes.string
+    }),
+};
 function Login(props) {
     const {
         errors,
         handleChange,
         handleSubmit,
     } = props;
-    var status = useSelector(state => state.user.status)
+    const status = useSelector(state => state.user.status)
     return (
         <>
             {

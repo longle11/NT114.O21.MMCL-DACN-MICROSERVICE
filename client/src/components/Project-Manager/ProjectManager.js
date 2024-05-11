@@ -11,7 +11,6 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
 import { deleteUserInProject } from '../../redux/actions/CreateProjectAction';
 export default function ProjectManager() {
-
     const dispatch = useDispatch()
     const listProject = useSelector(state => state.listProject.listProject)
     const listUser = useSelector(state => state.user.list)
@@ -21,13 +20,51 @@ export default function ProjectManager() {
         navigate('/manager')
     }, [])
 
-    const [value, setValue] = useState('')
+    const [valueProject, setValueProject] = useState('')
 
     //lấy ra người dùng hiện tại đang đăng nhập
     const userInfo = useSelector(state => state.user.userInfo)
 
     //su dung cho debounce search
     const search = useRef(null)
+
+    const waitingUserPressKey = () => {
+        //kiem tra gia tri co khac null khong, khac thi xoa
+        if (search.current) {
+            clearTimeout(search.current)
+        }
+        search.current = setTimeout(() => {
+            dispatch(getUserKeyword(valueProject))
+        }, 500)
+    }
+
+    const renderPopupAddUser = (record) => {
+        return <AutoComplete
+            style={{ width: '100%' }}
+            onSearch={(value) => {
+                waitingUserPressKey()
+            }}
+            value={valueProject}
+            onChange={(value) => {
+                setValueProject(value)
+            }}
+            defaultValue=''
+            options={listUser?.reduce((newListUser, user) => {
+                if (user._id !== userInfo.id) {
+                    return [...newListUser, { label: user.username, value: user._id }]
+                }
+                return newListUser
+            }, [])}
+            onSelect={(value, option) => {
+                setValueProject(option.label)
+                dispatch(insertUserIntoProject({
+                    project_id: record?._id,  //id cua project
+                    user_id: value   //id cua username
+                }))
+            }}
+            placeholder="input here"
+        />
+    }
 
     //su dung cho truong hien thi member
     const memberColumns = [
@@ -60,6 +97,17 @@ export default function ProjectManager() {
             }
         }
     ];
+    const renderMembers = (record, user) => {
+        const pos = record?.members.filter(user => user._id === record.creator._id)
+        if (pos !== -1) {
+            record?.members.splice(pos, 1)
+        }
+        //chèn id của project vào từng giá trị
+        const newMembers = record?.members.map(value => {
+            return { ...value, projectId: record._id }
+        })
+        return <Table columns={memberColumns} rowKey={user._id} dataSource={newMembers} />
+    }
     const columns = [
         {
             title: 'ID',
@@ -79,9 +127,9 @@ export default function ProjectManager() {
                     </NavLink>
                 }
 
-                return <span onClick={() => {
+                return <button className='btn bg-transparent' onKeyDown={() => {}} onClick={() => {
                     showNotificationWithIcon('error', '', 'You have not participated in this project ')
-                }}>{record.nameProject}</span>
+                }}>{record.nameProject}</button>
             }
         },
         {
@@ -110,55 +158,15 @@ export default function ProjectManager() {
                         <div>
                             {
                                 record.members?.slice(0, 3).map((user, index) => {
-                                    return <Popover content={() => {
-                                        const pos = record?.members.findIndex(user => user._id === record.creator._id)
-                                        if (pos !== -1) {
-                                            record?.members.splice(pos, 1)
-                                        }
-                                        //chèn id của project vào từng giá trị
-                                        const newMembers = record?.members.map(value => {
-                                            return { ...value, projectId: record._id }
-                                        })
-                                        return <Table columns={memberColumns} rowKey={index} dataSource={newMembers} />
+                                    return <Popover key={user._id} content={() => {
+                                        renderMembers(record, user)
                                     }} title="Members">
-                                        <Avatar key={index} src={<img src={user.avatar} alt="avatar" />} />
+                                        <Avatar key={user._id} src={<img src={user.avatar} alt="avatar" />} />
                                     </Popover>
                                 })
                             }
                             {record.members?.length >= 3 ? <Avatar>...</Avatar> : ''}
-                            <Popover placement="right" title="Add User" content={() => {
-                                return <AutoComplete
-                                    style={{ width: '100%' }}
-                                    onSearch={(value) => {
-                                        //kiem tra gia tri co khac null khong, khac thi xoa
-                                        if (search.current) {
-                                            clearTimeout(search.current)
-                                        }
-                                        search.current = setTimeout(() => {
-                                            dispatch(getUserKeyword(value))
-                                        }, 500)
-                                    }}
-                                    value={value}
-                                    onChange={(value) => {
-                                        setValue(value)
-                                    }}
-                                    defaultValue=''
-                                    options={listUser?.reduce((newListUser, user) => {
-                                        if (user._id !== userInfo.id) {
-                                            return [...newListUser, { label: user.username, value: user._id }]
-                                        }
-                                        return newListUser
-                                    }, [])}
-                                    onSelect={(value, option) => {
-                                        setValue(option.label)
-                                        dispatch(insertUserIntoProject({
-                                            project_id: record?._id,  //id cua project
-                                            user_id: value   //id cua username
-                                        }))
-                                    }}
-                                    placeholder="input here"
-                                />
-                            }} trigger="click">
+                            <Popover placement="right" title="Add User" content={renderPopupAddUser(record)} trigger="click">
                                 <Avatar style={{ backgroundColor: '#87d068' }}>
                                     <i className="fa fa-plus"></i>
                                 </Avatar>
@@ -166,7 +174,7 @@ export default function ProjectManager() {
                         </div>) : (
                         <div>
                             {record.members?.slice(0, 3).map((user, index) => {
-                                return <Avatar key={index} src={<img src={user.avatar} alt="avatar" />} />
+                                return <Avatar key={user._id} src={<img src={user.avatar} alt="avatar" />} />
                             })}
                             {record.members?.length >= 3 ? <Avatar>...</Avatar> : ''}
                         </div>)
@@ -194,7 +202,7 @@ export default function ProjectManager() {
                             okText="Yes"
                             cancelText="No"
                             onConfirm={() => {
-                                if(record?._id === localStorage.getItem('projectid')) {
+                                if (record?._id === localStorage.getItem('projectid')) {
                                     localStorage.setItem('projectid', undefined)
                                 }
                                 dispatch(deleteItemCategory(record?._id))
@@ -210,23 +218,21 @@ export default function ProjectManager() {
         }
     ];
     return (
-        <>
-            <div className='container-fluid'>
-                <div className="header">
-                    <nav aria-label="breadcrumb">
-                        <ol className="breadcrumb" style={{ backgroundColor: 'white' }}>
-                            <li className="breadcrumb-item">Project</li>
-                            <li className="breadcrumb-item active" aria-current="page">
-                                Project management
-                            </li>
-                        </ol>
-                    </nav>
-                </div>
-                <h3>Project management</h3>
-                <div className="content">
-                    <Table columns={columns} rowKey={"id"} dataSource={listProject} />
-                </div>
+        <div className='container-fluid'>
+            <div className="header">
+                <nav aria-label="breadcrumb">
+                    <ol className="breadcrumb" style={{ backgroundColor: 'white' }}>
+                        <li className="breadcrumb-item">Project</li>
+                        <li className="breadcrumb-item active" aria-current="page">
+                            Project management
+                        </li>
+                    </ol>
+                </nav>
             </div>
-        </>
+            <h3>Project management</h3>
+            <div className="content">
+                <Table columns={columns} rowKey={"id"} dataSource={listProject} />
+            </div>
+        </div>
     )
 }

@@ -12,6 +12,10 @@ import { useNavigate } from 'react-router-dom'
 import { userLoggedInAction } from '../redux/actions/UserAction'
 import { GetProjectAction } from '../redux/actions/ListProjectAction'
 import { Modal } from 'antd'
+import PropTypes from 'prop-types';
+MainPageTemplate.propTypes = {
+    Component: PropTypes.elementType.isRequired
+};
 export default function MainPageTemplate({ Component }) {
     const status = useSelector(state => state.user.status)
     const isLoading = useSelector(state => state.loading.isLoading)
@@ -30,10 +34,10 @@ export default function MainPageTemplate({ Component }) {
         setIsModalOpen(false);
         navigate("/login")
     };
-    return (
-        !isLoading ? (
-            status ? (
-                <div className='d-flex' style={{ overflow: 'hidden' }}>
+    const content = () => {
+        if (isLoading) {
+            if (status) {
+                return <div className='d-flex' style={{ overflow: 'hidden' }}>
                     <DrawerHOC />
                     <SideBar />
                     <MenuBar />
@@ -42,9 +46,12 @@ export default function MainPageTemplate({ Component }) {
                     </div>
                     <InfoModal />
                 </div>
-            ) : <Modal title="Thông báo" open={isModalOpen} onCancel={handleLogin} onOk={handleLogin} centered>
-                <p>Phiên đăng nhập của bạn đã hết hạn, vui lòng đăng nhập lại</p>
+            }
+            return <Modal title="Thông báo" open={isModalOpen} onCancel={handleLogin} onOk={handleLogin} centered>
+                <p>Your login session has expired, please log in again</p>
             </Modal>
-        ) : <></>
-    )
+        }
+        return null
+    }
+    return <>{content()}</>
 }

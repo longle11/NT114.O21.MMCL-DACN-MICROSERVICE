@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import DrawerHOC from '../../HOC/DrawerHOC'
-import { useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AutoComplete, Avatar, Button, Popover, Table } from 'antd';
 import { getInfoIssue } from '../../redux/actions/IssueAction';
@@ -10,6 +10,7 @@ import { GetProjectAction } from '../../redux/actions/ListProjectAction';
 import { deleteUserInProject } from '../../redux/actions/CreateProjectAction';
 import { DeleteOutlined } from '@ant-design/icons';
 import Search from 'antd/es/input/Search';
+import { iTagForIssueTypes, iTagForPriorities } from '../../util/CommonFeatures';
 export default function Dashboard() {
     const dispatch = useDispatch()
     const navigate = useNavigate()
@@ -18,20 +19,20 @@ export default function Dashboard() {
     const [type, setType] = useState(0)
 
     const projectInfo = useSelector(state => state.listProject.projectInfo)
-    const [value, setValue] = useState('')
+    const [valueDashboard, setValueDashboard] = useState('')
     const listUser = useSelector(state => state.user.list)
     const userInfo = useSelector(state => state.user.userInfo)
     //su dung cho debounce search
     const search = useRef(null)
 
     useEffect(() => {
-        if(typeof localStorage.getItem('projectid') === 'string' && localStorage.getItem('projectid').length >= 8) {
+        if (typeof localStorage.getItem('projectid') === 'string' && localStorage.getItem('projectid').length >= 8) {
             localStorage.setItem('projectid', projectInfo?._id)
-        }else {
+        } else {
             localStorage.setItem('projectid', null)
             showNotificationWithIcon('error', 'Vui lòng tham gia vào dự án trước')
             navigate('/manager')
-        } 
+        }
     }, [])
 
     //su dung cho truong hien thi member
@@ -71,48 +72,20 @@ export default function Dashboard() {
         }
     ];
 
-    const renderIssueType = (type) => {
-        //0 la story
-        if (type === 0) {
-            return <i className="fa-solid fa-bookmark mr-2" style={{ color: '#65ba43', fontSize: '20px' }} ></i>
-        }
-        //1 la task
-        if (type === 1) {
-            return <i className="fa-solid fa-square-check mr-2" style={{ color: '#4fade6', fontSize: '20px' }} ></i>
-        }
-        //2 la bug
-        if (type === 2) {
-            return <i className="fa-solid fa-circle-exclamation mr-2" style={{ color: '#cd1317', fontSize: '20px' }} ></i>
-        }
+    const renderAvatarMembers = (value, table) => {
+        return <Popover key={value._id} content={() => {
+            return <>{table}</>
+        }} title="Members">
+            <Avatar src={value.avatar} key={value._id} />
+        </Popover>
     }
 
-    const renderPriority = (priority) => {
-        if (priority === 0) {
-            return <i className="fa-solid fa-arrow-up" style={{ color: '#cd1317', fontSize: '20px' }} />
-        }
-        if (priority === 1) {
-            return <i className="fa-solid fa-arrow-up" style={{ color: '#e9494a', fontSize: '20px' }} />
-        }
-        if (priority === 2) {
-            return <i className="fa-solid fa-arrow-up" style={{ color: '#e97f33', fontSize: '20px' }} />
-        }
-        if (priority === 3) {
-            return <i className="fa-solid fa-arrow-down" style={{ color: '#2d8738', fontSize: '20px' }} />
-        }
-        if (priority === 4) {
-            return <i className="fa-solid fa-arrow-down" style={{ color: '#57a55a', fontSize: '20px' }} />
-        }
-    }
+    
 
     const countEleStatus = (position, type) => {
         if (type === 1) {
             return projectInfo?.issues?.filter(issue => {
-                if (issue.assignees.findIndex(value => value._id === userInfo.id) !== -1) {
-                    return true
-                } else if (issue.creator._id === userInfo.id) {
-                    return true
-                }
-                return false
+                return (issue.assignees.findIndex(value => value._id === userInfo.id) !== -1) || (issue.creator._id === userInfo.id)
             }).filter(value => value.issueStatus === position).length
         }
         return projectInfo?.issues?.filter(value => value.issueStatus === position).length
@@ -123,32 +96,24 @@ export default function Dashboard() {
         let listIssues = projectInfo?.issues
         if (type === 1) {
             listIssues = listIssues?.filter(issue => {
-                if (issue.assignees.findIndex(value => value._id === userInfo.id) !== -1) {
-                    return true
-                } else if (issue.creator._id === userInfo.id) {
-                    return true
-                }
-                return false
+                return (issue.assignees.findIndex(value => value._id === userInfo.id) !== -1) || (issue.creator._id === userInfo.id)
             })
         }
         return listIssues?.filter(issue => {
-            if (issue.issueStatus === position) {
-                return true
-            }
-            return false
+            return issue.issueStatus === position
         })
             .sort((issue1, issue2) => issue1.priority - issue2.priority)
             .map((value, index) => {
-                return (<li className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }} onClick={() => {
-                    dispatch(getInfoIssue(value._id))
-                }}>
-                    <p>
+                return (<li key={value._id} className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }}>
+                    <button className="btn bg-transparent" onClick={() => {
+                        dispatch(getInfoIssue(value._id))
+                    }} onKeyDown={() => {}}>
                         {value.shortSummary}
-                    </p>
+                    </button>
                     <div className="block" style={{ display: 'flex' }}>
                         <div className="block-left">
-                            {renderIssueType(value.issueType)}
-                            {renderPriority(value.priority)}
+                            {iTagForIssueTypes(value.issueType)}
+                            {iTagForPriorities(value.priority)}
                         </div>
                         <div className="block-right" style={{ display: 'flex', alignItems: 'center' }}>
                             <div className="avatar-group">
@@ -156,9 +121,9 @@ export default function Dashboard() {
                                 {
                                     value?.assignees?.map((user, index) => {
                                         if (index === 3) {
-                                            return <Avatar size={40}>...</Avatar>
+                                            return <Avatar key={value._id} size={40}>...</Avatar>
                                         } else if (index <= 2) {
-                                            return <Avatar size={30} key={index} src={user.avatar} />
+                                            return <Avatar size={30} key={value._id} src={user.avatar} />
                                         }
                                         return null
                                     })
@@ -185,12 +150,12 @@ export default function Dashboard() {
             </div>
             <div className='title'>
                 <h3>Dashboard</h3>
-                <a href="https://github.com/longle1/NT114.O21.MMCL-DACN" target="_blank" style={{ textDecoration: 'none' }}>
+                <NavLink to="https://github.com/longle11/NT114.O21.MMCL-DACN-MICROSERVICE" target="_blank" style={{ textDecoration: 'none' }}>
                     <button className="btn btn-light btn-git">
                         <i className="fab fa-github mr-2"></i>
                         <div>Github Repo</div>
                     </button>
-                </a>
+                </NavLink>
             </div>
             <div className="info" style={{ display: 'flex' }}>
                 <div className="search-block">
@@ -204,13 +169,8 @@ export default function Dashboard() {
                 </div>
                 <div className="avatar-group" style={{ display: 'flex' }}>
                     {projectInfo?.members?.map((value, index) => {
-                        return <div className="avatar">
-                            <Popover content={() => {
-                                return <Table columns={memberColumns} rowKey={index} dataSource={projectInfo?.members} />
-                            }} title="Members">
-                                <Avatar src={value.avatar} key={index} />
-                            </Popover>
-                        </div>
+                        const table = <Table columns={memberColumns} rowKey={value._id} dataSource={projectInfo?.members} />
+                        return renderAvatarMembers(value, table)
                     })}
 
                     <Popover placement="right" title="Add User" content={() => {
@@ -225,9 +185,9 @@ export default function Dashboard() {
                                     dispatch(getUserKeyword(value))
                                 }, 500)
                             }}
-                            value={value}
+                            value={valueDashboard}
                             onChange={(value) => {
-                                setValue(value)
+                                setValueDashboard(value)
                             }}
                             defaultValue=''
                             options={listUser?.reduce((newListUser, user) => {
@@ -237,7 +197,7 @@ export default function Dashboard() {
                                 return newListUser
                             }, [])}
                             onSelect={async (value, option) => {
-                                setValue(option.label)
+                                setValueDashboard(option.label)
                                 await dispatch(insertUserIntoProject({
                                     project_id: projectInfo?._id,  //id cua project
                                     user_id: value   //id cua username

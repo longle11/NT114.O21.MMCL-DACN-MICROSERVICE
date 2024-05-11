@@ -26,7 +26,7 @@ export const getItemCategory = (props) => {
 export const updateItemCategory = (props) => {
     return async dispatch => {
         try {
-            const {data: result, status} = await Axios.put(`${domainName}/api/projectmanagement/update/${props.id}`, { props })
+            const {data: result} = await Axios.put(`${domainName}/api/projectmanagement/update/${props.id}`, { props })
 
             dispatch(ListProjectAction())
             dispatch(drawerAction(true))

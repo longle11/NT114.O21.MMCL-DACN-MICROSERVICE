@@ -9,6 +9,7 @@ import { createCommentAction, deleteCommentAction, updateCommentAction } from '.
 import { showNotificationWithIcon } from '../../../util/NotificationUtil';
 import storeListComments from '../../../util/StoreListComment';
 import { GetProjectAction } from '../../../redux/actions/ListProjectAction';
+import { priorityTypeOptions, issueTypeOptions } from '../../../util/CommonFeatures';
 const { DateTime } = require('luxon');
 const { TextArea } = Input;
 export default function InfoModal() {
@@ -16,8 +17,8 @@ export default function InfoModal() {
     const projectInfo = useSelector(state => state.listProject.projectInfo)
     const userInfo = useSelector(state => state.user.userInfo)
 
-    const [time, editTime] = useState(false)
-    const [trackingTime, editTrackingTime] = useState({
+    const [time, setTime] = useState(false)
+    const [trackingTime, setTrackingTime] = useState({
         timeSpent: issueInfo?.timeSpent,
         timeRemaining: issueInfo?.timeRemaining
     })
@@ -59,20 +60,27 @@ export default function InfoModal() {
 
         if (diff.hours >= 1) {
             return `${Math.round(diff.hours)} hour ago`
-        } else if (diff.minutes >= 1) {
+        }
+        if (diff.minutes >= 1) {
             return `${Math.round(diff.minutes)} minutes ago`
-        } if (diff.days >= 1) {
+        }
+        if (diff.days >= 1) {
             return `${Math.round(diff.days)} days ago`
-        } if (diff.months >= 1) {
+        }
+        if (diff.months >= 1) {
             return `${Math.round(diff.months)} months ago`
         } else {
             return 'a few second ago'
         }
     }
 
+    const renderContentModal = () => {
+        return issueInfo?.description.trim() !== '' ? Parser(`${issueInfo?.description}`) : issueInfo?.creator._id === userInfo.id ? <p style={{ color: 'blue' }}>Add Your Description</p> : <p>There is no description yet</p>
+    }
+
     const renderComments = () => {
         let listComments = issueInfo?.comments.map((value, index) => {
-            return (<li className='comment d-flex' key={index}>
+            return (<li className='comment d-flex' key={value._id}>
                 <div className="avatar">
                     <Avatar src={value.creator.avatar} size={40} />
                 </div>
@@ -102,12 +110,13 @@ export default function InfoModal() {
                                 {value.content}
                             </p>
                             {
-                                value.creator._id === userInfo.id ? (<div className='mb-2'><span onClick={() => {
+                                value.creator._id === userInfo.id ? (<div className="mb-2"><button className="btn bg-transparent mr-3" onClick={() => {
                                     setEditContentComment(value.content);
                                     setEditComment(value._id.toString());
-                                }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }} className='mr-3'>Edit</span><span onClick={() => {
-                                    dispatch(deleteCommentAction({ commentId: value._id.toString(), issueId: issueInfo?._id.toString() }));
-                                }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }}>Delete</span></div>) : <div className='mt-3'></div>
+                                }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }}>Edit</button>
+                                    <button className="btn bg-transparent" onKeyDown={() => { }} onClick={() => {
+                                        dispatch(deleteCommentAction({ commentId: value._id.toString(), issueId: issueInfo?._id.toString() }));
+                                    }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }}>Delete</button></div>) : <div className='mt-3'></div>
 
                             }
                         </div>
@@ -132,70 +141,20 @@ export default function InfoModal() {
             return <option key={status.value} value={status.value}>{status.label}</option>
         })
     }
-    const iTagForIssueTypes = (type) => {
-        //0 la story
-        if (type === 0) {
-            return <i className="fa-solid fa-bookmark mr-2" style={{ color: '#65ba43', fontSize: '20px' }} ></i>
-        }
-        //1 la task
-        if (type === 1) {
-            return <i className="fa-solid fa-square-check mr-2" style={{ color: '#4fade6', fontSize: '20px' }} ></i>
-        }
-        //2 la bug
-        if (type === 2) {
-            return <i className="fa-solid fa-circle-exclamation mr-2" style={{ color: '#cd1317', fontSize: '20px' }} ></i>
-        }
-    }
-
     const renderOptionAssignee = () => {
         return projectInfo?.members?.filter((value, index) => {
             const isExisted = issueInfo?.assignees?.findIndex((user) => {
                 return user._id === value._id
             })
-            if (isExisted !== -1) {
-                return false
-            }
-            if (issueInfo?.creator._id === value._id) {
-                return false
-            }
-            return true
+            return !(issueInfo?.creator._id === value._id || isExisted !== -1)
         }).map((value, index) => {
-            return <Option value={value._id}>{value.username}</Option>
+            return <Option key={value._id} value={value._id}>{value.username}</Option>
         })
     }
 
-    const iTagForPriorities = (priority) => {
-        if (priority === 0) {
-            return <i className="fa-solid fa-arrow-up" style={{ color: '#cd1317', fontSize: '20px' }} />
-        }
-        if (priority === 1) {
-            return <i className="fa-solid fa-arrow-up" style={{ color: '#e9494a', fontSize: '20px' }} />
-        }
-        if (priority === 2) {
-            return <i className="fa-solid fa-arrow-up" style={{ color: '#e97f33', fontSize: '20px' }} />
-        }
-        if (priority === 3) {
-            return <i className="fa-solid fa-arrow-down" style={{ color: '#2d8738', fontSize: '20px' }} />
-        }
-        if (priority === 4) {
-            return <i className="fa-solid fa-arrow-down" style={{ color: '#57a55a', fontSize: '20px' }} />
-        }
-    }
-    const priorityTypeOptions = [
-        { label: <>{iTagForPriorities(0)} Highest</>, value: 0 },
-        { label: <>{iTagForPriorities(1)} High</>, value: 1 },
-        { label: <>{iTagForPriorities(2)} Medium</>, value: 2 },
-        { label: <>{iTagForPriorities(3)} Low</>, value: 3 },
-        { label: <>{iTagForPriorities(4)} Lowest</>, value: 4 }
-    ]
-    const issueTypeOptions = [
-        { label: <>{iTagForIssueTypes(0)} Story</>, value: 0 },
-        { label: <>{iTagForIssueTypes(1)} Task</>, value: 1 },
-        { label: <>{iTagForIssueTypes(2)} Bug</>, value: 2 }
-    ]
 
 
-    return <div className="modal fade" id="infoModal" tabIndex={-1} role="dialog" aria-labelledby="infoModal" aria-hidden="true">
+    return <dialog className="modal fade" id="infoModal" tabIndex={-1} aria-labelledby="infoModal" aria-hidden="true">
         <div className="modal-dialog modal-info">
             <div className="modal-content">
                 <div className="modal-header align-items-center">
@@ -243,13 +202,13 @@ export default function InfoModal() {
                                 <p className="issue" style={{ fontSize: '24px', fontWeight: 'bold' }}>{issueInfo?.shortSummary}</p>
                                 <div className="description">
                                     <p style={{ fontWeight: 'bold', fontSize: '15px' }}>Description</p>
-                                    {editDescription ? (<p onDoubleClick={() => {
+                                    {editDescription ? (<button className='btn bg-transparent' onKeyDown={() => { }} onDoubleClick={() => {
                                         if (issueInfo?.creator._id === userInfo.id) {
                                             setEditDescription(false)
                                         }
                                     }}>
-                                        {issueInfo?.description.trim() !== '' ? Parser(`${issueInfo?.description}`) : issueInfo?.creator._id === userInfo.id ? <p style={{ color: 'blue' }}>Add Your Description</p> : <p>There is no description yet</p>}
-                                    </p>) : (
+                                        {renderContentModal()}
+                                    </button>) : (
                                         <>
                                             <Editor name='description'
                                                 apiKey='golyll15gk3kpiy6p2fkqowoismjya59a44ly52bt1pf82oe'
@@ -285,37 +244,35 @@ export default function InfoModal() {
 
                                     {/* Kiểm tra xem nếu người đó thuộc về issue thì mới có thể đăng bình luận */}
                                     {issueInfo?.creator._id === userInfo.id || issueInfo?.assignees.findIndex(value => value._id === userInfo.id) !== -1 ? (
-                                        <>
-                                            <div className="block-comment" style={{ display: 'flex', flexDirection: 'column' }}>
-                                                <div className="input-comment d-flex">
-                                                    <div className="avatar">
-                                                        <Avatar src={userInfo?.avatar} size={40} />
-                                                    </div>
-                                                    <div style={{ width: '100%' }}>
-                                                        <Input type='text' placeholder='Add a comment...' defaultValue="" value={comment.content} onChange={(e) => {
-                                                            setComment({
-                                                                content: e.target.value,
-                                                                isSubmit: false
-                                                            })
-                                                        }} />
-                                                        <Button type="primary" onClick={() => {
-                                                            if (comment.content.trim() === '') {
-                                                                showNotificationWithIcon('error', 'Tạo bình luận', 'Vui lòng nhập nội dung trước khi gửi')
-                                                            } else {
-                                                                dispatch(createCommentAction({ content: comment.content, issueId: issueInfo._id, creator: userInfo?.id }))
-                                                                setComment({
-                                                                    content: '',
-                                                                    isSubmit: true
-                                                                })
-                                                            }
-                                                        }} className='mt-2'>Send</Button>
-                                                    </div>
+                                        <div className="block-comment" style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <div className="input-comment d-flex">
+                                                <div className="avatar">
+                                                    <Avatar src={userInfo?.avatar} size={40} />
                                                 </div>
-                                                <ul className="display-comment mt-2 p-0" style={{ display: 'flex', flexDirection: 'column', height: '35rem', overflow: 'overlay', scrollbarWidth: 'none' }}>
-                                                    {renderComments()}
-                                                </ul>
+                                                <div style={{ width: '100%' }}>
+                                                    <Input type='text' placeholder='Add a comment...' defaultValue="" value={comment.content} onChange={(e) => {
+                                                        setComment({
+                                                            content: e.target.value,
+                                                            isSubmit: false
+                                                        })
+                                                    }} />
+                                                    <Button type="primary" onClick={() => {
+                                                        if (comment.content.trim() === '') {
+                                                            showNotificationWithIcon('error', 'Tạo bình luận', 'Vui lòng nhập nội dung trước khi gửi')
+                                                        } else {
+                                                            dispatch(createCommentAction({ content: comment.content, issueId: issueInfo._id, creator: userInfo?.id }))
+                                                            setComment({
+                                                                content: '',
+                                                                isSubmit: true
+                                                            })
+                                                        }
+                                                    }} className='mt-2'>Send</Button>
+                                                </div>
                                             </div>
-                                        </>
+                                            <ul className="display-comment mt-2 p-0" style={{ display: 'flex', flexDirection: 'column', height: '35rem', overflow: 'overlay', scrollbarWidth: 'none' }}>
+                                                {renderComments()}
+                                            </ul>
+                                        </div>
                                     ) : <p className='text-danger'>Plese join in this issue to read comments</p>}
 
                                 </div>
@@ -333,9 +290,9 @@ export default function InfoModal() {
                                     <h6>ASSIGNEES</h6>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)' }}>
                                         {issueInfo?.assignees?.map((value, index) => {
-                                            return <div style={{ display: 'flex', alignItems: 'center', marginRight: '5px' }} className="item mt-2">
+                                            return <div key={value._id} style={{ display: 'flex', alignItems: 'center', marginRight: '5px' }} className="item mt-2">
                                                 <div className="avatar">
-                                                    <Avatar src={value.avatar} />
+                                                    <Avatar key={value._id} src={value.avatar} />
                                                 </div>
                                                 <p className="name d-flex align-items-center ml-1" style={{ fontWeight: 'bold' }}>
                                                     {value.username}
@@ -356,12 +313,11 @@ export default function InfoModal() {
                                         {
                                             issueInfo?.creator._id === userInfo.id ? (
                                                 <div style={{ display: 'flex', alignItems: 'center', width: '100px' }}>
-
-                                                    <span onClick={() => {
+                                                    <button onKeyDown={() => { }} className='text-primary mt-2 mb-2 btn bg-transparent' style={{ fontSize: '12px', margin: '0px', cursor: 'pointer' }} onClick={() => {
                                                         setAddAssignee(false)
-                                                    }} className='text-primary mt-2 mb-2' style={{ fontSize: '12px', margin: '0px', cursor: 'pointer' }}>
+                                                    }} >
                                                         <i className="fa fa-plus" style={{ marginRight: 5 }} />Add more
-                                                    </span>
+                                                    </button>
                                                 </div>
                                             ) : <></>
                                         }
@@ -418,7 +374,7 @@ export default function InfoModal() {
                                             clearTimeout(inputTimeOriginal.current)
                                         }
                                         inputTimeOriginal.current = setTimeout(() => {
-                                            dispatch(updateInfoIssue(issueInfo?._id, projectInfo?._id, {timeOriginalEstimate: e.target.value}))
+                                            dispatch(updateInfoIssue(issueInfo?._id, projectInfo?._id, { timeOriginalEstimate: e.target.value }))
                                         }, 500)
                                     }} disabled={issueInfo?.creator._id !== userInfo.id} defaultValue="" value={issueInfo?.timeOriginalEstimate} />
                                 </div>
@@ -428,9 +384,14 @@ export default function InfoModal() {
                                         <i className="fa fa-clock" />
                                         <div style={{ width: '100%' }}>
                                             <div className="progress">
-                                                <div className="progress-bar" role="progressbar" style={{ width: (issueInfo?.timeSpent / (issueInfo?.timeSpent + issueInfo?.timeRemaining)) * 100 + '%' }} onDoubleClick={() => {
-                                                    editTime(true)
-                                                }} />
+                                                <progress
+                                                    className="progress-bar"
+                                                    onKeyDown={() => { }}
+                                                    style={{ width: (issueInfo?.timeSpent / (issueInfo?.timeSpent + issueInfo?.timeRemaining)) * 100 + '%' }}
+                                                    onDoubleClick={() => {
+                                                        setTime(true);
+                                                    }}
+                                                />
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                                 <p className="logged">{issueInfo?.timeSpent}h logged</p>
@@ -441,18 +402,18 @@ export default function InfoModal() {
                                                 <div>
                                                     <div className='row'>
                                                         <div className='col-6 p-0'>
-                                                            <label>Time spent</label>
+                                                            <label htmlFor='timeSpent'>Time spent</label>
                                                             <InputNumber value={issueInfo?.timeSpent} name="timeSpent" min={0} onChange={(value) => {
-                                                                editTrackingTime({
+                                                                setTrackingTime({
                                                                     timeSpent: value,
                                                                     ...trackingTime
                                                                 })
                                                             }} />
                                                         </div>
                                                         <div className='col-6 p-0 text-center'>
-                                                            <label>Time remaining</label>
+                                                            <label htmlFor='timeRemaining'>Time remaining</label>
                                                             <InputNumber value={issueInfo?.timeRemaining} min={0} defaultValue={0} name="timeRemaining" onChange={(value) => {
-                                                                editTrackingTime({
+                                                                setTrackingTime({
                                                                     timeRemaining: value,
                                                                     ...trackingTime
                                                                 })
@@ -462,10 +423,10 @@ export default function InfoModal() {
                                                         <div className='col-12 mt-3 p-0'>
                                                             <Button type='primary mr-2' onClick={() => {
                                                                 dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { timeSpent: trackingTime.timeSpent, timeRemaining: trackingTime.timeRemaining }))
-                                                                editTime(false)
+                                                                setTime(false)
                                                             }}>Save</Button>
                                                             <Button type='default' onClick={() => {
-                                                                editTime(false)
+                                                                setTime(false)
                                                             }}>Cancel</Button>
                                                         </div>
                                                     </div>
@@ -482,5 +443,5 @@ export default function InfoModal() {
                 </div>
             </div>
         </div>
-    </div >
+    </dialog >
 }

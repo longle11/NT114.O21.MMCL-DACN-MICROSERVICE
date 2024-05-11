@@ -7,11 +7,9 @@ const initialState = {
 }
 
 export default (state = initialState, action) => {
-    switch (action.type) {
-        case GET_INFO_ISSUE:
-            state.issueInfo = action.issueInfo
-            return { ...state }
-        default:
-            return state
+    if(action.type === GET_INFO_ISSUE) {
+        state.issueInfo = action.issueInfo
+        return { ...state }
     }
+    return state
 }

@@ -22,9 +22,9 @@ const SideBar = () => {
     const { id } = useParams()
     return (
         <div className={`page-wrapper ${isSidebarOpen ? 'toggled' : ''}`}>
-            <a id="show-sidebar" className="btn btn-sm btn-dark" href="#" onClick={toggleSidebar} style={{ zIndex: 9999 }}>
+            <NavLink id="show-sidebar" className="btn btn-sm btn-dark" to="#" onClick={toggleSidebar} style={{ zIndex: 9999 }}>
                 <i className="fas fa-bars"></i>
-            </a>
+            </NavLink>
             <nav id="sidebar" className="sidebar-wrapper bg-dark">
                 <div>
                     <div className="sidebar-content">
@@ -40,23 +40,23 @@ const SideBar = () => {
                                     </h6>
                                 </div>
                             </div>
-                            <div id="close-sidebar" onClick={closeSidebar}>
+                            <button className='btn bg-transparent' id="close-sidebar" onKeyDown={() => { }} onClick={closeSidebar}>
                                 <i className="fas fa-times text-light" />
-                            </div>
+                            </button>
                         </div>
                         <div className="sidebar-menu">
                             <ul>
                                 <li className="header-menu">
                                     <span>General</span>
                                 </li>
-                                <li className="sidebar-dropdown font-weight-bold" style={{ fontSize: '17px' }} onClick={() => {
-                                    if (id) {
-                                        dispatch(drawer_edit_form_action(<TaskForm />))
-                                    } else {
-                                        showNotificationWithIcon('error', 'Create Issue', 'Vui long tham gia vao du an truoc khi tao van de')
-                                    }
-                                }}>
-                                    <NavLink href="#">
+                                <li className="sidebar-dropdown font-weight-bold" style={{ fontSize: '17px' }}>
+                                    <NavLink href="#" onClick={() => {
+                                        if (id) {
+                                            dispatch(drawer_edit_form_action(<TaskForm />))
+                                        } else {
+                                            showNotificationWithIcon('error', 'Create Issue', 'Vui long tham gia vao du an truoc khi tao van de')
+                                        }
+                                    }}>
                                         <i style={{ fontSize: '17px' }} className="fa-solid fa-plus text-light"></i>
                                         <span className='text-light'>Create Issue</span>
                                     </NavLink>
@@ -71,7 +71,7 @@ const SideBar = () => {
                         </div>
                     </div>
                     <div className="sidebar-footer">
-                        <NavLink href="#" style={{width: '100%', backgroundColor: 'lightskyblue'}} onClick={() => {
+                        <NavLink href="#" style={{ width: '100%', backgroundColor: 'lightskyblue' }} onClick={() => {
                             dispatch(userLoggedoutAction())
                         }}>
                             <i className="fa fa-power-off" />

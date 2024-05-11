@@ -4,7 +4,17 @@ import { connect } from 'react-redux';
 import * as Yup from "yup";
 import { signUpUserAction } from '../../redux/actions/UserAction';
 import { NavLink } from 'react-router-dom';
-
+import PropTypes from 'prop-types';
+SignUp.propTypes = {
+    handleSubmit: PropTypes.func.isRequired,
+    handleChange: PropTypes.func.isRequired,
+    errors: PropTypes.shape({
+        username: PropTypes.string,
+        email: PropTypes.string,
+        password: PropTypes.string,
+        confirmpassword: PropTypes.string,
+    }),
+  };
 function SignUp(props) {
     const {
         handleChange,

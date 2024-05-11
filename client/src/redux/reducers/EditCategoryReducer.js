@@ -11,10 +11,9 @@ export default (state = initialState, action) => {
         case GET_CATEGORY_TO_EDIT_DRAWER:
             return { ...state }
         case GET_ITEM_CATEGORY_DRAWER:
-            let newState = action.props
-            state.list = {...newState}
+            state.list = { ...action.props }
 
-            return {...state}
+            return { ...state }
 
         default:
             return state

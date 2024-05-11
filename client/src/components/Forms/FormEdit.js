@@ -5,7 +5,18 @@ import { connect, useDispatch, useSelector } from 'react-redux'
 import { submit_edit_form_action } from '../../redux/actions/DrawerAction';
 import { getListCategories } from '../../redux/actions/CategoryAction';
 import { updateItemCategory } from '../../redux/actions/EditCategoryAction';
-
+import PropTypes from 'prop-types';
+FormEdit.propTypes = {
+    handleSubmit: PropTypes.func.isRequired,
+    handleChange: PropTypes.func.isRequired,
+    setFieldValue: PropTypes.func.isRequired,
+    list: PropTypes.shape({
+        _id: PropTypes.objectOf(PropTypes.any),
+        nameProject: PropTypes.string,
+        description: PropTypes.string,
+        category: PropTypes.objectOf(PropTypes.any),
+    })
+};
 function FormEdit(props) {
     const handlEditorChange = (content, editor) => {
         setFieldValue('description', content)
@@ -32,35 +43,35 @@ function FormEdit(props) {
                 <div className='row'>
                     <div className='col-4'>
                         <div className="form-group">
-                            <label>Project ID</label>
+                            <label htmlFor="projectId">Project ID</label>
                             <input onChange={handleChange} value={props.list._id} className="form-control" name='projectId' disabled />
                         </div>
                     </div>
                     <div className='col-4'>
                         <div className="form-group">
-                            <label>Project Name</label>
-                            <input onChange={handleChange} defaultValue={props.list.nameProject} className="form-control" name='nameProject' />
+                            <label htmlFor="nameProject">Project Name</label>
+                            <input onChange={handleChange} defaultValue={props?.list?.nameProject} className="form-control" name='nameProject' />
                         </div>
                     </div>
                     <div className='col-4'>
                         <div className="form-group">
-                            <label>Categories</label>
+                            <label htmlFor="category">Categories</label>
                             <select name='category' className='form-control' onChange={handleChange}>
                                 {categoryList.map((value, index) => {
-                                    if (props.list.category.name === value.name) {
-                                        return <option selected value={value._id} key={index}>{value.name}</option>
+                                    if (props?.list?.category.name === value.name) {
+                                        return <option selected value={value._id} key={value._id}>{value.name}</option>
                                     }
-                                    return <option value={value._id} key={index}>{value.name}</option>
+                                    return <option value={value._id} key={value._id}>{value.name}</option>
                                 })}
                             </select>
                         </div>
                     </div>
                     <div className='col-12'>
                         <div className="form-group">
-                            <label>Description</label>
+                            <label htmlFor="description">Description</label>
                             <Editor name='description'
                                 apiKey='golyll15gk3kpiy6p2fkqowoismjya59a44ly52bt1pf82oe'
-                                initialValue={props.list.description}
+                                initialValue={props?.list?.description}
                                 init={{
                                     plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount linkchecker',
                                     toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
