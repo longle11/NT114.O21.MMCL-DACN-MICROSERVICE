@@ -129,7 +129,7 @@ export default function Dashboard() {
                 return (<li key={value._id} className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }}>
                     <div onClick={() => {
                         dispatch(getInfoIssue(value._id))
-                    }}>
+                    }} onKeyDown={() => {}}>
                         {value.shortSummary}
                     </div>
                     <div className="block" style={{ display: 'flex' }}>
@@ -192,7 +192,7 @@ export default function Dashboard() {
                 <div className="avatar-group" style={{ display: 'flex' }}>
                     {projectInfo?.members?.map((value, index) => {
                         const table = <Table columns={memberColumns} rowKey={value._id} dataSource={projectInfo?.members} />
-                        return <Popover content={() => {
+                        return <Popover key={value._id} content={() => {
                             return <>{table}</>
                         }} title="Members">
                             <Avatar src={value.avatar} key={value._id} />
