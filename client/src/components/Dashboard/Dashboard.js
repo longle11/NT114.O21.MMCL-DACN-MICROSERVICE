@@ -33,6 +33,7 @@ export default function Dashboard() {
             showNotificationWithIcon('error', 'Vui lòng tham gia vào dự án trước')
             navigate('/manager')
         }
+        // eslint-disable-next-line
     }, [])
 
     //su dung cho truong hien thi member
@@ -71,16 +72,16 @@ export default function Dashboard() {
             }
         }
     ];
-
+    const renderTableMembers = (table) => {
+        return <>{table}</>
+    }
     const renderAvatarMembers = (value, table) => {
-        return <Popover key={value._id} content={() => {
-            return <>{table}</>
-        }} title="Members">
+        return <Popover key={value._id} content={renderTableMembers(table)} title="Members">
             <Avatar src={value.avatar} key={value._id} />
         </Popover>
     }
 
-    
+
 
     const countEleStatus = (position, type) => {
         if (type === 1) {
@@ -104,12 +105,13 @@ export default function Dashboard() {
         })
             .sort((issue1, issue2) => issue1.priority - issue2.priority)
             .map((value, index) => {
-                return (<li key={value._id} className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }}>
-                    <button className="btn bg-transparent" onClick={() => {
+                return (<li key={value._id} className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }} onClick={() => {
+                        console.log("Issue cần lấy: ", value._id);
                         dispatch(getInfoIssue(value._id))
-                    }} onKeyDown={() => {}}>
+                    }} onKeyDown={() => { }}>
+                    <p>
                         {value.shortSummary}
-                    </button>
+                    </p>
                     <div className="block" style={{ display: 'flex' }}>
                         <div className="block-left">
                             {iTagForIssueTypes(value.issueType)}
@@ -133,6 +135,42 @@ export default function Dashboard() {
                     </div>
                 </li>)
             })
+    }
+
+    const renderMembersAndFeatureAdd = () => {
+        return <AutoComplete
+            style={{ width: '100%' }}
+            onSearch={(value) => {
+                //kiem tra gia tri co khac null khong, khac thi xoa
+                if (search.current) {
+                    clearTimeout(search.current)
+                }
+                search.current = setTimeout(() => {
+                    dispatch(getUserKeyword(value))
+                }, 500)
+            }}
+            value={valueDashboard}
+            onChange={(value) => {
+                setValueDashboard(value)
+            }}
+            defaultValue=''
+            options={listUser?.reduce((newListUser, user) => {
+                if (user._id !== userInfo.id) {
+                    return [...newListUser, { label: user.username, value: user._id }]
+                }
+                return newListUser
+            }, [])}
+            onSelect={async (value, option) => {
+                setValueDashboard(option.label)
+                await dispatch(insertUserIntoProject({
+                    project_id: projectInfo?._id,  //id cua project
+                    user_id: value   //id cua username
+                }))
+
+                await dispatch(GetProjectAction(projectInfo?._id, ""))
+            }}
+            placeholder="input here"
+        />
     }
 
     return (
@@ -173,41 +211,7 @@ export default function Dashboard() {
                         return renderAvatarMembers(value, table)
                     })}
 
-                    <Popover placement="right" title="Add User" content={() => {
-                        return <AutoComplete
-                            style={{ width: '100%' }}
-                            onSearch={(value) => {
-                                //kiem tra gia tri co khac null khong, khac thi xoa
-                                if (search.current) {
-                                    clearTimeout(search.current)
-                                }
-                                search.current = setTimeout(() => {
-                                    dispatch(getUserKeyword(value))
-                                }, 500)
-                            }}
-                            value={valueDashboard}
-                            onChange={(value) => {
-                                setValueDashboard(value)
-                            }}
-                            defaultValue=''
-                            options={listUser?.reduce((newListUser, user) => {
-                                if (user._id !== userInfo.id) {
-                                    return [...newListUser, { label: user.username, value: user._id }]
-                                }
-                                return newListUser
-                            }, [])}
-                            onSelect={async (value, option) => {
-                                setValueDashboard(option.label)
-                                await dispatch(insertUserIntoProject({
-                                    project_id: projectInfo?._id,  //id cua project
-                                    user_id: value   //id cua username
-                                }))
-
-                                await dispatch(GetProjectAction(projectInfo?._id, ""))
-                            }}
-                            placeholder="input here"
-                        />
-                    }} trigger="click">
+                    <Popover placement="right" title="Add User" content={renderMembersAndFeatureAdd()} trigger="click">
                         <Avatar style={{ backgroundColor: '#87d068' }}>
                             <i className="fa fa-plus"></i>
                         </Avatar>

@@ -20,6 +20,7 @@ function FormEdit(props) {
 
         //lấy ra danh sách category
         dispatch(getListCategories())
+        // eslint-disable-next-line
     }, [])
     const {
         handleChange,

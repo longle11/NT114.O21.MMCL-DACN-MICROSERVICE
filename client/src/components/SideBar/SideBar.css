@@ -117,12 +117,12 @@ body {
 /*----------------sidebar-wrapper----------------*/
 
 .sidebar-wrapper {
-    width: 300px;
+    width: auto;
     height: 100%;
     max-height: 100%;
     position: fixed;
     top: 0;
-    left: -300px;
+    left: -1000px;
     z-index: 999;
 }
 
@@ -214,21 +214,6 @@ body {
 .sidebar-wrapper .sidebar-menu ul li a:hover>i::before {
     display: inline-block;
     animation: swing ease-in-out 0.5s 1 alternate;
-}
-
-.sidebar-wrapper .sidebar-menu .sidebar-dropdown>a:after {
-    font-weight: 900;
-    content: "\f105";
-    display: inline-block;
-    font-style: normal;
-    text-rendering: auto;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-align: center;
-    background: 0 0;
-    position: absolute;
-    right: 15px;
-    top: 14px;
 }
 
 

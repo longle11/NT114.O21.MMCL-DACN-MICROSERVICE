@@ -17,6 +17,7 @@ function Create(props) {
 
     useEffect(() => {
         dispatch(getListCategories())
+        // eslint-disable-next-line
     }, [])
 
     return (
@@ -73,7 +74,7 @@ Create.propTypes = {
     handleSubmit: PropTypes.func.isRequired,
     handleChange: PropTypes.func.isRequired,
     setFieldValue: PropTypes.func.isRequired,
-  };
+};
 
 const handleCreateProject = withFormik({
     enableReinitialize: true,
