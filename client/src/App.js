@@ -7,8 +7,6 @@ import Create from './components/Create-Project/Create';
 import ProjectManager from './components/Project-Manager/ProjectManager';
 import SignUp from './components/signup/SignUp';
 import Loading from './components/Loading/Loading';
-
-
 function App() {
   return (
     <>
