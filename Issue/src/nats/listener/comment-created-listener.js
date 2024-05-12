@@ -1,5 +1,5 @@
 const commentModel = require('../../models/commentModel')
-const issueModel = require('/../../models/issueModel')
+const issueModel = require('../../models/issueModel')
 const natsWrapper = require('../../nats-wrapper')
 
 const commentCreatedListener = () => {

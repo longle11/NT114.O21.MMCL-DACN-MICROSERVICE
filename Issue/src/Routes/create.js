@@ -25,7 +25,6 @@ router.post("/create", currentUserMiddleware, [
             if (!result.isEmpty()) {
                 throw new BadRequestError('Information is invalid')
             } else {
-                const { shortSummary } = req.body
                 const issue = new issueModel(req.body)
                 const newIssue = await issue.save()
 
