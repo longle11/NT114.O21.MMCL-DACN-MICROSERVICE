@@ -18,7 +18,6 @@ export default (state = initialState, action) => {
             state.status = action.status
             state.userInfo = action.userInfo
             return { ...state }
-
         default:
             return state
     }

@@ -38,6 +38,7 @@ spec:
                   fieldPath: metadata.name
             - name: MONGO_URL
               value: "mongodb://auth-mongo-srv:27017/auth"
+              
 ---
 apiVersion: v1
 kind: Service
