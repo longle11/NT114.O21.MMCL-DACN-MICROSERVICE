@@ -16,9 +16,11 @@ export default function ProjectManager() {
     const listUser = useSelector(state => state.user.list)
     const navigate = useNavigate()
     useEffect(() => {
+        console.log("Lặp vô tận");
         dispatch(ListProjectAction())
         navigate('/manager')
-    }, [])
+    // eslint-disable-next-line
+    }, []) 
 
     const [valueProject, setValueProject] = useState('')
 
@@ -127,9 +129,9 @@ export default function ProjectManager() {
                     </NavLink>
                 }
 
-                return <button className='btn bg-transparent' onKeyDown={() => {}} onClick={() => {
+                return <NavLink className='btn bg-transparent' onKeyDown={() => {}} onClick={() => {
                     showNotificationWithIcon('error', '', 'You have not participated in this project ')
-                }}>{record.nameProject}</button>
+                }}>{record.nameProject}</NavLink>
             }
         },
         {

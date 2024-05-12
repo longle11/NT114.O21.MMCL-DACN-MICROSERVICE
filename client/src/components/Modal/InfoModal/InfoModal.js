@@ -75,7 +75,14 @@ export default function InfoModal() {
     }
 
     const renderContentModal = () => {
-        return issueInfo?.description.trim() !== '' ? Parser(`${issueInfo?.description}`) : issueInfo?.creator._id === userInfo.id ? <p style={{ color: 'blue' }}>Add Your Description</p> : <p>There is no description yet</p>
+        if (issueInfo?.description.trim() !== '') {
+            return Parser(`${issueInfo?.description}`)
+        }
+
+        if (issueInfo?.creator._id === userInfo.id) {
+            return <p style={{ color: 'blue' }}>Add Your Description</p>
+        }
+        return <p>There is no description yet</p>
     }
 
     const renderComments = () => {
@@ -110,11 +117,11 @@ export default function InfoModal() {
                                 {value.content}
                             </p>
                             {
-                                value.creator._id === userInfo.id ? (<div className="mb-2"><button className="btn bg-transparent mr-3" onClick={() => {
+                                value.creator._id === userInfo.id ? (<div className="mb-2"><button className="btn bg-transparent p-0 mr-3" onClick={() => {
                                     setEditContentComment(value.content);
                                     setEditComment(value._id.toString());
                                 }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }}>Edit</button>
-                                    <button className="btn bg-transparent" onKeyDown={() => { }} onClick={() => {
+                                    <button className="btn bg-transparent p-0" onKeyDown={() => { }} onClick={() => {
                                         dispatch(deleteCommentAction({ commentId: value._id.toString(), issueId: issueInfo?._id.toString() }));
                                     }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }}>Delete</button></div>) : <div className='mt-3'></div>
 
@@ -154,7 +161,7 @@ export default function InfoModal() {
 
 
 
-    return <dialog className="modal fade" id="infoModal" tabIndex={-1} aria-labelledby="infoModal" aria-hidden="true">
+    return <div role="dialog" className="modal fade" id="infoModal" tabIndex={-1} aria-labelledby="infoModal" aria-hidden="true">
         <div className="modal-dialog modal-info">
             <div className="modal-content">
                 <div className="modal-header align-items-center">
@@ -164,7 +171,7 @@ export default function InfoModal() {
                             defaultValue={issueTypeOptions[issueInfo?.issueType]?.value}
                             style={{ width: '100%' }}
                             options={issueTypeOptions}
-                            disabled={issueInfo?.creator._id !== userInfo.id}
+                            disabled={issueInfo?.creator?._id !== userInfo.id}
                             onSelect={(value, option) => {
                                 dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { issueType: value }))
                             }}
@@ -173,7 +180,7 @@ export default function InfoModal() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center' }} className="task-click">
                         {
-                            issueInfo?.creator._id.toString() === userInfo.id ? (
+                            issueInfo?.creator?._id.toString() === userInfo.id ? (
                                 <div>
                                     <Popconfirm placement="topLeft"
                                         title="Delete this issue?"
@@ -202,13 +209,13 @@ export default function InfoModal() {
                                 <p className="issue" style={{ fontSize: '24px', fontWeight: 'bold' }}>{issueInfo?.shortSummary}</p>
                                 <div className="description">
                                     <p style={{ fontWeight: 'bold', fontSize: '15px' }}>Description</p>
-                                    {editDescription ? (<button className='btn bg-transparent' onKeyDown={() => { }} onDoubleClick={() => {
-                                        if (issueInfo?.creator._id === userInfo.id) {
+                                    {editDescription ? (<p className='btn bg-transparent' onKeyDown={() => { }} onDoubleClick={() => {
+                                        if (issueInfo?.creator?._id === userInfo.id) {
                                             setEditDescription(false)
                                         }
                                     }}>
                                         {renderContentModal()}
-                                    </button>) : (
+                                    </p>) : (
                                         <>
                                             <Editor name='description'
                                                 apiKey='golyll15gk3kpiy6p2fkqowoismjya59a44ly52bt1pf82oe'
@@ -243,7 +250,7 @@ export default function InfoModal() {
                                     <h6>Comment</h6>
 
                                     {/* Kiểm tra xem nếu người đó thuộc về issue thì mới có thể đăng bình luận */}
-                                    {issueInfo?.creator._id === userInfo.id || issueInfo?.assignees.findIndex(value => value._id === userInfo.id) !== -1 ? (
+                                    {issueInfo?.creator?._id === userInfo.id || issueInfo?.assignees.findIndex(value => value._id === userInfo.id) !== -1 ? (
                                         <div className="block-comment" style={{ display: 'flex', flexDirection: 'column' }}>
                                             <div className="input-comment d-flex">
                                                 <div className="avatar">
@@ -383,14 +390,12 @@ export default function InfoModal() {
                                     <div style={{ display: 'flex' }}>
                                         <i className="fa fa-clock" />
                                         <div style={{ width: '100%' }}>
-                                            <div className="progress">
+                                            <div className="progress" onDoubleClick={() => {
+                                                setTime(true);
+                                            }} onKeyDown={() => { }}>
                                                 <progress
                                                     className="progress-bar"
-                                                    onKeyDown={() => { }}
                                                     style={{ width: (issueInfo?.timeSpent / (issueInfo?.timeSpent + issueInfo?.timeRemaining)) * 100 + '%' }}
-                                                    onDoubleClick={() => {
-                                                        setTime(true);
-                                                    }}
                                                 />
                                             </div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -443,5 +448,5 @@ export default function InfoModal() {
                 </div>
             </div>
         </div>
-    </dialog >
+    </div >
 }

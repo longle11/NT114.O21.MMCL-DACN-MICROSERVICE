@@ -8,9 +8,10 @@ export const UserLoginTemplate = ({ Component }) => {
     const dispatch = useDispatch()
     useEffect(() => {
         dispatch(userLoggedInAction())
+        // eslint-disable-next-line
     }, [])
     return <Login />
-} 
+}
 UserLoginTemplate.propTypes = {
     Component: PropTypes.elementType.isRequired
 };

@@ -24,16 +24,18 @@ export default function MainPageTemplate({ Component }) {
     useEffect(() => {
         dispatch(userLoggedInAction())
         //lay ra project hien tai
-        if (typeof localStorage.getItem('projectid') === 'string' && localStorage.getItem('projectid').length >= 10) {
+        if (localStorage.getItem('projectid') !== null && typeof localStorage.getItem('projectid') === 'string' && localStorage.getItem('projectid').length >= 10) {
             dispatch(GetProjectAction(localStorage.getItem('projectid'), ""))
         }
+        // eslint-disable-next-line
     }, [])
     const handleLogin = () => {
         setIsModalOpen(false);
         navigate("/login")
     };
     const content = () => {
-        if (isLoading) {
+        console.log("trạng thái log in hiện tại", status, " với loading ", isLoading);
+        if (!isLoading) {
             if (status) {
                 return <div className='d-flex' style={{ overflow: 'hidden' }}>
                     <DrawerHOC />

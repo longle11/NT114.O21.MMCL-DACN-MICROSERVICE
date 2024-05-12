@@ -35,6 +35,7 @@ export const getInfoIssue = (id) => {
     return async dispatch => {
         try {
             const res = await Axios.get(`${domainName}/api/issue/${id}`)
+            console.log("Kết quả lấy ra được ", res.data.data);
             dispatch({
                 type: GET_INFO_ISSUE,
                 issueInfo: res.data.data

@@ -23,7 +23,7 @@ function TaskForm(props) {
         setFieldValue('description', content)
     }
 
-    
+
     const { id } = useParams()
 
     useEffect(() => {
@@ -33,6 +33,7 @@ function TaskForm(props) {
             // //submit sự kiện để gửi lên form
             dispatch(submit_edit_form_action(handleSubmit))
         }
+        // eslint-disable-next-line
     }, [])
     const dispatch = useDispatch()
     return (

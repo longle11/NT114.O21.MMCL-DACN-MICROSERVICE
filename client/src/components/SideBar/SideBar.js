@@ -27,7 +27,7 @@ const SideBar = () => {
             </NavLink>
             <nav id="sidebar" className="sidebar-wrapper bg-dark">
                 <div>
-                    <div className="sidebar-content">
+                    <div className="sidebar-content" style={{overflow: 'hidden'}}>
                         <div className="sidebar-brand">
                             <div className='slidebar-infoUser'>
                                 <img src={userInfo?.avatar} style={{ borderRadius: '50%' }} alt='avatar of user' />
