@@ -57,8 +57,18 @@ jobs:
       - name: Deploy argocd yaml file
         run: kubectl apply -f infras/argocd.yaml
 
-      # - name: Apply k8s
-      #   run: kubectl apply -f infras/k8s
+      - name: Chang type ClusterIP to Loadbalancer in argocd
+        run: |
+          kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+
+      - name: Chang type ClusterIP to Loadbalancer in grafana
+        run: |
+          kubectl patch svc prometheus-grafana -n prometheus -p '{"spec": {"type": "LoadBalancer"}}'
+      
+      - name: Chang type ClusterIP to Loadbalancer in prometheus
+        run: |
+          kubectl patch svc prometheus-kube-prometheus-prometheus -n prometheus -p '{"spec": {"type": "LoadBalancer"}}'
+
 
 
       
