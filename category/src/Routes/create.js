@@ -28,7 +28,7 @@ router.get('/create', async (req, res) => {
 
     categoryPublisher(listData, 'category:created')
     res.status(201).json({
-        message: "Khoi tao thanh cong",
+        message: "Success Initial",
         data: listData
     })
 })
