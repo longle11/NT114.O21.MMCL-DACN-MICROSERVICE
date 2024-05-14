@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: category
-          image: longle2003/category
+          image: longle2003/category:latest
           env:
             - name: JWT_KEY
               valueFrom:
