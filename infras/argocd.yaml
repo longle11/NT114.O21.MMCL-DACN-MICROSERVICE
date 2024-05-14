@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/longle11/NT114.O21.MMCL-DACN-MICROSERVICE
-    targetRevision: main
+    targetRevision: HEAD
     path: infras/k8s
   destination: 
     server: https://kubernetes.default.svc
