@@ -25,4 +25,4 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
     
       - run: aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name ${{secrets.AWS_CLUSTER_NAME}}
-      - run: kubectl apply -f infras/k8s/category-depl.yaml
+      - run: kubectl rollout restart deployment category-depl
