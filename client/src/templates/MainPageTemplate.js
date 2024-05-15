@@ -34,7 +34,7 @@ export default function MainPageTemplate({ Component }) {
         navigate("/login")
     };
     const content = () => {
-        console.log("trạng thái log in hiện tại", status, " với loading ", isLoading);
+
         if (!isLoading) {
             if (status) {
                 return <div className='d-flex' style={{ overflow: 'hidden' }}>
@@ -46,10 +46,11 @@ export default function MainPageTemplate({ Component }) {
                     </div>
                     <InfoModal />
                 </div>
+            } else {
+                return <Modal title="Thông báo" open={isModalOpen} onCancel={handleLogin} onOk={handleLogin} centered>
+                    <p>Your login session has expired, please log in again</p>
+                </Modal>
             }
-            return <Modal title="Thông báo" open={isModalOpen} onCancel={handleLogin} onOk={handleLogin} centered>
-                <p>Your login session has expired, please log in again</p>
-            </Modal>
         }
         return null
     }
