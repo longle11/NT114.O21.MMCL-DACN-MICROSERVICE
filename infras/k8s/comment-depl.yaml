@@ -44,8 +44,9 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: comment-srv
+  name: comment-nodeport-srv
 spec: 
+  type: NodePort
   selector:
     app: comment
   ports:

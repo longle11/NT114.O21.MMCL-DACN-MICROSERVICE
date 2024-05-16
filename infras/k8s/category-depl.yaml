@@ -36,8 +36,9 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: category-srv
+  name: category-nodeport-srv
 spec: 
+  type: NodePort
   selector:
     app: category
   ports:

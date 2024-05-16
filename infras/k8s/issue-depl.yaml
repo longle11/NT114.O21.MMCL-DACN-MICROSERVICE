@@ -42,8 +42,9 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: issue-srv
-spec:
+  name: issue-nodeport-srv
+spec: 
+  type: NodePort
   selector: 
     app: issue
   ports:

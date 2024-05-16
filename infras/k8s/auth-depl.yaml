@@ -44,8 +44,9 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: auth-srv
-spec: 
+  name: auth-nodeport-srv
+spec:  
+  type: NodePort
   selector:
     app: auth
   ports:

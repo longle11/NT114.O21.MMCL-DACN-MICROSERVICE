@@ -40,7 +40,7 @@ spec:
             pathType: Prefix
             backend: 
               service:  
-                name: projectmanagement-srv
+                name: projectmanagement-nodeport-srv
                 port:
                   number: 4003
           - path: /api/category/?(.*)
