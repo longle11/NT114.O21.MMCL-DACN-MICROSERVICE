@@ -27,8 +27,9 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: client-srv
+  name: client-nodeport-srv
 spec: 
+  type: NodePort
   selector:
     app: client
   ports:
