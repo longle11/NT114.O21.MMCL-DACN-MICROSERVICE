@@ -16,7 +16,6 @@ export default function ProjectManager() {
     const listUser = useSelector(state => state.user.list)
     const navigate = useNavigate()
     useEffect(() => {
-        console.log("Lặp vô tận");
         dispatch(ListProjectAction())
         navigate('/manager')
     // eslint-disable-next-line
@@ -193,7 +192,7 @@ export default function ProjectManager() {
                 if (userInfo.id === record.creator?._id) {
                     return <div>
                         <Button className='mr-2 text-primary' type="default" icon={<EditOutlined />} size='large' onClick={() => {
-                            dispatch(drawer_edit_form_action(<FormEdit />))
+                            dispatch(drawer_edit_form_action(<FormEdit />, "Submit", 730))
                             //gửi item hiện tại lên redux
                             record.creator = 45
                             dispatch(getItemCategory(record))

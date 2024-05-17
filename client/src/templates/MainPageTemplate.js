@@ -13,6 +13,8 @@ import { userLoggedInAction } from '../redux/actions/UserAction'
 import { GetProjectAction } from '../redux/actions/ListProjectAction'
 import { Modal } from 'antd'
 import PropTypes from 'prop-types';
+import { io } from 'socket.io-client'
+import domainName from '../util/Config'
 
 export default function MainPageTemplate({ Component }) {
     const status = useSelector(state => state.user.status)
@@ -22,6 +24,9 @@ export default function MainPageTemplate({ Component }) {
     const navigate = useNavigate()
 
     useEffect(() => {
+        const socket = io(domainName)
+        console.log(socket);
+
         dispatch(userLoggedInAction())
         //lay ra project hien tai
         if (localStorage.getItem('projectid') !== null && typeof localStorage.getItem('projectid') === 'string' && localStorage.getItem('projectid').length >= 10) {

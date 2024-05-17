@@ -7,6 +7,7 @@ import TaskForm from '../Forms/TaskForm';
 import { NavLink, useParams } from 'react-router-dom';
 import { userLoggedoutAction } from '../../redux/actions/UserAction';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
+import Notification from '../Notifications/Notification';
 const SideBar = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const dispatch = useDispatch()
@@ -52,7 +53,7 @@ const SideBar = () => {
                                 <li className="sidebar-dropdown font-weight-bold" style={{ fontSize: '17px' }}>
                                     <NavLink href="#" onClick={() => {
                                         if (id) {
-                                            dispatch(drawer_edit_form_action(<TaskForm />))
+                                            dispatch(drawer_edit_form_action(<TaskForm />, "Submit", 720))
                                         } else {
                                             showNotificationWithIcon('error', 'Create Issue', 'Vui long tham gia vao du an truoc khi tao van de')
                                         }
@@ -62,9 +63,11 @@ const SideBar = () => {
                                     </NavLink>
                                 </li>
                                 <li className="sidebar-dropdown font-weight-bold" style={{ fontSize: '17px' }}>
-                                    <NavLink href="#">
-                                        <i style={{ fontSize: '17px' }} className="fa-solid fa-magnifying-glass  text-light"></i>
-                                        <span className='text-light'>Search Issues</span>
+                                    <NavLink href="#" onClick={() => {
+                                        dispatch(drawer_edit_form_action(<Notification />, "Clear All Notifications", 300))
+                                    }}>
+                                        <i style={{ fontSize: '17px' }} className="fa-solid fa-bell text-light"></i>
+                                        <span className='text-light'>Notification</span>
                                     </NavLink>
                                 </li>
                             </ul>

@@ -6,28 +6,36 @@ export default function DrawerHOC() {
     const visible = useSelector(state => state.isOpenDrawer.visible)
     const component = useSelector(state => state.isOpenDrawer.component)
     const submit = useSelector(state => state.isOpenDrawer.submit)
+    const textButton = useSelector(state => state.isOpenDrawer.textButton)
+    const width = useSelector(state => state.isOpenDrawer.width)
     
     const dispatch = useDispatch()
     const handleClose = () => {
         dispatch(drawer_edit_form_action(<div/>))
         dispatch(drawerAction(true))
     }
+    const renderButton = () => {
+        if(textButton?.toLowerCase().includes("submit")) {
+            return <Button onClick={handleClose}>Cancel</Button>
+        }
+        return <></>
+    }
     return (
         <Drawer
-                title="Create a new account"
-                width={720}
+                width={width}
                 onClose={handleClose}
                 open={visible}
                 styles={{
                     body: {
                         paddingBottom: 80,
+                        padding: 0
                     },
                 }}
                 extra={
-                    <Space>
-                        <Button onClick={handleClose}>Cancel</Button>
+                    <Space> 
+                        {renderButton()}
                         <Button onClick={submit} type="primary">
-                            Submit
+                            {textButton}
                         </Button>
                     </Space>
                 }

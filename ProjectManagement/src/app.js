@@ -3,7 +3,7 @@ const bodyParser = require("body-parser")
 const cors = require("cors")
 const cookieSession = require("cookie-session")
 const errorHandler = require("./Middlewares/Error-handler")
-
+const { Server } = require('socket.io')
 
 const app = express()
 app.disable('x-powered-by')
@@ -12,6 +12,21 @@ app.use(cors({
     origin: ['https://nt533uitjiradev.click'],
     methods: ['GET', 'POST', 'PUT', 'DELETE']
 }))
+
+const io = new Server({
+    cors: {
+        origin: "https://nt533uitjiradev.click"
+    }
+})
+
+io.on("connection", (socket) => {
+    console.log(socket);
+
+    socket.on("disconnect", () => {
+        console.log("Someone has left");
+    })
+})
+
 app.use(bodyParser.json())
 
 app.set('trust proxy', 1)
