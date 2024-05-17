@@ -13,11 +13,13 @@ export const drawerAction = (status) => {
         }
     }
 }
-export const drawer_edit_form_action = (component) => {
+export const drawer_edit_form_action = (component, textButton, width) => {
     return dispatch => {
         dispatch({
             type: OPEN_FORM_EDIT_DRAWER,
-            component: component
+            component: component,
+            textButton, 
+            width
         })
     }
 }

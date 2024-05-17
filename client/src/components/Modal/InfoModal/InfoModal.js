@@ -199,7 +199,7 @@ export default function InfoModal() {
                         }
                         <button type="button" className="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">×</span>
-                        </button>
+                        </button> 
                     </div>
                 </div>
                 <div className="modal-body">
@@ -209,7 +209,7 @@ export default function InfoModal() {
                                 <p className="issue" style={{ fontSize: '24px', fontWeight: 'bold' }}>{issueInfo?.shortSummary}</p>
                                 <div className="description">
                                     <p style={{ fontWeight: 'bold', fontSize: '15px' }}>Description</p>
-                                    {editDescription ? (<p className='btn bg-transparent' onKeyDown={() => { }} onDoubleClick={() => {
+                                    {editDescription ? (<p onKeyDown={() => { }} onDoubleClick={() => {
                                         if (issueInfo?.creator?._id === userInfo.id) {
                                             setEditDescription(false)
                                         }

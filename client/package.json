@@ -23,6 +23,7 @@
     "react-scripts": "5.0.1",
     "redux": "^5.0.1",
     "redux-thunk": "^3.1.0",
+    "socket.io-client": "^4.7.5",
     "styled-component": "^2.8.0",
     "tailwindcss": "^3.4.1",
     "web-vitals": "^2.1.4",
