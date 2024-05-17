@@ -17,7 +17,7 @@ app.use(cookieSession({
 
 app.use(bodyParser.json())
 app.use(cors({
-    origin: ['https://nt533uitjiradev.click'],
+    origin: ['https://www.nt533uitjiradev.click'],
     methods: ['GET', 'POST', 'PUT', 'DELETE']
 }))
 
