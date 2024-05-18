@@ -15,7 +15,8 @@ app.use(cors({
 
 const io = new Server({
     cors: {
-        origin: "https://www.nt533uitjiradev.click"
+        // origin: "https://www.nt533uitjiradev.click"
+        origin: "http://client-srv:3006"
     }
 })
 
