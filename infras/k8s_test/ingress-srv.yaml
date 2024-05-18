@@ -4,10 +4,13 @@ metadata:
   name: ingress-srv
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "1800"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "1800"
+    nginx.ingress.kubernetes.io/websocket-services: client-srv
 spec: 
   ingressClassName: nginx
   rules:
-    - host: jira.dev
+    - host: jiraproject.com
       http:
         paths:
           - path: /api/users/?(.*)
@@ -51,4 +54,4 @@ spec:
               service:
                 name: client-srv
                 port: 
-                  number: 3000
+                  number: 3006

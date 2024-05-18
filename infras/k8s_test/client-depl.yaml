@@ -15,8 +15,6 @@ spec:
       containers:
         - name: client
           image: longle2003/client
-          ports:
-            - containerPort: 3000
 ---
 
 apiVersion: v1
@@ -29,7 +27,7 @@ spec:
   ports:
     - name: client
       protocol: TCP
-      port: 3000
-      targetPort: 3000
+      port: 3006
+      targetPort: 3006
 
 

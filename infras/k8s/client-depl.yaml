@@ -35,7 +35,7 @@ spec:
   ports:
     - name: client
       protocol: TCP
-      port: 3000
-      targetPort: 3000
+      port: 3006
+      targetPort: 3006
 
 
