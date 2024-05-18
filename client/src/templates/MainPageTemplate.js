@@ -24,8 +24,7 @@ export default function MainPageTemplate({ Component }) {
     const navigate = useNavigate()
 
     useEffect(() => {
-        // const socket = io(`${domainName}/api/projectmanagement`)
-        const socket = io("http://projectmanagement-srv:4003")
+        const socket = io(`${domainName}/api/projectmanagement`)
         console.log("New result ", socket);
 
         dispatch(userLoggedInAction())
