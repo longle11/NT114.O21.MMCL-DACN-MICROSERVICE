@@ -7,8 +7,7 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/websocket-services: client-nodeport-srv
     nginx.org/websocket-services: client-nodeport-srv
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+
 
 spec: 
   ingressClassName: nginx
@@ -55,6 +54,13 @@ spec:
                 name: category-nodeport-srv
                 port: 
                   number: 4004
+          - path: /socket.io/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: projectmanagement-nodeport-srv
+                port:
+                  number: 4003
           - path: /?(.*)
             pathType: Prefix
             backend:
