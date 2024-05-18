@@ -14,6 +14,7 @@ import { GetProjectAction } from '../redux/actions/ListProjectAction'
 import { Modal } from 'antd'
 import PropTypes from 'prop-types';
 import { io } from 'socket.io-client'
+import domainName from '../util/Config'
 
 export default function MainPageTemplate({ Component }) {
     const status = useSelector(state => state.user.status)
@@ -23,7 +24,7 @@ export default function MainPageTemplate({ Component }) {
     const navigate = useNavigate()
 
     useEffect(() => {
-        const socket = io("http://projectmanagement-srv:4003")
+        const socket = io(`${domainName}/api/projectmanagement`)
         console.log("New result ", socket);
 
         dispatch(userLoggedInAction())
