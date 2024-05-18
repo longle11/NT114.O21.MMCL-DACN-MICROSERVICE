@@ -13,19 +13,19 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE']
 }))
 
-const io = new Server({
-    cors: {
-        origin: "https://www.nt533uitjiradev.click"
-    }
-})
+// const io = new Server({
+//     cors: {
+//         origin: "https://www.nt533uitjiradev.click"
+//     }
+// })
 
-io.on("connection", (socket) => {
-    console.log(socket);
+// io.on("connection", (socket) => {
+//     console.log(socket);
 
-    socket.on("disconnect", () => {
-        console.log("Someone has left");
-    })
-})
+//     socket.on("disconnect", () => {
+//         console.log("Someone has left");
+//     })
+// })
 
 app.use(bodyParser.json())
 
