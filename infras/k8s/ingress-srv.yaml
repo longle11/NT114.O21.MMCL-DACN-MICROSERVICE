@@ -5,6 +5,7 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/websocket-services: client-nodeport-srv
 spec: 
   ingressClassName: nginx
   tls:
@@ -56,4 +57,4 @@ spec:
               service:
                 name: client-nodeport-srv
                 port: 
-                  number: 3000
+                  number: 3006
