@@ -29,5 +29,3 @@ spec:
       protocol: TCP
       port: 3006
       targetPort: 3006
-
-
