@@ -9,7 +9,7 @@ const app = express()
 app.disable('x-powered-by')
 
 app.use(cors({
-    origin: ['https://www.nt533uitjiradev.click', "*"],
+    origin: ['https://www.nt533uitjiradev.click'],
     methods: ['GET', 'POST', 'PUT', 'DELETE']
 }))
 
