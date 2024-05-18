@@ -24,8 +24,9 @@ export default function MainPageTemplate({ Component }) {
     const navigate = useNavigate()
 
     useEffect(() => {
-        const socket = io(`${domainName}/api/projectmanagement`)
-        console.log("kết quả nhận được ", socket);
+        // const socket = io(`${domainName}/api/projectmanagement`)
+        const socket = io("http://projectmanagement-srv:4003")
+        console.log("New result ", socket);
 
         dispatch(userLoggedInAction())
         //lay ra project hien tai
