@@ -4,15 +4,15 @@ metadata:
   name: ingress-srv
   annotations:
     nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "1800"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "1800"
     nginx.ingress.kubernetes.io/websocket-services: client-srv
-        # nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    # nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.org/websocket-services: client-nodeport-srv
+    kubernetes.io/ingress.allow-http: "false"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
 spec: 
   ingressClassName: nginx
   rules:
-    - host: jiraproject.com
+    - host: www.nt533uitjiradev.click
       http:
         paths:
           - path: /api/users/?(.*)
@@ -40,6 +40,13 @@ spec:
             pathType: Prefix
             backend: 
               service:  
+                name: projectmanagement-srv
+                port:
+                  number: 4003
+          - path: /socket.io/?(.*)
+            pathType: Prefix
+            backend:
+              service:
                 name: projectmanagement-srv
                 port:
                   number: 4003

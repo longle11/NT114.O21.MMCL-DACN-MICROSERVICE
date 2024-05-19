@@ -40,6 +40,13 @@ spec:
                 name: issue-nodeport-srv
                 port:
                   number: 4002
+          - path: /socket.io/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: projectmanagement-nodeport-srv
+                port:
+                  number: 4003
           - path: /api/projectmanagement/?(.*)
             pathType: Prefix
             backend: 
@@ -54,13 +61,6 @@ spec:
                 name: category-nodeport-srv
                 port: 
                   number: 4004
-          - path: /socket.io/?(.*)
-            pathType: Prefix
-            backend:
-              service:
-                name: projectmanagement-nodeport-srv
-                port:
-                  number: 4003
           - path: /?(.*)
             pathType: Prefix
             backend:

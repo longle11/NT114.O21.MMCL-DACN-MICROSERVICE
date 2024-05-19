@@ -8,6 +8,7 @@ export default function DrawerHOC() {
     const submit = useSelector(state => state.isOpenDrawer.submit)
     const textButton = useSelector(state => state.isOpenDrawer.textButton)
     const width = useSelector(state => state.isOpenDrawer.width)
+    const padding = useSelector(state => state.isOpenDrawer.padding)
     
     const dispatch = useDispatch()
     const handleClose = () => {
@@ -28,7 +29,7 @@ export default function DrawerHOC() {
                 styles={{
                     body: {
                         paddingBottom: 80,
-                        padding: 0
+                        padding: padding
                     },
                 }}
                 extra={

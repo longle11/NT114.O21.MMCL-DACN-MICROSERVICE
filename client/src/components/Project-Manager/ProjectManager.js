@@ -192,7 +192,7 @@ export default function ProjectManager() {
                 if (userInfo.id === record.creator?._id) {
                     return <div>
                         <Button className='mr-2 text-primary' type="default" icon={<EditOutlined />} size='large' onClick={() => {
-                            dispatch(drawer_edit_form_action(<FormEdit />, "Submit", 730))
+                            dispatch(drawer_edit_form_action(<FormEdit />, "Submit", 730, '30px'))
                             //gửi item hiện tại lên redux
                             record.creator = 45
                             dispatch(getItemCategory(record))

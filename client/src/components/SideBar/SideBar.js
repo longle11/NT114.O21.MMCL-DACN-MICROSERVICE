@@ -53,7 +53,7 @@ const SideBar = () => {
                                 <li className="sidebar-dropdown font-weight-bold" style={{ fontSize: '17px' }}>
                                     <NavLink href="#" onClick={() => {
                                         if (id) {
-                                            dispatch(drawer_edit_form_action(<TaskForm />, "Submit", 720))
+                                            dispatch(drawer_edit_form_action(<TaskForm />, "Submit", 720, '30px'))
                                         } else {
                                             showNotificationWithIcon('error', 'Create Issue', 'Vui long tham gia vao du an truoc khi tao van de')
                                         }
@@ -64,7 +64,7 @@ const SideBar = () => {
                                 </li>
                                 <li className="sidebar-dropdown font-weight-bold" style={{ fontSize: '17px' }}>
                                     <NavLink href="#" onClick={() => {
-                                        dispatch(drawer_edit_form_action(<Notification />, "Clear All Notifications", 300))
+                                        dispatch(drawer_edit_form_action(<Notification />, "Clear All Notifications", 300, '0px'))
                                     }}>
                                         <i style={{ fontSize: '17px' }} className="fa-solid fa-bell text-light"></i>
                                         <span className='text-light'>Notification</span>
