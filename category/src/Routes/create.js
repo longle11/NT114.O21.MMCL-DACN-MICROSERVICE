@@ -17,16 +17,19 @@ const objects = [
 
 router.get('/create', async (req, res) => {
     const categories = await categoryModel.find({})
-    if(categories.length === 0) {
+    let listData = null
+    if (categories.length === 0) {
         for (const obj of objects) {
             await categoryModel.create({
                 name: obj
             })
         }
+        listData = await categoryModel.find({})
+        categoryPublisher(listData, 'category:created')
+    } else {
+        listData = await categoryModel.find({})
     }
-    const listData = await categoryModel.find({})
 
-    categoryPublisher(listData, 'category:created')
     res.status(201).json({
         message: "Success Initial",
         data: listData

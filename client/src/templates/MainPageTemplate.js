@@ -19,6 +19,7 @@ import domainName from '../util/Config'
 export default function MainPageTemplate({ Component }) {
     const status = useSelector(state => state.user.status)
     const isLoading = useSelector(state => state.loading.isLoading)
+    const userInfo = useSelector(state => state.user.userInfo)
     const dispatch = useDispatch()
     const [isModalOpen, setIsModalOpen] = useState(true);
     const navigate = useNavigate()
@@ -52,9 +53,13 @@ export default function MainPageTemplate({ Component }) {
                     <InfoModal />
                 </div>
             } else {
-                return <Modal title="Thông báo" open={isModalOpen} onCancel={handleLogin} onOk={handleLogin} centered>
-                    <p>Your login session has expired, please log in again</p>
-                </Modal>
+                if (userInfo === null) {
+                    return <Modal title="Thông báo" open={isModalOpen} onCancel={handleLogin} onOk={handleLogin} centered>
+                        <p>Your login session has expired, please log in again</p>
+                    </Modal>
+                }
+
+                return navigate("/login")
             }
         }
         return null
