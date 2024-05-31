@@ -5,7 +5,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: ltphilong2001@gmail.com
+    email: 21522302@gm.uit.edu.vn
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
