@@ -43,22 +43,23 @@ export default function MainPageTemplate({ Component }) {
 
         if (!isLoading) {
             if (status) {
-                return <div className='d-flex' style={{ overflow: 'hidden' }}>
-                    <DrawerHOC />
-                    <SideBar />
-                    <MenuBar />
-                    <div style={{ width: '100%' }} className='main'>
-                        <Component />
+                if (userInfo !== null) {
+                    return <div className='d-flex' style={{ overflow: 'hidden' }}>
+                        <DrawerHOC />
+                        <SideBar />
+                        <MenuBar />
+                        <div style={{ width: '100%' }} className='main'>
+                            <Component />
+                        </div>
+                        <InfoModal />
                     </div>
-                    <InfoModal />
-                </div>
-            } else {
-                if (userInfo === null) {
+                }
+                else {
                     return <Modal title="Thông báo" open={isModalOpen} onCancel={handleLogin} onOk={handleLogin} centered>
                         <p>Your login session has expired, please log in again</p>
                     </Modal>
                 }
-
+            } else {
                 return navigate("/login")
             }
         }

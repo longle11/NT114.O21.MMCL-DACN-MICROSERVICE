@@ -91,7 +91,7 @@ export default function ProjectManager() {
             dataIndex: '_id',
             render: (text, record, index) => {
                 return <Button type="primary" onClick={async () => {
-                    await dispatch(deleteUserInProject(text, record.projectId))
+                    dispatch(deleteUserInProject(text, record.projectId))
 
                     dispatch(ListProjectAction())
                 }} icon={<DeleteOutlined />} size='large' />
@@ -126,11 +126,11 @@ export default function ProjectManager() {
                     }} style={{ textDecoration: 'none' }}>
                         <span>{record.nameProject}</span>
                     </NavLink>
+                }else {
+                    return <NavLink onKeyDown={() => {}} onClick={() => {
+                        showNotificationWithIcon('error', '', 'You have not participated in this project ')
+                    }}><span>{record.nameProject}</span></NavLink>
                 }
-
-                return <NavLink className='btn bg-transparent' onKeyDown={() => {}} onClick={() => {
-                    showNotificationWithIcon('error', '', 'You have not participated in this project ')
-                }}>{record.nameProject}</NavLink>
             }
         },
         {

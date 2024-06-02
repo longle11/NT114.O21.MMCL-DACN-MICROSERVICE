@@ -67,7 +67,3 @@ jobs:
       - name: Chang type ClusterIP to Loadbalancer in prometheus
         run: |
           kubectl patch svc prometheus-kube-prometheus-prometheus -n prometheus -p '{"spec": {"type": "LoadBalancer"}}'
-
-
-
-      

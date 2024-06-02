@@ -20,7 +20,6 @@ export const GetProjectAction = (id, keyword) => {
     return async dispatch => {
         try {
             const res = await Axios.get(`${domainName}/api/projectmanagement/${id.toString()}?keyword=${keyword}`)
-            console.log(res);
             dispatch({
                 type: GET_PROJECT_API,
                 data: res.data.data

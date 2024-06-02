@@ -1,0 +1,27 @@
+apiVersion: monitoring.cores.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: alert-config
+  labels:
+    resource: alertmanagerPromethus
+  namespace: prometheus
+spec:
+  route: 
+    groupBy: ['severity']
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 12h
+    receiver: 'email'
+  receivers:
+    - name: 'email'
+      email_configs:
+      - to: '21522302@gm.uit.edu.vn'
+        from: '21522302@gm.uit.edu.vn'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: '21522302@gm.uit.edu.vn'
+        auth_identity: '21522302@gm.uit.edu.vn'
+        auth_password: 
+          valueFrom:
+          secretKeyRef:
+            name: smtp-secret
+            key: smtp-password

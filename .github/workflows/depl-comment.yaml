@@ -26,4 +26,4 @@ jobs:
       
       - run: aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name ${{secrets.AWS_CLUSTER_NAME}}
       - run: kubectl rollout restart deployment comment-depl
-
+        continue-on-error: true

@@ -1,0 +1,50 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    release: prometheus
+  name: api-rules
+spec:
+  groups:
+    - name: api
+      rules:
+        - alert: APIHighRequestLatency
+          expr: api_http_request_latencies_second{quantile="0.5"} > 1
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: "High request latency on {{ $labels.instance }}"
+            description: "{{ $labels.instance }} has a median request latency above 1s (current value: {{ $value }}s)"
+        - alert: DiskSpaceUsage
+          expr: 100.0 - 100 * ((wmi_logical_disk_free_bytes{} / 1024 / 1024 ) / (wmi_logical_disk_size_bytes{}  / 1024 / 1024)) > 95
+          for: 1m
+          labels:
+            severity: error
+          annotations:
+            summary: "Disk Space Usage (instance {{ $labels.instance }})"
+            description: "Disk Space on Drive is used more than 95%\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+        - alert: Cpu Usage High
+          expr: 100 - (avg by (instance) (irate(wmi_cpu_time_total{mode="idle"}[2m])) * 100) > 80
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: "CPU Usage (instance {{ $labels.instance }})"
+            description: "CPU Usage is more than 80%\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+        - alert: Memory Usage High
+          expr: 100*(windows_cs_physical_memory_bytes)*0 < 1
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Memory Usage (instance {{ $labels.instance }})"
+            description: "Memory Usage is more than 90%\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
+        - alert: InstanceDown
+          expr: up == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: “Instance [{{ $labels.instance }}] down”
+            description: “Instance [{{ $labels.instance }}] down”
