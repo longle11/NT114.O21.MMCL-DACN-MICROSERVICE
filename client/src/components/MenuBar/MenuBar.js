@@ -1,6 +1,33 @@
 import React from 'react'
+import { useSelector } from 'react-redux';
 import { NavLink } from 'react-router-dom';
 export default function MenuBar() {
+    const listProject = useSelector(state => state.listProject.listProject)
+    const userInfo = useSelector(state => state.user.userInfo)
+    const renderCurrentProject = () => {
+        const index = listProject.findIndex(project => localStorage.getItem('projectid')?.length >= 10 && project._id.toString() === localStorage.getItem('projectid'))
+        if (index !== -1) {
+            //xem user hiện tại có phải là người tạo dự án hay không
+            var isProjectOwner = userInfo.id === listProject[index]?.creator._id.toString()
+            const listMembers = listProject[index]?.members.map(member => member._id.toString())
+            var isProjectMembers = listMembers.includes(userInfo.id)
+            if (isProjectMembers || isProjectOwner) {
+                return <li className="list">
+                    <NavLink to={`/projectDetail/${localStorage.getItem('projectid')}`} className="nav-link">
+                        <i className="fa fa-home mr-3"></i>
+                        <span className="link">Dashboard</span>
+                    </NavLink>
+                </li>
+
+            }
+        }
+        return <li className="list" style={{ pointerEvents: "none" }}>
+            <NavLink to={`/projectDetail/`} className="nav-link">
+                <i className="fa fa-home mr-3"></i>
+                <span className="link">Dashboard</span>
+            </NavLink>
+        </li>
+    }
     return (
         <div className="page-content">
             <div className='d-flex' style={{ height: '100%' }}>
@@ -12,12 +39,7 @@ export default function MenuBar() {
                         </div>
                         <div className="sidebar-content">
                             <ul className="lists p-0">
-                                <li className="list" style={{ pointerEvents: localStorage.getItem('projectid')?.length >= 10 ? "auto" : "none" }}>
-                                    <NavLink to={`/projectDetail/${localStorage.getItem('projectid')}`} className="nav-link">
-                                        <i className="fa fa-home mr-3"></i>
-                                        <span className="link">Dashboard</span>
-                                    </NavLink>
-                                </li>
+                                {renderCurrentProject()}
                                 <li className="list">
                                     <NavLink to="/create" className="nav-link">
                                         <i className="fa fa-plus mr-3"></i>
@@ -30,7 +52,7 @@ export default function MenuBar() {
                                         <span className="link">Project management</span>
                                     </NavLink>
                                 </li>
-                                <hr />         
+                                <hr />
                             </ul>
                         </div>
                     </div>
