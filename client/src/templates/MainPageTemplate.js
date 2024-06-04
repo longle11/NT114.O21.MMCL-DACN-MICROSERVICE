@@ -59,9 +59,8 @@ export default function MainPageTemplate({ Component }) {
                         <p>Your login session has expired, please log in again</p>
                     </Modal>
                 }
-            } else {
-                return navigate("/login")
             }
+            return navigate("/login")
         }
         return null
     }
