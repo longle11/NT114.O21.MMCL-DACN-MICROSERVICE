@@ -129,7 +129,7 @@ export default function ProjectManager() {
                 }else {
                     return <NavLink onKeyDown={() => {}} onClick={() => {
                         showNotificationWithIcon('error', '', 'You have not participated in this project ')
-                    }}><span>{record.nameProject}</span></NavLink>
+                    }}>{record.nameProject}</NavLink>
                 }
             }
         },
