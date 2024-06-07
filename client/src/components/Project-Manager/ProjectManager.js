@@ -18,8 +18,8 @@ export default function ProjectManager() {
     useEffect(() => {
         dispatch(ListProjectAction())
         navigate('/manager')
-    // eslint-disable-next-line
-    }, []) 
+        // eslint-disable-next-line
+    }, [])
 
     const [valueProject, setValueProject] = useState('')
 
@@ -126,8 +126,8 @@ export default function ProjectManager() {
                     }} style={{ textDecoration: 'none' }}>
                         <span>{record.nameProject}</span>
                     </NavLink>
-                }else {
-                    return <NavLink onKeyDown={() => {}} onClick={() => {
+                } else {
+                    return <NavLink style={{ color: 'black' }} onKeyDown={() => { }} onClick={() => {
                         showNotificationWithIcon('error', '', 'You have not participated in this project ')
                     }}>{record.nameProject}</NavLink>
                 }
