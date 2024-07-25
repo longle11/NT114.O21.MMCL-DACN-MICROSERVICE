@@ -15,9 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: cd client && docker build -t longle2003/client:${{ IMAGE_VERSION }} .
+      - run: cd client && docker build -t longle2003/client:$IMAGE_VERSION .
       - run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-      - run: docker push longle2003/client:${{ IMAGE_VERSION }}
+      - run: docker push longle2003/client:$IMAGE_VERSION
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -25,4 +25,4 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
       
       - run: aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name ${{secrets.AWS_CLUSTER_NAME}}
-      - run: kubectl set image deployment/client-depl client=longle2003/client:${{ IMAGE_VERSION }}
+      - run: kubectl set image deployment/client-depl client=longle2003/client:$IMAGE_VERSION
