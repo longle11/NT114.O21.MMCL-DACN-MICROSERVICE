@@ -61,8 +61,8 @@ export default function Dashboard() {
             render: (text, record, index) => {
                 if (projectInfo?.creator.toString() === userInfo.id) {
                     return text !== userInfo.id ? (
-                        <Button type="primary" onClick={async () => {
-                            await dispatch(deleteUserInProject(text, projectInfo?._id))
+                        <Button type="primary" onClick={() => {
+                            dispatch(deleteUserInProject(text, projectInfo?._id))
 
                             dispatch(GetProjectAction(projectInfo?._id, ""))
                         }} icon={<DeleteOutlined />} size='large' />
@@ -106,9 +106,8 @@ export default function Dashboard() {
             .sort((issue1, issue2) => issue1.priority - issue2.priority)
             .map((value, index) => {
                 return (<li key={value._id} className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }} onClick={() => {
-                        console.log("Issue cần lấy: ", value._id);
-                        dispatch(getInfoIssue(value._id))
-                    }} onKeyDown={() => { }}>
+                    dispatch(getInfoIssue(value._id))
+                }} onKeyDown={() => { }}>
                     <p>
                         {value.shortSummary}
                     </p>
@@ -160,14 +159,14 @@ export default function Dashboard() {
                 }
                 return newListUser
             }, [])}
-            onSelect={async (value, option) => {
+            onSelect={(value, option) => {
                 setValueDashboard(option.label)
-                await dispatch(insertUserIntoProject({
+                dispatch(insertUserIntoProject({
                     project_id: projectInfo?._id,  //id cua project
                     user_id: value   //id cua username
                 }))
 
-                await dispatch(GetProjectAction(projectInfo?._id, ""))
+                dispatch(GetProjectAction(projectInfo?._id, ""))
             }}
             placeholder="input here"
         />

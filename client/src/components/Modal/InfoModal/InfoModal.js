@@ -383,7 +383,7 @@ export default function InfoModal() {
                                         inputTimeOriginal.current = setTimeout(() => {
                                             dispatch(updateInfoIssue(issueInfo?._id, projectInfo?._id, { timeOriginalEstimate: e.target.value }))
                                         }, 500)
-                                    }} disabled={issueInfo?.creator._id !== userInfo.id} defaultValue="" value={issueInfo?.timeOriginalEstimate} />
+                                    }} disabled={issueInfo?.creator._id !== userInfo.id} defaultValue={issueInfo?.timeOriginalEstimate} />
                                 </div>
                                 <div className="time-tracking">
                                     <h6>TIME TRACKING</h6>
@@ -408,20 +408,24 @@ export default function InfoModal() {
                                                     <div className='row'>
                                                         <div className='col-6 p-0'>
                                                             <label htmlFor='timeSpent'>Time spent</label>
-                                                            <InputNumber value={issueInfo?.timeSpent} name="timeSpent" min={0} onChange={(value) => {
-                                                                setTrackingTime({
-                                                                    timeSpent: value,
-                                                                    ...trackingTime
-                                                                })
+                                                            <InputNumber min={0} name="timeSpent" defaultValue={issueInfo?.timeSpent} onChange={(value) => {
+                                                                if(value !== null) {
+                                                                    setTrackingTime({
+                                                                        ...trackingTime,
+                                                                        timeSpent: value
+                                                                    })
+                                                                }
                                                             }} />
                                                         </div>
                                                         <div className='col-6 p-0 text-center'>
                                                             <label htmlFor='timeRemaining'>Time remaining</label>
-                                                            <InputNumber value={issueInfo?.timeRemaining} min={0} defaultValue={0} name="timeRemaining" onChange={(value) => {
-                                                                setTrackingTime({
-                                                                    timeRemaining: value,
-                                                                    ...trackingTime
-                                                                })
+                                                            <InputNumber min={0} defaultValue={issueInfo?.timeRemaining} name="timeRemaining" onChange={(value) => {
+                                                                if(value !== null) {
+                                                                    setTrackingTime({
+                                                                        ...trackingTime,
+                                                                        timeRemaining: value
+                                                                    })
+                                                                }
                                                             }} />
                                                         </div>
 

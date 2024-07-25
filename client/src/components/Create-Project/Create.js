@@ -36,7 +36,7 @@ function Create(props) {
             <div className="info">
                 <form onSubmit={handleSubmit}>
                     <div className='form-group'>
-                        <p>Name</p>
+                        <p>Name <span style={{color: 'red'}}>(*)</span></p>
                         <input onChange={handleChange} className='form-control' name='nameProject' />
                     </div>
                     <div className='form-group'>
@@ -86,10 +86,7 @@ const handleCreateProject = withFormik({
     // }),
     handleSubmit: (values, { props, setSubmitting }) => {
         if (values.nameProject.trim() === '') {
-            showNotificationWithIcon('error', 'Tạo dự án', 'Trường Project name không được bỏ trống')
-        }
-        if (values.description.trim() === '') {
-            showNotificationWithIcon('error', 'Tạo dự án', 'Trường Description không được bỏ trống')
+            showNotificationWithIcon('error', 'Tạo dự án', 'Trường * không được bỏ trống')
         }
         if (values.nameProject.trim() !== '' && values.description.trim() !== '') {
             if (props.userInfo) {

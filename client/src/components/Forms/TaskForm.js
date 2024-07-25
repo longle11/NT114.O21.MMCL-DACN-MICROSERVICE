@@ -1,5 +1,5 @@
 import { Editor } from '@tinymce/tinymce-react'
-import { Input, InputNumber, Select, Slider } from 'antd'
+import { Button, Input, InputNumber, Select, Slider, Upload, message } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { connect, useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
@@ -8,7 +8,10 @@ import { createIssue } from '../../redux/actions/IssueAction';
 import { submit_edit_form_action } from '../../redux/actions/DrawerAction';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
 import { priorityTypeOptions, issueTypeOptions } from '../../util/CommonFeatures';
+import { UploadOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
+import domainName from '../../util/Config';
+import Axios from "axios";
 
 function TaskForm(props) {
     const { handleChange, handleSubmit, setFieldValue } = props
@@ -93,6 +96,26 @@ function TaskForm(props) {
                         onEditorChange={handlEditorChange}
                     />
                 </div>
+                <div className='row mt-2 d-flex flex-column w-50'>
+                    <label htmlFor='fileAttachment'>File Attachment</label>
+                    <Upload
+                        name='file'
+                        accept='.pdf, .txt'
+                        beforeUpload={async (info) => {
+                            console.log("info", info);
+                            message.success('File uploaded successfully')
+                            const formData = new FormData()
+                            formData.append('updatedfile', info)
+                            const res = await Axios.post(`${domainName}/api/files/upload`, formData)
+                            console.log(res.data)
+                        }}>
+                        <Button icon={<UploadOutlined />}>Select File</Button>
+                    </Upload>
+                </div>
+                <form action="/api/files/upload" method="post" enctype="multipart/form-data">
+                    <input type="file" name="file" />
+                    <input type="submit" value="Upload File" />
+                </form>
                 <div className='row mt-2'>
                     <div className='col-6 p-0 pr-4'>
                         <label htmlFor='assignees'>Assignees</label>

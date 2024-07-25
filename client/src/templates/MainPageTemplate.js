@@ -8,13 +8,14 @@ import '../components/SideBar/SideBar.css'
 import '../components/Modal/InfoModal/InfoModal.css'
 import DrawerHOC from '../HOC/DrawerHOC'
 import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { userLoggedInAction } from '../redux/actions/UserAction'
 import { GetProjectAction } from '../redux/actions/ListProjectAction'
 import { Modal } from 'antd'
 import PropTypes from 'prop-types';
 import { io } from 'socket.io-client'
 import domainName from '../util/Config'
+import MenuBarHeader from '../components/Header/MenuBarHeader'
 
 export default function MainPageTemplate({ Component }) {
     const status = useSelector(state => state.user.status)
@@ -25,8 +26,8 @@ export default function MainPageTemplate({ Component }) {
     const navigate = useNavigate()
 
     useEffect(() => {
-        const socket = io(`${domainName}/api/projectmanagement`)
-        console.log("New result ", socket);
+        // const socket = io(`${domainName}/api/projectmanagement`)
+        // console.log("New result ", socket);
 
         dispatch(userLoggedInAction())
         //lay ra project hien tai
@@ -44,14 +45,15 @@ export default function MainPageTemplate({ Component }) {
         if (!isLoading) {
             if (status) {
                 if (userInfo !== null) {
-                    return <div className='d-flex' style={{ overflow: 'hidden' }}>
-                        <DrawerHOC />
-                        <SideBar />
-                        <MenuBar />
-                        <div style={{ width: '100%' }} className='main'>
+                    return <div className='d-flex flex-column' style={{ overflow: 'hidden' }}>
+                        {/* <DrawerHOC /> */}
+                        {/* <SideBar /> */}
+                        <MenuBarHeader />
+                        {/* <MenuBar /> */}
+                        <div style={{ width: '100%', padding: 0 }} className='main'>
                             <Component />
                         </div>
-                        <InfoModal />
+                        {/* <InfoModal /> */}
                     </div>
                 }
                 else {
@@ -60,7 +62,7 @@ export default function MainPageTemplate({ Component }) {
                     </Modal>
                 }
             }
-            return navigate("/login")
+            return <Navigate to="/login" />
         }
         return null
     }

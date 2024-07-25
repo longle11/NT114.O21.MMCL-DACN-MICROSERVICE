@@ -8,7 +8,7 @@ export default function MenuBar() {
         const index = listProject.findIndex(project => localStorage.getItem('projectid')?.length >= 10 && project._id.toString() === localStorage.getItem('projectid'))
         if (index !== -1) {
             //xem user hiện tại có phải là người tạo dự án hay không
-            var isProjectOwner = userInfo.id === listProject[index]?.creator._id.toString()
+            var isProjectOwner = userInfo.id === listProject[index]?.creator?._id.toString()
             const listMembers = listProject[index]?.members.map(member => member._id.toString())
             var isProjectMembers = listMembers.includes(userInfo.id)
             if (isProjectMembers || isProjectOwner) {
@@ -21,7 +21,8 @@ export default function MenuBar() {
 
             }
         }
-        return <li className="list" style={{ pointerEvents: "none" }}>
+        const projectCreated = localStorage.getItem('projectid').length >= 10 ? "" : "none"
+        return <li className="list" style={{ pointerEvents: projectCreated }}>
             <NavLink to={`/projectDetail/`} className="nav-link">
                 <i className="fa fa-home mr-3"></i>
                 <span className="link">Dashboard</span>

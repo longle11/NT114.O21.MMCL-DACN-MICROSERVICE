@@ -11,8 +11,10 @@ export const createProjectAction = (data) => {
             })
 
             await delay(2000)
-            const {data: result} = await Axios.post(`${domainName}/api/projectmanagement/create`, data)
+            const result = await Axios.post(`${domainName}/api/projectmanagement/create`, data)
             showNotificationWithIcon('success', '', result.message)
+            //tiến hành lưu vào 
+            localStorage.setItem('projectid', result.data.data._id.toString())
         }catch(error) {
             if (error.response.status === 401) {
                 showNotificationWithIcon('error', '', 'Please sign in before posting comment')

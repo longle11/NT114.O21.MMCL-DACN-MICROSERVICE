@@ -48,7 +48,7 @@ const SideBar = () => {
                         <div className="sidebar-menu">
                             <ul>
                                 <li className="header-menu">
-                                    <span>General</span>
+                                    <span style={{color: 'white'}}>General</span>
                                 </li>
                                 <li className="sidebar-dropdown font-weight-bold" style={{ fontSize: '17px' }}>
                                     <NavLink href="#" onClick={() => {
