@@ -11,5 +11,6 @@ CMD ["npm", "run", "build"]
 FROM nginx
 
 EXPOSE 3006
+
 COPY ./nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder ./build /usr/share/nginx/htmlß
