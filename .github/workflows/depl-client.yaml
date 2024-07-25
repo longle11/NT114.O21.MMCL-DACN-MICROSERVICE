@@ -11,7 +11,7 @@ jobs:
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      IMAGE_VERSION: $${{ github.sha }}
+      IMAGE_VERSION: ${{ github.sha }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
