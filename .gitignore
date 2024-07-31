@@ -14,3 +14,4 @@ ProjectManagement/package-lock.json
 file/node_modules
 file/package-lock.json
 skaffold.yaml
+infras/kong/values.yaml
