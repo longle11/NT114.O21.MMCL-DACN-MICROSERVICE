@@ -11,13 +11,14 @@ jobs:
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      IMAGE_VERSION: ${{ github.sha }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: cd comment && docker build -t longle2003/comment .
+      - run: cd comment && docker build -t longle2003/comment:$IMAGE_VERSION .
       - run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
   
-      - run: docker push longle2003/comment
+      - run: docker push longle2003/comment:$IMAGE_VERSION
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -25,5 +26,4 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
       
       - run: aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name ${{secrets.AWS_CLUSTER_NAME}}
-      - run: kubectl rollout restart deployment comment-depl
-        continue-on-error: true
+      - run: kubectl set image deployment/comment-depl comment=longle2003/comment:$IMAGE_VERSION

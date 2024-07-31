@@ -1,0 +1,26 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rate-limit
+  annotations:
+    kubernetes.io/ingress.class: kong
+plugin: rate-limiting
+config:
+  minute: 5
+  policy: local
+  limit_by: ip
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata: 
+  name: admin-api-auth
+  annotations:
+    kubernetes.io/ingress.class: kong
+config:
+  key_names:
+    - apikey
+  key_in_header: true
+  key_in_query: false
+  hide_credentials: true
+plugin: key-auth
+disabled: false

@@ -10,7 +10,7 @@ build:
     - image: longle2003/auth
       context: auth
       docker:
-        dockerfile: Dockerfile
+        dockerfile: Dockerfile.dev
       sync:
         manual:
           - dest: .
@@ -18,7 +18,7 @@ build:
     - image: longle2003/client
       context: client
       docker:
-        dockerfile: Dockerfile
+        dockerfile: Dockerfile.dev
       sync:
         manual:
           - dest: .
@@ -26,7 +26,7 @@ build:
     - image: longle2003/comment
       context: comment
       docker:
-        dockerfile: Dockerfile
+        dockerfile: Dockerfile.dev
       sync:
         manual:
           - dest: .
@@ -42,7 +42,7 @@ build:
     - image: longle2003/projectmanagement
       context: Projectmanagement
       docker:
-        dockerfile: Dockerfile
+        dockerfile: Dockerfile.dev
       sync:
         manual:
           - dest: .

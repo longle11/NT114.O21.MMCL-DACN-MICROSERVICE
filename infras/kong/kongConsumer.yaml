@@ -1,0 +1,9 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongConsumer
+metadata:
+  name: adminapi-consumer
+  annotations:
+    kubernetes.io/ingress.class: kong
+username: longle
+credentials:
+  - adminapi-consumer-secret

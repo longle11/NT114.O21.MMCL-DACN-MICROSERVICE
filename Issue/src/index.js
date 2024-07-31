@@ -29,17 +29,18 @@ async function connectToNats() {
         console.log("Successfully connected to nats");
     } catch (error) {
         console.log("Failed connection to nats", error);
+        process.exit(1)
     }
 }
 
 
 async function connectToMongoDb() {
     try {
-        await mongoose.connect(process.env.MONGO_URL) 
-
+        await mongoose.connect(process.env.MONGO_URL)
         console.log("Successfully connected to database");
     } catch (error) {
         console.log("Failed connection to database");
+        process.exit(1)
     }
 }
 
