@@ -4,10 +4,9 @@ const currentUserMiddleware = async (req, res, next) => {
     try {
         if(req.session.jwt) {
             const payload = jwt.verify(req.session.jwt, process.env.JWT_KEY)
-
             const isExistedUser = await userModel.findById(payload.id)
             if(isExistedUser) {
-                req.currentUser = payload
+                req.currentUser = payload.id
             }
         }
     }catch(error) {

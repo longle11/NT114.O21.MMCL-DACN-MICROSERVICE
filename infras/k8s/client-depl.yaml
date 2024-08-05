@@ -22,6 +22,9 @@ spec:
             limits:
               memory: "2Gi"
               cpu: "2"
+          env:
+            - name: ENV
+              value: prod
 ---
 
 apiVersion: v1

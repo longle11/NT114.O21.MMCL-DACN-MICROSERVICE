@@ -2,7 +2,12 @@ apiVersion: skaffold/v4beta5
 kind: Config
 manifests:
   rawYaml:
-    - "./infras/k8s_test/*"
+    - "./infras/k8s_test/auth-depl.yaml"
+    - "./infras/k8s_test/client-depl.yaml"
+    - "./infras/k8s_test/category-depl.yaml"
+    - "./infras/k8s_test/issue-depl.yaml"
+    - "./infras/k8s_test/projectmanagement-depl.yaml"
+    - "./infras/k8s_test/nats-depl.yaml"
 build:
   local:
     push: false

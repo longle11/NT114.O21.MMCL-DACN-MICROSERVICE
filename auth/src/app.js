@@ -12,11 +12,12 @@ app.use(cors({
 }))
 app.use(bodyParser.json())
 
-app.set('trust proxy', 1) // trust first proxy
+// app.set('trust proxy', 1) // trust first proxy
 
 app.use(cookieSession({
     signed: false,
-    secure: process.env.NODE_ENV !== 'test',
+    // secure: process.env.NODE_ENV !== 'test',
+    secure: false
 }))
 
 

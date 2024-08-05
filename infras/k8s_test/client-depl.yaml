@@ -15,6 +15,10 @@ spec:
       containers:
         - name: client
           image: longle2003/client
+          env:
+            - name: ENV
+              value: dev
+
 ---
 
 apiVersion: v1
