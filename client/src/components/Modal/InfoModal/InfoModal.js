@@ -79,7 +79,7 @@ export default function InfoModal() {
             return Parser(`${issueInfo?.description}`)
         }
 
-        if (issueInfo?.creator._id === userInfo.id) {
+        if (issueInfo?.creator._id === userInfo?.id) {
             return <p style={{ color: 'blue' }}>Add Your Description</p>
         }
         return <p>There is no description yet</p>
@@ -117,7 +117,7 @@ export default function InfoModal() {
                                 {value.content}
                             </p>
                             {
-                                value.creator._id === userInfo.id ? (<div className="mb-2"><button className="btn bg-transparent p-0 mr-3" onClick={() => {
+                                value.creator._id === userInfo?.id ? (<div className="mb-2"><button className="btn bg-transparent p-0 mr-3" onClick={() => {
                                     setEditContentComment(value.content);
                                     setEditComment(value._id.toString());
                                 }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }}>Edit</button>
@@ -171,7 +171,7 @@ export default function InfoModal() {
                             defaultValue={issueTypeOptions[issueInfo?.issueType]?.value}
                             style={{ width: '100%' }}
                             options={issueTypeOptions}
-                            disabled={issueInfo?.creator?._id !== userInfo.id}
+                            disabled={issueInfo?.creator?._id !== userInfo?.id}
                             onSelect={(value, option) => {
                                 dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { issueType: value }))
                             }}
@@ -180,7 +180,7 @@ export default function InfoModal() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center' }} className="task-click">
                         {
-                            issueInfo?.creator?._id.toString() === userInfo.id ? (
+                            issueInfo?.creator?._id.toString() === userInfo?.id ? (
                                 <div>
                                     <Popconfirm placement="topLeft"
                                         title="Delete this issue?"
@@ -210,7 +210,7 @@ export default function InfoModal() {
                                 <div className="description">
                                     <p style={{ fontWeight: 'bold', fontSize: '15px' }}>Description</p>
                                     {editDescription ? (<p onKeyDown={() => { }} onDoubleClick={() => {
-                                        if (issueInfo?.creator?._id === userInfo.id) {
+                                        if (issueInfo?.creator?._id === userInfo?.id) {
                                             setEditDescription(false)
                                         }
                                     }}>
@@ -250,7 +250,7 @@ export default function InfoModal() {
                                     <h6>Comment</h6>
 
                                     {/* Kiểm tra xem nếu người đó thuộc về issue thì mới có thể đăng bình luận */}
-                                    {issueInfo?.creator?._id === userInfo.id || issueInfo?.assignees.findIndex(value => value._id === userInfo.id) !== -1 ? (
+                                    {issueInfo?.creator?._id === userInfo?.id || issueInfo?.assignees.findIndex(value => value._id === userInfo?.id) !== -1 ? (
                                         <div className="block-comment" style={{ display: 'flex', flexDirection: 'column' }}>
                                             <div className="input-comment d-flex">
                                                 <div className="avatar">
@@ -287,7 +287,7 @@ export default function InfoModal() {
                             <div className="col-4">
                                 <div className="status">
                                     <h6>STATUS</h6>
-                                    <select className="custom-select" disabled={issueInfo?.creator._id !== userInfo.id} onChange={(event) => {
+                                    <select className="custom-select" disabled={issueInfo?.creator._id !== userInfo?.id} onChange={(event) => {
                                         dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { issueStatus: event.target.value }))
                                     }}>
                                         {renderIssueStatus(issueInfo?.issueStatus)}
@@ -303,7 +303,7 @@ export default function InfoModal() {
                                                 </div>
                                                 <p className="name d-flex align-items-center ml-1" style={{ fontWeight: 'bold' }}>
                                                     {value.username}
-                                                    {issueInfo?.creator._id === userInfo.id ? (
+                                                    {issueInfo?.creator._id === userInfo?.id ? (
                                                         <Popconfirm placement="topLeft"
                                                             title="Delete this user?"
                                                             description="Are you sure to delete this user from project?"
@@ -318,7 +318,7 @@ export default function InfoModal() {
                                             </div>
                                         })}
                                         {
-                                            issueInfo?.creator._id === userInfo.id ? (
+                                            issueInfo?.creator._id === userInfo?.id ? (
                                                 <div style={{ display: 'flex', alignItems: 'center', width: '100px' }}>
                                                     <button onKeyDown={() => { }} className='text-primary mt-2 mb-2 btn bg-transparent' style={{ fontSize: '12px', margin: '0px', cursor: 'pointer' }} onClick={() => {
                                                         setAddAssignee(false)
@@ -336,7 +336,7 @@ export default function InfoModal() {
                                                 style={{ width: '200px' }}
                                                 placeholder="Select a person"
                                                 optionFilterProp="children"
-                                                disabled={issueInfo?.creator._id !== userInfo.id}
+                                                disabled={issueInfo?.creator._id !== userInfo?.id}
                                                 onSelect={(value, option) => {
                                                     setAddAssignee(true)
                                                     dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { assignees: value }))
@@ -366,7 +366,7 @@ export default function InfoModal() {
                                         placeholder={priorityTypeOptions[issueInfo?.priority]?.label}
                                         defaultValue={priorityTypeOptions[issueInfo?.priority]?.value}
                                         options={priorityTypeOptions}
-                                        disabled={issueInfo?.creator._id !== userInfo.id}
+                                        disabled={issueInfo?.creator._id !== userInfo?.id}
                                         onSelect={(value, option) => {
                                             dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { priority: value }))
                                         }}
@@ -383,7 +383,7 @@ export default function InfoModal() {
                                         inputTimeOriginal.current = setTimeout(() => {
                                             dispatch(updateInfoIssue(issueInfo?._id, projectInfo?._id, { timeOriginalEstimate: e.target.value }))
                                         }, 500)
-                                    }} disabled={issueInfo?.creator._id !== userInfo.id} defaultValue={issueInfo?.timeOriginalEstimate} />
+                                    }} disabled={issueInfo?.creator._id !== userInfo?.id} defaultValue={issueInfo?.timeOriginalEstimate} />
                                 </div>
                                 <div className="time-tracking">
                                     <h6>TIME TRACKING</h6>
@@ -403,7 +403,7 @@ export default function InfoModal() {
                                                 <p className="estimate-time">{issueInfo?.timeRemaining}h estimated</p>
                                             </div>
 
-                                            {issueInfo?.creator._id === userInfo.id && time ? (
+                                            {issueInfo?.creator._id === userInfo?.id && time ? (
                                                 <div>
                                                     <div className='row'>
                                                         <div className='col-6 p-0'>

@@ -7,11 +7,19 @@ import Create from './components/Create-Project/Create';
 import ProjectManager from './components/Project-Manager/ProjectManager';
 import SignUp from './components/signup/SignUp';
 import Loading from './components/Loading/Loading';
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { userLoggedInAction } from './redux/actions/UserAction'
+import NotFound from './components/NotFound/NotFound';
 function App() {
+  const dispatch = useDispatch()
+  useEffect(() => {
+    dispatch(userLoggedInAction())
+  }, [])
   return (
     <>
-      <Loading />
-      <BrowserRouter>
+      <BrowserRouter> 
+        <Loading />
         <Routes>
           <Route path='/manager' element={<MainPageTemplate Component={ProjectManager} />} />
           <Route path='/projectDetail/:id' element={<MainPageTemplate Component={Dashboard} />} />
@@ -19,6 +27,7 @@ function App() {
           <Route path='/create' element={<MainPageTemplate Component={Create} />} />
           <Route path='/login' element={<UserLoginTemplate Component={Login} />} />
           <Route path='/signup' Component={SignUp} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </>

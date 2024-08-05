@@ -6,6 +6,7 @@ import { getListCategories } from '../../redux/actions/CategoryAction';
 import { createProjectAction } from '../../redux/actions/CreateProjectAction';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
 import PropTypes from 'prop-types';
+import { USER_LOGGED_IN } from '../../redux/constants/constant';
 
 function Create(props) {
     const { handleSubmit, handleChange, setFieldValue } = props;
@@ -14,7 +15,6 @@ function Create(props) {
     }
     const dispatch = useDispatch()
     const categoryList = useSelector(state => state.categories.categoryList)
-
     useEffect(() => {
         dispatch(getListCategories())
         // eslint-disable-next-line
@@ -64,7 +64,13 @@ function Create(props) {
                             })}
                         </select>
                     </div>
-                    <button type='submit' className='btn btn-primary'>Create project</button>
+                    <button type='submit' className='btn btn-primary' onClick={() => {
+                        console.log("kich haot thang nay");
+                        dispatch({
+                            type: USER_LOGGED_IN,
+                            userInfo: null
+                        })
+                    }}>Create project</button>
                 </form>
             </div>
         </div>

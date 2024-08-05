@@ -1,12 +1,13 @@
 import React from 'react'
 import { withFormik } from 'formik'
 import * as Yup from "yup";
-import { connect, useSelector } from 'react-redux'
+import { connect, useDispatch, useSelector } from 'react-redux'
 import { NavLink, Navigate } from 'react-router-dom';
-import { userLoginAction } from '../../redux/actions/UserAction';
+import { loginWithGoogleAction, signUpUserAction, userLoginAction } from '../../redux/actions/UserAction';
 import './Login.css'
 import PropTypes from 'prop-types';
-
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from "jwt-decode";
 function Login(props) {
     const {
         errors,
@@ -14,6 +15,7 @@ function Login(props) {
         handleSubmit,
     } = props;
     const status = useSelector(state => state.user.status)
+    const dispatch = useDispatch()
     return (
         <>
             {
@@ -51,9 +53,31 @@ function Login(props) {
                                                     <span className='text-danger'>{errors.password}</span>
                                                 </div>
                                                 {/* Submit button */}
-                                                <button type="submit" data-mdb-button-init data-mdb-ripple-init className="btn btn-primary btn-block mb-4">
+                                                <button type="submit" style={{marginBottom: '10px'}} className="btn btn-primary btn-block mb-4">
                                                     Sign In
                                                 </button>
+                                                <GoogleLogin 
+                                                    text="continue_with"
+                                                    width="100%"
+                                                    locale="en"
+                                                    containerProps={{
+                                                        style: {
+                                                          width: "100% !important",
+                                                        },
+                                                      }}                                                
+                                                    onSuccess={credentialResponse => {
+                                                        const decryptData = jwtDecode(credentialResponse.credential);
+                                                        const newUser = {
+                                                            username: decryptData.name,
+                                                            email: decryptData.email,
+                                                            password: null
+                                                        }
+                                                        dispatch(loginWithGoogleAction(newUser))
+                                                    }}
+                                                    onError={() => {
+                                                        console.log('Login Failed');
+                                                    }}
+                                                />
                                             </form>
                                             <NavLink to='/signup'>Create an account</NavLink>
                                         </div>

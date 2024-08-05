@@ -2,6 +2,7 @@ import Axios from "axios"
 import { GET_USER_BY_KEYWORD_API, USER_LOGGED_IN } from "../constants/constant"
 import { ListProjectAction } from "./ListProjectAction"
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
+import { crea } from 'react-router-dom'
 import domainName from '../../util/Config'
 export const getUserKeyword = (keyword) => {
     return async dispatch => {
@@ -39,7 +40,7 @@ export const signUpUserAction = (props) => {
             }
             const res = await Axios.post(`${domainName}/api/users/signup`, newUser)
 
-            if (res.status === 201) {
+            if (res.response.status === 201) {
                 showNotificationWithIcon("success", "Register", "Successfully created the user")
             }
         } catch (errors) {
@@ -50,6 +51,43 @@ export const signUpUserAction = (props) => {
     }
 }
 
+export const loginWithGoogleAction = (props) => {
+    return async dispatch => {
+        const newUser = {
+            username: props.username,
+            email: props.email,
+            password: null
+        }
+        try {
+            await Axios.post(`${domainName}/api/users/signup`, newUser)
+        }catch(err) {
+            if(err.response.status === 400) {
+                let loggedIn = false
+                await Axios.post(`${domainName}/api/users/login`, {
+                    email: newUser.email,
+                    password: null
+                })
+                .then(res => {
+                    showNotificationWithIcon("success", "Đăng nhập", "Đăng nhập thành công")
+                    loggedIn = true
+                })
+                .catch(err => {
+                    showNotificationWithIcon("error", "Đăng nhập", "Đăng nhập thất bại")
+                }) 
+                if (loggedIn) {
+                    const res = await Axios.get(`${domainName}/api/users/currentuser`)
+    
+                    if (res.data.currentUser) {
+                        dispatch({
+                            type: USER_LOGGED_IN,
+                            userInfo: res.data.currentUser
+                        })
+                    }
+                }
+            } 
+        }
+    }
+}
 
 export const userLoginAction = (email, password) => {
 
@@ -72,9 +110,9 @@ export const userLoginAction = (email, password) => {
                 const res = await Axios.get(`${domainName}/api/users/currentuser`)
 
                 if (res.data.currentUser) {
+                    console.log("Xuat hien trong nay 111");
                     dispatch({
                         type: USER_LOGGED_IN,
-                        status: true,
                         userInfo: res.data.currentUser
                     })
                 }
@@ -91,13 +129,12 @@ export const userLoggedInAction = () => {
             if (!res.data.currentUser) {
                 dispatch({
                     type: USER_LOGGED_IN,
-                    status: false,
                     userInfo: null
                 })
             } else {
+                console.log("Xuat hien trong nay");
                 dispatch({
                     type: USER_LOGGED_IN,
-                    status: true,
                     userInfo: res.data.currentUser
                 })
             }

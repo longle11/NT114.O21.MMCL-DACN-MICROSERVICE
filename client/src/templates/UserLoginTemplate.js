@@ -1,15 +1,17 @@
-import { useDispatch } from 'react-redux';
-import { useEffect } from 'react';
-import { userLoggedInAction } from '../redux/actions/UserAction';
+import { useSelector } from 'react-redux';
 import Login from '../components/Login/Login';
 import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 export const UserLoginTemplate = ({ Component }) => {
-    const dispatch = useDispatch()
+    const userInfo = useSelector(state => state.user.userInfo)
+    const navigate = useNavigate()
     useEffect(() => {
-        dispatch(userLoggedInAction())
-        // eslint-disable-next-line
-    }, [])
+        if(userInfo !== null) {
+            navigate('/')
+        }
+    }, [userInfo, navigate])
     return <Login />
 }
 UserLoginTemplate.propTypes = {

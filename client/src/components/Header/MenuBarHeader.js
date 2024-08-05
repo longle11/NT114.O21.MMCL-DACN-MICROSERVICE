@@ -6,7 +6,6 @@ import domainName from '../../util/Config'
 export default function MenuBarHeader() {
     const renderCurrentProject = async () => {
         const currentProject = await Axios.get(`${domainName}/api/projectmanagement/${localStorage.getItem('projectid')}`)
-        console.log(currentProject);
         return (
             <div className="card">
                 <div className="card-body d-flex flex-column">

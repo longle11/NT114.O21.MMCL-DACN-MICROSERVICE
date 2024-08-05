@@ -51,7 +51,7 @@ export default function ProjectManager() {
             }}
             defaultValue=''
             options={listUser?.reduce((newListUser, user) => {
-                if (user._id !== userInfo.id) {
+                if (user._id !== userInfo?.id) {
                     return [...newListUser, { label: user.username, value: user._id }]
                 }
                 return newListUser
@@ -119,7 +119,7 @@ export default function ProjectManager() {
             dataIndex: 'projectName',
             key: 'projectName',
             render: (text, record, index) => {
-                if (record?.creator?._id === userInfo.id || record.members.findIndex(user => user._id === userInfo.id) !== -1) {
+                if (record?.creator?._id === userInfo?.id || record.members.findIndex(user => user._id === userInfo?.id) !== -1) {
                     return <NavLink to={`/projectDetail/${record._id}`} onClick={() => {
                         dispatch(GetProjectAction(record._id, ""))
                     }} style={{ textDecoration: 'none' }}>
@@ -152,9 +152,9 @@ export default function ProjectManager() {
             title: 'Members',
             dataIndex: 'members',
             key: 'members',
-            render: (text, record, index) => {  //userInfo.id === record.creator._id
+            render: (text, record, index) => {  //userInfo?.id === record.creator._id
                 return <>
-                    {userInfo.id === record.creator?._id ? (
+                    {userInfo?.id === record.creator?._id ? (
                         <div>
                             {
                                 record.members?.slice(0, 3).map((user, index) => {
@@ -188,7 +188,7 @@ export default function ProjectManager() {
             dataIndex: 'action',
             key: 'categoryId',
             render: (text, record, index) => {
-                if (userInfo.id === record.creator?._id) {
+                if (userInfo?.id === record.creator?._id) {
                     return <div>
                         <Button className='mr-2 text-primary' type="default" icon={<EditOutlined />} size='large' onClick={() => {
                             dispatch(drawer_edit_form_action(<FormEdit />, "Submit", 730, '30px'))
