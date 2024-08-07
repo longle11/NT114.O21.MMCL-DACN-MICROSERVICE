@@ -1,5 +1,5 @@
 import Axios from "axios"
-import { GET_USER_BY_KEYWORD_API, SHOW_MODAL_INPUT_TOKEN, USER_LOGGED_IN } from "../constants/constant"
+import { DISPLAY_LOADING, GET_USER_BY_KEYWORD_API, HIDE_LOADING, SHOW_MODAL_INPUT_TOKEN, USER_LOGGED_IN } from "../constants/constant"
 import { ListProjectAction } from "./ListProjectAction"
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
 import domainName from '../../util/Config'
@@ -32,19 +32,24 @@ export const insertUserIntoProject = (props) => {
 export const signUpUserAction = (props) => {
     return async dispatch => {
         try {
+            dispatch({
+                type: DISPLAY_LOADING
+            })
             const newUser = {
                 username: props.username,
                 email: props.email,
                 password: props.password
             }
             const res = await Axios.post(`${domainName}/api/users/signup`, newUser)
-            console.log("ket qua lay ra tu login ", res);
             if (res.status === 200) {
                 showNotificationWithIcon("success", "Notification", res.data.message)
                 await dispatch({
                     type: SHOW_MODAL_INPUT_TOKEN,
                     status: true,
                     temporaryUserRegistrationId: res.data.data
+                })
+                dispatch({
+                    type: HIDE_LOADING
                 })
             }
         } catch (errors) {

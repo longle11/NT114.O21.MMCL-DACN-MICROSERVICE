@@ -17,6 +17,7 @@ function SignUp(props) {
     } = props;
     const showModalInputToken = useSelector(state => state.user.showModalInputToken)
     const temporaryUserRegistrationId = useSelector(state => state.user.temporaryUserRegistrationId)
+    const isLoading = useSelector(state => state.loading.isLoading)
     const [inputValue, setInputValue] = useState('');
     const [popUpOpen, setPopUpOpen] = useState(false)
     const handleInputChange = (event) => {
@@ -39,7 +40,7 @@ function SignUp(props) {
     const [countdown, setCountdown] = useState(timeToResetToken);
     // Sử dụng hook useState để tạo trạng thái isRunning, khởi tạo là false
     const [isRunning, setIsRunning] = useState(false);
-    
+
     useEffect(() => {
         if (showModalInputToken === true) {
             let timer;
@@ -63,95 +64,100 @@ function SignUp(props) {
         }
     }, [isRunning, countdown, showModalInputToken])
 
-
-
-    return (
-        <section className="vh-100 bg-image" style={{ backgroundImage: 'url("https://mdbcdn.b-cdn.net/img/Photos/new-templates/search-box/img4.webp")' }}>
-            <div className="mask d-flex align-items-center h-100 gradient-custom-3">
-                <div className="container h-100">
-                    <div className="row d-flex justify-content-center align-items-center h-100">
-                        <div className="col-12 col-md-9 col-lg-7 col-xl-6">
-                            <div className="card" style={{ borderRadius: 15 }}>
-                                <div className="card-body p-5">
-                                    <h2 className="text-uppercase text-center mb- text-primary">Create an account</h2>
-                                    <form onSubmit={handleSubmit}>
-                                        <div data-mdb-input-init className="form-outline mb-3">
-                                            <label className="form-label" htmlFor="username">Username</label>
-                                            <input onChange={handleChange} type="text" id="username" className="form-control form-control-lg" placeholder='Input your username' />
-                                            <span className='text-danger'>{errors.username}</span>
-                                        </div>
-                                        <div data-mdb-input-init className="form-outline mb-3">
-                                            <label className="form-label" htmlFor="email">Email</label>
-                                            <input onChange={handleChange} type="email" id="email" className="form-control form-control-lg" placeholder='Input your email' />
-                                            <span className='text-danger'>{errors.email}</span>
-                                        </div>
-                                        <div data-mdb-input-init className="form-outline mb-3">
-                                            <label className="form-label" htmlFor="password">Password</label>
-                                            <input onChange={handleChange} type="password" id="password" className="form-control form-control-lg" placeholder='Input your password' />
-                                            <span className='text-danger'>{errors.password}</span>
-                                        </div>
-                                        <div data-mdb-input-init className="form-outline mb-4">
-                                            <label className="form-label" htmlFor="confirmpassword">Confirm your password</label>
-                                            <input onChange={handleChange} type="password" id="confirmpassword" className="form-control form-control-lg" placeholder='Confirm your password' />
-                                            <span className='text-danger'>{errors.confirmpassword}</span>
-                                        </div>
-                                        <div className="d-flex justify-content-center">
-                                            <button type="submit" className="btn btn-success btn-block btn-lg gradient-custom-4 text-body text-light">Register</button>
-                                        </div>
-                                        <p className="text-center text-muted mt-3 mb-0">Have already an account? <NavLink to="/login" className="fw-bold text-body"><u className='text-primary'>Login here</u></NavLink></p>
-                                    </form>
+    const renderApp = () => {
+        console.log("loading ", isLoading);
+        if (!isLoading) {
+            return <section className="vh-100 bg-image" style={{ backgroundImage: 'url("https://mdbcdn.b-cdn.net/img/Photos/new-templates/search-box/img4.webp")' }}>
+                <div className="mask d-flex align-items-center h-100 gradient-custom-3">
+                    <div className="container h-100">
+                        <div className="row d-flex justify-content-center align-items-center h-100">
+                            <div className="col-12 col-md-9 col-lg-7 col-xl-6">
+                                <div className="card" style={{ borderRadius: 15 }}>
+                                    <div className="card-body p-5">
+                                        <h2 className="text-uppercase text-center mb- text-primary">Create an account</h2>
+                                        <form onSubmit={handleSubmit}>
+                                            <div data-mdb-input-init className="form-outline mb-3">
+                                                <label className="form-label" htmlFor="username">Username</label>
+                                                <input onChange={handleChange} type="text" id="username" className="form-control form-control-lg" placeholder='Input your username' />
+                                                <span className='text-danger'>{errors.username}</span>
+                                            </div>
+                                            <div data-mdb-input-init className="form-outline mb-3">
+                                                <label className="form-label" htmlFor="email">Email</label>
+                                                <input onChange={handleChange} type="email" id="email" className="form-control form-control-lg" placeholder='Input your email' />
+                                                <span className='text-danger'>{errors.email}</span>
+                                            </div>
+                                            <div data-mdb-input-init className="form-outline mb-3">
+                                                <label className="form-label" htmlFor="password">Password</label>
+                                                <input onChange={handleChange} type="password" id="password" className="form-control form-control-lg" placeholder='Input your password' />
+                                                <span className='text-danger'>{errors.password}</span>
+                                            </div>
+                                            <div data-mdb-input-init className="form-outline mb-4">
+                                                <label className="form-label" htmlFor="confirmpassword">Confirm your password</label>
+                                                <input onChange={handleChange} type="password" id="confirmpassword" className="form-control form-control-lg" placeholder='Confirm your password' />
+                                                <span className='text-danger'>{errors.confirmpassword}</span>
+                                            </div>
+                                            <div className="d-flex justify-content-center">
+                                                <button type="submit" className="btn btn-success btn-block btn-lg gradient-custom-4 text-body text-light">Register</button>
+                                            </div>
+                                            <p className="text-center text-muted mt-3 mb-0">Have already an account? <NavLink to="/login" className="fw-bold text-body"><u className='text-primary'>Login here</u></NavLink></p>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div>
-                <Popconfirm
-                    title="Cancel Verification"
-                    description="Are you sure to cancel this verification?"
-                    okText="Yes"
-                    placement="topRight"
-                    onCancel={() => {
-                        setPopUpOpen(false)
-                    }}
-                    onConfirm={() => {
-                        props.dispatch({
-                            type: SHOW_MODAL_INPUT_TOKEN,
-                            status: false,
-                            temporaryUserRegistrationId: null
-                        })
-                        setPopUpOpen(false)
-                    }}
-                    cancelText="No"
-                    open={popUpOpen}
-                />
-                <Modal title="Verify Token" open={showModalInputToken} onOk={() => {
-                    if (inputValue.trim() === "") {
-                        alert("Ma token khong duoc bo trong")
-                    } else {
-                        if (temporaryUserRegistrationId !== null) {
-                            props.dispatch(verifyTokenAction({ userId: temporaryUserRegistrationId, token: inputValue }))
+                <div>
+                    <Popconfirm
+                        title="Cancel Verification"
+                        description="Are you sure to cancel this verification?"
+                        okText="Yes"
+                        placement="topRight"
+                        onCancel={() => {
+                            setPopUpOpen(false)
+                        }}
+                        onConfirm={() => {
+                            props.dispatch({
+                                type: SHOW_MODAL_INPUT_TOKEN,
+                                status: false,
+                                temporaryUserRegistrationId: null
+                            })
+                            setPopUpOpen(false)
+                        }}
+                        cancelText="No"
+                        open={popUpOpen}
+                    />
+                    <Modal title="Verify Token" open={showModalInputToken} onOk={() => {
+                        if (inputValue.trim() === "") {
+                            alert("Ma token khong duoc bo trong")
+                        } else {
+                            if (temporaryUserRegistrationId !== null) {
+                                props.dispatch(verifyTokenAction({ userId: temporaryUserRegistrationId, token: inputValue }))
+                            }
                         }
-                    }
-                }} onCancel={() => {
-                    setPopUpOpen(true)
-                }}>
-                    <div className="form-group">
-                        <label htmlFor="token">Input your token</label>
-                        <input value={inputValue} onChange={handleInputChange} type="text" className="form-control" id="token" placeholder="Input token" />
-                        <div className='d-flex mt-2'>
-                            <p className='m-0'>Time remaining: <span style={{ color: 'red' }}>{countdown}</span></p>
-                            <NavLink className="ml-2" to="#" style={{ visibility: isRunning ? 'hidden' : 'visible' }} onClick={() => {
-                                setCountdown(timeToResetToken)
-                                props.dispatch(getTokenAction(temporaryUserRegistrationId))
-                            }}>Get token</NavLink>
+                    }} onCancel={() => {
+                        setPopUpOpen(true)
+                    }}>
+                        <div className="form-group">
+                            <label htmlFor="token">Input your token</label>
+                            <input value={inputValue} onChange={handleInputChange} type="text" className="form-control" id="token" placeholder="Input token" />
+                            <div className='d-flex mt-2'>
+                                <p className='m-0'>Time remaining: <span style={{ color: 'red' }}>{countdown}</span></p>
+                                <NavLink className="ml-2" to="#" style={{ visibility: isRunning ? 'hidden' : 'visible' }} onClick={() => {
+                                    setCountdown(timeToResetToken)
+                                    props.dispatch(getTokenAction(temporaryUserRegistrationId))
+                                }}>Get token</NavLink>
+                            </div>
                         </div>
-                    </div>
-                </Modal>
-            </div>
-        </section>
+                    </Modal>
+                </div>
+            </section>
+        }
+        return null
+    }
 
+    return (
+        <>{renderApp()}</>
     )
 }
 const handleSignUpForm = withFormik({

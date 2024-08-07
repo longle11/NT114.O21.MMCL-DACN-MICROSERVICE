@@ -11,6 +11,7 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { userLoggedInAction } from './redux/actions/UserAction'
 import NotFound from './components/NotFound/NotFound';
+import ProfileUser from './components/Profile/ProfileUser';
 function App() {
   const dispatch = useDispatch()
   useEffect(() => {
@@ -27,6 +28,7 @@ function App() {
           <Route path='/create' element={<MainPageTemplate Component={Create} />} />
           <Route path='/login' element={<UserLoginTemplate Component={Login} />} />
           <Route path='/signup' Component={SignUp} />
+          <Route path='/profile/:id' Component={ProfileUser} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

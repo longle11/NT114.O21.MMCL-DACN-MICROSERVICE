@@ -35,18 +35,17 @@ export default function MainPageTemplate({ Component }) {
         return navigate("/login")
     }
     const content = () => {
-        console.log("loading hien tai", isLoading);
         if (!isLoading) {
             if (userInfo !== null) {
-                return <div className='d-flex' style={{ overflow: 'hidden' }}>
-                    <DrawerHOC />
-                    <SideBar />
-                    {/* <MenuBarHeader /> */}
-                    <MenuBar />
+                return <div style={{ overflow: 'hidden' }}>
+                    {/* <DrawerHOC />
+                    <SideBar /> */}
+                    <MenuBarHeader />
+                    {/* <MenuBar /> */}
                     <div style={{ width: '100%', padding: 0 }} className='main'>
                         <Component />
                     </div>
-                    <InfoModal />
+                    {/* <InfoModal /> */}
                 </div>
             } else {
                 return <Modal title="Notification" open="true" onCancel={handleLogin} onOk={handleLogin} centered>
