@@ -55,15 +55,15 @@ const { log } = require("console")
 
 const sendTokenToEmail = async (id) => {
     try {
-        const newuser = await userModel.findById(id)
-        const getToken = await newuser.generateToken()
-        await newuser.save()
+        const currentUser = await userModel.findById(id)
+        const getToken = await currentUser.generateToken()
+        await currentUser.save()
 
         const token = getToken
         const message = `Input token to verify your information: ${token}`
 
         await sendEmail({
-            email: newuser.email,
+            email: currentUser.email,
             subject: "Token",
             notify: message
         })
@@ -71,7 +71,7 @@ const sendTokenToEmail = async (id) => {
         return {
             message: "Please check your email",
             statusCode: 200,
-            id: newuser._id.toString()
+            id: currentUser._id.toString()
         }
     } catch (error) {
         user.token = null
@@ -90,7 +90,6 @@ router.post("/signup", async (req, res, next) => {
     try {
         const { username, email, password } = req.body
         const existedUser = await userModel.findOne({ email })
-        console.log(existedUser)
         //kiem tra xem user da ton tai hay chua
         if (!existedUser) {
             const newUser = {
@@ -103,6 +102,9 @@ router.post("/signup", async (req, res, next) => {
             if (password !== null) {
                 const salt = bcrypt.genSaltSync(10)
                 newUser.password = bcrypt.hashSync(newUser.password, salt)
+            } else {
+                //day la dang ky bang gmail
+                newUser.status = "approved"
             }
             const user = await userModel.create(newUser)
 
@@ -114,6 +116,14 @@ router.post("/signup", async (req, res, next) => {
                     statusCode: 400
                 })
             } else {
+                //tách từng thuộc tính để gửi lên nats
+                const data = {
+                    _id: user._id,
+                    username: user.username,
+                    avatar: user.avatar
+                }
+                //đăng ký sự kiện publish lên nats
+                authPublisher(data, 'auth:created')
                 res.status(200).json({
                     message: getMessage.message,
                     statusCode: 200,
@@ -131,8 +141,8 @@ router.post("/signup", async (req, res, next) => {
 
 router.post('/token/:id', async (req, res, next) => {
     try {
-        const userId = req.body.id
-        const token = req.params.id
+        const userId = req.params.id
+        const token = req.body.id
 
         const currentUser = await userModel.findById(userId)
         if (currentUser) {
@@ -140,7 +150,7 @@ router.post('/token/:id', async (req, res, next) => {
                 .createHash('sha256')
                 .update(token)
                 .digest('hex')
-            
+
             const checkTokenExistedOrExpired = await userModel.findOne({
                 token: hashToken,
                 tokenExp: { $gt: Date.now() }
@@ -151,6 +161,14 @@ router.post('/token/:id', async (req, res, next) => {
                 currentUser.token = null
                 currentUser.tokenExp = null
                 currentUser.save()
+                //tách từng thuộc tính để gửi lên nats
+                const data = {
+                    _id: currentUser._id,
+                    username: currentUser.username,
+                    avatar: currentUser.avatar
+                }
+                //đăng ký sự kiện publish lên nats
+                authPublisher(data, 'auth:created')
                 res.status(201).json({
                     message: "Successfully registration",
                     sttausCode: 201,
@@ -165,6 +183,27 @@ router.post('/token/:id', async (req, res, next) => {
         }
     } catch (error) {
         console.log(error)
+        next(error)
+    }
+})
+
+router.get('/token/:id', async (req, res, next) => {
+    try {
+        const userId = req.params.id
+        const getMessage = await sendTokenToEmail(userId)
+        if (getMessage.statusCode === 400) {
+            res.status(400).json({
+                message: getMessage.message,
+                statusCode: 400
+            })
+        } else {
+            res.status(200).json({
+                message: getMessage.message,
+                statusCode: 200
+            })
+        }
+
+    } catch (error) {
         next(error)
     }
 })

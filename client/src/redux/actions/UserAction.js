@@ -40,7 +40,7 @@ export const signUpUserAction = (props) => {
             const res = await Axios.post(`${domainName}/api/users/signup`, newUser)
             console.log("ket qua lay ra tu login ", res);
             if (res.status === 200) {
-                showNotificationWithIcon("success", "", res.data.messgage)
+                showNotificationWithIcon("success", "Notification", res.data.message)
                 await dispatch({
                     type: SHOW_MODAL_INPUT_TOKEN,
                     status: true,
@@ -49,7 +49,7 @@ export const signUpUserAction = (props) => {
             }
         } catch (errors) {
             if (errors?.response.status === 400) {
-                showNotificationWithIcon("error", "", errors?.response.data.message)
+                showNotificationWithIcon("error", "Notification", errors?.response.data.message)
                 await dispatch({
                     type: SHOW_MODAL_INPUT_TOKEN,
                     status: false,
@@ -99,21 +99,17 @@ export const loginWithGoogleAction = (props) => {
 }
 
 export const userLoginAction = (email, password) => {
-
     return async (dispatch) => {
         try {
             let loggedIn = false
-            await Axios.post(`${domainName}/api/users/login`, {
+            const res = await Axios.post(`${domainName}/api/users/login`, {
                 email,
                 password
             })
-                .then(res => {
-                    showNotificationWithIcon("success", "Đăng nhập", "Đăng nhập thành công")
-                    loggedIn = true
-                })
-                .catch(err => {
-                    showNotificationWithIcon("error", "Đăng nhập", "Đăng nhập thất bại")
-                })
+            if(res.status === 200) {
+                showNotificationWithIcon("success", "Loggin", res.data.message)
+                loggedIn = true
+            }
 
             if (loggedIn) {
                 const res = await Axios.get(`${domainName}/api/users/currentuser`)
@@ -125,8 +121,17 @@ export const userLoginAction = (email, password) => {
                     })
                 }
             }
-        } catch (errors) {
-
+        } catch (error) {
+            if(error.response.status === 401) {
+                showNotificationWithIcon("error", "Loggin", error.response.data.message)
+            }else if(error.response.status === 400) {
+                showNotificationWithIcon("error", "Loggin", error.response.data.message)
+                dispatch({
+                    type: SHOW_MODAL_INPUT_TOKEN,
+                    status: true,
+                    temporaryUserRegistrationId: error.response.data.userId
+                })
+            }
         }
     }
 }
@@ -170,18 +175,38 @@ export const userLoggedoutAction = () => {
 export const verifyTokenAction = (params) => {
     return async dispatch => {
         try {
-            const res = await Axios.post(`${domainName}/api/users/token/${params.token}`, {id: params.userId})
-            if(res.status === 201) {
+            const res = await Axios.post(`${domainName}/api/users/token/${params.userId}`, { id: params.token })
+            if (res.status === 201) {
                 showNotificationWithIcon('success', 'Register', res.data.message)
 
                 dispatch({
                     type: SHOW_MODAL_INPUT_TOKEN,
-                    status: false
+                    status: false,
+                    temporaryUserRegistrationId: null
                 })
             }
         } catch (error) {
-            if(error?.response?.status === 400) {
+            if (error?.response?.status === 400) {
                 showNotificationWithIcon('error', 'Register', error?.response?.data.message)
+                dispatch({
+                    type: SHOW_MODAL_INPUT_TOKEN,
+                    status: true
+                })
+            }
+        }
+    }
+}
+
+export const getTokenAction = (userId) => {
+    return async dispatch => {
+        try {
+            const res = await Axios.get(`${domainName}/api/users/token/${userId}`)
+            if(res.status === 200) {
+                showNotificationWithIcon('success', 'Notification', res.data.message)
+            }
+        } catch (error) {
+            if(error?.response.status === 400) {
+                showNotificationWithIcon('error', 'Notification', error.response.data.message)
             }
         }
     }

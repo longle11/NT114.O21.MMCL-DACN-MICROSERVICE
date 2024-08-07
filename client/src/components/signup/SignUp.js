@@ -2,11 +2,12 @@ import { withFormik } from 'formik';
 import React, { useEffect, useRef, useState } from 'react'
 import { connect, useSelector } from 'react-redux';
 import * as Yup from "yup";
-import { signUpUserAction, verifyTokenAction } from '../../redux/actions/UserAction';
+import { getTokenAction, signUpUserAction, verifyTokenAction } from '../../redux/actions/UserAction';
 import { NavLink } from 'react-router-dom';
 import PropTypes from 'prop-types';
-import { Modal } from 'antd';
+import { Modal, Popconfirm } from 'antd';
 import { SHOW_MODAL_INPUT_TOKEN } from '../../redux/constants/constant';
+import { timeToResetToken } from '../../util/Delay';
 
 function SignUp(props) {
     const {
@@ -16,17 +17,11 @@ function SignUp(props) {
     } = props;
     const showModalInputToken = useSelector(state => state.user.showModalInputToken)
     const temporaryUserRegistrationId = useSelector(state => state.user.temporaryUserRegistrationId)
-    const timeToResetToken = 10
     const [inputValue, setInputValue] = useState('');
+    const [popUpOpen, setPopUpOpen] = useState(false)
     const handleInputChange = (event) => {
         setInputValue(event.target.value);
     };
-
-
-    // Sử dụng hook useState để tạo trạng thái countdown, khởi tạo là một số nguyên dương
-    const [countdown, setCountdown] = useState(timeToResetToken);
-    // Sử dụng hook useState để tạo trạng thái isRunning, khởi tạo là false
-    const [isRunning, setIsRunning] = useState(false);
     // Hàm xử lý sự kiện khi nhấn nút "Start"
     const handleStart = () => {
         // Bắt đầu đếm ngược chỉ khi không đang trong quá trình đếm ngược
@@ -39,6 +34,12 @@ function SignUp(props) {
     const handleCompletion = () => {
         setIsRunning(false);
     };
+
+    // Sử dụng hook useState để tạo trạng thái countdown, khởi tạo là một số nguyên dương
+    const [countdown, setCountdown] = useState(timeToResetToken);
+    // Sử dụng hook useState để tạo trạng thái isRunning, khởi tạo là false
+    const [isRunning, setIsRunning] = useState(false);
+    
     useEffect(() => {
         if (showModalInputToken === true) {
             let timer;
@@ -105,32 +106,50 @@ function SignUp(props) {
                     </div>
                 </div>
             </div>
-
-            <Modal title="Verify Token" open={showModalInputToken} onOk={() => {
-                if (inputValue.trim() === "") {
-                    alert("Ma token khong duoc bo trong")
-                } else {
-                    if (temporaryUserRegistrationId !== null) {
-                        props.dispatch(verifyTokenAction({ userId: temporaryUserRegistrationId, token: inputValue }))
+            <div>
+                <Popconfirm
+                    title="Cancel Verification"
+                    description="Are you sure to cancel this verification?"
+                    okText="Yes"
+                    placement="topRight"
+                    onCancel={() => {
+                        setPopUpOpen(false)
+                    }}
+                    onConfirm={() => {
+                        props.dispatch({
+                            type: SHOW_MODAL_INPUT_TOKEN,
+                            status: false,
+                            temporaryUserRegistrationId: null
+                        })
+                        setPopUpOpen(false)
+                    }}
+                    cancelText="No"
+                    open={popUpOpen}
+                />
+                <Modal title="Verify Token" open={showModalInputToken} onOk={() => {
+                    if (inputValue.trim() === "") {
+                        alert("Ma token khong duoc bo trong")
+                    } else {
+                        if (temporaryUserRegistrationId !== null) {
+                            props.dispatch(verifyTokenAction({ userId: temporaryUserRegistrationId, token: inputValue }))
+                        }
                     }
-                }
-            }} onCancel={() => {
-                props.dispatch({
-                    type: SHOW_MODAL_INPUT_TOKEN,
-                    status: false
-                })
-            }}>
-                <div className="form-group">
-                    <label htmlFor="token">Input your token</label>
-                    <input value={inputValue} onChange={handleInputChange} type="text" className="form-control" id="token" placeholder="Input token" />
-                    <div className='d-flex mt-2'>
-                        <p className='m-0'>Time remaining: <span style={{ color: 'red' }}>{countdown}</span></p>
-                        <NavLink className="ml-2" to="#" style={{ visibility: isRunning ? 'hidden' : 'visible' }} onClick={() => {
-                            setCountdown(timeToResetToken)
-                        }}>Lay lai ma</NavLink>
+                }} onCancel={() => {
+                    setPopUpOpen(true)
+                }}>
+                    <div className="form-group">
+                        <label htmlFor="token">Input your token</label>
+                        <input value={inputValue} onChange={handleInputChange} type="text" className="form-control" id="token" placeholder="Input token" />
+                        <div className='d-flex mt-2'>
+                            <p className='m-0'>Time remaining: <span style={{ color: 'red' }}>{countdown}</span></p>
+                            <NavLink className="ml-2" to="#" style={{ visibility: isRunning ? 'hidden' : 'visible' }} onClick={() => {
+                                setCountdown(timeToResetToken)
+                                props.dispatch(getTokenAction(temporaryUserRegistrationId))
+                            }}>Get token</NavLink>
+                        </div>
                     </div>
-                </div>
-            </Modal>
+                </Modal>
+            </div>
         </section>
 
     )
