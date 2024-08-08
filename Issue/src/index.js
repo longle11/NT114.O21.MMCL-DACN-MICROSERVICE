@@ -13,7 +13,7 @@ async function connectToNats() {
         await natsWrapper.connect(process.env.NATS_CLUSTER_ID, process.env.NATS_CLIENT_ID, process.env.NATS_URL)
         natsWrapper.client.on('close', () => {
             console.log('NATs connection closed');
-            process.exit()
+            process.exit(1)
         })
 
         process.on('SIGINT', () => { natsWrapper.client.close() })

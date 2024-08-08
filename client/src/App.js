@@ -12,6 +12,7 @@ import { useDispatch } from 'react-redux';
 import { userLoggedInAction } from './redux/actions/UserAction'
 import NotFound from './components/NotFound/NotFound';
 import ProfileUser from './components/Profile/ProfileUser';
+import Backlog from './components/WD-Board/Backlog/Backlog';
 function App() {
   const dispatch = useDispatch()
   useEffect(() => {
@@ -26,6 +27,14 @@ function App() {
           <Route path='/projectDetail/:id' element={<MainPageTemplate Component={Dashboard} />} />
           <Route path='/' element={<MainPageTemplate Component={ProjectManager} />} />
           <Route path='/create' element={<MainPageTemplate Component={Create} />} />
+
+          <Route path='/backlog' element={<MainPageTemplate Component={Backlog} />} />
+          <Route path='/roadmap' element={<MainPageTemplate Component={Dashboard} />} />
+          <Route path='/active-sprints' element={<MainPageTemplate Component={SignUp} />} />
+          <Route path='/reports' element={<MainPageTemplate Component={ProjectManager} />} />
+          <Route path='/issues' element={<MainPageTemplate Component={Create} />} />
+          <Route path='/components' element={<MainPageTemplate Component={Create} />} />
+
           <Route path='/login' element={<UserLoginTemplate Component={Login} />} />
           <Route path='/signup' Component={SignUp} />
           <Route path='/profile/:id' Component={ProfileUser} />

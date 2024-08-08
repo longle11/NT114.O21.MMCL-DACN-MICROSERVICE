@@ -9,39 +9,39 @@ export default function DrawerHOC() {
     const textButton = useSelector(state => state.isOpenDrawer.textButton)
     const width = useSelector(state => state.isOpenDrawer.width)
     const padding = useSelector(state => state.isOpenDrawer.padding)
-    
+
     const dispatch = useDispatch()
     const handleClose = () => {
-        dispatch(drawer_edit_form_action(<div/>))
+        dispatch(drawer_edit_form_action(<div />))
         dispatch(drawerAction(true))
     }
     const renderButton = () => {
-        if(textButton?.toLowerCase().includes("submit")) {
+        if (textButton?.toLowerCase().includes("submit")) {
             return <Button onClick={handleClose}>Cancel</Button>
         }
         return <></>
     }
     return (
         <Drawer
-                width={width}
-                onClose={handleClose}
-                open={visible}
-                styles={{
-                    body: {
-                        paddingBottom: 80,
-                        padding: padding
-                    },
-                }}
-                extra={
-                    <Space> 
-                        {renderButton()}
-                        <Button onClick={submit} type="primary">
-                            {textButton}
-                        </Button>
-                    </Space>
-                }
-            >
-                {component}
-            </Drawer>
+            width={width}
+            onClose={handleClose}
+            open={visible}
+            styles={{
+                body: {
+                    paddingBottom: 80,
+                    padding: padding
+                },
+            }}
+            extra={
+                <Space>
+                    {renderButton()}
+                    <Button onClick={submit} type="primary">
+                        {textButton}
+                    </Button>
+                </Space>
+            }
+        >
+            {component}
+        </Drawer>
     );
 }

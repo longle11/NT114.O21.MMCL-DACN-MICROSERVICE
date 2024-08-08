@@ -29,7 +29,7 @@ export default function MainPageTemplate({ Component }) {
         //     dispatch(GetProjectAction(localStorage.getItem('projectid'), ""))
         // }
         // // eslint-disable-next-line
-        
+
     }, [])
     const handleLogin = () => {
         return navigate("/login")
@@ -37,15 +37,17 @@ export default function MainPageTemplate({ Component }) {
     const content = () => {
         if (!isLoading) {
             if (userInfo !== null) {
-                return <div style={{ overflow: 'hidden' }}>
-                    {/* <DrawerHOC />
-                    <SideBar /> */}
+                return <div>
                     <MenuBarHeader />
-                    {/* <MenuBar /> */}
-                    <div style={{ width: '100%', padding: 0 }} className='main'>
-                        <Component />
+                    <div style={{ overflow: 'hidden', display: 'flex' }}>
+                        <DrawerHOC />
+                        <SideBar />
+                        {/* <MenuBar /> */}
+                        <div style={{ width: '100%', padding: 0 }} className='main'>
+                            <Component />
+                        </div>
+                        <InfoModal />
                     </div>
-                    {/* <InfoModal /> */}
                 </div>
             } else {
                 return <Modal title="Notification" open="true" onCancel={handleLogin} onOk={handleLogin} centered>
