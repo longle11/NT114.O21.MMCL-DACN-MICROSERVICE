@@ -72,6 +72,35 @@ function TaskForm(props) {
                         />
                     </div>
                 </div>
+                <div className='row mt-2'>
+                    <div className='col-6 p-0 pr-5'>
+                        <label htmlFor='issueType'>Epic Link</label>
+                        <Select
+                            placeholder="Select Epic"
+                        />
+                    </div>
+                    <div className='col-6 p-0'>
+                        <label htmlFor='priority'>Labels</label>
+                        <Select
+                            placeholder="Select label"
+                        />
+                        <small>Choose this epic to assign this issue to.</small>
+                    </div>
+                </div>
+                <div className='row mt-2'>
+                    <div className='col-6 p-0 pr-5'>
+                        <label htmlFor='issueType'>Components</label>
+                        <Select
+                            placeholder="None"
+                        />
+                    </div>
+                    <div className='col-6 p-0'>
+                        <label htmlFor='priority'>Sprint</label>
+                        <Select
+                            placeholder="Select sprint"
+                        />
+                    </div>
+                </div>
 
                 <div className='row mt-2'>
                     <label htmlFor='shortSummary'>Short summary <span style={{ color: 'red' }}>(*)</span></label>
@@ -106,8 +135,7 @@ function TaskForm(props) {
                             message.success('File uploaded successfully')
                             const formData = new FormData()
                             formData.append('updatedfile', info)
-                            const res = await Axios.post(`${domainName}/api/files/upload`, formData)
-                            console.log(res.data)
+                            await Axios.post(`${domainName}/api/files/upload`, formData)
                         }}>
                         <Button icon={<UploadOutlined />}>Select File</Button>
                     </Upload>

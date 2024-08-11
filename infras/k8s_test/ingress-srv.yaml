@@ -57,6 +57,27 @@ spec:
                 name: category-srv
                 port: 
                   number: 4004
+          - path: /api/issuehistory/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: issuehistory-srv
+                port: 
+                  number: 4005
+          - path: /api/issueprocess/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: issueprocess-srv
+                port: 
+                  number: 4006
+          - path: /api/sprint/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: sprint-srv
+                port: 
+                  number: 4007
           - path: /?(.*)
             pathType: Prefix
             backend:

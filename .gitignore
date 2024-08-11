@@ -15,3 +15,10 @@ file/node_modules
 file/package-lock.json
 skaffold.yaml
 infras/kong/values.yaml
+sprint/package-lock.json
+sprint/node_modules
+issue_process/package-lock.json
+issue_process/node_modules
+issue_history/node_modules
+issue_history/package-lock.json
+note

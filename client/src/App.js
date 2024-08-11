@@ -13,6 +13,7 @@ import { userLoggedInAction } from './redux/actions/UserAction'
 import NotFound from './components/NotFound/NotFound';
 import ProfileUser from './components/Profile/ProfileUser';
 import Backlog from './components/WD-Board/Backlog/Backlog';
+import Release from './components/Development/Releases/Release';
 function App() {
   const dispatch = useDispatch()
   useEffect(() => {
@@ -34,6 +35,7 @@ function App() {
           <Route path='/reports' element={<MainPageTemplate Component={ProjectManager} />} />
           <Route path='/issues' element={<MainPageTemplate Component={Create} />} />
           <Route path='/components' element={<MainPageTemplate Component={Create} />} />
+          <Route path='/releases' element={<MainPageTemplate Component={Release} />} />
 
           <Route path='/login' element={<UserLoginTemplate Component={Login} />} />
           <Route path='/signup' Component={SignUp} />

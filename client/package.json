@@ -11,6 +11,7 @@
     "ant": "^0.2.0",
     "antd": "^5.14.2",
     "axios": "^1.6.7",
+    "dayjs": "^1.11.12",
     "formik": "^2.4.5",
     "html-react-parser": "^5.1.8",
     "js-cookie": "^3.0.5",

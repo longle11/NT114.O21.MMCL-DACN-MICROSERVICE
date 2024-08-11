@@ -44,6 +44,7 @@ async function connectToNats() {
         categoryCreatedListener()
     } catch (error) {
         console.log("Connected failed to nats server", error);
+        process.exit(1)
     }
 }
 

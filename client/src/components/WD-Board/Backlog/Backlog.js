@@ -1,14 +1,26 @@
-import { Button, Tag, Avatar, Drawer, Space } from 'antd'
+import { Button, Tag, Avatar, Col, Switch, Checkbox, Row } from 'antd'
 import Search from 'antd/es/input/Search'
-import React from 'react'
-import { UserOutlined } from '@ant-design/icons';
-import './Backlog.css'
+import React, { useState } from 'react'
+import {
+    DownOutlined,
+    FrownFilled,
+    FrownOutlined,
+    MehOutlined,
+    SmileOutlined,
+    UserOutlined
+} from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { drawer_edit_form_action } from '../../../redux/actions/DrawerAction';
-import CreateIssue from '../../Forms/CreateIssue/CreateIssue';
+import CreateIssue from '../../Forms/CreateEpic/CreateEpic';
+import { NavLink } from 'react-router-dom';
+import TaskForm from '../../Forms/TaskForm';
 export default function Backlog() {
+    const [onChangeVersion, setOnChangeVersion] = useState(false)
+    const [onChangeEpic, setOnChangeEpic] = useState(false)
     const dispatch = useDispatch()
-    const visible = useSelector(state => state.isOpenDrawer.visible)
+    const onChange = (checkedValues) => {
+        console.log('checked = ', checkedValues);
+    };
     return (
         <div>
             <span>Projects / Website Developments / WD Board</span>
@@ -31,7 +43,7 @@ export default function Backlog() {
                 </div>
                 <div className="avatar-group d-flex">
                     {/* {projectInfo?.members?.map((value, index) => {
-                        const table = <Table columns={memberColumns} rowKey={value._id} dataSource={projectInfo?.members} />
+                        const table = <Table cols={memberCols} rowKey={value._id} dataSource={projectInfo?.members} />
                         return renderAvatarMembers(value, table)
                     })} */}
                 </div>
@@ -43,31 +55,101 @@ export default function Backlog() {
                 }}>Only my issues</Button>
             </div>
             <div style={{ margin: '0 40px' }}>
-                <div className='d-flex'>
+                <div style={{ display: 'flex' }}>
                     <div>
-                        <button className='btn btn-primary' id="dropdownVersionButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">VERSIONS</button>
+                        <button className='btn btn-primary' id="dropdownVersionButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">VERSIONS<i className="fa-sharp fa-solid fa-caret-down ml-4"></i></button>
                         <div className="dropdown-menu" aria-labelledby="dropdownVersionButton">
-                            <div className='d-flex justify-content-between align-items-center'>
-                                <h6 className='m-0'>Versions</h6>
-                                <span><i className="fa-regular fa-plus mr-1"></i>Create version</span>
+                            <p>Unreleased versions in this project</p>
+                            <hr />
+                            <div className='d-flex align-items-center'>
+                                <Switch onChange={() => {
+                                    setOnChangeVersion(!onChangeVersion)
+                                }} value={onChangeVersion} />
+                                <span className='ml-3'>Show version panel</span>
                             </div>
                         </div>
                     </div>
                     <div>
-                        <button className='btn btn-primary' id="dropdownEpicButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">EPICS</button>
+                        <button className='btn btn-primary' id="dropdownEpicButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">EPICS<i className="fa-sharp fa-solid fa-caret-down ml-4"></i></button>
                         <div className="dropdown-menu" aria-labelledby="dropdownEpicButton">
-                            <div className='d-flex justify-content-between align-items-center'>
-                                <h6 className='m-0'>Epics</h6>
-                                <span onClick={(e) => {
-                                    e.preventDefault()
-                                    dispatch(drawer_edit_form_action(<CreateIssue />, "Create", 720, '30px'))
-                                }}><i className="fa-regular fa-plus mr-1" ></i>Create epic</span>
+                            <Checkbox.Group style={{ width: '100%', margin: '10px' }} onChange={onChange}>
+                                <Row>
+                                    <Col span="16">
+                                        <Checkbox value="A">A</Checkbox>
+                                    </Col>
+                                    <Col span="16">
+                                        <Checkbox value="B">B</Checkbox>
+                                    </Col>
+                                    <Col span="16">
+                                        <Checkbox value="C">C</Checkbox>
+                                    </Col>
+                                    <Col span="16">
+                                        <Checkbox value="D">D</Checkbox>
+                                    </Col>
+                                    <Col span="16">
+                                        <Checkbox value="E">E</Checkbox>
+                                    </Col>
+                                </Row>
+                            </Checkbox.Group>
+                            <hr />
+                            <div className='d-flex align-items-center'>
+                                <Switch onChange={() => {
+                                    setOnChangeEpic(!onChangeEpic)
+                                }} value={onChangeEpic} />
+                                <span className='mr-3'>Show epic panel</span>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className='main-info-backlog' style={{ minHeight: '200px' }}>
-                    <div>
+                <div className='main-info-backlog' style={{ minHeight: '200px', display: onChangeEpic || onChangeVersion ? 'flex' : 'block' }}>
+                    <div className="card version-info-backlog" style={{ width: '25rem', display: onChangeVersion ? 'block' : 'none', margin: '10px 5px' }}>
+                        <div className='d-flex justify-content-between'>
+                            <h6>Versions</h6>
+                            <i className="fa-solid fa-xmark" onClick={() => {
+                                setOnChangeVersion(!onChangeVersion)
+                            }}></i>
+                        </div>
+                        <div className="card-body d-flex flex-column justify-content-center">
+                            <img src="https://jira-frontend-bifrost.prod-east.frontend.public.atl-paas.net/assets/releases-80px.782fa98d.svg" />
+                            <p>Versions help you package and schedule project deliveries.</p>
+                            <p>Your unreleased versions will appear here so you can manage them directly from the backlog.</p>
+                        </div>
+                    </div>
+
+                    <div className="card epic-info-backlog" style={{ width: '25rem', display: onChangeEpic ? 'block' : 'none', margin: '10px 5px' }}>
+                        <div className='d-flex justify-content-between'>
+                            <h6>Epci</h6>
+                            <i className="fa-solid fa-xmark" onClick={() => {
+                                setOnChangeEpic(!onChangeEpic)
+                            }}></i>
+                        </div>
+                        <div className="card-body d-flex flex-column justify-content-center p-2">
+                            <button style={{ width: '100%', textAlign: 'left' }} className='btn btn-transparent'>Issue without epic</button>
+                            <div style={{border: '2px solid #aaa', borderRadius: '10px' }}>
+                                <button style={{ width: '100%', textAlign: 'left' }} className="btn btn-transparent" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                                    <i className="fa-solid fa-caret-down mr-3"></i>Epic name 1
+                                </button>
+                                <div className="collapse " id="collapseExample">
+                                    <div className='d-flex flex-column'>
+                                        <div>
+                                            <span>Issues (0)</span>
+                                            <span>Completed (0)</span>
+                                            <span>Unestimated (0)</span>
+                                            <span>Estimate (0)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                        <NavLink to='#' onClick={() => {
+                            dispatch(drawer_edit_form_action(<TaskForm />, 'Save', '760px'))
+                        }}>Create issue in epic</NavLink>
+                        <NavLink to='#'>Viewed linked pages</NavLink>
+                        </div>
+                    </div>
+
+                    <div className='issues-info-backlog' style={{ width: '100%', margin: '10px' }}>
                         <h6>Backlog <span>7 issues</span></h6>
                         <ul style={{ listStyle: 'none', padding: 0, border: '1px solid #ddd' }}>
                             <li style={{ borderBottom: '1px solid #ddd', padding: '5px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
