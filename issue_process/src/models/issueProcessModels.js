@@ -9,19 +9,20 @@ const issueProcessSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         default: null
     },
-    type_processes: [
+    name_process: {
+        type: String,
+        default: null
+    },
+    issue_list: [
         {
-            name_progress: String,
-            issues_progress: [
-                {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: 'issues'
-                }
-            ],
-            createAt: Date
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'issues'
         }
-    ]
-
+    ],
+    createAt: {
+        type: Date,
+        default: Date.now
+    }
 })
 
 const issueProcessModel = mongoose.model('issue_Process', issueProcessSchema)

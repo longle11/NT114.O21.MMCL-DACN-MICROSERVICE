@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const userSchema = mongoose.Schema({
+const userSchema = new mongoose.Schema({
     username: {
         type: String,
         default: null
@@ -11,11 +11,19 @@ const userSchema = mongoose.Schema({
     }
 })
 
-userSchema.virtual('issuesRefCreator', {
+userSchema.virtual('usersRefAssignees', {
     ref: 'issues',
+    foreignField: '_id',
+    localField: 'assignees'
+})
+
+userSchema.virtual('usersRefCreator', {
+    ref: 'epics',
     foreignField: '_id',
     localField: 'creator'
 })
-const userModel = new mongoose.model('users', userSchema)
+
+
+const userModel = mongoose.model('users', userSchema)
 
 module.exports = userModel

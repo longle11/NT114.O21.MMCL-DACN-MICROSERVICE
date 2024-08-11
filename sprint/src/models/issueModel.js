@@ -9,7 +9,7 @@ const issueSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    reporter: {
+    creator: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users'
     },
@@ -17,14 +17,23 @@ const issueSchema = new mongoose.Schema({
         type: Number,
         default: null
     },
-    priority: {
+    issue_priority: {
         type: Number,
         default: null
     },
-    version: {
+    fix_version: {
         type: mongoose.Schema.Types.ObjectId,
-        default: null
+        ref: 'versions'
+    },
+    epic_link: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'epics'
     }
+})
+issueSchema.virtual('sprintsRefIssueList', {
+    ref: 'sprints',
+    foreignField: '_id',
+    localField: 'issue_list'
 })
 
 const issueModel = mongoose.model('issues', issueSchema)

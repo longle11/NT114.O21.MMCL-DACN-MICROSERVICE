@@ -15,18 +15,20 @@ const issueSchema = new mongoose.Schema({
             ref: 'users'
         }
     ],
-    issueStatus: {
+    issue_priority: {
         type: Number,
-        default: null
+        default: 2
     },
-    priority: {
+    issue_type: {
         type: Number,
-        default: null
-    },
-    version: {
-        type: mongoose.Schema.Types.ObjectId,
         default: null
     }
+})
+
+issueSchema.virtual('issuesRefIssueList', {
+    ref: 'issueProcesses',
+    foreignField: '_id',
+    localField: 'issue_list'
 })
 
 const issueModel = mongoose.model('issues', issueSchema)

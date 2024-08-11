@@ -12,13 +12,22 @@ const issueHistorySchema = new mongoose.Schema({
     history: [
         {
             name_status: String,
-            update_by: {
+            createBy: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: 'users'
             },
-            createAt: Date,
-            old_status: String,
-            new_status: String
+            createAt: {
+                type: Date,
+                default: Date.now
+            },
+            old_status: {
+                type: String,
+                default: null
+            },
+            new_status: {
+                type: String,
+                default: null
+            }
         }
     ]
 })
