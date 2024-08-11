@@ -9,10 +9,12 @@ const issueSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    reporter: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'users'
-    },
+    assignees: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'users'
+        }
+    ],
     issueStatus: {
         type: Number,
         default: null
