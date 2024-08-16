@@ -5,7 +5,7 @@ on:
     branches:
       - "main"
     paths:
-      - "ProjectManagement/**"
+      - "project_management/**"
 jobs:
   build:
     runs-on: ubuntu-latest

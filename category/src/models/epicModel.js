@@ -15,7 +15,8 @@ const epicSchema = new mongoose.Schema({
     },
     creator: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'users'
+        ref: 'users',
+        default: null
     },
     tag_color: {
         type: String,
@@ -44,7 +45,7 @@ const epicSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'issues'
         }
-    ],
+    ]
 })
 
 const epicModel = mongoose.model('epics', epicSchema)

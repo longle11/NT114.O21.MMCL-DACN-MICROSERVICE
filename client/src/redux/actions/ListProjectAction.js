@@ -1,6 +1,5 @@
 import Axios from "axios"
-import { GET_LIST_PROJECT_API, GET_PROJECT_API } from "../constants/constant"
-import { delay } from "../../util/Delay"
+import { GET_LIST_PROJECT_API, GET_PROCESSES_PROJECT, GET_PROJECT_API, GET_SPRINT_PROJECT } from "../constants/constant"
 import domainName from '../../util/Config'
 export const ListProjectAction = () => {
     return async dispatch => {
@@ -24,10 +23,37 @@ export const GetProjectAction = (id, keyword) => {
                 type: GET_PROJECT_API,
                 data: res.data.data
             })
-            await delay(1000)
-            localStorage.setItem('projectid', id)
         } catch (errors) {
-            localStorage.setItem('projectid', 1)
+
+        }
+    }
+}
+
+export const GetProcessListAction = (project_id) => {
+    return async dispatch => {
+        try {
+            const res = await Axios.get(`${domainName}/api/issueprocess/${project_id}`)
+            
+            dispatch({
+                type: GET_PROCESSES_PROJECT,
+                processList: res.data.data
+            })
+        } catch (errors) {
+
+        }
+    }
+}
+export const GetSprintListAction = (project_id) => {
+    return async dispatch => {
+        try {
+            const res = await Axios.get(`${domainName}/api/sprint/${project_id}`)
+            
+            dispatch({
+                type: GET_SPRINT_PROJECT,
+                sprintList: res.data.data
+            })
+        } catch (errors) {
+
         }
     }
 }

@@ -1,57 +1,53 @@
 import { Avatar, Input, Select } from 'antd'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { UserOutlined } from '@ant-design/icons';
-export default function CreateIssue() {
+import { useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { submit_edit_form_action } from '../../../redux/actions/DrawerAction';
+import { createEpic } from '../../../redux/actions/CategoryAction';
+export default function CreateEpic() {
     const handleChangeProjects = () => {
 
     }
     const handleChangeIssues = () => {
 
     }
+    const dispatch = useDispatch()
+    useEffect(() => {
+        // //submit sự kiện để gửi lên form
+        dispatch(submit_edit_form_action(handleSubmit))
+        // eslint-disable-next-line
+    }, [])
+    const userInfo = useSelector(state => state.user.userInfo)
+    const {id} = useParams()
+    const handleSubmit = () => {
+        dispatch(createEpic({
+            project_id: id,
+            epic_name: "test",
+            creator: null,
+            summary: "1 chut test ve epic"
+        }))
+    }
     const optionProjects = [
         {
-            value: 'jack',
-            label: 'Jack',
-        },
-        {
-            value: 'lucy',
-            label: 'Lucy',
-        },
-        {
-            value: 'Yiminghe',
-            label: 'yiminghe',
-        },
-        {
-            value: 'disabled',
-            label: 'Disabled'
-        },
+            value: 'new project',
+            label: `${id}`,
+        }
     ]
     const optionIssues = [
         {
-            value: 'jack',
-            label: 'Jack',
-        },
-        {
-            value: 'lucy',
-            label: 'Lucy',
-        },
-        {
-            value: 'Yiminghe',
-            label: 'yiminghe',
-        },
-        {
-            value: 'disabled',
-            label: 'Disabled'
-        },
+            value: 'epic',
+            label: 'Epic',
+        }
     ]
     const reporterOptions = [
-        { label: <>{<Avatar icon={<UserOutlined />} />} Longle</>, value: 0 },
+        { label: <>{<Avatar src={userInfo.avatar} />} {userInfo.username}</>, value: 0 },
         { label: <>{<Avatar icon={<UserOutlined />} />} Default user</>, value: 1 },
         { label: <>{<Avatar icon={<UserOutlined />} />} Hehe user</>, value: 2 }
     ]
-    const nameOfTypeIssues = ['Epic', 'Story', 'Task', 'Bug']
+    // const nameOfTypeIssues = ['Story', 'Task', 'Bug']
     return (
-        <div>
+        <form onSubmit={handleSubmit}>
             <div className='d-flex justify-content-between'>
                 <h4>Create Epic</h4>
                 <div>
@@ -101,6 +97,6 @@ export default function CreateIssue() {
                 <label htmlFor='reporterForm' className='p-0'>Reporter <span className='text-danger'>*</span></label>
                 <Select className='form-control' style={{ border: 'none', padding: '0', width: '40%' }} id="reporterForm" defaultValue={reporterOptions[0].value} options={reporterOptions}/>
             </div>
-        </div>
+        </form>
     )
 }

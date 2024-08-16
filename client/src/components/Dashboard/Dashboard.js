@@ -1,39 +1,60 @@
 import React, { useEffect, useRef, useState } from 'react'
 import DrawerHOC from '../../HOC/DrawerHOC'
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { AutoComplete, Avatar, Button, Popover, Table } from 'antd';
+import { AutoComplete, Avatar, Button, Modal, Popover, Select, Table } from 'antd';
 import { getInfoIssue } from '../../redux/actions/IssueAction';
-import { showNotificationWithIcon } from '../../util/NotificationUtil';
 import { getUserKeyword, insertUserIntoProject } from '../../redux/actions/UserAction';
-import { GetProjectAction } from '../../redux/actions/ListProjectAction';
+import { GetProcessListAction, GetProjectAction } from '../../redux/actions/ListProjectAction';
 import { deleteUserInProject } from '../../redux/actions/CreateProjectAction';
 import { DeleteOutlined } from '@ant-design/icons';
 import Search from 'antd/es/input/Search';
 import { iTagForIssueTypes, iTagForPriorities } from '../../util/CommonFeatures';
 export default function Dashboard() {
     const dispatch = useDispatch()
-    const navigate = useNavigate()
 
     //sử dụng hiển thị tất cả issue hoặc chỉ các issue liên quan tới user
     const [type, setType] = useState(0)
+    const { id } = useParams()
 
     const projectInfo = useSelector(state => state.listProject.projectInfo)
     const [valueDashboard, setValueDashboard] = useState('')
     const listUser = useSelector(state => state.user.list)
     const userInfo = useSelector(state => state.user.userInfo)
+    const processList = useSelector(state => state.listProject.processList)
+    const [currentProcess, setCurrentProcess] = useState(null)
     //su dung cho debounce search
     const search = useRef(null)
+    const [listProcesses, setListProcesses] = useState([
+        {
+            nameProcess: "backlog"
+        },
+        {
+            nameProcess: "inprogress"
+        },
+        {
+            nameProcess: "done"
+        }
+    ])
+
+    const [open, setOpen] = useState(false);
+
+    const showModal = () => {
+        setOpen(true);
+    };
+
+    const handleOk = () => {
+
+    };
+
+    const handleCancel = () => {
+        console.log('Clicked cancel button');
+        setOpen(false);
+    };
 
     useEffect(() => {
-        if (typeof localStorage.getItem('projectid') === 'string' && localStorage.getItem('projectid').length >= 8) {
-            localStorage.setItem('projectid', projectInfo?._id)
-        } else {
-            localStorage.setItem('projectid', null)
-            showNotificationWithIcon('error', 'Vui lòng tham gia vào dự án trước')
-            navigate('/manager')
-        }
-        // eslint-disable-next-line
+        dispatch(GetProcessListAction(id))
+        console.log("chay vo tan a");
     }, [])
 
     //su dung cho truong hien thi member
@@ -81,7 +102,21 @@ export default function Dashboard() {
         </Popover>
     }
 
-
+    const renderProcessListOptions = (currentProcessId) => {
+        var processListOptions = []
+        processList.filter(process => {
+            if (process._id.toString() !== currentProcessId) {
+                const processOption = {
+                    label: <span style={{ backgroundColor: process.tag_color, width: '100%', height: '100%', display: 'block' }}>{process.name_process}</span>,
+                    value: process._id.toString()
+                }
+                processListOptions.push(processOption)
+                return true
+            }
+            return false
+        })
+        return processListOptions
+    }
 
     const countEleStatus = (position, type) => {
         if (type === 1) {
@@ -172,6 +207,11 @@ export default function Dashboard() {
         />
     }
 
+    const addNewProcess = () => {
+        const newListProcesses = [...listProcesses, { nameProcess: "hihi" }];
+        console.log("listProcesses ", newListProcesses);
+        setListProcesses(newListProcesses);
+    }
     return (
         <>
             <DrawerHOC />
@@ -222,41 +262,61 @@ export default function Dashboard() {
                 <Button onClick={() => {
                     setType(1)
                 }}>Only my issues</Button>
+                <Button onClick={() => {
+                    addNewProcess()
+                }}>Add process {listProcesses.length}</Button>
             </div>
-            <div className="content" style={{ display: 'flex' }}>
-                <div className="card" style={{ width: '20rem', height: '30rem', overflow: 'auto', scrollbarWidth: 'none', fontWeight: 'bold' }}>
-                    <div className="card-header">
-                        BACKLOG {countEleStatus(0, type)}
+            <div className="content" style={{ overflowX: 'scroll', width: '100%', display: '-webkit-box', padding: '15px 20px', scrollbarWidth: 'none', backgroundColor: 'white' }}>
+                {processList?.map(process => (<div className="card" style={{ width: '18rem', height: '25rem', fontWeight: 'bold', scrollbarWidth: 'none' }}>
+                    <div className='d-flex justify-content-between align-items-center' style={{ backgroundColor: process.tag_color, color: 'white', padding: '3px 10px' }}>
+                        <div className="card-header">
+                            {process.name_process} {countEleStatus(0, type)}
+                        </div>
+                        <div className='dropdown'>
+                            <button style={{ height: '30px' }} className='btn btn-light p-0 pl-3 pr-3' type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i className="fa-sharp fa-solid fa-bars"></i>
+                            </button>
+                            <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                <button className="dropdown-item">Set column limit</button>
+                                <button className="dropdown-item" onClick={() => {
+                                    setCurrentProcess(process)
+                                    showModal()
+                                }}>Delete</button>
+                            </div>
+                        </div>
                     </div>
                     <ul className="list-group list-group-flush">
                         {renderIssue(0, type)}
                     </ul>
-                </div>
-                <div className="card" style={{ width: '20rem', height: '30rem', overflow: 'auto', scrollbarWidth: 'none', fontWeight: 'bold' }}>
-                    <div className="card-header">
-                        SELECTED FOR DEVELOPMENT {countEleStatus(1, type)}
-                    </div>
-                    <ul className="list-group list-group-flush">
-                        {renderIssue(1, type)}
-                    </ul>
-                </div>
-                <div className="card" style={{ width: '20rem', height: '30rem', overflow: 'auto', scrollbarWidth: 'none', fontWeight: 'bold' }}>
-                    <div className="card-header">
-                        IN PROGRESS {countEleStatus(2, type)}
-                    </div>
-                    <ul className="list-group list-group-flush">
-                        {renderIssue(2, type)}
-                    </ul>
-                </div>
-                <div className="card" style={{ width: '20rem', height: '30rem', overflow: 'auto', scrollbarWidth: 'none', fontWeight: 'bold' }}>
-                    <div className="card-header">
-                        DONE {countEleStatus(3, type)}
-                    </div>
-                    <ul className="list-group list-group-flush">
-                        {renderIssue(3, type)}
-                    </ul>
-                </div>
+                </div>))}
             </div>
+            <Modal
+                open={open}
+                onOk={handleOk}
+                onCancel={handleCancel}
+            >
+                <div className='d-flex'>
+                    <i className="glyphicon glyphicon-alert"></i>
+                    <span style={{ fontSize: '16px', fontWeight: 'bold' }}>Move work from <span>{currentProcess?.name_process}</span> column</span>
+                </div>
+                <p>Select a new home for any work with the <span>{currentProcess?.name_process}</span> status, including work in the backlog.</p>
+                <div className='d-flex justify-content-between align-items-center'>
+                    <div className='d-flex flex-column'>
+                        <label htmlFor='currentProcess'>This status will be deleted:</label>
+                        <div style={{ textDecoration: 'line-through', backgroundColor: currentProcess?.tag_color, display: 'inline' }}>{currentProcess?.name_process}</div>
+                    </div>
+                    <i className="fa fa-long-arrow-alt-right"></i>
+                    <div className='d-flex flex-column'>
+                        <label htmlFor='newProcess?'>Move existing issues to:</label>
+                        <Select
+                            showSearch
+                            optionFilterProp="label"
+                            options={renderProcessListOptions(currentProcess?._id.toString())}
+                            defaultValue={renderProcessListOptions(currentProcess?._id.toString())[0]?.value}
+                        />
+                    </div>
+                </div>
+            </Modal>
         </>
     )
 }

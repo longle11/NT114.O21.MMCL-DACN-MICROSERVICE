@@ -1,23 +1,23 @@
 const mongoose = require('mongoose')
 
 const worklogHistorySchema = mongoose.Schema({
-    project_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        default: null
-    },
     issue_id: {
         type: mongoose.Schema.Types.ObjectId,
         default: null
     },
     creator: {
         type: mongoose.Schema.Types.ObjectId,
-        default: null
+        ref: 'users'
     },
     working_date: {
-        type: Date,
-        default: Date.now
+        type: String,
+        default: null
     },
     description: {
+        type: String,
+        default: null
+    },
+    timeSpent: {
         type: String,
         default: null
     }

@@ -1,6 +1,5 @@
 const mongoose = require("mongoose")
 const crypto = require('crypto')
-const bcrypt = require("bcrypt")
 const config = require("../Config/config")
 
 const userSchema = new mongoose.Schema({
@@ -23,6 +22,10 @@ const userSchema = new mongoose.Schema({
     createAt: {
         type: Date,
         default: Date.now
+    },
+    project_working: {
+        type: mongoose.Schema.Types.ObjectId,
+        default: null
     },
     isNewUser: {
         type: Boolean,

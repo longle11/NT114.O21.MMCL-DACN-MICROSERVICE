@@ -25,17 +25,13 @@ function TaskForm(props) {
     const handlEditorChange = (content, editor) => {
         setFieldValue('description', content)
     }
-
-
     const { id } = useParams()
 
     useEffect(() => {
-        if (id !== undefined) {
-            //thiet lap id project cho withformik
-            setFieldValue('projectId', id)
-            // //submit sự kiện để gửi lên form
-            dispatch(submit_edit_form_action(handleSubmit))
-        }
+        //thiet lap id project cho withformik
+        setFieldValue('projectId', id)
+        // //submit sự kiện để gửi lên form
+        dispatch(submit_edit_form_action(handleSubmit))
         // eslint-disable-next-line
     }, [])
     const dispatch = useDispatch()
@@ -43,8 +39,8 @@ function TaskForm(props) {
         <div className='container-fluid'>
             <form onSubmit={handleSubmit}>
                 <div className='row'>
-                    <label htmlFor='nameProject'>Project Name</label>
-                    <Input value={props.projectInfo?.nameProject} disabled name='nameProject' />
+                    <label htmlFor='name_project'>Project Name</label>
+                    <Input value={'test'} disabled name='name_project' />
                 </div>
                 <div className='row mt-2'>
                     <div className='col-6 p-0 pr-5'>
@@ -212,31 +208,27 @@ TaskForm.propTypes = {
     handleChange: PropTypes.func.isRequired,
     setFieldValue: PropTypes.func.isRequired,
     projectInfo: PropTypes.shape({
-        nameProject: PropTypes.string,
+        name_project: PropTypes.string,
         members: PropTypes.array
     })
 };
 const handleSubmitTaskForm = withFormik({
     enableReinitialize: true,
     mapPropsToValues: (props) => {
+        const templateIssue = props.currentIssue
         return {
-            projectId: props.projectInfo?._id,
-            creator: props.userInfo?.id,
-            issueType: 0,
-            priority: 0,
-            shortSummary: '',
-            description: '',
-            assignees: [],
-            timeOriginalEstimate: 0,
-            timeSpent: 0,
-            timeRemaining: 0,
-            issueStatus: 0,  //khoi tao mac dinh se vao backlog
-            comments: [],
-            positionList: 0 //thu tu nam trong danh sach
+            projectId: templateIssue.project_id,
+            creator: templateIssue !== null ? templateIssue?.creator?._id.toString() : null,
+            issue_type: 0,   //khoi tao mac dinh se vao todo
+            issue_priority: templateIssue !== null ? templateIssue?.issue_priority : 2,
+            summary: templateIssue !== null ? templateIssue?.summary : null,
+            description: templateIssue !== null ? templateIssue?.description : null,
+            assignees: templateIssue !== null ? templateIssue?.assignees : [],
+            timeOriginalEstimate: templateIssue !== null ? templateIssue?.timeOriginalEstimate : null,
+            issue_status: templateIssue !== null ? templateIssue?.issue_status : 0,
         }
     },
     handleSubmit: (values, { props, setSubmitting }) => {
-        console.log(values);
         let checkSubmit = true
         if (values.shortSummary.trim() === '' || values.timeOriginalEstimate === 0 || values.timeSpent === 0 || values.timeRemaining === 0) {
             checkSubmit = false
@@ -245,9 +237,7 @@ const handleSubmitTaskForm = withFormik({
         if (checkSubmit) {
             props.dispatch(createIssue(values))
         }
-    },
-
-    displayName: 'BasicForm',
+    }
 })(TaskForm);
 
 const mapStateToProp = (state) => ({

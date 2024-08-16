@@ -13,6 +13,10 @@ const issueProcessSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    tag_color: {
+        type: String,
+        default: '#dddd'
+    },
     issue_list: [
         {
             type: mongoose.Schema.Types.ObjectId,

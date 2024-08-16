@@ -1,14 +1,14 @@
 const mongoose = require("mongoose")
 
 const issueSchema = new mongoose.Schema({
-    projectId: mongoose.Schema.Types.ObjectId,
+    project_id: mongoose.Schema.Types.ObjectId,
     creator: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users'
     },
     issue_priority: {
         type: Number,
-        default: null
+        default: 2
     },
     summary: {
         type: String,
@@ -20,11 +20,12 @@ const issueSchema = new mongoose.Schema({
     },
     issue_type: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'issueProcesses'
+        ref: 'issueProcesses',
+        default: null
     },
     issue_status: {
         type: Number,
-        default: null
+        default: 0
     },
     assignees: [
         {
@@ -34,7 +35,8 @@ const issueSchema = new mongoose.Schema({
     ],
     epic_link: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'epics'
+        ref: 'epics',
+        default: null
     },
     story_point: {
         type: Number,
@@ -42,27 +44,26 @@ const issueSchema = new mongoose.Schema({
     },
     fix_version: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'versions'
+        ref: 'versions',
+        default: null
     },
     current_sprint: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'sprints'
+        ref: 'sprints',
+        default: null
     },
     old_sprint: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'sprints'
+        ref: 'sprints',
+        default: null
     },
     timeSpent: {
         type: Number,
-        default: null
-    },
-    timeRemaining: {
-        type: Number,
-        default: null
+        default: 0
     },
     timeOriginalEstimate: {
         type: Number,
-        default: null
+        default: 0
     },
     createAt: {
         type: Date,

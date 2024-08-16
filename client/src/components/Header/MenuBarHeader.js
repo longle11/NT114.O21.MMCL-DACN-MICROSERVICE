@@ -1,24 +1,22 @@
-import Axios from 'axios'
 import React, { useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import domainName from '../../util/Config'
 import { Avatar, Input, Modal } from 'antd'
 import { useDispatch, useSelector } from 'react-redux'
 import Search from 'antd/es/input/Search'
 import { SHOW_MODAL_INPUT_TOKEN } from '../../redux/constants/constant'
 
 export default function MenuBarHeader() {
-    const renderCurrentProject = async () => {
-        const currentProject = await Axios.get(`${domainName}/api/projectmanagement/${localStorage.getItem('projectid')}`)
-        return (
-            <div className="card">
-                <div className="card-body d-flex flex-column">
-                    <h5 className='card-title'>{currentProject.data.data.nameProject}</h5>
-                    <h6 className='card-subtitle'>{currentProject.data.data.category}</h6>
-                </div>
-            </div>
-        )
-    }
+    // const renderCurrentProject = async () => {
+    //     const currentProject = await Axios.get(`${domainName}/api/projectmanagement/${localStorage.getItem('projectid')}`)
+    //     return (
+    //         <div className="card">
+    //             <div className="card-body d-flex flex-column">
+    //                 <h5 className='card-title'>{currentProject.data.data.nameProject}</h5>
+    //                 <h6 className='card-subtitle'>{currentProject.data.data.category}</h6>
+    //             </div>
+    //         </div>
+    //     )
+    // }
     const userInfo = useSelector(state => state.user.userInfo)
     const showModalInputToken = useSelector(state => state.user.showModalInputToken)
     const [currentPassowrd, setCurrentPassowrd] = useState('')
@@ -39,13 +37,11 @@ export default function MenuBarHeader() {
                         <div className="dropdown-menu" aria-labelledby="navbarDropdown" style={{minWidth: '150px', width: '200px'}}>
                             <div style={{padding: '5px 15px'}}>
                             <p style={{ fontSize: '12px', fontWeight: 'bold' }}>WORKED ON</p>
-                            {localStorage.getItem('projectid').toString().length >= 10 ? (
-                                renderCurrentProject()
-                            ) : <p style={{ fontSize: '15px' }}>No project recently</p>}
+                            <p style={{ fontSize: '15px' }}>No project recently</p>
                             </div>
                             <div className="dropdown-divider" />
-                            <a className="dropdown-item" style={{ cursor: "pointer", padding: '5px 10px', fontSize: '13px' }} href="#">View all projects</a>
-                            <a className="dropdown-item" style={{ cursor: "pointer", padding: '5px 10px', fontSize: '13px' }} href="#">Create your project</a>
+                            <a className="dropdown-item" style={{ cursor: "pointer", padding: '5px 10px', fontSize: '13px' }} href="/">View all projects</a>
+                            <a className="dropdown-item" style={{ cursor: "pointer", padding: '5px 10px', fontSize: '13px' }} href="/">Create your project</a>
                         </div>
                     </li>
                     <li className="nav-item dropdown mr-2">
@@ -53,10 +49,10 @@ export default function MenuBarHeader() {
                             Projects
                         </NavLink>
                         <div className="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <a className="dropdown-item" href="#">Action</a>
-                            <a className="dropdown-item" href="#">Another action</a>
+                            <a className="dropdown-item" href="/">Action</a>
+                            <a className="dropdown-item" href="/">Another action</a>
                             <div className="dropdown-divider" />
-                            <a className="dropdown-item" href="#">Something else here</a>
+                            <a className="dropdown-item" href="/">Something else here</a>
                         </div>
                     </li>
                     <li className='nav-item mr-5'>

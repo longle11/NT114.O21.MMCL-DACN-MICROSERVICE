@@ -21,8 +21,7 @@ export default function MenuBar() {
 
             }
         }
-        const projectCreated = localStorage.getItem('projectid').length >= 10 ? "" : "none"
-        return <li className="list" style={{ pointerEvents: projectCreated }}>
+        return <li className="list">
             <NavLink to={`/projectDetail/`} className="nav-link">
                 <i className="fa fa-home mr-3"></i>
                 <span className="link">Dashboard</span>

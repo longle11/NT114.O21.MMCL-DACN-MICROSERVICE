@@ -67,6 +67,9 @@ export const signUpUserAction = (props) => {
 
 export const loginWithGoogleAction = (props) => {
     return async dispatch => {
+        dispatch({
+            type: DISPLAY_LOADING
+        })
         const newUser = {
             username: props.username,
             email: props.email,
@@ -100,6 +103,9 @@ export const loginWithGoogleAction = (props) => {
                 }
             }
         }
+        dispatch({
+            type: HIDE_LOADING
+        })
     }
 }
 
@@ -143,6 +149,9 @@ export const userLoginAction = (email, password) => {
 export const userLoggedInAction = () => {
     return async dispatch => {
         try {
+            dispatch({
+                type: DISPLAY_LOADING
+            })
             const res = await Axios.get(`${domainName}/api/users/currentuser`)
             if (!res.data.currentUser) {
                 dispatch({
@@ -155,6 +164,10 @@ export const userLoggedInAction = () => {
                     userInfo: res.data.currentUser
                 })
             }
+
+            dispatch({
+                type: HIDE_LOADING
+            })
         } catch (error) {
             console.log(error);
         }

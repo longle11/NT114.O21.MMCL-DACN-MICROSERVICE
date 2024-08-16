@@ -1,10 +1,6 @@
 const mongoose = require("mongoose")
 
 const issueSchema = new mongoose.Schema({
-    epic_name: {
-        type: String, 
-        default: null
-    },
     summary: {
         type: String,
         default: null
@@ -28,7 +24,13 @@ const issueSchema = new mongoose.Schema({
     epic_link: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'epics'
-    }
+    },
+    assignees: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'users'
+        }
+    ]
 })
 issueSchema.virtual('sprintsRefIssueList', {
     ref: 'sprints',

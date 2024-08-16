@@ -1,17 +1,29 @@
 const mongoose = require('mongoose')
 
 const issueSchema = new mongoose.Schema({
-    issue_type: {
+    summary: {
+        type: String,
+        default: null
+    },
+    creator: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'users'
+    },
+    issueStatus: {
         type: Number,
         default: null
     },
     issue_priority: {
         type: Number,
-        default: 2
-    },
-    summary: {
-        type: String,
         default: null
+    },
+    fix_version: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'versions'
+    },
+    epic_link: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'epics'
     },
     assignees: [
         {
@@ -29,7 +41,7 @@ issueSchema.virtual('issuesRefIssueVersionModel', {
 issueSchema.virtual('issuesRefIssueCompletedVersionModel', {
     ref: 'versions',
     foreignField: '_id',
-    foreignField: 'issues_completed'
+    localField: 'issues_completed'
 })
 issueSchema.virtual('issuesRefIssueEstimatVersionModel', {
     ref: 'versions',
@@ -51,7 +63,7 @@ issueSchema.virtual('issuesRefIssueEpicModel', {
 issueSchema.virtual('issuesRefIssueCompletedEpicModel', {
     ref: 'epics',
     foreignField: '_id',
-    foreignField: 'issues_completed'
+    localField: 'issues_completed'
 })
 issueSchema.virtual('issuesRefIssueEstimatEpicModel', {
     ref: 'epics',

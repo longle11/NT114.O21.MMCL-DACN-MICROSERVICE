@@ -1,17 +1,20 @@
 const mongoose = require("mongoose")
 
 const issueHistorySchema = new mongoose.Schema({
-    project_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        default: null
-    },
     issue_id: {
         type: mongoose.Schema.Types.ObjectId,
         default: null
     },
-    history: [
+    histories: [
         {
-            name_status: String,
+            name_status: {
+                type: String,
+                default: null
+            },
+            type_history: {
+                type: String,
+                default: null
+            },
             createBy: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: 'users'
@@ -32,5 +35,5 @@ const issueHistorySchema = new mongoose.Schema({
     ]
 })
 
-const issueHistoryModel = mongoose.model('issue_history', issueHistorySchema)
+const issueHistoryModel = mongoose.model('issueHistories', issueHistorySchema)
 module.exports = issueHistoryModel

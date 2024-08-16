@@ -1,5 +1,5 @@
 import { withFormik } from 'formik';
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { connect, useSelector } from 'react-redux';
 import * as Yup from "yup";
 import { getTokenAction, signUpUserAction, verifyTokenAction } from '../../redux/actions/UserAction';

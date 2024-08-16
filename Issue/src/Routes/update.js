@@ -10,6 +10,8 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
     try {
         if (req.currentUser) {
             const { id } = req.params
+            console.log("req.body", req.body, "params ", id);
+            
             const issueIds = await issueModel.find({})
             const ids = issueIds.map(issue => issue._id.toString());
             if (!ids.includes(id)) {
@@ -23,19 +25,28 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                     //them assignees moi vao danh sach neu duoc them vao    
                     req.body.assignees = listAssignees
                 }
-                currentIssue = { ...currentIssue._doc, ...req.body }
-                await issueModel.updateOne({ _id: id }, currentIssue)
-                const copyIssue = {
-                    _id: currentIssue._id,
-                    priority: currentIssue.priority,
-                    shortSummary: currentIssue.shortSummary,
-                    positionList: currentIssue.positionList,
-                    issueType: currentIssue.issueType,
-                    issueStatus: currentIssue.issueStatus,
-                    assignees: currentIssue.assignees
+                //kiem xem timeSpent da ton tai hay chua, neu roi thi tien hanh cap nhat len
+                var timeSpent = currentIssue.timeSpent
+                console.log("req.body", req.body);
+                
+                if(req.body.timeSpent) {
+                    timeSpent += req.body.timeSpent
+                    req.body.timeSpent = timeSpent
                 }
-                //public su kien toi projectmanagement service
-                await issuePublisher(copyIssue, 'issue:updated')
+                currentIssue = { ...currentIssue._doc, ...req.body }
+                console.log(currentIssue);
+                
+                await issueModel.updateOne({ _id: id }, currentIssue)
+                
+                // const copyIssue = {
+                //     _id: currentIssue._id,
+                //     issue_priority: currentIssue.issue_priority,
+                //     shortSummary: currentIssue.shortSummary,
+                //     issue_status: currentIssue.issue_status,
+                //     assignees: currentIssue.assignees
+                // }
+                // //public su kien toi projectmanagement service
+                // await issuePublisher(copyIssue, 'issue:updated')
 
                 return res.status(200).json({
                     message: "Successfully updated this issue",

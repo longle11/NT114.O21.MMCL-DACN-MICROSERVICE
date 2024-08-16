@@ -1,6 +1,10 @@
 const mongoose = require("mongoose")
 
 const sprintSchema = new mongoose.Schema({
+    project_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        default: null
+    },  
     sprint_name: {
         type: String, 
         default: null

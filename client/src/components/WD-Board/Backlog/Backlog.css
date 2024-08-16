@@ -1,3 +1,12 @@
-button:focus {
+.btn:focus {
     box-shadow: none;
+}
+
+.issues-backlog-detail:last-child {
+    border-bottom: none !important;
+    padding: 5px 0
+}
+
+.dragIssue { 
+    opacity: 0;
 }

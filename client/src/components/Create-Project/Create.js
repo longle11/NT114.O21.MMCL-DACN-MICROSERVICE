@@ -6,13 +6,13 @@ import { getListCategories } from '../../redux/actions/CategoryAction';
 import { createProjectAction } from '../../redux/actions/CreateProjectAction';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
 import PropTypes from 'prop-types';
-import { USER_LOGGED_IN } from '../../redux/constants/constant';
 
 function Create(props) {
     const { handleSubmit, handleChange, setFieldValue } = props;
     const handlEditorChange = (content, editor) => {
         setFieldValue('description', content)
     }
+    
     const dispatch = useDispatch()
     const categoryList = useSelector(state => state.categories.categoryList)
     useEffect(() => {
@@ -37,7 +37,7 @@ function Create(props) {
                 <form onSubmit={handleSubmit}>
                     <div className='form-group'>
                         <p>Name <span style={{color: 'red'}}>(*)</span></p>
-                        <input onChange={handleChange} className='form-control' name='nameProject' />
+                        <input onChange={handleChange} className='form-control' name='name_project' />
                     </div>
                     <div className='form-group'>
                         <p>Description</p>
@@ -64,13 +64,7 @@ function Create(props) {
                             })}
                         </select>
                     </div>
-                    <button type='submit' className='btn btn-primary' onClick={() => {
-                        console.log("kich haot thang nay");
-                        dispatch({
-                            type: USER_LOGGED_IN,
-                            userInfo: null
-                        })
-                    }}>Create project</button>
+                    <button type='submit' className='btn btn-primary'>Create project</button>
                 </form>
             </div>
         </div>
@@ -85,16 +79,16 @@ Create.propTypes = {
 const handleCreateProject = withFormik({
     enableReinitialize: true,
     mapPropsToValues: (props) => {
-        return { nameProject: '', description: '', category: props.categoryList[0]?._id }
+        return { name_project: '', description: '', category: props.categoryList[0]?._id }
     },
     // validationSchema: Yup.object().shape({
 
     // }),
     handleSubmit: (values, { props, setSubmitting }) => {
-        if (values.nameProject.trim() === '') {
+        if (values.name_project.trim() === '') {
             showNotificationWithIcon('error', 'Tạo dự án', 'Trường * không được bỏ trống')
         }
-        if (values.nameProject.trim() !== '' && values.description.trim() !== '') {
+        if (values.name_project.trim() !== '' && values.description.trim() !== '') {
             if (props.userInfo) {
                 values.creator = props.userInfo.id
                 props.dispatch(createProjectAction(values))

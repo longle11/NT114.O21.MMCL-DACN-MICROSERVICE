@@ -1,6 +1,6 @@
 const express = require("express")
 const categoryModel = require('../models/category')
-const categoryPublisher = require('../nats/category-publisher')
+const servicePublisher = require("../nats/publisher/service-publisher")
 const router = express.Router()
 
 const objects = [
@@ -25,7 +25,7 @@ router.get('/create', async (req, res) => {
             })
         }
         listData = await categoryModel.find({})
-        categoryPublisher(listData, 'category:created')
+        servicePublisher(listData, 'category:created')
     } else {
         listData = await categoryModel.find({})
     }

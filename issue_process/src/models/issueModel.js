@@ -1,28 +1,34 @@
 const mongoose = require("mongoose")
 
 const issueSchema = new mongoose.Schema({
-    epic_name: {
-        type: String, 
-        default: null
-    },
     summary: {
         type: String,
         default: null
+    },
+    creator: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'users'
+    },
+    issueStatus: {
+        type: Number,
+        default: null
+    },
+    issue_priority: {
+        type: Number,
+        default: null
+    },
+    fix_version: {
+        type: mongoose.Schema.Types.ObjectId
+    },
+    epic_link: {
+        type: mongoose.Schema.Types.ObjectId
     },
     assignees: [
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'users'
         }
-    ],
-    issue_priority: {
-        type: Number,
-        default: 2
-    },
-    issue_type: {
-        type: Number,
-        default: null
-    }
+    ]
 })
 
 issueSchema.virtual('issuesRefIssueList', {

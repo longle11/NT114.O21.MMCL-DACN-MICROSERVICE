@@ -7,10 +7,10 @@ client/node_modules
 client/package-lock.json
 comment/node_modules
 comment/package-lock.json
-Issue/node_modules
-Issue/package-lock.json
-ProjectManagement/node_modules
-ProjectManagement/package-lock.json
+issue/node_modules
+issue/package-lock.json
+project_management/node_modules
+project_management/package-lock.json
 file/node_modules
 file/package-lock.json
 skaffold.yaml

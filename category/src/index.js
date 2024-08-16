@@ -3,6 +3,8 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const mongoose =require('mongoose')
 const natsWrapper = require('./nats-wrapper')
+const issueCreatedListener = require('./nats/listener/issue-listener/issue-created-listeners')
+const authCreatedListener = require('./nats/listener/auth-listener/auth-created-listener')
 const app = express()
 
 app.use(bodyParser.json())
@@ -19,6 +21,9 @@ async function connectToNats() {
 
         process.on('SIGINT', () => { natsWrapper.client.close() })
         process.on('SIGTERM', () => { natsWrapper.client.close() })
+
+        issueCreatedListener()
+        authCreatedListener()
         console.log("Ket noi thanh cong toi nats");
     } catch (error) {
         console.log("Kết nối thất bại tới nats", error);
@@ -41,7 +46,9 @@ connectToMongoDb()
 app.use('/api/category', require('./Routes/create'))
 app.use('/api/category', require('./Routes/delete'))
 app.use('/api/category', require('./Routes/getList'))
+app.use('/api/category', require('./Routes/epic-create'))
+app.use('/api/category', require('./Routes/version-create'))
 
 app.listen(4004, () => {
-    console.log("Listening on port 4004 test");
+    console.log("Listening on port 4004");
 })

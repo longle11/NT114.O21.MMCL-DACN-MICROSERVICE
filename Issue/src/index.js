@@ -1,12 +1,11 @@
 const mongoose = require("mongoose")
 const natsWrapper = require("./nats-wrapper")
-const authCreatedListener = require("./nats/listener/auth-created-listener")
-const commentCreatedListener = require("./nats/listener/comment-created-listener")
-const commentDeletedListener = require("./nats/listener/comment-deleted-listener")
-const commentUpdatedListener = require("./nats/listener/comment-updated-listener")
-const projectManagementDeletedListener = require("./nats/listener/projectManagement-deleted-listener")
-const projectManagementUpdatedListener = require("./nats/listener/projectManagement-updated-listener")
 const app = require('./app')
+const versionCreatedListener = require("./nats/listener/version-listener/version-created-listener")
+const epicCreatedListener = require("./nats/listener/epic-listener/epic-created-listener")
+const sprintCreatedListener = require("./nats/listener/sprint-listener/sprint-created-listener")
+const issueProcessCreatedListener = require("./nats/listener/issueprocess-listener/issueprocess-created-listener")
+const authCreatedListener = require("./nats/listener/auth-listener/auth-created-listener")
 
 async function connectToNats() {
     try {
@@ -20,11 +19,10 @@ async function connectToNats() {
         process.on('SIGTERM', () => { natsWrapper.client.close() })
 
         authCreatedListener()
-        commentCreatedListener()
-        commentDeletedListener()
-        commentUpdatedListener()
-        projectManagementDeletedListener()
-        projectManagementUpdatedListener()
+        versionCreatedListener()
+        epicCreatedListener()
+        sprintCreatedListener()
+        issueProcessCreatedListener()
 
         console.log("Successfully connected to nats");
     } catch (error) {

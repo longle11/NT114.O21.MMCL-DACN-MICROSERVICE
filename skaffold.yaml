@@ -2,15 +2,7 @@ apiVersion: skaffold/v4beta5
 kind: Config
 manifests:
   rawYaml:
-    - "./infras/k8s_test/auth-depl.yaml"
-    - "./infras/k8s_test/client-depl.yaml"
-    - "./infras/k8s_test/category-depl.yaml"
-    - "./infras/k8s_test/issue-depl.yaml"
-    - "./infras/k8s_test/projectmanagement-depl.yaml"
-    - "./infras/k8s_test/issuehistory-depl.yaml"
-    - "./infras/k8s_test/issueprocess-depl.yaml"
-    - "./infras/k8s_test/sprint-depl.yaml"
-    - "./infras/k8s_test/nats-depl.yaml"
+    - "./infras/k8s_test/test/*"
 build:
   local:
     push: false
@@ -40,15 +32,15 @@ build:
           - dest: .
             src: 'src/**/*.js'
     - image: longle2003/issue
-      context: Issue
+      context: issue
       docker:
-        dockerfile: Dockerfile
+        dockerfile: Dockerfile.dev
       sync:
         manual:
           - dest: .
             src: 'src/**/*.js'
     - image: longle2003/projectmanagement
-      context: Projectmanagement
+      context: project_management
       docker:
         dockerfile: Dockerfile.dev
       sync:
@@ -70,7 +62,7 @@ build:
       sync:
         manual:
           - dest: .
-            src: 'src/**//*.js'
+            src: 'src/**/*.js'
     - image: longle2003/issue_history
       context: issue_history
       docker:
@@ -78,7 +70,7 @@ build:
       sync:
         manual:
           - dest: .
-            src: 'src/**//*.js'
+            src: 'src/**/*.js'
     - image: longle2003/issue_process
       context: issue_process
       docker:
@@ -86,4 +78,4 @@ build:
       sync:
         manual:
           - dest: .
-            src: 'src/**//*.js'
+            src: 'src/**/*.js'

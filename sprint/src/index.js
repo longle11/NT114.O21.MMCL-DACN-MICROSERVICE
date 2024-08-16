@@ -3,9 +3,13 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const mongoose = require('mongoose')
 const natsWrapper = require('./nats-wrapper')
+const authCreatedListener = require('./nats/listener/auth-listener/auth-created-listener')
+const versionCreatedListener = require('./nats/listener/version-listener/version-created-listener')
+const epicCreatedListener = require('./nats/listener/epic-listener/epic-created-listener')
+const issueCreatedListener = require('./nats/listener/issue-listener/issue-created-listeners')
 const app = express()
 app.use(cors())
-
+app.use(bodyParser.json())
 async function connectToMongoDb () {
     try {
         await mongoose.connect("mongodb://sprint-mongo-srv:27017/db")
@@ -27,6 +31,12 @@ async function connectToNats() {
 
         process.on('SIGINT', () => {natsWrapper.client.close()})
         process.on('SIGTERM', () => {natsWrapper.client.close()})
+
+        authCreatedListener()
+        versionCreatedListener()
+        epicCreatedListener()
+        issueCreatedListener()
+
         console.log("Connected successfully to nats");
     }catch(err) {
         console.log("Connected failed to nats server", err);
@@ -36,6 +46,11 @@ async function connectToNats() {
 
 connectToMongoDb()
 connectToNats()
+
+app.use('/api/sprint', require('./Routes/create'))
+app.use('/api/sprint', require('./Routes/delete'))
+app.use('/api/sprint', require('./Routes/getSprint'))
+app.use('/api/sprint', require('./Routes/update'))
 
 app.listen(4007, () => {
     console.log('listening on port 4007');

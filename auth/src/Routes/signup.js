@@ -105,6 +105,13 @@ router.post("/signup", async (req, res, next) => {
             } else {
                 //day la dang ky bang gmail
                 newUser.status = "approved"
+                const data = {
+                    _id: newUser._id,
+                    username: newUser.username,
+                    avatar: newUser.avatar
+                }
+                //đăng ký sự kiện publish lên nats
+                authPublisher(data, 'auth:created')
             }
             const user = await userModel.create(newUser)
 
@@ -116,14 +123,6 @@ router.post("/signup", async (req, res, next) => {
                     statusCode: 400
                 })
             } else {
-                //tách từng thuộc tính để gửi lên nats
-                const data = {
-                    _id: user._id,
-                    username: user.username,
-                    avatar: user.avatar
-                }
-                //đăng ký sự kiện publish lên nats
-                authPublisher(data, 'auth:created')
                 res.status(200).json({
                     message: getMessage.message,
                     statusCode: 200,
