@@ -1,17 +1,15 @@
-import { Avatar, Button, DatePicker, Image, Input, InputNumber, Modal, Popconfirm, Select } from 'antd';
-import React, { useEffect, useRef, useState } from 'react'
+import { Avatar, Button, DatePicker, Input, Popconfirm, Select } from 'antd';
+import React, { useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { Editor } from '@tinymce/tinymce-react';
 import Parser from 'html-react-parser';
 import { Option } from 'antd/es/mentions';
 import { createWorklogHistory, deleteAssignee, deleteIssue, getIssueHistoriesList, getWorklogHistoriesList, updateInfoIssue } from '../../../redux/actions/IssueAction';
-import { createCommentAction, deleteCommentAction, updateCommentAction } from '../../../redux/actions/CommentAction';
+import { createCommentAction } from '../../../redux/actions/CommentAction';
 import { showNotificationWithIcon } from '../../../util/NotificationUtil';
-import storeListComments from '../../../util/StoreListComment';
 import { GetProjectAction } from '../../../redux/actions/ListProjectAction';
 import { priorityTypeOptions, issueTypeOptions, iTagForPriorities, iTagForIssueTypes } from '../../../util/CommonFeatures';
 const { DateTime } = require('luxon');
-const { TextArea } = Input;
 
 export default function InfoModal() {
     const issueInfo = useSelector(state => state.issue.issueInfo)
@@ -107,6 +105,7 @@ export default function InfoModal() {
         }
         return <p>There is no description yet</p>
     }
+
     const validateOriginalTime = (input) => {
         for (const regex of regexs) {
             if (input.match(regex)) {
@@ -290,6 +289,17 @@ export default function InfoModal() {
             }
         })
     }
+    const getCurrentEpic = () => {
+        console.log("heheh ", issueInfo);
+        
+        if(issueInfo?.epic_link === null) {
+            return null
+        }
+        console.log("index tra ve ", epicList?.map(epic => epic._id.toString() === issueInfo?.epic_link?._id.toString()));
+        
+        return  epicList?.findIndex(epic => epic._id.toString() === issueInfo?.epic_link?._id.toString())
+    }
+
     const renderComments = () => {
         // let listComments = issueInfo?.comments.map((value, index) => {
         //     return (<li className='comment d-flex' key={value._id}>
@@ -363,9 +373,11 @@ export default function InfoModal() {
             return <Option key={value._id} value={value._id}>{value.username}</Option>
         })
     }
+
     function capitalizeFirstLetter(str) {
         return str.charAt(0).toUpperCase() + str.slice(1);
     }
+
     const renderTypeHistory = (name_status, old_status, new_status) => {
         if (name_status.toLowerCase() === "priority") {
             return <div>{iTagForPriorities(old_status)} <i className="fa-solid fa-arrow-right-long ml-3 mr-3"></i> {iTagForPriorities(new_status)}</div>
@@ -376,6 +388,8 @@ export default function InfoModal() {
             return <div><span style={{ fontWeight: 'bold' }}>Assignees</span> <i className="fa-solid fa-arrow-left-long ml-3 mr-3"></i>  <Avatar src={new_status.substring(0, getAvatar)} /> {new_status.substring(getAvatar + 1)}</div>
         } else if (name_status.toLowerCase() === "time original estimate" || name_status.toLowerCase() === "time spent") {
             return <div>{convertMinuteToFormat(old_status)} <i className="fa-solid fa-arrow-right-long ml-3 mr-3"></i> {convertMinuteToFormat()}</div>
+        } else if (name_status.toLowerCase() === "sprint" || name_status.toLowerCase().includes("epic")) {
+            return <div>{old_status} <i className="fa-solid fa-arrow-right-long ml-3 mr-3"></i> {new_status}</div>
         }
     }
     const renderHistoriesList = () => {
@@ -582,7 +596,7 @@ export default function InfoModal() {
                                 </div>
                                 {renderActivities()}
                             </div>
-                            <div className="col-4">
+                            <div className="col-4 p-0">
                                 <div className="status">
                                     <h6>TYPE</h6>
                                     <select className="custom-select" disabled={issueInfo?.creator._id !== userInfo?.id} onChange={(event) => {
@@ -663,7 +677,7 @@ export default function InfoModal() {
                                     </div>
                                     <div className='col-6'>
                                         <h6 className='mt-3'>SPRINT</h6>
-                                        <Input disabled value={issueInfo?.current_sprint ? issueInfo?.current_sprint : "None"} />
+                                        <Input disabled value={issueInfo?.current_sprint ? issueInfo?.current_sprint.sprint_name : "None"} />
                                     </div>
                                 </div>
                                 <div className='row epic-version'>
@@ -674,7 +688,11 @@ export default function InfoModal() {
                                             onChange={(value) => {
 
                                             }}
-                                            defaultValue={issueInfo?.epic_link ? issueInfo?.epic_link?.epic_name : "None"}
+                                            onClick={() => {
+                                                console.log("THong tin issue hien tai ", issueInfo);
+                                            }}
+                                            //issueInfo?.epic_link ? issueInfo?.epic_link?.epic_name : "None"
+                                            value={getCurrentEpic() !== null ? renderEpics()[getCurrentEpic()]?.value : "None"}
                                         />
                                     </div>
                                     <div className='col-6'>

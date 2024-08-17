@@ -51,7 +51,11 @@ app.use('/api/sprint', require('./Routes/create'))
 app.use('/api/sprint', require('./Routes/delete'))
 app.use('/api/sprint', require('./Routes/getSprint'))
 app.use('/api/sprint', require('./Routes/update'))
-
+app.get('/tester', async (req, res) => {
+    res.send({
+        message: "strip path thanh cong nha"
+    })
+})
 app.listen(4007, () => {
     console.log('listening on port 4007');
 })

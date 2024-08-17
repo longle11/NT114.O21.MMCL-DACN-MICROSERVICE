@@ -47,6 +47,7 @@ export const GetSprintListAction = (project_id) => {
     return async dispatch => {
         try {
             const res = await Axios.get(`${domainName}/api/sprint/${project_id}`)
+            console.log("GetSprintListAction lay ra duoc o thoi diem hien tai", res.data.data);
             
             dispatch({
                 type: GET_SPRINT_PROJECT,

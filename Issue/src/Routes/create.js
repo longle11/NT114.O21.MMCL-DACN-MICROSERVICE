@@ -27,39 +27,30 @@ router.post("/create", async (req, res, next) => {
         }
 
         await issuePublisher(issueCopy, 'issue:created')
+        if (req.currentUser) {
+            const issue = new issueModel(req.body)
+            const newIssue = await issue.save()
 
-        return res.status(201).json({
-            message: "Successfully created an issue",
-            data: newIssue
-        })
-        // console.log("loi ngoai nay");
-        // if (req.currentUser) {
-        //     console.log("vao trong nay");
-        //     const issue = new issueModel(req.body)
-        //     const newIssue = await issue.save()
+            const issueCopy = { 
+                _id: newIssue._id,
+                issue_priority: newIssue.issue_priority,
+                summary: newIssue.summary,
+                issue_type: newIssue.issue_type,
+                assignees: newIssue.assignees,
+                creator: newIssue.creator,
+                epic_link: newIssue.epic_link,
+                fix_version: newIssue.fix_version,
+            }
 
-        //     console.log("gia tri duoc tao ra", newIssue);
+            await issuePublisher(issueCopy, 'issue:created')
 
-        //     const issueCopy = {
-        //         _id: newIssue._id,
-        //         issue_priority: newIssue.issue_priority,
-        //         summary: newIssue.summary,
-        //         issue_type: newIssue.issue_type,
-        //         assignees: newIssue.assignees,
-        //         creator: newIssue.creator,
-        //         epic_link: newIssue.epic_link,
-        //         fix_version: newIssue.fix_version,
-        //     }
-
-        //     await issuePublisher(issueCopy, 'issue:created')
-
-        //     return res.status(201).json({
-        //         message: "Successfully created an issue",
-        //         data: newIssue
-        //     })
-        // } else {
-        //     throw new UnauthorizedError("Authentication failed")
-        // }
+            return res.status(201).json({
+                message: "Successfully created an issue",
+                data: newIssue
+            })
+        } else {
+            throw new UnauthorizedError("Authentication failed")
+        }
 
     } catch (error) {
         console.log(error);

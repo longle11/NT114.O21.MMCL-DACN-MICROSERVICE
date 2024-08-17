@@ -20,6 +20,12 @@ router.get("/:issueId", currentUserMiddleware, async (req, res, next) => {
                     path: 'assignees',
                     select: '-__v'
                 })
+                .populate({
+                    path: 'current_sprint'
+                })
+                .populate({
+                    path: 'epic_link'
+                })
             return res.status(200).json({
                 message: "Successfully retrieve the issue",
                 data: issue
@@ -51,18 +57,16 @@ router.get("/backlog/:projectId", async (req, res) => {
                 select: '-__v'
             })
             .populate({
-                path: 'epic_link',
-                select: '-__v'
-            })
-            .populate({
                 path: 'fix_version',
                 select: '-__v'
             })
+          
         
         if (getAllIssuesInProject.length !== 0) {
             const getIssuesInBacklog = getAllIssuesInProject.filter(issue => {
                 return issue.current_sprint === null
             })
+
             return res.status(200).json({
                 message: "successfully get all issues belonging to backlog",
                 data: getIssuesInBacklog

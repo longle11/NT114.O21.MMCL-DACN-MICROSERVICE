@@ -24,13 +24,13 @@ router.post("/login", async (req, res, next) => {
                         req.session = {
                             jwt: userJwt
                         }
-                        res.status(200).json({
+                        return res.status(200).json({
                             message: "Login Success",
                             data: userId,
                             statusCode: 200
                         })
                     } else {
-                        res.status(400).json({
+                        return res.status(400).json({
                             message: "Your account has not been approved yet, please enter the token to activate your account",
                             statusCode: 400,
                             userId: currentUser._id.toString()
@@ -49,7 +49,7 @@ router.post("/login", async (req, res, next) => {
                     req.session = {
                         jwt: userJwt
                     }
-                    res.status(200).json({
+                    return res.status(200).json({
                         message: "Login Success",
                         data: userId,
                         statusCode: 200

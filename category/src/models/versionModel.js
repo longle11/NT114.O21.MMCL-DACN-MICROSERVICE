@@ -33,25 +33,7 @@ const versionSchema = new mongoose.Schema({
         type: Number,
         default: '#dddd'
     },
-    issues: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'issues'
-        }
-    ],
-    issues_unestimated: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'issues'
-        }
-    ],
-    issues_estimate: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'issues'
-        }
-    ],
-    issues_completed: [
+    issue_list: [
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'issues'

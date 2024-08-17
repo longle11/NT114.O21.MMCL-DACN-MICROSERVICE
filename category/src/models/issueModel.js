@@ -36,45 +36,16 @@ const issueSchema = new mongoose.Schema({
 issueSchema.virtual('issuesRefIssueVersionModel', {
     ref: 'versions',
     foreignField: '_id',
-    localField: 'issues'
-})
-issueSchema.virtual('issuesRefIssueCompletedVersionModel', {
-    ref: 'versions',
-    foreignField: '_id',
-    localField: 'issues_completed'
-})
-issueSchema.virtual('issuesRefIssueEstimatVersionModel', {
-    ref: 'versions',
-    foreignField: '_id',
-    localField: 'issues_estimate'
-})
-issueSchema.virtual('issuesRefIssueUnestimatedVersionModel', {
-    ref: 'versions',
-    foreignField: '_id',
-    localField: 'issues_unestimated'
+    localField: 'issue_list'
 })
 
 
 issueSchema.virtual('issuesRefIssueEpicModel', {
     ref: 'epics',
     foreignField: '_id',
-    localField: 'issues'
+    localField: 'issue_list'
 })
-issueSchema.virtual('issuesRefIssueCompletedEpicModel', {
-    ref: 'epics',
-    foreignField: '_id',
-    localField: 'issues_completed'
-})
-issueSchema.virtual('issuesRefIssueEstimatEpicModel', {
-    ref: 'epics',
-    foreignField: '_id',
-    localField: 'issues_estimate'
-})
-issueSchema.virtual('issuesRefIssueUnestimatedEpicModel', {
-    ref: 'epics',
-    foreignField: '_id',
-    localField: 'issues_unestimated'
-})
+
 
 const issueModel = mongoose.model('issues', issueSchema)
 

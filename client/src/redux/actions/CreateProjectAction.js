@@ -100,8 +100,10 @@ export const deleteSprintAction = (sprintId, projectId) => {
 export const updateSprintAction = (sprintId, props) => {
     return async dispatch => {
         try {
+            console.log('Gia tri prop cua updateSprintAction ', props);
+            
             const res = await Axios.put(`${domainName}/api/sprint/update/${sprintId}`, props)
-            console.log(res);
+            console.log("res tra ve tu updateSprintAction ", res);
             
             if (res.status === 200) {
                 showNotificationWithIcon('success', 'cap nhat', res.data.message)

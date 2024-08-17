@@ -9,7 +9,7 @@ const issueSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users'
     },
-    issueStatus: {
+    issue_status: {
         type: Number,
         default: null
     },

@@ -10,8 +10,6 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
     try {
         if (req.currentUser) {
             const { id } = req.params
-            console.log("req.body", req.body, "params ", id);
-            
             const issueIds = await issueModel.find({})
             const ids = issueIds.map(issue => issue._id.toString());
             if (!ids.includes(id)) {
@@ -27,16 +25,14 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                 }
                 //kiem xem timeSpent da ton tai hay chua, neu roi thi tien hanh cap nhat len
                 var timeSpent = currentIssue.timeSpent
-                console.log("req.body", req.body);
                 
                 if(req.body.timeSpent) {
                     timeSpent += req.body.timeSpent
                     req.body.timeSpent = timeSpent
                 }
-                currentIssue = { ...currentIssue._doc, ...req.body }
-                console.log(currentIssue);
-                
-                await issueModel.updateOne({ _id: id }, currentIssue)
+
+                await issueModel.updateOne({_id: id}, {$set: {...req.body}})
+                const getis = await issueModel.findById(id)
                 
                 // const copyIssue = {
                 //     _id: currentIssue._id,
@@ -57,6 +53,8 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
             throw new UnauthorizedError("Authentication failed")
         }
     } catch (error) {
+        console.log(error);
+        
         next(error)
     }
 })

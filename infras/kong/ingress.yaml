@@ -7,7 +7,6 @@ metadata:
     # konghq.com/protocols: https
     konghq.com/methods: GET,POST,PUT,DELETE
     # konghq.com/plugins: rate-limit, admin-api-auth
-    konghq.com/strip-path: "false"
 spec:
   ingressClassName: kong
   rules:

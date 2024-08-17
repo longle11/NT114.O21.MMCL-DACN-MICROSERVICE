@@ -48,6 +48,7 @@ app.use('/api/category', require('./Routes/delete'))
 app.use('/api/category', require('./Routes/getList'))
 app.use('/api/category', require('./Routes/epic-create'))
 app.use('/api/category', require('./Routes/version-create'))
+app.use('/api/category', require('./Routes/update'))
 
 app.listen(4004, () => {
     console.log("Listening on port 4004");

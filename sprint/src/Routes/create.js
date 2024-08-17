@@ -8,11 +8,11 @@ router.post('/create', async (req, res, next) => {
         const newData = req.body
         if (getSprintByProjectID.length === 0) {
             req.body.sprint_name = "Default"
-        }else {
+        } else {
             const getName = getSprintByProjectID[getSprintByProjectID.length - 1].sprint_name
             const generateNumber = parseInt(getName[getName.length - 1]) ? (parseInt(getName[getName.length - 1]) + 1).toString() : "1"
             const sprint_name = getSprintByProjectID[0].sprint_name
-            req.body.sprint_name = sprint_name.substring(0, sprint_name.length-1) + " " + generateNumber
+            req.body.sprint_name = sprint_name.substring(0, sprint_name.length - 1) + " " + generateNumber
         }
 
         const sprint = new sprintModel(newData)
@@ -24,7 +24,13 @@ router.post('/create', async (req, res, next) => {
         }
         await servicePublisher(sprintDataCopy, 'sprint:created')
 
-        const getSprintList = await sprintModel.find({project_id: req.body.project_id})
+        const getSprintList = await sprintModel.find({ project_id: req.body.project_id })
+            .populate({
+                path: 'issue_list',
+                populate: {
+                    path: 'creator'
+                }
+            })
         res.status(201).json({
             message: "Successfully created an sprint",
             data: getSprintList

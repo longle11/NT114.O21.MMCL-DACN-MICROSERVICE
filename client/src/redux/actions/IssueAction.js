@@ -57,7 +57,8 @@ export const getInfoIssue = (id) => {
     return async dispatch => {
         try {
             const res = await Axios.get(`${domainName}/api/issue/${id}`)
-
+            console.log("res in getInfoIssue ", res);
+            
             dispatch({
                 type: GET_INFO_ISSUE,
                 issueInfo: res.data.data
@@ -73,7 +74,8 @@ export const getIssuesBacklog = (projectId) => {
     return async dispatch => {
         try {
             const res = await Axios.get(`${domainName}/api/issue/backlog/${projectId}`)
-
+            console.log("ket qua tra ve ", res.data.data);
+            
             dispatch({
                 type: GET_ISSUES_BACKLOG,
                 issuesBacklog: res.data.data
@@ -87,7 +89,8 @@ export const getIssuesBacklog = (projectId) => {
 export const updateInfoIssue = (issueId, projectId, props, old_status, new_status, creator_history, type_history, name_status) => {
     return async dispatch => {
         try {
-            const res = await Axios.put(`${domainName}/api/issue/update/${issueId}`, { ...props })
+            const res = await Axios.put(`${domainName}/api/issue/update/${issueId}`, props)
+            console.log("res trong update info ", res);
             
             // //tien hanh tao history cho issue
             dispatch(createIssueHistory({
@@ -98,6 +101,14 @@ export const updateInfoIssue = (issueId, projectId, props, old_status, new_statu
                 old_status: old_status,
                 new_status: new_status
             }))
+
+            const backlogList = await Axios.get(`${domainName}/api/issue/backlog/${projectId}`)
+            console.log("backlogList", backlogList);
+            
+            dispatch({
+                type: GET_ISSUES_BACKLOG,
+                issuesBacklog: backlogList.data.data
+            })
 
             //lấy ra danh sách issue sau khi thay đổi
             dispatch(getInfoIssue(issueId))
