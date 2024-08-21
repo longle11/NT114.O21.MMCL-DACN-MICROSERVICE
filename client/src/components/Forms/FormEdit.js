@@ -40,8 +40,8 @@ function FormEdit(props) {
                     </div>
                     <div className='col-4'>
                         <div className="form-group">
-                            <label htmlFor="nameProject">Project Name</label>
-                            <input onChange={handleChange} defaultValue={props?.list?.nameProject} className="form-control" name='nameProject' />
+                            <label htmlFor="name_project">Project Name</label>
+                            <input onChange={handleChange} defaultValue={props?.list?.name_project} className="form-control" name='name_project' />
                         </div>
                     </div>
                     <div className='col-4'>
@@ -89,7 +89,7 @@ FormEdit.propTypes = {
     setFieldValue: PropTypes.func.isRequired,
     list: PropTypes.shape({
         _id: PropTypes.objectOf(PropTypes.any),
-        nameProject: PropTypes.string,
+        name_project: PropTypes.string,
         description: PropTypes.string,
         category: PropTypes.objectOf(PropTypes.any),
     })
@@ -100,7 +100,7 @@ const handleSubmitForm = withFormik({
     mapPropsToValues: (props) => {
         return {
             id: props.list?._id,
-            nameProject: props.list?.nameProject,
+            name_project: props.list?.name_project,
             description: props.list?.description,
             category: props.list?.category?._id,
         }

@@ -10,6 +10,8 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
     try {
         if (req.currentUser) {
             const { id } = req.params
+            console.log("Gia tri body duoc lay ra tu du an ", req.body);
+            
             const issueIds = await issueModel.find({})
             const ids = issueIds.map(issue => issue._id.toString());
             if (!ids.includes(id)) {
@@ -25,24 +27,34 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                 }
                 //kiem xem timeSpent da ton tai hay chua, neu roi thi tien hanh cap nhat len
                 var timeSpent = currentIssue.timeSpent
-                
-                if(req.body.timeSpent) {
+
+                if (req.body.timeSpent) {
                     timeSpent += req.body.timeSpent
                     req.body.timeSpent = timeSpent
                 }
 
-                await issueModel.updateOne({_id: id}, {$set: {...req.body}})
-                const getis = await issueModel.findById(id)
+                await issueModel.updateOne({ _id: id }, { $set: { ...req.body } })
+                const finddd = await issueModel.findById(id)
+
+                console.log("Gia tri finddd la ", finddd);
                 
-                // const copyIssue = {
-                //     _id: currentIssue._id,
-                //     issue_priority: currentIssue.issue_priority,
-                //     shortSummary: currentIssue.shortSummary,
-                //     issue_status: currentIssue.issue_status,
-                //     assignees: currentIssue.assignees
-                // }
-                // //public su kien toi projectmanagement service
-                // await issuePublisher(copyIssue, 'issue:updated')
+                const copyIssue = {
+                    _id: currentIssue._id,
+                    summary: currentIssue.summary,
+                    issue_status: currentIssue.issue_status,
+                    issue_priority: currentIssue.issue_priority,
+                    assignees: currentIssue.assignees,
+                    epic_link: currentIssue.epic_link,
+                    creator: currentIssue.creator,
+                    fix_version: currentIssue.fix_version,
+                    story_point: currentIssue.story_point,
+                    issue_type: currentIssue.issue_type,
+                    ...req.body
+                }
+                console.log("GIA TRI SAU KHI CAP NHAT VA GUI LEN NATS ", copyIssue, " CO BODY ", req.body);
+
+                // public su kien toi projectmanagement service
+                await issuePublisher(copyIssue, 'issue:updated')
 
                 return res.status(200).json({
                     message: "Successfully updated this issue",
@@ -54,7 +66,7 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
         }
     } catch (error) {
         console.log(error);
-        
+
         next(error)
     }
 })

@@ -25,17 +25,6 @@ export default function Dashboard() {
     const [currentProcess, setCurrentProcess] = useState(null)
     //su dung cho debounce search
     const search = useRef(null)
-    const [listProcesses, setListProcesses] = useState([
-        {
-            nameProcess: "backlog"
-        },
-        {
-            nameProcess: "inprogress"
-        },
-        {
-            nameProcess: "done"
-        }
-    ])
 
     const [open, setOpen] = useState(false);
 
@@ -207,11 +196,11 @@ export default function Dashboard() {
         />
     }
 
-    const addNewProcess = () => {
-        const newListProcesses = [...listProcesses, { nameProcess: "hihi" }];
-        console.log("listProcesses ", newListProcesses);
-        setListProcesses(newListProcesses);
-    }
+    // const addNewProcess = () => {
+    //     const newListProcesses = [...listProcesses, { nameProcess: "hihi" }];
+    //     console.log("listProcesses ", newListProcesses);
+    //     setListProcesses(newListProcesses);
+    // }
     return (
         <>
             <DrawerHOC />
@@ -263,8 +252,8 @@ export default function Dashboard() {
                     setType(1)
                 }}>Only my issues</Button>
                 <Button onClick={() => {
-                    addNewProcess()
-                }}>Add process {listProcesses.length}</Button>
+                    // addNewProcess()
+                }}>Add process {processList.length}</Button>
             </div>
             <div className="content" style={{ overflowX: 'scroll', width: '100%', display: '-webkit-box', padding: '15px 20px', scrollbarWidth: 'none', backgroundColor: 'white' }}>
                 {processList?.map(process => (<div className="card" style={{ width: '18rem', height: '25rem', fontWeight: 'bold', scrollbarWidth: 'none' }}>

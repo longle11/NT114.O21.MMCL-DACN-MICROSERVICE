@@ -7,6 +7,8 @@ const authCreatedListener = require('./nats/listener/auth-listener/auth-created-
 const versionCreatedListener = require('./nats/listener/version-listener/version-created-listener')
 const epicCreatedListener = require('./nats/listener/epic-listener/epic-created-listener')
 const issueCreatedListener = require('./nats/listener/issue-listener/issue-created-listeners')
+const issueUpdatedListener = require('./nats/listener/issue-listener/issue-updated-listener')
+const issueInsertToSprintCreated = require('./nats/listener/issue-listener/issueInsertToSprint-created-listeners copy')
 const app = express()
 app.use(cors())
 app.use(bodyParser.json())
@@ -36,6 +38,8 @@ async function connectToNats() {
         versionCreatedListener()
         epicCreatedListener()
         issueCreatedListener()
+        issueUpdatedListener()
+        issueInsertToSprintCreated()
 
         console.log("Connected successfully to nats");
     }catch(err) {
@@ -51,11 +55,8 @@ app.use('/api/sprint', require('./Routes/create'))
 app.use('/api/sprint', require('./Routes/delete'))
 app.use('/api/sprint', require('./Routes/getSprint'))
 app.use('/api/sprint', require('./Routes/update'))
-app.get('/tester', async (req, res) => {
-    res.send({
-        message: "strip path thanh cong nha"
-    })
-})
+
+
 app.listen(4007, () => {
     console.log('listening on port 4007');
 })

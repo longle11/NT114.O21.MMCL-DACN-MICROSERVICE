@@ -1,10 +1,12 @@
 const express = require('express')
 const router = express.Router()
 const sprintModel = require('../models/sprintModel');
-const issueModel = require('../models/issueModel');
+const servicePublisher = require('../nats/publisher/service-publisher');
 router.put('/update/:sprintId', async (req, res, next) => {
     try {
         const getSprint = await sprintModel.findById(req.params.sprintId)
+        console.log("getSprint ", getSprint);
+        
         if (getSprint !== null) {
             if (req.body.issue_id) {
                 //find to see whether issue id is existed in sprint list or not 

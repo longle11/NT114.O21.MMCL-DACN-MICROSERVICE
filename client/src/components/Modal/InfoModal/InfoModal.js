@@ -1,4 +1,4 @@
-import { Avatar, Button, DatePicker, Input, Popconfirm, Select } from 'antd';
+import { Avatar, Button, DatePicker, Input, InputNumber, Popconfirm, Select } from 'antd';
 import React, { useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { Editor } from '@tinymce/tinymce-react';
@@ -9,11 +9,13 @@ import { createCommentAction } from '../../../redux/actions/CommentAction';
 import { showNotificationWithIcon } from '../../../util/NotificationUtil';
 import { GetProjectAction } from '../../../redux/actions/ListProjectAction';
 import { priorityTypeOptions, issueTypeOptions, iTagForPriorities, iTagForIssueTypes } from '../../../util/CommonFeatures';
+import { updateEpic } from '../../../redux/actions/CategoryAction';
 const { DateTime } = require('luxon');
 
 export default function InfoModal() {
     const issueInfo = useSelector(state => state.issue.issueInfo)
     const projectInfo = useSelector(state => state.listProject.projectInfo)
+    const processList = useSelector(state => state.listProject.processList)
     const userInfo = useSelector(state => state.user.userInfo)
     const historyList = useSelector(state => state.issue.historyList)
     const worklogList = useSelector(state => state.issue.worklogList)
@@ -53,6 +55,8 @@ export default function InfoModal() {
         content: '',
         isSubmit: true,
     })
+    const dispatch = useDispatch()
+
     //su dung cho debounce time original
     const inputTimeOriginal = useRef(null)
 
@@ -62,18 +66,49 @@ export default function InfoModal() {
         description: '',
         timeRemaining: 0
     })
+    const renderIssueType = () => {
+        return processList?.map(process => {
+            return {
+                label: process.name_process,
+                value: process._id.toString()
+            }
+        })
+    }
 
-    const issueStatus = [
-        { label: 'BACKLOG', value: 0 },
-        { label: 'SELECTED FOR DEVELOPMENT', value: 1 },
-        { label: 'IN PROGRESS', value: 2 },
-        { label: 'DONE', value: 3 }
-    ]
+
+    const renderEpics = () => {
+        return epicList?.map(epic => {
+            return {
+                value: epic._id.toString(),
+                label: epic.epic_name
+            }
+        })
+    }
+    const getCurrentEpic = () => {
+        console.log("heheh ", issueInfo);
+
+        if (issueInfo?.epic_link === null) {
+            return null
+        }
+        console.log("index tra ve ", epicList?.map(epic => epic._id.toString() === issueInfo?.epic_link?._id.toString()));
+
+        return epicList?.findIndex(epic => epic._id.toString() === issueInfo?.epic_link?._id.toString())
+    }
+
+    const renderOptionAssignee = () => {
+        return projectInfo?.members?.filter((value, index) => {
+            const isExisted = issueInfo?.assignees?.findIndex((user) => {
+                return user._id === value._id
+            })
+            return !(issueInfo?.creator._id === value._id || isExisted !== -1)
+        }).map((value, index) => {
+            return <Option key={value._id} value={value._id}>{value.username}</Option>
+        })
+    }
 
     const handlEditorChange = (content, editor) => {
         setDescription(content)
     }
-    const dispatch = useDispatch()
 
 
     const convertTime = (commentTime) => {
@@ -281,25 +316,6 @@ export default function InfoModal() {
         return 0
     }
 
-    const renderEpics = () => {
-        return epicList?.map(epic => {
-            return {
-                value: epic._id.toString(),
-                label: epic.epic_name
-            }
-        })
-    }
-    const getCurrentEpic = () => {
-        console.log("heheh ", issueInfo);
-        
-        if(issueInfo?.epic_link === null) {
-            return null
-        }
-        console.log("index tra ve ", epicList?.map(epic => epic._id.toString() === issueInfo?.epic_link?._id.toString()));
-        
-        return  epicList?.findIndex(epic => epic._id.toString() === issueInfo?.epic_link?._id.toString())
-    }
-
     const renderComments = () => {
         // let listComments = issueInfo?.comments.map((value, index) => {
         //     return (<li className='comment d-flex' key={value._id}>
@@ -355,24 +371,7 @@ export default function InfoModal() {
     }
 
 
-    const renderIssueStatus = (pos) => {
-        return issueStatus.map((status) => {
-            if (pos === status.value) {
-                return <option key={status.value} selected value={status.value}>{status.label}</option>
-            }
-            return <option key={status.value} value={status.value}>{status.label}</option>
-        })
-    }
-    const renderOptionAssignee = () => {
-        return projectInfo?.members?.filter((value, index) => {
-            const isExisted = issueInfo?.assignees?.findIndex((user) => {
-                return user._id === value._id
-            })
-            return !(issueInfo?.creator._id === value._id || isExisted !== -1)
-        }).map((value, index) => {
-            return <Option key={value._id} value={value._id}>{value.username}</Option>
-        })
-    }
+
 
     function capitalizeFirstLetter(str) {
         return str.charAt(0).toUpperCase() + str.slice(1);
@@ -388,7 +387,7 @@ export default function InfoModal() {
             return <div><span style={{ fontWeight: 'bold' }}>Assignees</span> <i className="fa-solid fa-arrow-left-long ml-3 mr-3"></i>  <Avatar src={new_status.substring(0, getAvatar)} /> {new_status.substring(getAvatar + 1)}</div>
         } else if (name_status.toLowerCase() === "time original estimate" || name_status.toLowerCase() === "time spent") {
             return <div>{convertMinuteToFormat(old_status)} <i className="fa-solid fa-arrow-right-long ml-3 mr-3"></i> {convertMinuteToFormat()}</div>
-        } else if (name_status.toLowerCase() === "sprint" || name_status.toLowerCase().includes("epic")) {
+        } else if (name_status.toLowerCase() === "sprint" || name_status.toLowerCase().includes("epic") || name_status.toLowerCase().includes("version") || name_status.toLowerCase().includes("point") || name_status.toLowerCase().includes("type")) {
             return <div>{old_status} <i className="fa-solid fa-arrow-right-long ml-3 mr-3"></i> {new_status}</div>
         }
     }
@@ -487,7 +486,9 @@ export default function InfoModal() {
         } else if (buttonActive === 2) {
             return <div className="comment mt-3">
                 <h6>History</h6>
-                {renderHistoriesList()}
+                <div style={{ height: 420, overflowY: 'auto', scrollbarWidth: 'none' }}>
+                    {renderHistoriesList()}
+                </div>
             </div>
         } else if (buttonActive === 3) {
             return <div className="comment mt-3">
@@ -511,7 +512,7 @@ export default function InfoModal() {
                             disabled={issueInfo?.creator?._id !== userInfo?.id}
                             onSelect={(value, option) => {
 
-                                dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { issue_status: value }, `${issueInfo.issue_status}`, `${value}`, userInfo.id, 'updated', 'status'))
+                                dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id.toString(), { issue_status: value }, `${issueInfo.issue_status}`, `${value}`, userInfo.id, 'updated', 'status'))
                             }}
                             name="issue_status"
                         />
@@ -528,7 +529,7 @@ export default function InfoModal() {
                                             dispatch(deleteIssue(issueInfo?._id))
 
                                             //dispatch lại sự kiện load lại project
-                                            dispatch(GetProjectAction(issueInfo?.projectId, ""))
+                                            dispatch(GetProjectAction(issueInfo?.project_id, ""))
                                         }} okText="Yes" cancelText="No">
                                         <i className="fa fa-trash-alt" style={{ cursor: 'pointer' }} />
                                     </Popconfirm>
@@ -575,7 +576,7 @@ export default function InfoModal() {
                                             <div className='mt-2'>
                                                 <Button onClick={() => {
                                                     setEditDescription(true)
-                                                    dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { description }))
+                                                    dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id, { description: description }, '', '', userInfo?.id, "update", "description"))
                                                 }} type="primary" className='mr-2'>Save</Button>
                                                 <Button onClick={() => {
                                                     setEditDescription(true)
@@ -599,12 +600,15 @@ export default function InfoModal() {
                             <div className="col-4 p-0">
                                 <div className="status">
                                     <h6>TYPE</h6>
-                                    <select className="custom-select" disabled={issueInfo?.creator._id !== userInfo?.id} onChange={(event) => {
-
-                                        dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { issue_type: event.target.value }))
-                                    }}>
-                                        {renderIssueStatus(issueInfo?.issueStatus)}
-                                    </select>
+                                    <Select
+                                        options={renderIssueType()}
+                                        style={{ width: '50%' }}
+                                        disabled={issueInfo?.creator._id !== userInfo?.id}
+                                        onChange={(value, props) => {
+                                            dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id, { issue_type: value }, issueInfo?.issue_type.name_process, props.label, userInfo.id, "updated", "issue type"))
+                                        }}
+                                        value={issueInfo?.issue_type?._id.toString()}
+                                    />
                                 </div>
                                 <div className="assignees">
                                     <h6>ASSIGNEES</h6>
@@ -685,13 +689,12 @@ export default function InfoModal() {
                                         <h6 className='mt-3'>EPIC</h6>
                                         <Select style={{ width: '100%' }}
                                             options={renderEpics()}
-                                            onChange={(value) => {
-
+                                            onChange={(value, props) => {
+                                                //assign issue to new epic
+                                                dispatch(updateInfoIssue(issueInfo?._id.toString(), issueInfo?.project_id.toString(), { epic_link: value }, issueInfo?.epic_link === null ? "None" : issueInfo?.epic_link.epic_name, props.label, userInfo.id, "updated", "epic link"))
+                                                //update new issue in epic
+                                                dispatch(updateEpic(value, {issue_id: issueInfo?._id.toString(), epic_id: issueInfo?.epic_link === null ? "null" : issueInfo?.epic_link._id.toString()}, issueInfo?.project_id.toString()))
                                             }}
-                                            onClick={() => {
-                                                console.log("THong tin issue hien tai ", issueInfo);
-                                            }}
-                                            //issueInfo?.epic_link ? issueInfo?.epic_link?.epic_name : "None"
                                             value={getCurrentEpic() !== null ? renderEpics()[getCurrentEpic()]?.value : "None"}
                                         />
                                     </div>
@@ -705,9 +708,13 @@ export default function InfoModal() {
                                 <div className='row story_point-component'>
                                     <div className='col-6'>
                                         <h6 className='mt-3'>STORY POINT</h6>
-                                        <Select style={{ width: '100%' }}
-                                            defaultValue={"None"}
-                                        />
+                                        <InputNumber min={0} max={1000} defaultValue={issueInfo?.story_point} value={issueInfo?.story_point} onBlur={(e) => {
+                                            if (e.target.value >= 0 && e.target.value <= 1000) {
+                                                dispatch(updateInfoIssue(issueInfo?._id.toString(), issueInfo?.project_id?.toString(), { story_point: e.target.value }, issueInfo?.story_point === null ? "None" : issueInfo?.story_point?.toString(), e.target.value, userInfo.id, "updated", "story point"))
+                                            } else {
+                                                showNotificationWithIcon('error', '', 'Error')
+                                            }
+                                        }} />
                                     </div>
                                     <div className='col-6'>
                                         <h6 className='mt-3'>COMPONENT</h6>
@@ -727,7 +734,7 @@ export default function InfoModal() {
                                         onSelect={(value, option) => {
                                             const old_value = `${issueInfo.issue_priority}`
                                             const new_value = `${value}`
-                                            dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { issue_priority: value }, old_value, new_value, userInfo.id, "updated", "priority"))
+                                            dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id, { issue_priority: value }, old_value, new_value, userInfo.id, "updated", "priority"))
                                         }}
                                         name="priority"
                                     />
@@ -857,7 +864,7 @@ export default function InfoModal() {
                                                         <div className='col-12 mt-3 p-0'>
                                                             <Button type='primary mr-2' onClick={() => {
                                                                 setTimeTable(false)
-                                                                dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id, { timeSpent: formData.timeSpent }, issueInfo.timeSpent, formData.timeSpent, issueInfo.id, "updated", "time spent"))
+                                                                dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id.toString(), { timeSpent: formData.timeSpent }, issueInfo.timeSpent, formData.timeSpent, issueInfo.id, "updated", "time spent"))
                                                                 dispatch(createWorklogHistory({
                                                                     issue_id: issueInfo._id.toString(),
                                                                     creator: userInfo.id,

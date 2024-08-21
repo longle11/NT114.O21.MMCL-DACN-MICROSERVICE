@@ -7,6 +7,29 @@
     padding: 5px 0
 }
 
-.dragIssue { 
+.dragIssue {
     opacity: 0;
+}
+
+div.epic-footer:hover {
+    background-color: #dddd;
+}
+
+div.issue-info:hover button.setting-issue {
+    visibility: visible !important;
+}
+
+.dropdown-menu li {
+    position: relative;
+}
+
+.dropdown-menu .dropdown-submenu {
+    display: none;
+    position: absolute;
+    left: -82.2%;
+    top: 0;
+}
+
+.dropdown-menu>li:hover>.dropdown-submenu {
+    display: block;
 }

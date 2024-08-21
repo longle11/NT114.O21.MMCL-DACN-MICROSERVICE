@@ -5,6 +5,7 @@ const mongoose = require('mongoose')
 const natsWrapper = require('./nats-wrapper')
 const authCreatedListener = require('./nats/listener/auth-listener/auth-created-listener')
 const issueCreatedListener = require('./nats/listener/issue-listener/issue-created-listeners')
+const issueUpdatedListener = require('./nats/listener/issue-listener/issue-updated-listener')
 const app = express()
 app.use(cors())
 app.use(bodyParser.json())
@@ -34,6 +35,7 @@ async function connectToNats() {
 
         authCreatedListener()
         issueCreatedListener()
+        issueUpdatedListener()
 
         console.log("Connected successfully to nats");
     }catch(err) {

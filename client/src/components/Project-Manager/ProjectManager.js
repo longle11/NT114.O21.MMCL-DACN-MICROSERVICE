@@ -10,6 +10,8 @@ import { getUserKeyword, insertUserIntoProject } from '../../redux/actions/UserA
 import { NavLink, useNavigate } from 'react-router-dom';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
 import { deleteUserInProject } from '../../redux/actions/CreateProjectAction';
+import { Input } from "antd";
+import Search from 'antd/es/input/Search';
 export default function ProjectManager() {
     const dispatch = useDispatch()
     const listProject = useSelector(state => state.listProject.listProject)
@@ -110,25 +112,32 @@ export default function ProjectManager() {
     }
     const columns = [
         {
-            title: 'ID',
-            dataIndex: '_id',
-            key: '_id',
+            title: '',
+            dataIndex: 'marked',
+            key: 'marked',
+            width: '3%',
+            render: (text, record, index) => {
+                if (record?.creator?._id === userInfo?.id) {
+                    return <button className='btn btn-transparent'>{record.marked === true ? <i className="fa-solid fa-star" style={{ color: '#ff8b00' }}></i> : <i className="fa-regular fa-star"></i>}</button>
+                }
+                return null
+            }
         },
         {
-            title: 'Project Name',
-            dataIndex: 'projectName',
-            key: 'projectName',
+            title: 'Name',
+            dataIndex: 'name_project',
+            key: 'name_project',
             render: (text, record, index) => {
                 if (record?.creator?._id === userInfo?.id || record.members.findIndex(user => user._id === userInfo?.id) !== -1) {
-                    return <NavLink to={`/projectDetail/${record._id}`} onClick={() => {
+                    return <NavLink to={`/projectDetail/${record._id}/board`} onClick={() => {
                         dispatch(GetProjectAction(record._id, ""))
                     }} style={{ textDecoration: 'none' }}>
-                        <span>{record.nameProject}</span>
+                        <span>{record.name_project}</span>
                     </NavLink>
                 } else {
                     return <NavLink style={{ color: 'black', textDecoration: 'none' }} onKeyDown={() => { }} onClick={() => {
                         showNotificationWithIcon('error', '', 'You have not participated in this project ')
-                    }}>{record.nameProject}</NavLink>
+                    }}>{record.name_project}</NavLink>
                 }
             }
         },
@@ -144,6 +153,7 @@ export default function ProjectManager() {
             title: 'Creator',
             dataIndex: 'creatorId',
             key: 'creatorId',
+            width: '10%',
             render: (text, record, index) => {
                 return <Tag key={index} color="green">{record.creator?.username}</Tag>
             }
@@ -187,6 +197,7 @@ export default function ProjectManager() {
             title: 'Action',
             dataIndex: 'action',
             key: 'categoryId',
+            width: '10%',
             render: (text, record, index) => {
                 if (userInfo?.id === record.creator?._id) {
                     return <div>
@@ -215,22 +226,36 @@ export default function ProjectManager() {
                     return <></>
                 }
             },
+        },
+        {
+            title: 'Settings',
+            dataIndex: 'setting',
+            key: 'setting',
+            width: '5%',
+            render: (text, record, index) => {
+                if (userInfo?.id === record.creator?._id) {
+                    return <div>
+                        <button className="btn btn-primary"><i class="fa fa-bars"></i></button>
+                    </div>
+                } else {
+                    return <></>
+                }
+            },
         }
     ];
     return (
         <div className='container-fluid'>
-            <div className="header">
-                <nav aria-label="breadcrumb">
-                    <ol className="breadcrumb" style={{ backgroundColor: 'white' }}>
-                        <li className="breadcrumb-item">Project</li>
-                        <li className="breadcrumb-item active" aria-current="page">
-                            Project management
-                        </li>
-                    </ol>
-                </nav>
+            <div className="project-list-header d-flex justify-content-between">
+                <h4 className="ml-2">Projects</h4>
+                <button className="btn btn-primary mr-5">Create Project</button>
             </div>
-            <h3>Project management</h3>
-            <div className="content">
+            <Search
+                placeholder="Search projects"
+                style={{
+                    width: 200
+                }}
+            />
+            <div className="project-list-info">
                 <Table columns={columns} rowKey={"id"} dataSource={listProject} />
             </div>
         </div>

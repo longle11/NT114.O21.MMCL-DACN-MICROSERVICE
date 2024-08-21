@@ -1,6 +1,7 @@
 const express = require("express")
 const categoryModel = require('../models/category')
 const epicModel = require("../models/epicModel")
+const versionModel = require("../models/versionModel")
 const router = express.Router()
 router.get('/list', async (req, res) => {
     const listCategories = await categoryModel.find({})
@@ -15,9 +16,61 @@ router.get('/epic-list/:projectId', async (req, res) => {
         .populate({
             path: 'creator'
         })
+        .populate({
+            path: 'issue_list'
+        })
+    console.log("getEpics", getEpics);
+    
     res.status(200).json({
         message: "Successfully get epic list",
         data: getEpics
+    })
+})
+
+router.get('/version-list/:projectId', async (req, res) => {
+    const getVersions = await versionModel.find({project_id: req.params.projectId})
+        .populate({
+            path: 'creator'
+        })
+        .populate({
+            path: 'issue_list'
+        })
+    console.log("getVersions", getVersions);
+    
+    res.status(200).json({
+        message: "Successfully get version list",
+        data: getVersions
+    })
+})
+
+router.get('/epic/:epicId', async (req, res) => {
+    const getEpics = await epicModel.findById(req.params.epicId)
+        .populate({
+            path: 'creator'
+        })
+        .populate({
+            path: 'issue_list'
+        })
+    console.log("getEpics", getEpics);
+    
+    res.status(200).json({
+        message: "Successfully get epic by id",
+        data: getEpics
+    })
+})
+router.get('/version/:versionId', async (req, res) => {
+    const getVersion = await versionModel.findById(req.params.versionId)
+        .populate({
+            path: 'creator'
+        })
+        .populate({
+            path: 'issue_list'
+        })
+    console.log("getVersion", getVersion);
+    
+    res.status(200).json({
+        message: "Successfully get version by id",
+        data: getVersion
     })
 })
 

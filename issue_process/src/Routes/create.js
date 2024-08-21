@@ -16,7 +16,7 @@ router.post('/create', async (req, res, next) => {
             name_process: newIssueProcess.name_process
         }
 
-        // await servicePublisher(issueProcessDataCopy, 'issueprocess:created')
+        await servicePublisher(issueProcessDataCopy, 'issueprocess:created')
 
         res.status(201).json({
             message: "Successfully created a issue process",
@@ -48,7 +48,14 @@ router.post('/create/default/:id', async (req, res) => {
         ]
         
         for(let process of templateProcess) {
-            await issueProcessModel.create(process)
+            const newProcess = new issueProcessModel(process)
+            const getNewProcess = await newProcess.save()
+            
+            await servicePublisher({
+                _id: getNewProcess._id.toString(),
+                name_process: getNewProcess.name_process
+            }, 'issueprocess:created')
+            
         }
         const processList = await issueProcessModel.find({project_id: req.params.id})
         res.status(201).json({

@@ -10,16 +10,20 @@ const versionSchema = new mongoose.Schema({
         default: null
     },
     start_date: {
-        type: Date,
-        default: Date.now
+        type: String,
+        default: null
     },
-    end_Date: {
-        type: Date,
-        default: Date.now
+    end_date: {
+        type: String,
+        default: null
     },
     description: {
         type: String,
         default: null
+    },
+    creator: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'users'
     },
     progress: {
         type: Number,
@@ -30,7 +34,7 @@ const versionSchema = new mongoose.Schema({
         default: null
     },
     tag_color: {
-        type: Number,
+        type: String,
         default: '#dddd'
     },
     issue_list: [

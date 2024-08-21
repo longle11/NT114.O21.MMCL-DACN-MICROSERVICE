@@ -23,7 +23,10 @@ const projectSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'categories'
     },
-    sprint_id: mongoose.Schema.Types.ObjectId
+    marked: {
+        type: Boolean,
+        default: false
+    }
 })
 
 const projectModel = mongoose.model('projects', projectSchema)

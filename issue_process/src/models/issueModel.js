@@ -23,12 +23,19 @@ const issueSchema = new mongoose.Schema({
     epic_link: {
         type: mongoose.Schema.Types.ObjectId
     },
+    issue_type: {
+        type: mongoose.Schema.Types.ObjectId
+    },
     assignees: [
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'users'
         }
-    ]
+    ],
+    story_point: {
+        type: Number,
+        default: null
+    }
 })
 
 issueSchema.virtual('issuesRefIssueList', {

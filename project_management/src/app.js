@@ -37,7 +37,7 @@ app.use(cookieSession({
 }))
 
 app.use('/api/projectmanagement', require("./Routes/create"))
-// app.use('/api/projectmanagement', require("./Routes/getList"))
+app.use('/api/projectmanagement', require("./Routes/getList"))
 // app.use('/api/projectmanagement', require("./Routes/listUser"))
 // app.use('/api/projectmanagement', require("./Routes/insertUser"))
 // app.use('/api/projectmanagement', require("./Routes/update"))

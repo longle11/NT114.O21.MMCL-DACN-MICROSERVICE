@@ -1,6 +1,6 @@
 import Axios from "axios"
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
-import { DISPLAY_LOADING, GET_INFO_ISSUE, GET_ISSUE_HISTORIES_LIST, GET_ISSUES_BACKLOG, GET_WORKLOG_HISTORIES_LIST, HIDE_LOADING, USER_LOGGED_IN } from "../constants/constant"
+import {  GET_INFO_ISSUE, GET_ISSUE_HISTORIES_LIST, GET_ISSUES_BACKLOG, GET_WORKLOG_HISTORIES_LIST, USER_LOGGED_IN } from "../constants/constant"
 import { GetProjectAction } from "./ListProjectAction"
 import domainName from '../../util/Config'
 import { delay } from "../../util/Delay"

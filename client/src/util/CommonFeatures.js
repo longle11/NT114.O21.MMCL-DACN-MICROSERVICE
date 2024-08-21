@@ -15,19 +15,20 @@ export const iTagForIssueTypes = (type) => {
 
 export const iTagForPriorities = (priority) => {    
     if (priority == 0) {
-        return <i className="fa-solid fa-arrow-up" style={{ color: '#cd1317', fontSize: '20px' }} />
+        return <i className="fa fa-angle-double-up" style={{ color: '#cd1317', fontSize: '20px' }} />
     }
     if (priority == 1) {
-        return <i className="fa-solid fa-arrow-up" style={{ color: '#e9494a', fontSize: '20px' }} />
+        return <i className="fa fa-chevron-up" style={{ color: '#e9494a', fontSize: '20px' }} />
     }
     if (priority == 2) {
-        return <i className="fa-solid fa-arrow-up" style={{ color: '#e97f33', fontSize: '20px' }} />
+        return <i className="fa fa-equals" style={{ color: '#e97f33', fontSize: '20px' }} />
     }
     if (priority == 3) {
-        return <i className="fa-solid fa-arrow-down" style={{ color: '#2d8738', fontSize: '20px' }} />
+       
+        return <i className="fa fa-chevron-down" style={{ color: '#2d8738', fontSize: '20px' }} />
     }
     if (priority == 4) {
-        return <i className="fa-solid fa-arrow-down" style={{ color: '#57a55a', fontSize: '20px' }} />
+        return <i className="fa fa-angle-double-down" style={{ color: '#57a55a', fontSize: '20px' }} />
     }
 }
 export const priorityTypeOptions = [

@@ -1,0 +1,6 @@
+.current-project:hover {
+    background-color: #e9ecef;
+}
+.current-project:hover div.project-marked {
+    display: block !important;
+}

@@ -3,7 +3,6 @@ import { DISPLAY_LOADING, GET_PROCESSES_PROJECT, GET_SPRINT_PROJECT, HIDE_LOADIN
 import { delay } from "../../util/Delay"
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
 import domainName from '../../util/Config'
-import { GetSprintListAction } from "./ListProjectAction"
 export const createProjectAction = (data) => {
     return async dispatch => {
         try {

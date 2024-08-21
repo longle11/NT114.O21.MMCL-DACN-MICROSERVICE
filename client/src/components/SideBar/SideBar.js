@@ -47,6 +47,9 @@ const SideBar = () => {
         else if (key === 'sub13') {
             return navigate(`${absolutePath}/issues`)
         }
+        else if (key === 'sub15') {
+            return navigate(`${absolutePath}/list`)
+        }
         else if (key === 'sub2') {
             return navigate(`${absolutePath}/reports`)
         }
@@ -59,6 +62,9 @@ const SideBar = () => {
         else if (key === 'sub22') {
             return navigate(`${absolutePath}/releases`)
         }
+        else if (key === 'sub23') {
+            return navigate(`${absolutePath}/epics`)
+        }
     }
     const items = [
         getItem('PLANNING', '1', <i className="fa fa-tasks" aria-hidden="true"></i>, [
@@ -66,14 +72,16 @@ const SideBar = () => {
                 getItem('Board', 'sub11'),
                 getItem('Backlog', 'sub12'),
                 getItem('Active sprints', 'sub13'),
-                getItem('Reports', 'sub14')
+                getItem('Reports', 'sub14'),
+                getItem('List', 'sub15'),
             ]),
             getItem('Issues', 'sub2', <i className="fa-solid fa-circle-exclamation"></i>),
             getItem('Components', 'sub3')
         ]),
         getItem('Development', '2', <DesktopOutlined />, [
             getItem('Code', 'sub21'),
-            getItem('Releases', 'sub22')
+            getItem('Releases', 'sub22'),
+            getItem('Epics', 'sub23')
         ]),
     ];
     return (

@@ -25,12 +25,20 @@ const issueSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'epics'
     },
+    issue_type: {
+        type: mongoose.Schema.Types.ObjectId,
+        default: null
+    },
     assignees: [
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'users'
         }
-    ]
+    ],
+    story_point: {
+        type: Number,
+        default: null
+    }
 })
 issueSchema.virtual('sprintsRefIssueList', {
     ref: 'sprints',

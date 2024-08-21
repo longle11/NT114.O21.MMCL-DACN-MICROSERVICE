@@ -6,7 +6,7 @@ const epicModel = require('../models/epicModel');
 router.post('/epic-create', async (req, res, next) => {
     try {
         const data = req.body
-        const newData = {...data, tag_color: randomColor()}
+        const newData = {...data, tag_color: randomColor({luminosity: 'light'})}
 
         const epic = new epicModel(newData)
         const newEpic = await epic.save()

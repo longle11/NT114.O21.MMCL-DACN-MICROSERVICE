@@ -6,6 +6,7 @@ const epicCreatedListener = require("./nats/listener/epic-listener/epic-created-
 const sprintCreatedListener = require("./nats/listener/sprint-listener/sprint-created-listener")
 const issueProcessCreatedListener = require("./nats/listener/issueprocess-listener/issueprocess-created-listener")
 const authCreatedListener = require("./nats/listener/auth-listener/auth-created-listener")
+const sprintDeletedListener = require("./nats/listener/sprint-listener/sprint-deleted-listener")
 
 async function connectToNats() {
     try {
@@ -22,6 +23,7 @@ async function connectToNats() {
         versionCreatedListener()
         epicCreatedListener()
         sprintCreatedListener()
+        sprintDeletedListener()
         issueProcessCreatedListener()
 
         console.log("Successfully connected to nats");

@@ -1,4 +1,4 @@
-import { Button, Tag, Avatar, Col, Switch, Checkbox, Row, Input, Select, Tooltip } from 'antd'
+import { Button, Tag, Avatar, Col, Switch, Checkbox, Row, Input, Select, Tooltip, Modal, InputNumber } from 'antd'
 import Search from 'antd/es/input/Search'
 import React, { useEffect, useState } from 'react'
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
@@ -9,22 +9,107 @@ import './Backlog.css'
 import { issueTypeWithoutOptions, iTagForIssueTypes, iTagForPriorities } from '../../../util/CommonFeatures';
 import { createIssue, getInfoIssue, getIssuesBacklog, updateInfoIssue } from '../../../redux/actions/IssueAction';
 import CreateEpic from '../../Forms/CreateEpic/CreateEpic';
-import { getEpicList, updateEpic } from '../../../redux/actions/CategoryAction';
+import { getEpicList, getVersionList, updateEpic, updateVersion } from '../../../redux/actions/CategoryAction';
 import { GetProcessListAction, GetSprintListAction } from '../../../redux/actions/ListProjectAction';
 import { createSprintAction, deleteSprintAction, updateSprintAction } from '../../../redux/actions/CreateProjectAction';
 import CreateSprint from '../../Forms/CreateSprint/CreateSprint';
 import dayjs from 'dayjs';
-import { GET_ISSUES_BACKLOG } from '../../../redux/constants/constant';
+import { GET_ISSUES_BACKLOG, GET_SPRINT_PROJECT } from '../../../redux/constants/constant';
+import Axios from 'axios';
+import domainName from '../../../util/Config';
 export default function Backlog() {
     const [onChangeVersion, setOnChangeVersion] = useState(false)
     const [onChangeEpic, setOnChangeEpic] = useState(false)
     const issuesBacklog = useSelector(state => state.issue.issuesBacklog)
     const processList = useSelector(state => state.listProject.processList)
     const sprintList = useSelector(state => state.listProject.sprintList)
+    const versionList = useSelector(state => state.categories.versionList)
     const dispatch = useDispatch()
     const onChange = (checkedValues) => {
         console.log('checked = ', checkedValues);
     };
+    const [dropDownLeft, setDropDownLeft] = useState(false)
+    const [currentSprint, setCurrentSprint] = useState({})
+    const [open, setOpen] = useState(false);
+
+    //handle when deleting a sprint to move issues to other places
+    const [getIssueToOtherPlaces, setGetIssueToOtherPlaces] = useState({
+        old_stored_place: null,
+        new_stored_place: 0 //mac dinh se luu tru vao backlog
+    })
+
+    const handleOk = async () => {
+        if (getIssueToOtherPlaces.old_stored_place !== null) {
+            if (getIssueToOtherPlaces.new_stored_place === 0) {
+                const getIssueListInCurrentSprint = getIssueToOtherPlaces.old_stored_place.issue_list
+                //proceed update current_sprint field to backlog in Issue service
+                for (let index = 0; index < getIssueListInCurrentSprint.length; index++) {
+                    dispatch(updateInfoIssue(getIssueListInCurrentSprint[index]._id.toString(), id, { current_sprint: null }, getIssueToOtherPlaces.old_stored_place.sprint_name, "backlog", userInfo.id, "updated", "sprint"))
+                }
+                //proceed delete all issues in current sprint
+                dispatch(deleteSprintAction(getIssueToOtherPlaces.old_stored_place._id.toString(), id))
+            } else if (getIssueToOtherPlaces.new_stored_place === 1) {
+                const old_sprint_list = sprintList.map(sprint => sprint._id.toString())
+                const old_sprint_name = getIssueToOtherPlaces.old_stored_place.sprint_name
+                //proceed delete all issues in current sprint
+                dispatch(deleteSprintAction(getIssueToOtherPlaces.old_stored_place._id.toString(), id))
+                //proceed create new sprint and insert all issue from old sprint to new sprint
+                const res = await Axios.post(`${domainName}/api/sprint/create`, { issue_list: getIssueToOtherPlaces.old_stored_place.issue_list, project_id: id })
+                if (res.status === 201) {
+                    dispatch({
+                        type: GET_SPRINT_PROJECT,
+                        sprintList: res.data.data
+                    })
+
+                    //get index of new sprint just created to update current_issue field in backlog
+                    const getIndexOfNewSprint = res.data.data.findIndex(sprint => {
+                        return !old_sprint_list.includes(sprint._id.toString())
+                    })
+
+                    if (getIndexOfNewSprint !== -1) {
+                        for (let index = 0; index < res.data.data[getIndexOfNewSprint].issue_list.length; index++) {
+                            const newSprint = res.data.data[getIndexOfNewSprint]
+                            dispatch(updateInfoIssue(newSprint.issue_list[index]._id.toString(), id, { current_sprint: newSprint._id.toString() }, old_sprint_name, newSprint.sprint_name, userInfo.id, "updated", "sprint"))
+                        }
+                    }
+                }
+
+            } else {
+
+            }
+        }
+
+        setGetIssueToOtherPlaces({
+            old_stored_place: null,
+            new_stored_place: 0
+        })
+    };
+
+    const handleCancel = () => {
+        setOpen(false);
+        setCurrentSprint({})
+    };
+
+    const renderStoredIssuePlace = (currentSprintId) => {
+        var storedOptions = [
+            {
+                label: 'backlog',
+                value: 0
+            },
+            {
+                label: 'new sprint',
+                value: 1
+            }
+        ]
+        const sprintOptions = sprintList.filter(sprint => sprint._id.toString() !== currentSprintId).map(sprint => {
+            return {
+                label: sprint.sprint_name,
+                value: sprint._id.toString()
+            }
+        })
+        storedOptions = [...storedOptions, ...sprintOptions]
+        return storedOptions
+    }
 
     const epicList = useSelector(state => state.categories.epicList)
     useEffect(() => {
@@ -32,7 +117,7 @@ export default function Backlog() {
         dispatch(getEpicList(id))
         dispatch(GetProcessListAction(id))
         dispatch(GetSprintListAction(id))
-        console.log("lap vo tan");
+        dispatch(getVersionList(id))
     }, [dispatch])
     const userInfo = useSelector(state => state.user.userInfo)
     const { id } = useParams()
@@ -43,6 +128,8 @@ export default function Backlog() {
         id: null,
         open: false
     })
+
+
     const handleDragEnd = (result) => {
         const source = result.source
         const dest = result.destination
@@ -52,7 +139,7 @@ export default function Backlog() {
         console.log("source ", source);
         console.log("dest ", dest);
         if (source.droppableId === dest.droppableId) {
-            const tempIssueBacklog = [...issuesBacklog]
+            const tempIssueBacklog = [...issuesBacklog.filter(issue => issue.current_sprint === null)]
             const temp = tempIssueBacklog[source.index]
 
             tempIssueBacklog[source.index] = tempIssueBacklog[dest.index]
@@ -67,8 +154,8 @@ export default function Backlog() {
             const getSprintId = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
             const getIndexSprint = sprintList.findIndex(sprint => sprint._id.toString() === getSprintId)
             if (getIndexSprint !== -1) {
-                const issue_id = issuesBacklog[source.index]._id.toString()
-                const project_id = issuesBacklog[source.index].project_id.toString()
+                const issue_id = issuesBacklog.filter(issue => issue.current_sprint === null)[source.index]._id.toString()
+                const project_id = issuesBacklog.filter(issue => issue.current_sprint === null)[source.index].project_id.toString()
                 dispatch(updateInfoIssue(issue_id, project_id, { current_sprint: getSprintId, }, "None", sprintList[getIndexSprint].sprint_name, userInfo.id, "updated", "sprint"))
                 dispatch(updateSprintAction(getSprintId, { issue_id: issue_id, project_id: project_id }))
             }
@@ -97,24 +184,75 @@ export default function Backlog() {
                 dispatch(updateSprintAction(getSprintIdSource, { issue_id: issueSource_id, project_id: id }))
                 dispatch(updateSprintAction(getSprintIdDest, { issue_id: issueSource_id, project_id: id }))
             }
-        }else if(dest.droppableId.includes("epic") && source.droppableId.includes("backlog")) {
+        } else if (dest.droppableId.includes("epic") && source.droppableId.includes("backlog")) {
             const getEpicId = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
             const getIndexEpic = epicList.findIndex(epic => epic._id.toString() === getEpicId)
-            if(getIndexEpic !== -1) {
-                console.log("vao oduoc trong nay");
-                
-                const getCurrentIssue = issuesBacklog[source.index]
+            if (getIndexEpic !== -1) {
+                const getCurrentIssue = issuesBacklog.filter(issue => issue.current_sprint === null)[source.index]
                 const getEpicIdInIssue = getCurrentIssue.epic_link?._id.toString()
                 const getEpicNameInIssue = getCurrentIssue.epic_link !== null ? getCurrentIssue.epic_link.epic_name : "None"
                 //tien hanh them issue vao epic
-                dispatch(updateEpic(epicList[getIndexEpic]._id.toString(), {issue_id: getCurrentIssue._id.toString(), epic_id: getEpicIdInIssue}, id))
+                dispatch(updateEpic(epicList[getIndexEpic]._id.toString(), { issue_id: getCurrentIssue._id.toString(), epic_id: getEpicIdInIssue ? getEpicIdInIssue : "null" }, id))
                 //tien hanh them id cua epic vao epic link trong issue
-                dispatch(updateInfoIssue(getCurrentIssue._id.toString(), id, { epic_link: epicList[getIndexEpic] }, getEpicNameInIssue, epicList[getIndexEpic].epic_name, userInfo.id, "updated", "epic link"))
+                dispatch(updateInfoIssue(getCurrentIssue._id.toString(), id, { epic_link: epicList[getIndexEpic]._id.toString() }, getEpicNameInIssue, epicList[getIndexEpic].epic_name, userInfo.id, "updated", "epic link"))
+            }
+        } else if (dest.droppableId.includes("epic") && source.droppableId.includes("sprint")) {
+            const getSprintIdSource = source.droppableId.substring(source.droppableId.indexOf('-') + 1)
+            const getEpicID = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
+            const getIndexSprintSource = sprintList.findIndex(sprint => sprint._id.toString() === getSprintIdSource)
+
+            const getIndexEpic = epicList.findIndex(epic => epic._id.toString() === getEpicID)
+
+            if (getIndexSprintSource !== -1 && getIndexEpic !== -1) {
+                const getCurrentIssue = sprintList[getIndexSprintSource].issue_list[source.index]
+                const getEpicIdInIssue = getCurrentIssue.epic_link?._id.toString()
+
+                const getEpicNameInIssue = getCurrentIssue.epic_link !== null ? getCurrentIssue.epic_link.epic_name : "None"
+
+
+                //tien hanh them issue vao epic
+                dispatch(updateEpic(epicList[getIndexSprintSource]._id.toString(), { issue_id: getCurrentIssue._id.toString(), epic_id: getEpicIdInIssue ? getEpicIdInIssue : "null" }, id))
+                //tien hanh them id cua epic vao epic link trong issue
+                dispatch(updateInfoIssue(getCurrentIssue._id.toString(), id, { epic_link: epicList[getIndexEpic]._id.toString() }, getEpicNameInIssue, epicList[getIndexEpic].epic_name, userInfo.id, "updated", "epic link"))
+            }
+        } else if (dest.droppableId.includes("version") && source.droppableId.includes("backlog")) {
+            const getVersionId = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
+            const getIndexVersion = versionList.findIndex(version => version._id.toString() === getVersionId)
+            console.log("versionList ", versionList, " getIndexVersion ", getIndexVersion);
+
+            if (getIndexVersion !== -1) {
+                const getCurrentIssue = issuesBacklog.filter(issue => issue.current_sprint === null)[source.index]
+
+                const getVersionIdInIssue = getCurrentIssue.fix_version?._id.toString()
+                const getVersionNameInIssue = getCurrentIssue.fix_version !== null ? getCurrentIssue.fix_version.version_name : "None"
+                //tien hanh them issue vao version
+                dispatch(updateVersion(versionList[getIndexVersion]._id.toString(), { issue_id: getCurrentIssue._id.toString(), version_id: getVersionIdInIssue ? getVersionIdInIssue : "null" }, id))
+                //tien hanh them id cua version vao version link trong issue
+                dispatch(updateInfoIssue(getCurrentIssue._id.toString(), id, { fix_version: versionList[getIndexVersion]._id.toString() }, getVersionNameInIssue, versionList[getIndexVersion].version_name, userInfo.id, "updated", "version"))
+            }
+        } else if (dest.droppableId.includes("version") && source.droppableId.includes("sprint")) {
+            const getSprintIdSource = source.droppableId.substring(source.droppableId.indexOf('-') + 1)
+            const getVersionId = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
+            const getIndexSprintSource = sprintList.findIndex(sprint => sprint._id.toString() === getSprintIdSource)
+
+            const getIndexVersion = sprintList.findIndex(sprint => sprint._id.toString() === getVersionId)
+
+            if (getIndexSprintSource !== -1 && getIndexVersion !== -1) {
+                const getCurrentIssue = sprintList[getIndexSprintSource].issue_list[source.index]
+                const getVersionIdInIssue = getCurrentIssue.fix_version?._id.toString()
+
+                const getVersionNameInIssue = getCurrentIssue.fix_version !== null ? getCurrentIssue.fix_version.version_name : "None"
+
+
+                //tien hanh them issue vao version
+                dispatch(updateVersion(versionList[getIndexSprintSource]._id.toString(), { issue_id: getCurrentIssue._id.toString(), version_id: getVersionIdInIssue ? getVersionIdInIssue : "null" }, id))
+                //tien hanh them id cua version vao version link trong issue
+                dispatch(updateInfoIssue(getCurrentIssue._id.toString(), id, { fix_version: versionList[getIndexVersion]._id.toString() }, getVersionNameInIssue, versionList[getIndexVersion].version_name, userInfo.id, "updated", "epic"))
             }
         }
     };
     const renderIssuesBacklog = () => {
-        const issuesInBacklog = issuesBacklog?.filter(issue => issue.current_sprint === null).map((issue, index) => {
+        const issuesInBacklog = issuesBacklog?.filter(issue => issue?.current_sprint === null).map((issue, index) => {
             return <Draggable key={issue._id.toString()} index={index} draggableId={issue._id.toString()}>
                 {(provided) => {
                     return <div
@@ -127,7 +265,7 @@ export default function Backlog() {
                         onClick={() => {
                             dispatch(getInfoIssue(issue._id.toString()))
                         }}
-                        className="issues-backlog-detail">
+                        className="issues-backlog-detail issue-info">
                         <div style={{ cursor: 'pointer', borderBottom: '1px solid #ddd', padding: '5px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div className='content-issue-backlog'>
                                 {iTagForIssueTypes(issue.issue_status)}
@@ -146,9 +284,73 @@ export default function Backlog() {
                                 {/* issue id */}
                                 <span className='ml-2'>WD-{issue._id.toString()}</span>
                                 {/* priority backlog */}
-                                {iTagForPriorities(issue.issue_priority)}
+                                <span className='ml-2'>{iTagForPriorities(issue.issue_priority)}</span>
                                 {/* Story points for issue Backlog */}
-                                {issue.story_point !== null ? <Avatar size={14}>{issue.story_point}</Avatar> : <Avatar size={14}>-</Avatar>}
+                                <span className='ml-2'>{issue.story_point !== null ? <Avatar size={14}>{issue.story_point}</Avatar> : <Avatar size={14}>-</Avatar>}</span>
+                                <button
+                                    className='ml-1 setting-issue btn btn-light'
+                                    id="dropdownMenuButton"
+                                    data-toggle="dropdown"
+                                    aria-haspopup="true"
+                                    aria-expanded="false"
+                                    style={{ visibility: 'hidden' }}
+                                    onClick={() => {
+                                        setDropDownLeft(false)
+                                    }}>
+                                    <i className="fa fa-bars"></i>
+                                </button >
+                                <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                    <li style={{ padding: '5px 15px' }}>
+                                        <div className='d-flex justify-content-between align-items-center'>
+                                            <span style={{ marginRight: 20 }}>Move to</span>
+                                            <i className="fa fa-angle-right" style={{ fontSize: 13 }}></i>
+                                        </div>
+                                        <ul className="dropdown-menu dropdown-submenu">
+                                            {sprintList?.map(sprint => {
+                                                return <li style={{ padding: '5px 15px' }}>{sprint.sprint_name}</li>
+                                            })}
+                                            <hr style={{ margin: '2px 0' }} />
+                                            <li style={{ padding: '5px 15px' }}>Top of backlog</li>
+                                            <li style={{ padding: '5px 15px' }}>Move up</li>
+                                            <li style={{ padding: '5px 15px' }}>Move down</li>
+                                            <li style={{ padding: '5px 15px' }}>Bottom of backlog</li>
+                                        </ul>
+                                    </li>
+                                    <hr style={{ margin: '2px 0' }} />
+                                    <li style={{ padding: '5px 15px' }}>Copy issue link</li>
+                                    <hr style={{ margin: '2px 0' }} />
+                                    <li style={{ padding: '5px 15px' }}>
+                                        <div className='d-flex justify-content-between align-items-center'>
+                                            <span style={{ marginRight: 20 }}>Assignee</span>
+                                            <i className="fa fa-angle-right" style={{ fontSize: 13 }}></i>
+                                        </div>
+                                        <ul className="dropdown-menu dropdown-submenu">
+                                            <li style={{ padding: '5px 15px' }}>
+                                                <Search
+                                                    placeholder="Search"
+                                                    style={{
+                                                        width: 200
+                                                    }}
+                                                />
+                                            </li>
+                                            <hr style={{ margin: '2px 0' }} />
+                                            {/* dispay info members in project */}
+                                        </ul>
+                                    </li>
+                                    <li style={{ padding: '5px 15px' }}>
+                                        <div className='d-flex justify-content-between align-items-center'>
+                                            <span style={{ marginRight: 20 }}>Story point estimate</span>
+                                            <i className="fa fa-angle-right" style={{ fontSize: 13 }}></i>
+                                        </div>
+                                        <ul className="dropdown-menu dropdown-submenu">
+                                            <li style={{ padding: '5px 15px' }}>
+                                                <InputNumber min={1} max={100} />
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <hr style={{ margin: '2px 0' }} />
+                                    <li style={{ padding: '5px 15px' }}>Delete</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -156,7 +358,7 @@ export default function Backlog() {
             </Draggable>
         })
         if (issuesInBacklog.length !== 0) {
-            return <Droppable droppableId="issues_backlog">
+            return <Droppable droppableId="issues_backlog dropup">
                 {(provided) => {
                     return <div
                         ref={provided.innerRef}
@@ -169,9 +371,15 @@ export default function Backlog() {
             </Droppable>
         }
         else {
-            return <div style={{ padding: 0, border: '2px dashed #ddd', height: '60px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <p className='m-0'>Your backlog is empty</p>
-            </div>
+            return <Droppable droppableId="issues_backlog">
+                {(provided) => {
+                    return <div ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        style={{ padding: 0, border: '2px dashed #ddd', height: '60px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <p className='m-0'>Your backlog is empty</p>
+                    </div>
+                }}
+            </Droppable>
         }
     }
 
@@ -182,7 +390,12 @@ export default function Backlog() {
         return sprintList?.map(sprint => {
             return <div className='issues-info-backlog' style={{ width: '100%', margin: '10px', backgroundColor: '#f7f8f9' }}>
                 <div className="d-flex justify-content-between align-items-center mb-1" style={{ padding: '5px 10px' }}>
-                    <div className='d-flex'>
+                    <div
+                        className='d-flex'
+                        data-toggle="collapse"
+                        data-target={`#issueSprintCollapse-${sprint._id.toString()}`}
+                        aria-expanded="true"
+                        aria-controls={`issueSprintCollapse-${sprint._id.toString()}`}>
                         <h6 className='m-0' style={{ lineHeight: '26px' }}>{sprint.sprint_name}</h6>
                         <button style={{ fontSize: '13px' }} className="btn btn-transparent p-0" onClick={() => {
                             dispatch(drawer_edit_form_action(<CreateSprint currentSprint={sprint} />, 'Save', '700px'))
@@ -192,137 +405,294 @@ export default function Backlog() {
                     <div className='d-flex align-items-center'>
                         <div className='mr-2'>
                             {processList?.map((process) => {
-                                return <Tooltip placement="bottom" title={`${process.name_process[0] + process.name_process.toLowerCase().substring(1)} 0 of 0 (issue count)`}>
-                                    <Avatar size={'small'} style={{ backgroundColor: process.tag_color }}>0</Avatar>
+                                const countIssueProcess = sprint.issue_list.filter(issue => {
+                                    return issue?.issue_type?.toString() === process._id.toString()
+                                }).length
+                                return <Tooltip placement="bottom" title={`${process.name_process[0] + process.name_process.toLowerCase().substring(1)} ${countIssueProcess} of ${sprint.issue_list.length} (issue count)`}>
+                                    <Avatar size={'small'} style={{ backgroundColor: process.tag_color }}>{countIssueProcess}</Avatar>
                                 </Tooltip>
                             })}
                         </div>
                         {sprint.issue_list.length !== 0 ? <button className='btn btn-primary' onClick={() => {
 
                         }}>Start sprint</button> : <button className='btn btn-primary' disabled>Start sprint</button>}
+                        {/* display drop down to select more options in current sprint */}
                         <div className='dropdown'>
-                            <button className='btn btn-transparent' type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i className="fa-sharp fa-solid fa-bars"></i></button>
+                            <button
+                                className='btn btn-transparent'
+                                type="button" id="dropdownMenuButton"
+                                data-toggle="dropdown"
+                                aria-haspopup="true"
+                                aria-expanded="true">
+                                <i className="fa-sharp fa-solid fa-bars"></i>
+                            </button>
                             <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                 <button className="dropdown-item" onClick={() => {
                                     dispatch(drawer_edit_form_action(<CreateSprint currentSprint={sprint} />, 'Save', '700px'))
                                 }}>Edit sprint</button>
                                 <button className="dropdown-item" onClick={() => {
-                                    dispatch(deleteSprintAction(sprint._id.toString(), sprint.project_id.toString()))
+                                    if (sprint.issue_list.length === 0) {
+                                        dispatch(deleteSprintAction(sprint._id.toString(), sprint.project_id.toString()))
+                                    } else {
+                                        setCurrentSprint(sprint)
+                                        setOpen(true)
+                                    }
                                 }}>Delete Sprint</button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className='sprint-info d-flex flex-column' style={{ padding: '5px 10px' }}>
-                    {sprint.start_date !== null && sprint.end_date !== null ? <span><span style={{ fontWeight: 'bold' }}>Date: </span> {dayjs(sprint.start_date).format("DD:MM:YYYY")} - {dayjs(sprint.end_date).format("DD:MM:YYYY")}</span> : <></>}
-                    {sprint.sprint_goal !== null ? <span><span style={{ fontWeight: 'bold' }}>Description: </span>{sprint.sprint_goal}</span> : <></>}
-                </div>
+                <div id={`issueSprintCollapse-${sprint._id.toString()}`} className='collapse show'>
+                    <div className='sprint-info d-flex flex-column' style={{ padding: '5px 10px' }}>
+                        {sprint.start_date !== null && sprint.end_date !== null ? <span><span style={{ fontWeight: 'bold' }}>Date: </span> {dayjs(sprint.start_date).format("DD:MM:YYYY")} - {dayjs(sprint.end_date).format("DD:MM:YYYY")}</span> : <></>}
+                        {sprint.sprint_goal !== null ? <span><span style={{ fontWeight: 'bold' }}>Description: </span>{sprint.sprint_goal}</span> : <></>}
+                    </div>
 
-                <Droppable droppableId={`sprint-${sprint._id.toString()}`} >
-                    {(provided) => {
-                        return <div ref={provided.innerRef} {...provided.droppableProps}>
-                            {sprint.issue_list.length === 0 ? <div style={{ padding: 0, border: '2px dashed #ddd', height: '150px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                <div className='description-sprint d-flex align-items-center'>
-                                    <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1BtLhkORsgCvCDFhKq9ZQ0ICDjaxJAntxfA&s)' style={{ width: '50px', height: '50px' }} alt="sprint img" />
-                                    <div className='description-text-sprint d-flex flex-column ml-2'>
-                                        <span style={{ fontWeight: '700' }}>Plan your sprint</span>
-                                        <span>Drag issues from the <b>Backlog</b> section, or create new issues, to plan the work for this sprint.<br /> Select <b>Start sprint</b> when you're ready</span>
-                                    </div>
-                                </div>
-                            </div> : <div className='issues-list-sprint'>
-                                {sprint.issue_list !== null ? sprint.issue_list?.map((issue, index) => {
-                                    return <Draggable
-                                        key={issue._id?.toString()}
-                                        draggableId={issue._id?.toString()}
-                                        index={index}>
-                                        {(provided) => {
-                                            return <div
-                                                ref={provided.innerRef}
-                                                {...provided.draggableProps}
-                                                {...provided.dragHandleProps}
-                                                onClick={() => {
-                                                    dispatch(getInfoIssue(issue._id.toString()))
-                                                }}
-                                                data-toggle="modal"
-                                                data-target="#infoModal">
-                                                <div style={{ cursor: 'pointer', borderBottom: '1px solid #ddd', padding: '5px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <div className='content-issue-sprint'>
-                                                        {iTagForIssueTypes(issue.issue_status)}
-                                                        <span>{issue.summary}</span>
-                                                    </div>
-                                                    <div className='attach-issue-sprint d-flex align-items-center'>
-                                                        {/* specify which components does issue belong to? */}
-                                                        {issue.epic_link !== null ? <Tag color={issue?.epic_link?.tag_color}>{issue?.epic_link?.epic_name}</Tag> : <></>}
-                                                        {/* specify which epics does issue belong to? */}
-                                                        {issue.fix_version !== null ? <Tag className='ml-2' color={issue?.fix_version?.tag_color}>{issue?.fix_version?.version_name}</Tag> : <></>}
-                                                        {/* Assigness */}
-                                                        <div className='ml-2'>
-                                                            {/* <Avatar icon={<UserOutlined />} /> */}
-                                                            <Avatar src={issue?.creator?.avatar} />
+                    <Droppable droppableId={`sprint-${sprint._id.toString()}`} >
+                        {(provided) => {
+                            return <div ref={provided.innerRef} {...provided.droppableProps}>
+                                {sprint.issue_list.length === 0 ? <div style={{ padding: 0, border: '2px dashed #ddd', height: sprint.issue_list.length > 1 ? 150 : 50, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                    {sprint.issue_list.length === 1 ? <div className='description-sprint d-flex align-items-center'>
+                                        <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1BtLhkORsgCvCDFhKq9ZQ0ICDjaxJAntxfA&s)' style={{ width: '50px', height: '50px' }} alt="sprint img" />
+                                        <div className='description-text-sprint d-flex flex-column ml-2'>
+                                            <span style={{ fontWeight: '700' }}>Plan your sprint</span>
+                                            <span>Drag issues from the <b>Backlog</b> section, or create new issues, to plan the work for this sprint.<br /> Select <b>Start sprint</b> when you're ready</span>
+                                        </div>
+                                    </div> : <div className='description-sprint d-flex align-items-center'>
+                                        <span>Plan a sprint by dragging the sprint footer down below some issues, or by dragging issues here</span>
+                                    </div>}
+                                </div> : <div className='issues-list-sprint'>
+                                    {sprint.issue_list !== null ? sprint.issue_list?.map((issue, index) => {
+                                        return <Draggable
+                                            key={issue._id?.toString()}
+                                            draggableId={issue._id?.toString()}
+                                            index={index}>
+                                            {(provided) => {
+                                                return <div
+                                                    className='issue-info'
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    {...provided.dragHandleProps}
+                                                    onClick={() => {
+                                                        dispatch(getInfoIssue(issue._id.toString()))
+                                                    }}
+                                                    data-toggle="modal"
+                                                    data-target="#infoModal">
+                                                    <div style={{ cursor: 'pointer', borderBottom: '1px solid #ddd', padding: '5px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <div className='content-issue-sprint'>
+                                                            {iTagForIssueTypes(issue.issue_status)}
+                                                            <span>{issue.summary}</span>
                                                         </div>
-                                                        {/* issue id */}
-                                                        <span className='ml-2'>WD-{issue?._id?.toString()}</span>
-                                                        {/* priority sprint */}
-                                                        {iTagForPriorities(issue.issue_priority)}
-                                                        {/* Story points for issue sprint */}
-                                                        {issue?.story_point !== null ? <Avatar size={14}>{issue?.story_point}</Avatar> : <Avatar size={14}>-</Avatar>}
+                                                        <div className='attach-issue-sprint d-flex align-items-center'>
+                                                            {/* specify which components does issue belong to? */}
+                                                            {issue.epic_link !== null ? <Tag color={issue?.epic_link?.tag_color}>{issue?.epic_link?.epic_name}</Tag> : <></>}
+                                                            {/* specify which epics does issue belong to? */}
+                                                            {issue.fix_version !== null ? <Tag className='ml-2' color={issue?.fix_version?.tag_color}>{issue?.fix_version?.version_name}</Tag> : <></>}
+                                                            {/* Assigness */}
+                                                            <div className='ml-2'>
+                                                                {/* <Avatar icon={<UserOutlined />} /> */}
+                                                                <Avatar src={issue?.creator?.avatar} />
+                                                            </div>
+                                                            {/* issue id */}
+                                                            <span className='ml-2'>WD-{issue?._id?.toString()}</span>
+                                                            {/* priority sprint */}
+                                                            <span className='ml-2'>{iTagForPriorities(issue.issue_priority)}</span>
+                                                            {/* Story points for issue sprint */}
+                                                            <span className='ml-2'>{issue?.story_point !== null ? <Avatar size={14}>{issue?.story_point}</Avatar> : <Avatar size={14}>-</Avatar>}</span>
+                                                            <button
+                                                                className='ml-1 setting-issue btn btn-light'
+                                                                id="dropdownMenuButton"
+                                                                data-toggle="dropdown"
+                                                                aria-haspopup="true"
+                                                                aria-expanded="false"
+                                                                style={{ visibility: 'hidden' }}
+                                                                onClick={() => {
+                                                                    setDropDownLeft(false)
+                                                                }}>
+                                                                <i className="fa fa-bars"></i>
+                                                            </button >
+                                                            <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                                                <li style={{ padding: '5px 15px' }}>
+                                                                    <div className='d-flex justify-content-between align-items-center'>
+                                                                        <span style={{ marginRight: 20 }}>Move to</span>
+                                                                        <i className="fa fa-angle-right" style={{ fontSize: 13 }}></i>
+                                                                    </div>
+                                                                    <ul className="dropdown-menu dropdown-submenu">
+                                                                        {sprintList?.filter(sp => sp._id.toString() !== sprint._id.toString()).map(sprint => {
+                                                                            return <li style={{ padding: '5px 15px' }}>{sprint.sprint_name}</li>
+                                                                        })}
+                                                                        <hr style={{ margin: '2px 0' }} />
+                                                                        <li style={{ padding: '5px 15px' }}>Top of backlog</li>
+                                                                        <li style={{ padding: '5px 15px' }}>Move up</li>
+                                                                        <li style={{ padding: '5px 15px' }}>Move down</li>
+                                                                        <li style={{ padding: '5px 15px' }}>Bottom of backlog</li>
+                                                                    </ul>
+                                                                </li>
+                                                                <hr style={{ margin: '2px 0' }} />
+                                                                <li style={{ padding: '5px 15px' }}>Copy issue link</li>
+                                                                <hr style={{ margin: '2px 0' }} />
+                                                                <li style={{ padding: '5px 15px' }}>
+                                                                    <div className='d-flex justify-content-between align-items-center'>
+                                                                        <span style={{ marginRight: 20 }}>Assignee</span>
+                                                                        <i className="fa fa-angle-right" style={{ fontSize: 13 }}></i>
+                                                                    </div>
+                                                                    <ul className="dropdown-menu dropdown-submenu">
+                                                                        <li style={{ padding: '5px 15px' }}>
+                                                                            <Search
+                                                                                placeholder="Search"
+                                                                                style={{
+                                                                                    width: 200
+                                                                                }}
+                                                                            />
+                                                                        </li>
+                                                                        <hr style={{ margin: '2px 0' }} />
+                                                                        {/* dispay info members in project */}
+                                                                    </ul>
+                                                                </li>
+                                                                <li style={{ padding: '5px 15px' }}>
+                                                                    <div className='d-flex justify-content-between align-items-center'>
+                                                                        <span style={{ marginRight: 20 }}>Story point estimate</span>
+                                                                        <i className="fa fa-angle-right" style={{ fontSize: 13 }}></i>
+                                                                    </div>
+                                                                    <ul className="dropdown-menu dropdown-submenu">
+                                                                        <li style={{ padding: '5px 15px' }}>
+                                                                            <InputNumber min={1} max={100} />
+                                                                        </li>
+                                                                    </ul>
+                                                                </li>
+                                                                <hr style={{ margin: '2px 0' }} />
+                                                                <li style={{ padding: '5px 15px' }}>Delete</li>
+                                                            </ul>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        }}
-                                    </Draggable>
-                                }) : <></>}
-                            </div>}
-                            {provided.placeholder}
-                        </div>
-                    }}
-                </Droppable>
+                                            }}
+                                        </Draggable>
+                                    }) : <></>}
+                                </div>}
+                                {provided.placeholder}
+                            </div>
+                        }}
+                    </Droppable>
 
-                <button className='btn btn-transparent btn-create-issue' style={{ fontSize: '14px', color: '#ddd', display: openCreatingSprint.open && openCreatingSprint.id === sprint._id.toString() ? 'none' : 'block' }} onClick={() => {
-                    setOpenCreatingSprint({
-                        id: sprint._id.toString(),
-                        open: true
-                    })
-                }}>
-                    <i className="fa-regular fa-plus mr-2"></i>
-                    Create issue
-                </button>
-                {sprintList?.map(currentSprint => {
-                    if (currentSprint._id.toString() === openCreatingSprint.id && openCreatingSprint.open && currentSprint._id.toString() === sprint._id.toString()) {
-                        return <div className='d-flex' style={{ display: openCreatingSprint ? 'block' : 'none' }}>
-                            <Select style={{ border: 'none', borderRadius: 0 }}
-                                defaultValue={issueTypeWithoutOptions[0].value}
-                                onChange={(value, option) => {
-                                    setIssueStatus(value)
-                                }}
-                                options={issueTypeWithoutOptions}
-                            />
-                            <Input placeholder="What need to be done?" onChange={(e) => {
-                                summary = e.target.value
-                            }} style={{ border: 'none', borderRadius: 0 }} />
-                            <Button type="primary" onClick={() => {
-                                dispatch(createIssue({
-                                    project_id: id,
-                                    issue_status: issueStatus,
-                                    summary: summary,
-                                    creator: userInfo.id
-                                }, issuesBacklog, null, null, userInfo.id))
+                    <button className='btn btn-transparent btn-create-issue' style={{ fontSize: '14px', color: '#ddd', display: openCreatingSprint.open && openCreatingSprint.id === sprint._id.toString() ? 'none' : 'block' }} onClick={() => {
+                        setOpenCreatingSprint({
+                            id: sprint._id.toString(),
+                            open: true
+                        })
+                    }}>
+                        <i className="fa-regular fa-plus mr-2"></i>
+                        Create issue
+                    </button>
+                    {sprintList?.map(currentSprint => {
+                        if (currentSprint._id.toString() === openCreatingSprint.id && openCreatingSprint.open && currentSprint._id.toString() === sprint._id.toString()) {
+                            return <div className='d-flex' style={{ display: openCreatingSprint ? 'block' : 'none' }}>
+                                <Select style={{ border: 'none', borderRadius: 0 }}
+                                    defaultValue={issueTypeWithoutOptions[0].value}
+                                    onChange={(value, option) => {
+                                        setIssueStatus(value)
+                                    }}
+                                    options={issueTypeWithoutOptions}
+                                />
+                                <Input placeholder="What need to be done?" onChange={(e) => {
+                                    summary = e.target.value
+                                }} style={{ border: 'none', borderRadius: 0 }} />
+                                <Button type="primary" onClick={() => {
+                                    dispatch(createIssue({
+                                        project_id: id,
+                                        issue_status: issueStatus,
+                                        summary: summary,
+                                        creator: userInfo.id,
+                                        current_sprint: currentSprint._id.toString()
+                                    }, issuesBacklog, null, null, userInfo.id))
 
-                                //set default is 0 which means story
-                                setIssueStatus(0)
-                            }}>Save</Button>
-                            <Button type="danger" onClick={() => {
-                                setOpenCreatingSprint({
-                                    id: null,
-                                    open: false
-                                })
-                            }}>Cancel</Button>
-                        </div>
-                    }
-                    return <></>
-                })}
+                                    //set default is 0 which means story
+                                    setIssueStatus(0)
+                                }}>Save</Button>
+                                <Button type="danger" onClick={() => {
+                                    setOpenCreatingSprint({
+                                        id: null,
+                                        open: false
+                                    })
+                                }}>Cancel</Button>
+                            </div>
+                        }
+                        return <></>
+                    })}
+                </div>
             </div>
         })
+    }
+
+    const renderVersionList = () => {
+        const getVersions = versionList.map(version => {
+            const versionTag = "collapse" + version._id.toString()
+            const versionID = "#" + versionTag
+            return <Droppable key={`version-${version._id.toString()}`} droppableId={`version-${version._id.toString()}`}>
+                {(provided) => {
+                    return <div
+                        key={version._id.toString()}
+                        style={{ border: '2px solid #aaa', borderRadius: '10px' }}
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}>
+                        <button style={{ width: '100%', textAlign: 'left', backgroundColor: version.tag_color }} className="btn btn-transparent" type="button" data-toggle="collapse" data-target={versionID} aria-expanded="false" aria-controls={versionTag}>
+                            <i className="fa-solid fa-caret-down mr-3"></i>{version.version_name}
+                        </button>
+                        <div className="collapse" id={versionTag} style={{ padding: '5px 5px' }}>
+                            <div className='d-flex flex-column'>
+                                <div>
+                                    <Input style={{ border: 0, height: 40, marginTop: 10, marginBottom: 10 }} defaultValue={version.description} disabled />
+                                    <NavLink to={`/projectDetail/${id}/releases`}>Details</NavLink>
+                                </div>
+                                <hr style={{ width: '100%', height: 8 }} />
+                                <div style={{ padding: '5px 10px' }}>
+                                    <div>
+                                        <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
+                                            <span>Start Date</span>
+                                            <Input style={{ width: 100 }} defaultValue={version.start_date} disabled />
+                                        </div>
+                                        <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
+                                            <span>End Date</span>
+                                            <Input style={{ width: 100 }} defaultValue={version.end_date} disabled />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
+                                            <span>Issues </span>
+                                            <div style={{ width: 100 }}>
+                                                <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{version?.issue_list?.length}</span></Avatar>
+                                            </div>
+                                        </div>
+                                        <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
+                                            <span>Completed </span>
+                                            <div style={{ width: 100 }}>
+                                                <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{version?.issue_list?.length}</span></Avatar>
+                                            </div>
+                                        </div>
+                                        <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
+                                            <span>Unestimated</span>
+                                            <div style={{ width: 100 }}>
+                                                <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{version?.issue_list?.filter(issue => issue.story_point === null).length}</span></Avatar>
+                                            </div>
+                                        </div>
+                                        <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
+                                            <span>Estimate</span>
+                                            <div style={{ width: 100 }}>
+                                                <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{version?.issue_list?.filter(issue => issue.story_point !== null).length}</span></Avatar>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {provided.placeholder}
+                    </div>
+                }}
+            </Droppable>
+        })
+        return <div>
+            {getVersions}
+        </div>
     }
 
     const renderEpicList = () => {
@@ -333,19 +703,39 @@ export default function Backlog() {
                 {(provided) => {
                     return <div
                         key={epic._id.toString()}
-                        style={{ border: '2px solid #aaa', borderRadius: '10px', backgroundColor: epic.tag_color }}
+                        style={{ border: '2px solid #aaa', borderRadius: '10px' }}
                         ref={provided.innerRef}
                         {...provided.droppableProps}>
-                        <button style={{ width: '100%', textAlign: 'left' }} className="btn btn-transparent" type="button" data-toggle="collapse" data-target={epicID} aria-expanded="false" aria-controls={epicTag}>
+                        <button style={{ width: '100%', textAlign: 'left', backgroundColor: epic.tag_color }} className="btn btn-transparent" type="button" data-toggle="collapse" data-target={epicID} aria-expanded="false" aria-controls={epicTag}>
                             <i className="fa-solid fa-caret-down mr-3"></i>{epic.epic_name}
                         </button>
-                        <div className="collapse" id={epicTag}>
+                        <div className="collapse" id={epicTag} style={{ padding: '5px 10px' }}>
                             <div className='d-flex flex-column'>
                                 <div>
-                                    <p>Issues ({epic?.issue_list?.length})</p>
-                                    <p>Completed (0)</p>
-                                    <p>Unestimated ({epic?.issue_list?.filter(issue => issue.story_point === null).length})</p>
-                                    <p>Estimate ({epic?.issue_list?.filter(issue => issue.story_point !== null).length})</p>
+                                    <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
+                                        <span>Issues </span>
+                                        <div style={{ width: 100 }}>
+                                            <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{epic?.issue_list?.length}</span></Avatar>
+                                        </div>
+                                    </div>
+                                    <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
+                                        <span>Completed </span>
+                                        <div style={{ width: 100 }}>
+                                            <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{epic?.issue_list?.length}</span></Avatar>
+                                        </div>
+                                    </div>
+                                    <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
+                                        <span>Unestimated</span>
+                                        <div style={{ width: 100 }}>
+                                            <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{epic?.issue_list?.filter(issue => issue.story_point === null).length}</span></Avatar>
+                                        </div>
+                                    </div>
+                                    <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
+                                        <span>Estimate</span>
+                                        <div style={{ width: 100 }}>
+                                            <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{epic?.issue_list?.filter(issue => issue.story_point !== null).length}</span></Avatar>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -441,23 +831,30 @@ export default function Backlog() {
                     <DragDropContext onDragEnd={(result) => {
                         handleDragEnd(result)
                     }}>
-                        <div className="card version-info-backlog" style={{ width: '25rem', display: onChangeVersion ? 'block' : 'none', margin: '10px 5px', height: '30rem' }}>
-                            <div className='d-flex justify-content-between'>
-                                <h6 className='m-0'>Versions</h6>
-                                <i className="fa-solid fa-xmark" onClick={() => {
-                                    setOnChangeVersion(!onChangeVersion)
-                                }}></i>
-                            </div>
-                            <div className="card-body d-flex flex-column justify-content-center">
-                                <img src="https://jira-frontend-bifrost.prod-east.frontend.public.atl-paas.net/assets/releases-80px.782fa98d.svg" />
-                                <p>Versions help you package and schedule project deliveries.</p>
-                                <p>Your unreleased versions will appear here so you can manage them directly from the backlog.</p>
-                            </div>
+                        <div className="card version-info-backlog" style={{ width: '25rem', display: onChangeVersion ? 'block' : 'none', margin: '10px 5px', height: 'auto' }}>
+                            {versionList?.length !== 0 ? <div>
+                                <button style={{ width: '100%', textAlign: 'left', border: '2px solid #aaa', borderRadius: '10px' }} className='btn btn-transparent'>Issue without version</button>
+                                {renderVersionList()}
+                            </div> : <div>
+                                <div className='d-flex justify-content-between' style={{ padding: '5px 10px' }}>
+                                    <h6 className='m-0'>Versions</h6>
+                                    <i className="fa-solid fa-xmark" onClick={() => {
+                                        setOnChangeVersion(!onChangeVersion)
+                                    }}></i>
+                                </div>
+                                <div className="card-body d-flex flex-column justify-content-center">
+                                    <img src="https://jira-frontend-bifrost.prod-east.frontend.public.atl-paas.net/assets/releases-80px.782fa98d.svg" />
+                                    <p>Versions help you package and schedule project deliveries.</p>
+                                    <p>Your unreleased versions will appear here so you can manage them directly from the backlog.</p>
+                                </div>
+                            </div>}
                         </div>
 
-                        <div className="card epic-info-backlog" style={{ width: '25rem', display: onChangeEpic ? 'block' : 'none', margin: '10px 5px', height: '30rem' }}>
-                            <div className='d-flex justify-content-between'>
-                                <h6>Epci</h6>
+                        <div
+                            className="card epic-info-backlog"
+                            style={{ width: '25rem', display: onChangeEpic ? 'block' : 'none', margin: '10px 5px', height: '30rem', position: 'relative' }}>
+                            <div className='d-flex justify-content-between' style={{ padding: '5px 10px' }}>
+                                <h6>Epic</h6>
                                 <i className="fa-solid fa-xmark" onClick={() => {
                                     setOnChangeEpic(!onChangeEpic)
                                 }}></i>
@@ -466,24 +863,40 @@ export default function Backlog() {
                                 <button style={{ width: '100%', textAlign: 'left', border: '2px solid #aaa', borderRadius: '10px' }} className='btn btn-transparent'>Issue without epic</button>
                                 {renderEpicList()}
                             </div>
-                            <div>
-                                <NavLink to='#' onClick={() => {
-                                    dispatch(drawer_edit_form_action(<CreateEpic currentEpic={{project_id: id, creator: userInfo.id, summary: '', epic_name: ''}}/>, 'Create', '760px'))
-                                }}>Create issue in epic</NavLink>
-                                <NavLink to='#'>Viewed linked pages</NavLink>
+                            <div style={{ position: 'absolute', bottom: 0, display: 'flex', flexDirection: 'column', width: '100%' }}>
+                                <div style={{ padding: '10px', display: 'flex' }} className='epic-footer'>
+                                    <i className="fa fa-plus mr-2"></i>
+                                    <NavLink style={{ width: '100%', textDecoration: 'none', display: 'block', color: 'black' }} to='#' onClick={() => {
+                                        dispatch(drawer_edit_form_action(<CreateEpic currentEpic={{ project_id: id, creator: userInfo.id, summary: '', epic_name: '' }} />, 'Create', '760px'))
+                                    }}>Create issue in epic</NavLink>
+                                </div>
+                                <div style={{ padding: '10px', display: 'flex' }} className='epic-footer'>
+                                    <i className="material-icons mr-2"></i>
+                                    <NavLink to={`/projectDetail/${id}/epics`} style={{ color: 'black', textDecoration: 'none' }}>Viewed linked pages</NavLink>
+                                </div>
                             </div>
                         </div>
 
                         <div className='d-flex flex-column' style={{ width: '100%' }}>
 
                             {renderSprintList()}
-                            <div className='issues-info-backlog' style={{ width: '100%', margin: '10px' }}>
-                                <div className="d-flex justify-content-between align-items-center mb-4">
+                            <div className='issues-info-backlog'>
+                                <div
+                                    className="d-flex justify-content-between align-items-center mb-4"
+                                    data-toggle="collapse" data-target="#issueBacklogCollapse"
+                                    aria-expanded="false"
+                                    aria-controls="issueBacklogCollapse"
+                                    style={{ width: '100%', margin: '10px', padding: '5px 10px' }}>
                                     <h6 className='m-0'>Backlog <span>7 issues</span></h6>
                                     <div className='d-flex align-items-center'>
                                         <div className='mr-2'>
                                             {processList?.map((process) => {
-                                                return <Avatar size={'small'} style={{ backgroundColor: process.tag_color }}>0</Avatar>
+                                                const countIssueProcess = issuesBacklog.filter(issue => {
+                                                    return issue?.issue_type?.toString() === process._id.toString()
+                                                }).length
+                                                return <Tooltip placement="bottom" title={`${process.name_process[0] + process.name_process.toLowerCase().substring(1)} ${countIssueProcess} of ${issuesBacklog.length} (issue count)`}>
+                                                    <Avatar size={'small'} style={{ backgroundColor: process.tag_color }}>{countIssueProcess}</Avatar>
+                                                </Tooltip>
                                             })}
                                         </div>
                                         <button className='btn btn-primary' onClick={() => {
@@ -494,43 +907,79 @@ export default function Backlog() {
                                         }}>Create sprint</button>
                                     </div>
                                 </div>
-                                {renderIssuesBacklog()}
-                                {!openCreatingBacklog ? <button className='btn btn-transparent btn-create-issue' style={{ fontSize: '14px', color: '#ddd' }} onClick={() => {
-                                    setOpenCreatingBacklog(true)
-                                }}>
-                                    <i className="fa-regular fa-plus mr-2"></i>
-                                    Create issue
-                                </button> : <div className='d-flex'>
-                                    <Select style={{ border: 'none', borderRadius: 0 }}
-                                        defaultValue={issueTypeWithoutOptions[0].value}
-                                        onChange={(value, option) => {
-                                            setIssueStatus(value)
-                                        }}
-                                        options={issueTypeWithoutOptions}
-                                    />
-                                    <Input placeholder="What need to be done?" onChange={(e) => {
-                                        summary = e.target.value
-                                    }} style={{ border: 'none', borderRadius: 0 }} />
-                                    <Button type="primary" onClick={() => {
-                                        dispatch(createIssue({
-                                            project_id: id,
-                                            issue_status: issueStatus,
-                                            summary: summary,
-                                            creator: userInfo.id
-                                        }, issuesBacklog, null, null, userInfo.id))
-
-                                        //set default is 0 which means story
-                                        setIssueStatus(0)
-                                    }}>Save</Button>
-                                    <Button type="danger" onClick={() => {
-                                        setOpenCreatingBacklog(false)
-                                    }}>Cancel</Button>
-                                </div>}
+                                <div id="issueBacklogCollapse" className='collapse show'>
+                                    {renderIssuesBacklog()}
+                                    {!openCreatingBacklog ? <button className='btn btn-transparent btn-create-issue' style={{ fontSize: '14px', color: '#ddd' }} onClick={() => {
+                                        setOpenCreatingBacklog(true)
+                                    }}>
+                                        <i className="fa-regular fa-plus mr-2"></i>
+                                        Create issue
+                                    </button> : <div className='d-flex'>
+                                        <Select style={{ border: 'none', borderRadius: 0 }}
+                                            defaultValue={issueTypeWithoutOptions[0].value}
+                                            onChange={(value, option) => {
+                                                setIssueStatus(value)
+                                            }}
+                                            options={issueTypeWithoutOptions}
+                                        />
+                                        <Input placeholder="What need to be done?" onChange={(e) => {
+                                            summary = e.target.value
+                                        }} style={{ border: 'none', borderRadius: 0 }} />
+                                        <Button type="primary" onClick={() => {
+                                            dispatch(createIssue({
+                                                project_id: id,
+                                                issue_status: issueStatus,
+                                                summary: summary,
+                                                creator: userInfo.id,
+                                                issue_type: processList[0]._id,
+                                                current_sprint: null
+                                            }, issuesBacklog, null, null, userInfo.id))
+                                            //set default is 0 which means story
+                                            setIssueStatus(0)
+                                        }}>Save</Button>
+                                        <Button type="danger" onClick={() => {
+                                            setOpenCreatingBacklog(false)
+                                        }}>Cancel</Button>
+                                    </div>}
+                                </div>
                             </div>
                         </div>
                     </DragDropContext>
                 </div>
             </div>
+            <Modal
+                open={open}
+                onOk={handleOk}
+                onCancel={handleCancel}
+            >
+                <div className='d-flex'>
+                    <i className="glyphicon glyphicon-alert"></i>
+                    <span style={{ fontSize: '16px', fontWeight: 'bold' }}>Move issues from {currentSprint?.sprint_name}</span>
+                </div>
+                <p>Select a new home for any issues with the <span>{currentSprint?.sprint_name}</span> other sprints, including work in the backlog.</p>
+                <div className='d-flex justify-content-between align-items-center'>
+                    <div className='d-flex flex-column'>
+                        <label htmlFor='currentProcess'>This status will be deleted:</label>
+                        <div style={{ textDecoration: 'line-through', isplay: 'inline' }}>{currentSprint?.sprint_name}</div>
+                    </div>
+                    <i className="fa fa-long-arrow-alt-right"></i>
+                    <div className='d-flex flex-column'>
+                        <label htmlFor='newProcess?'>Move existing issues to:</label>
+                        <Select
+                            showSearch
+                            optionFilterProp="label"
+                            onChange={(value) => {
+                                setGetIssueToOtherPlaces({
+                                    old_stored_place: currentSprint,
+                                    new_stored_place: value
+                                })
+                            }}
+                            options={renderStoredIssuePlace(currentSprint?._id?.toString())}
+                            defaultValue={renderStoredIssuePlace(currentSprint?._id?.toString())[0].value}
+                        />
+                    </div>
+                </div>
+            </Modal>
         </div>
     )
 }

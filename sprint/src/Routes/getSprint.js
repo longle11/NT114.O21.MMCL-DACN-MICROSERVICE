@@ -11,9 +11,12 @@ router.get('/:projectId', async (req, res, next) => {
                     path: 'creator'
                 }
             })
-            const userInfo = await userModel.find({})
-            console.log("userinfo", userInfo);
-            
+            .populate({
+                path: 'issue_list',
+                populate: {
+                    path: 'epic_link'
+                }
+            })
         res.status(200).json({
             message: "Successfully got sprint list",
             data: getSprintsByProjectID

@@ -22,6 +22,11 @@ userSchema.virtual('usersRefCreator', {
     foreignField: '_id',
     localField: 'creator'
 })
+userSchema.virtual('usersRefCreatorVersion', {
+    ref: 'versions',
+    foreignField: '_id',
+    localField: 'creator'
+})
 
 
 const userModel = mongoose.model('users', userSchema)

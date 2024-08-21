@@ -23,6 +23,8 @@ build:
         manual:
           - dest: .
             src: 'src/**/*.js'
+          - src: "***/*.css"
+            dest: .
     - image: longle2003/comment
       context: comment
       docker:

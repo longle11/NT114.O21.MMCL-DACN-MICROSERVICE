@@ -11,7 +11,6 @@ import { useNavigate } from 'react-router-dom'
 import PropTypes from 'prop-types';
 import MenuBarHeader from '../components/Header/MenuBarHeader'
 import { userLoggedInAction } from '../redux/actions/UserAction'
-import { getIssuesBacklog } from '../redux/actions/IssueAction'
 
 export default function MainPageTemplate({ Component }) {
     const isLoading = useSelector(state => state.loading.isLoading)

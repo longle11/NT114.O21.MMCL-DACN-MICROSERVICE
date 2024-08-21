@@ -13,7 +13,11 @@ import { userLoggedInAction } from './redux/actions/UserAction'
 import NotFound from './components/NotFound/NotFound';
 import ProfileUser from './components/Profile/ProfileUser';
 import Backlog from './components/WD-Board/Backlog/Backlog';
-import Release from './components/Development/Releases/Release';
+import Release from './components/Development/Releases/Release-Dashboard/Release';
+import IssuesList from './components/WD-Board/Issues-List/IssuesList';
+import Epic from './components/Development/Epic/Epic-Dashboard/Epic';
+import EpicDetail from './components/Development/Epic/Epic-Detail/EpicDetail';
+import ReleaseDetail from './components/Development/Releases/Release-Detail/ReleaseDetail';
 function App() {
   const dispatch = useDispatch()
   useEffect(() => {
@@ -30,7 +34,11 @@ function App() {
           <Route path='/projectDetail/:id/active-sprints' element={<MainPageTemplate Component={SignUp} />} />
           <Route path='/projectDetail/:id/reports' element={<MainPageTemplate Component={ProjectManager} />} />
           <Route path='/projectDetail/:id/releases' element={<MainPageTemplate Component={Release} />} />
+          <Route path='/projectDetail/:id/epics' element={<MainPageTemplate Component={Epic} />} />
+          <Route path='/projectDetail/:id/epics/epic-detail/:epicId' element={<MainPageTemplate Component={EpicDetail} />} />
+          <Route path='/projectDetail/:id/versions/version-detail/:versionId' element={<MainPageTemplate Component={ReleaseDetail} />} />
           <Route path='/projectDetail/:id/issues' element={<MainPageTemplate Component={Create} />} />
+          <Route path='/projectDetail/:id/list' element={<MainPageTemplate Component={IssuesList} />} />
 
           <Route path='/' element={<MainPageTemplate Component={ProjectManager} />} />
           <Route path='/create' element={<MainPageTemplate Component={Create} />} />

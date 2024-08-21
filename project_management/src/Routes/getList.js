@@ -9,19 +9,11 @@ router.get('/list', async (req, res, next) => {
         const data = await projectModel
             .find({})
             .populate({
-                path: 'category',
-                select: ' -__v'
-            })
-            .populate({
                 path: 'creator',
                 select: '-__v'
             })
             .populate({
                 path: 'members',
-                select: '-__v'
-            })
-            .populate({
-                path: 'issues',
                 select: '-__v'
             })
         if(data) {

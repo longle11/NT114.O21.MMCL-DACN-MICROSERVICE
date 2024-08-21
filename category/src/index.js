@@ -5,6 +5,7 @@ const mongoose =require('mongoose')
 const natsWrapper = require('./nats-wrapper')
 const issueCreatedListener = require('./nats/listener/issue-listener/issue-created-listeners')
 const authCreatedListener = require('./nats/listener/auth-listener/auth-created-listener')
+const issueUpdatedListener = require('./nats/listener/issue-listener/issue-updated-listener')
 const app = express()
 
 app.use(bodyParser.json())
@@ -24,6 +25,7 @@ async function connectToNats() {
 
         issueCreatedListener()
         authCreatedListener()
+        issueUpdatedListener()
         console.log("Ket noi thanh cong toi nats");
     } catch (error) {
         console.log("Kết nối thất bại tới nats", error);

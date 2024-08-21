@@ -5,6 +5,8 @@ export const ListProjectAction = () => {
     return async dispatch => {
         try {
             const res = await Axios.get(`${domainName}/api/projectmanagement/list`)
+            console.log("ListProjectAction ListProjectActionListProjectActionListProjectAction", res);
+            
             dispatch({
                 type: GET_LIST_PROJECT_API,
                 data: res.data.data

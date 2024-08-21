@@ -6,12 +6,11 @@ const versionModel = require('../models/versionModel');
 router.post('/version-create', async (req, res, next) => {
     try {
         const data = req.body
-        const newData = {...data, tag_color: randomColor()}
+        const newData = {...data, tag_color: randomColor({luminosity: 'light'})}
 
         const version = new versionModel(newData)
         const newVersion = await version.save()
 
-        console.log("Du lieu duoc tao ra ", newVersion);
         const versionDataCopy = {
             _id: newVersion._id,
             version_name: newVersion.version_name,

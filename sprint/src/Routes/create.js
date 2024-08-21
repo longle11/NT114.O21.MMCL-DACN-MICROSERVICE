@@ -10,13 +10,15 @@ router.post('/create', async (req, res, next) => {
             req.body.sprint_name = "Default"
         } else {
             const getName = getSprintByProjectID[getSprintByProjectID.length - 1].sprint_name
-            const generateNumber = parseInt(getName[getName.length - 1]) ? (parseInt(getName[getName.length - 1]) + 1).toString() : "1"
-            const sprint_name = getSprintByProjectID[0].sprint_name
-            req.body.sprint_name = sprint_name.substring(0, sprint_name.length - 1) + " " + generateNumber
+            const generateNumber = Number.isInteger(parseInt(getName[getName.length - 1])) ? (parseInt(getName[getName.length - 1]) + 1).toString() : " 1"
+            const sprint_name = getSprintByProjectID[getSprintByProjectID.length - 1].sprint_name
+            
+            req.body.sprint_name = sprint_name.substring(0, sprint_name.length -1)  + generateNumber
         }
 
         const sprint = new sprintModel(newData)
         const newSprint = await sprint.save()
+
 
         const sprintDataCopy = {
             _id: newSprint._id,

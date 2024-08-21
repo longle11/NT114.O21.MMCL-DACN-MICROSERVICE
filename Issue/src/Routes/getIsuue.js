@@ -3,6 +3,7 @@ const currentUserMiddleware = require("../Middlewares/currentUser-Middleware")
 const issueModel = require('../models/issueModel')
 const BadRequestError = require("../Errors/Bad-Request-Error")
 const userModel = require("../models/userModel")
+const issueProcessModel = require("../models/issueProcessModel")
 const router = express.Router()
 
 router.get("/:issueId", currentUserMiddleware, async (req, res, next) => {
@@ -26,6 +27,9 @@ router.get("/:issueId", currentUserMiddleware, async (req, res, next) => {
                 .populate({
                     path: 'epic_link'
                 })
+                .populate({
+                    path: 'issue_type'
+                })
             return res.status(200).json({
                 message: "Successfully retrieve the issue",
                 data: issue
@@ -42,7 +46,7 @@ router.get("/:issueId", currentUserMiddleware, async (req, res, next) => {
 router.get("/backlog/:projectId", async (req, res) => {
     try {
         const { projectId } = req.params
-        
+
         const getAllIssuesInProject = await issueModel.find({ project_id: projectId })
             .populate({
                 path: 'creator',
@@ -60,16 +64,14 @@ router.get("/backlog/:projectId", async (req, res) => {
                 path: 'fix_version',
                 select: '-__v'
             })
-          
-        
-        if (getAllIssuesInProject.length !== 0) {
-            const getIssuesInBacklog = getAllIssuesInProject.filter(issue => {
-                return issue.current_sprint === null
+            .populate({
+                path: 'issue_type',
+                select: '-__v'
             })
-
+        if (getAllIssuesInProject.length !== 0) {
             return res.status(200).json({
                 message: "successfully get all issues belonging to backlog",
-                data: getIssuesInBacklog
+                data: getAllIssuesInProject
             })
         } else {
             return res.status(200).json({
@@ -81,5 +83,6 @@ router.get("/backlog/:projectId", async (req, res) => {
         console.log(error)
     }
 })
+
 
 module.exports = router;
