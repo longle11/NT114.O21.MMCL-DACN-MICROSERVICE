@@ -1,21 +1,26 @@
 import React, { useEffect, useRef, useState } from 'react'
 import DrawerHOC from '../../HOC/DrawerHOC'
-import { NavLink, useParams } from 'react-router-dom';
+import { NavLink, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { AutoComplete, Avatar, Button, Modal, Popover, Select, Table } from 'antd';
-import { getInfoIssue } from '../../redux/actions/IssueAction';
+import { AutoComplete, Avatar, Breadcrumb, Button, Input, Modal, Popover, Select, Table } from 'antd';
+import { getInfoIssue, updateInfoIssue } from '../../redux/actions/IssueAction';
 import { getUserKeyword, insertUserIntoProject } from '../../redux/actions/UserAction';
-import { GetProcessListAction, GetProjectAction } from '../../redux/actions/ListProjectAction';
+import { CreateProcessACtion, GetProcessListAction, GetProjectAction, GetSprintAction, GetSprintListAction } from '../../redux/actions/ListProjectAction';
 import { deleteUserInProject } from '../../redux/actions/CreateProjectAction';
 import { DeleteOutlined } from '@ant-design/icons';
 import Search from 'antd/es/input/Search';
 import { iTagForIssueTypes, iTagForPriorities } from '../../util/CommonFeatures';
+import { showNotificationWithIcon } from '../../util/NotificationUtil';
+import dayjs from 'dayjs';
+import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
+import { delay } from '../../util/Delay';
+import { DISPLAY_LOADING, HIDE_LOADING } from '../../redux/constants/constant';
 export default function Dashboard() {
     const dispatch = useDispatch()
 
     //sử dụng hiển thị tất cả issue hoặc chỉ các issue liên quan tới user
     const [type, setType] = useState(0)
-    const { id } = useParams()
+    const { id, sprintId } = useParams()
 
     const projectInfo = useSelector(state => state.listProject.projectInfo)
     const [valueDashboard, setValueDashboard] = useState('')
@@ -23,11 +28,14 @@ export default function Dashboard() {
     const userInfo = useSelector(state => state.user.userInfo)
     const processList = useSelector(state => state.listProject.processList)
     const [currentProcess, setCurrentProcess] = useState(null)
+    const sprintInfo = useSelector(state => state.listProject.sprintInfo)
+    const [valueProcess, setValueProcess] = useState('')
     //su dung cho debounce search
     const search = useRef(null)
+    const navigate = useNavigate()
 
     const [open, setOpen] = useState(false);
-
+    const [openAddProcess, setOpenAddProcess] = useState(false)
     const showModal = () => {
         setOpen(true);
     };
@@ -43,6 +51,7 @@ export default function Dashboard() {
 
     useEffect(() => {
         dispatch(GetProcessListAction(id))
+        dispatch(GetSprintAction(sprintId))
         console.log("chay vo tan a");
     }, [])
 
@@ -107,6 +116,17 @@ export default function Dashboard() {
         return processListOptions
     }
 
+    const calculateTaskRemainingTime = (currentDate, endDate) => {
+        if (endDate !== null) {
+            const diff = endDate.diff(currentDate, 'day', true);
+            const days = Math.floor(diff);
+            const hours = Math.floor((diff - days) * 24);
+
+            return `${days} days ${hours} hours remaining`
+        }
+        return null
+    }
+
     const countEleStatus = (position, type) => {
         if (type === 1) {
             return projectInfo?.issues?.filter(issue => {
@@ -115,49 +135,121 @@ export default function Dashboard() {
         }
         return projectInfo?.issues?.filter(value => value.issueStatus === position).length
     }
+    const handleDragEnd = async (result) => {
+        const source = result.source
+        const dest = result.destination
+        if (dest === null) {
+            return
+        }
+        if (source.droppableId === dest.droppableId) {
 
-    //type là loại được chọn để hiển thị (tất cả vấn đề / các vấn đề thuộc user)
-    const renderIssue = (position, type) => {
-        let listIssues = projectInfo?.issues
-        if (type === 1) {
-            listIssues = listIssues?.filter(issue => {
-                return (issue.assignees.findIndex(value => value._id === userInfo.id) !== -1) || (issue.creator._id === userInfo.id)
+        } else {
+            const getSourceTypeIndex = processList.findIndex(process => process._id === source.droppableId)
+            const getIssue = sprintInfo.issue_list.filter(issue => issue.issue_type === processList[getSourceTypeIndex]._id)[source.index]
+            const getDestTypeIndex = processList.findIndex(process => process._id === dest.droppableId)
+            dispatch({
+                type: DISPLAY_LOADING
+            })
+            dispatch(updateInfoIssue(getIssue._id, id, { issue_type: dest.droppableId }, processList[getSourceTypeIndex].name_process, processList[getDestTypeIndex].name_process, userInfo.id, "updated", "type"))
+            await delay(1000)
+
+            dispatch(GetSprintAction(sprintId))
+            dispatch({
+                type: HIDE_LOADING
             })
         }
-        return listIssues?.filter(issue => {
-            return issue.issueStatus === position
-        })
-            .sort((issue1, issue2) => issue1.priority - issue2.priority)
-            .map((value, index) => {
-                return (<li key={value._id} className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }} onClick={() => {
-                    dispatch(getInfoIssue(value._id))
-                }} onKeyDown={() => { }}>
-                    <p>
-                        {value.shortSummary}
-                    </p>
-                    <div className="block" style={{ display: 'flex' }}>
-                        <div className="block-left">
-                            {iTagForIssueTypes(value.issueType)}
-                            {iTagForPriorities(value.priority)}
-                        </div>
-                        <div className="block-right" style={{ display: 'flex', alignItems: 'center' }}>
-                            <div className="avatar-group">
-                                {/* them avatar cua cac assignees */}
-                                {
-                                    value?.assignees?.map((user, index) => {
-                                        if (index === 3) {
-                                            return <Avatar key={value._id} size={40}>...</Avatar>
-                                        } else if (index <= 2) {
-                                            return <Avatar size={30} key={value._id} src={user.avatar} />
+    }
+
+    //type là loại được chọn để hiển thị (tất cả vấn đề / các vấn đề thuộc user)
+    const renderIssue = (processId) => {
+        // let listIssues = projectInfo?.issues
+        // if (type === 1) {
+        //     listIssues = listIssues?.filter(issue => {
+        //         return (issue.assignees.findIndex(value => value._id === userInfo.id) !== -1) || (issue.creator._id === userInfo.id)
+        //     })
+        // }
+
+        if (sprintInfo === null) return <></>
+        const listIssues = sprintInfo?.issue_list
+        return listIssues?.filter((issue, index) => processId === issue.issue_type).map((issue, index) => {
+            return <Draggable draggableId={issue._id} index={index} key={issue._id}>
+                {(provided) => {
+                    return <li
+                        key={issue._id}
+                        className="list-group-item"
+                        data-toggle="modal"
+                        data-target="#infoModal"
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        onClick={() => {
+                            dispatch(getInfoIssue(issue._id))
+                        }} onKeyDown={() => { }}>
+                        <div style={{ cursor: 'pointer' }}>
+                            <p>
+                                {issue.summary}
+                            </p>
+                            <div className="block" style={{ display: 'flex' }}>
+                                <div className="block-left">
+                                    {iTagForIssueTypes(issue.issue_status)}
+                                    {iTagForPriorities(issue.issue_priority)}
+                                </div>
+                                <div className="block-right" style={{ display: 'flex', alignItems: 'center' }}>
+                                    <div className="avatar-group">
+                                        {/* them avatar cua cac assignees */}
+                                        {
+                                            issue?.assignees?.map((user, index) => {
+                                                if (index === 3) {
+                                                    return <Avatar key={issue._id} size={40}>...</Avatar>
+                                                } else if (index <= 2) {
+                                                    return <Avatar size={30} key={issue._id} src={user.avatar} />
+                                                }
+                                                return null
+                                            })
                                         }
-                                        return null
-                                    })
-                                }
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </li>)
-            })
+
+                    </li>
+                }}
+            </Draggable>
+        })
+        // return listIssues?.filter(issue => {
+        //     return issue.issueStatus === position
+        // })
+        //     .sort((issue1, issue2) => issue1.priority - issue2.priority)
+        //     .map((value, index) => {
+        //         return (<li key={value._id} className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }} onClick={() => {
+        //             dispatch(getInfoIssue(value._id))
+        //         }} onKeyDown={() => { }}>
+        //             <p>
+        //                 {value.shortSummary}
+        //             </p>
+        //             <div className="block" style={{ display: 'flex' }}>
+        //                 <div className="block-left">
+        //                     {iTagForIssueTypes(value.issueType)}
+        //                     {iTagForPriorities(value.priority)}
+        //                 </div>
+        //                 <div className="block-right" style={{ display: 'flex', alignItems: 'center' }}>
+        //                     <div className="avatar-group">
+        //                         {/* them avatar cua cac assignees */}
+        //                         {
+        //                             value?.assignees?.map((user, index) => {
+        //                                 if (index === 3) {
+        //                                     return <Avatar key={value._id} size={40}>...</Avatar>
+        //                                 } else if (index <= 2) {
+        //                                     return <Avatar size={30} key={value._id} src={user.avatar} />
+        //                                 }
+        //                                 return null
+        //                             })
+        //                         }
+        //                     </div>
+        //                 </div>
+        //             </div>
+        //         </li>)
+        //     })
     }
 
     const renderMembersAndFeatureAdd = () => {
@@ -202,32 +294,48 @@ export default function Dashboard() {
     //     setListProcesses(newListProcesses);
     // }
     return (
-        <>
+        <div style={{ margin: '0 20px' }}>
             <DrawerHOC />
             <div className="header">
-                <nav aria-label="breadcrumb">
-                    <ol className="breadcrumb" style={{ backgroundColor: 'white' }}>
-                        <li className="breadcrumb-item">Project</li>
-                        <li className="breadcrumb-item active" aria-current="page">
-                            Dashboard
-                        </li>
-                    </ol>
-                </nav>
+                <Breadcrumb
+                    style={{ marginBottom: 10 }}
+                    items={[
+                        {
+                            title: <a href="">Projects</a>,
+                        },
+                        {
+                            title: <a href="/workflow" onClick={() => {
+                                //proceed store backlog in localstorage
+                                const processListCopy = [...processList]
+                                localStorage.setItem('nodes', JSON.stringify(processListCopy))
+                                localStorage.setItem('edges', JSON.stringify([{ id: `e0-${processListCopy[0]._id}`, source: '0', target: processListCopy[0]._id, label: 'Created' }]))
+                            }}>Hidden</a>,
+                        }
+                    ]}
+                />
             </div>
             <div className='title'>
-                <h3>Dashboard</h3>
-                <NavLink to="https://github.com/longle11/NT114.O21.MMCL-DACN-MICROSERVICE" target="_blank" style={{ textDecoration: 'none' }}>
-                    <button className="btn btn-light btn-git">
-                        <i className="fab fa-github mr-2"></i>
-                        <div>Github Repo</div>
-                    </button>
-                </NavLink>
+                <h4>{Object?.keys(sprintInfo).length === 0 ? "Dashboard" : sprintInfo.sprint_name}</h4>
+                <div className='d-flex'>
+                    <button className='btn btn-transparent m-0 mr-2' style={{ fontSize: '12px' }}>{projectInfo.marked === true ? <i className="fa-solid fa-star" style={{ color: '#ff8b00' }}></i> : <i className="fa-regular fa-star"></i>}</button>
+                    <Button className='m-0 mr-2' type='primary'><i className="fa fa-clock mr-2"></i>{sprintInfo !== null ? calculateTaskRemainingTime(dayjs(new Date()), dayjs(sprintInfo.end_date)) : "hehe"}</Button>
+                    <Button className='m-0 mr-2' type='primary'>Complete Sprint</Button>
+                    <NavLink to="https://github.com/longle11/NT114.O21.MMCL-DACN-MICROSERVICE" target="_blank" style={{ textDecoration: 'none' }}>
+                        <Button className='m-0 mr-2' type='primary'>
+                            <i className="fab fa-github mr-2"></i>
+                            <div>Github Repo</div>
+                        </Button>
+                    </NavLink>
+                    <Button className='m-0 mr-2' type='primary'><i className="fa fa-share"></i></Button>
+                    <Button className='m-0 mr-2' type='primary'><i className="fa fa-bars"></i></Button>
+                </div>
             </div>
+            <p>{Object?.keys(sprintInfo).length === 0 ? "" : sprintInfo.sprint_goal}</p>
             <div className="info" style={{ display: 'flex' }}>
                 <div className="search-block">
                     <Search
-                        placeholder="input search text"
-                        style={{ width: 300 }}
+                        placeholder="Search"
+                        style={{ width: 200 }}
                         onSearch={value => {
                             dispatch(GetProjectAction(projectInfo?._id, value))
                         }}
@@ -245,39 +353,79 @@ export default function Dashboard() {
                         </Avatar>
                     </Popover>
                 </div>
-                <Button type="primary" onClick={() => {
-                    setType(0)
-                }} className=' ml-2 mr-3'>All issues</Button>
-                <Button onClick={() => {
-                    setType(1)
-                }}>Only my issues</Button>
-                <Button onClick={() => {
-                    // addNewProcess()
-                }}>Add process {processList.length}</Button>
+                
+                
             </div>
             <div className="content" style={{ overflowX: 'scroll', width: '100%', display: '-webkit-box', padding: '15px 20px', scrollbarWidth: 'none', backgroundColor: 'white' }}>
-                {processList?.map(process => (<div className="card" style={{ width: '18rem', height: '25rem', fontWeight: 'bold', scrollbarWidth: 'none' }}>
-                    <div className='d-flex justify-content-between align-items-center' style={{ backgroundColor: process.tag_color, color: 'white', padding: '3px 10px' }}>
-                        <div className="card-header">
-                            {process.name_process} {countEleStatus(0, type)}
-                        </div>
-                        <div className='dropdown'>
-                            <button style={{ height: '30px' }} className='btn btn-light p-0 pl-3 pr-3' type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i className="fa-sharp fa-solid fa-bars"></i>
-                            </button>
-                            <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                <button className="dropdown-item">Set column limit</button>
-                                <button className="dropdown-item" onClick={() => {
-                                    setCurrentProcess(process)
-                                    showModal()
-                                }}>Delete</button>
+                <DragDropContext onDragEnd={(result) => {
+                    handleDragEnd(result)
+                }}>
+                    {processList?.map((process, index) => (<div className="card" style={{ width: '16rem', height: '28rem', fontWeight: 'bold', scrollbarWidth: 'none' }}>
+                        <div className='d-flex justify-content-between align-items-center' style={{ backgroundColor: process.tag_color, color: 'white', padding: '3px 10px' }}>
+                            <div className="card-header d-flex align-items-center" style={{ color: 'black' }}>
+                                {process?.name_process} <Avatar className='ml-2' size={25}><span style={{fontSize: 12, display: 'flex'}}>{sprintInfo !== null ? sprintInfo?.issue_list?.filter(issue => issue.issue_type === process._id).length : 0}</span></Avatar>
+                                {/* {countEleStatus(0, type)} */}
+                            </div>
+                            <div className='dropdown'>
+                                <button style={{ height: '30px' }} className='btn btn-light p-0 pl-3 pr-3' type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i className="fa-sharp fa-solid fa-bars"></i>
+                                </button>
+                                <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                    <button className="dropdown-item">Set column limit</button>
+                                    <button className="dropdown-item" onClick={() => {
+                                        setCurrentProcess(process)
+                                        showModal()
+                                    }}>Delete</button>
+                                </div>
                             </div>
                         </div>
+                        <div style={{ height: '100%', overflowY: 'auto', scrollbarWidth: 'none' }}>
+                            <Droppable droppableId={process._id}>
+                                {(provided) => {
+                                    return <ul className="list-group list-group-flush" style={{ height: '100%' }} ref={provided.innerRef} {...provided.droppableProps}>
+                                        {index === 0 && sprintInfo !== null && sprintInfo?.issue_list?.length === 0 ? <div className='d-flex flex-column align-items-center ml-2 mr-2'>
+                                            <img src="https://jira-frontend-bifrost.prod-east.frontend.public.atl-paas.net/assets/agile.52407441.svg" style={{ height: 150, width: 150 }} alt="img-backlog" />
+                                            <p style={{ fontWeight: 'bold', marginBottom: 5 }}>Get started in the backlog</p>
+                                            <span style={{ fontWeight: 'normal', textAlign: 'center' }}>Plan and start a sprint to see issues here.</span>
+                                            <Button className='mt-2' danger onClick={() => {
+                                                navigate(`/projectDetail/${id}/backlog`)
+                                            }}>Go to Backlog</Button>
+                                        </div> : renderIssue(process._id)}
+                                        {provided.placeholder}
+                                    </ul>
+                                }}
+                            </Droppable>
+                        </div>
+                    </div>))}
+                </DragDropContext>
+                <div className='add-process'>
+                    <Button style={{ display: !openAddProcess ? "block" : "none" }} onClick={() => {
+                        setOpenAddProcess(true)
+                    }} type="primary"><i className="fa fa-plus"></i></Button>
+                    <div style={{ display: openAddProcess ? "block" : "none" }}>
+                        <Input defaultValue='' value={valueProcess} style={{ width: '100%' }} onChange={(e) => {
+                            setValueProcess(e.target.value)
+                        }} />
+                        <div className='d-flex justify-content-end'>
+                            <Button onClick={() => {
+                                if (valueProcess.trim() !== "") {
+                                    dispatch(CreateProcessACtion({
+                                        project_id: id,
+                                        name_process: valueProcess.toUpperCase()
+                                    }))
+                                    setOpenAddProcess(false)
+                                    setValueProcess('')
+                                } else {
+                                    showNotificationWithIcon('error', '', 'Created failed, please entering again')
+                                }
+                            }} type="primary"><i class="fa fa-check"></i></Button>
+                            <Button onClick={() => {
+                                setOpenAddProcess(false)
+                                setValueProcess('')
+                            }}><i className="fa-solid fa-xmark"></i></Button>
+                        </div>
                     </div>
-                    <ul className="list-group list-group-flush">
-                        {renderIssue(0, type)}
-                    </ul>
-                </div>))}
+                </div>
             </div>
             <Modal
                 open={open}
@@ -306,6 +454,6 @@ export default function Dashboard() {
                     </div>
                 </div>
             </Modal>
-        </>
+        </div>
     )
 }

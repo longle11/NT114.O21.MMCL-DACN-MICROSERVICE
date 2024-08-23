@@ -3,7 +3,6 @@ const currentUserMiddleware = require("../Middlewares/currentUser-Middleware")
 const issueModel = require('../models/issueModel')
 const BadRequestError = require("../Errors/Bad-Request-Error")
 const userModel = require("../models/userModel")
-const issueProcessModel = require("../models/issueProcessModel")
 const router = express.Router()
 
 router.get("/:issueId", currentUserMiddleware, async (req, res, next) => {
@@ -30,6 +29,8 @@ router.get("/:issueId", currentUserMiddleware, async (req, res, next) => {
                 .populate({
                     path: 'issue_type'
                 })
+            console.log("isue lay ra ", issue);
+            
             return res.status(200).json({
                 message: "Successfully retrieve the issue",
                 data: issue
@@ -67,6 +68,9 @@ router.get("/backlog/:projectId", async (req, res) => {
             .populate({
                 path: 'issue_type',
                 select: '-__v'
+            })
+            .populate({
+                path: 'current_sprint'
             })
         if (getAllIssuesInProject.length !== 0) {
             return res.status(200).json({

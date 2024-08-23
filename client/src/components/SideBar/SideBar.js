@@ -50,6 +50,12 @@ const SideBar = () => {
         else if (key === 'sub15') {
             return navigate(`${absolutePath}/list`)
         }
+        else if (key === 'sub16') {
+            return navigate(`${absolutePath}/issues/issue-detail`)
+        }
+        else if (key === 'sub17') {
+            return navigate(`${absolutePath}/workflows`)
+        }
         else if (key === 'sub2') {
             return navigate(`${absolutePath}/reports`)
         }
@@ -74,6 +80,8 @@ const SideBar = () => {
                 getItem('Active sprints', 'sub13'),
                 getItem('Reports', 'sub14'),
                 getItem('List', 'sub15'),
+                getItem('Issues', 'sub16'),
+                getItem('Workflows', 'sub17'),
             ]),
             getItem('Issues', 'sub2', <i className="fa-solid fa-circle-exclamation"></i>),
             getItem('Components', 'sub3')

@@ -58,7 +58,6 @@ export const getInfoIssue = (id) => {
         try {
             const res = await Axios.get(`${domainName}/api/issue/${id}`)
             console.log("res in getInfoIssue ", res);
-            
             dispatch({
                 type: GET_INFO_ISSUE,
                 issueInfo: res.data.data
@@ -90,8 +89,6 @@ export const updateInfoIssue = (issueId, projectId, props, old_status, new_statu
     return async dispatch => {
         try {
             const res = await Axios.put(`${domainName}/api/issue/update/${issueId}`, props)
-            console.log("res trong update info ", res);
-            
             // //tien hanh tao history cho issue
             dispatch(createIssueHistory({
                 issue_id: res.data.data._id.toString(),
@@ -103,7 +100,6 @@ export const updateInfoIssue = (issueId, projectId, props, old_status, new_statu
             }))
 
             const backlogList = await Axios.get(`${domainName}/api/issue/backlog/${projectId}`)
-            console.log("backlogList", backlogList);
             
             dispatch({
                 type: GET_ISSUES_BACKLOG,
@@ -117,8 +113,6 @@ export const updateInfoIssue = (issueId, projectId, props, old_status, new_statu
             dispatch(GetProjectAction(projectId, ""))
 
             showNotificationWithIcon("success", "Cập nhật", "Successfully updated issue")
-
-
         } catch (error) {
             console.log(error);
             

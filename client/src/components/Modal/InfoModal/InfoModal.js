@@ -1,4 +1,4 @@
-import { Avatar, Button, DatePicker, Input, InputNumber, Popconfirm, Select } from 'antd';
+import { Avatar, Button, DatePicker, Input, InputNumber, Popconfirm, Progress, Select } from 'antd';
 import React, { useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { Editor } from '@tinymce/tinymce-react';
@@ -610,7 +610,7 @@ export default function InfoModal() {
                                         value={issueInfo?.issue_type?._id.toString()}
                                     />
                                 </div>
-                                <div className="assignees">
+                                <div className="assignees mt-3">
                                     <h6>ASSIGNEES</h6>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)' }}>
                                         {issueInfo?.assignees?.map((value, index) => {
@@ -750,7 +750,8 @@ export default function InfoModal() {
 
                                         // }, 3000)
                                     }} disabled={issueInfo?.creator._id !== userInfo?.id}
-                                        defaultValue={convertMinuteToFormat(issueInfo?.timeOriginalEstimate)}
+                                        value={convertMinuteToFormat(issueInfo?.timeOriginalEstimate)}
+                                        defaultValue=""
                                         onBlur={(e) => {
                                             if (validateOriginalTime(e.target.value)) {
                                                 const oldValue = calculateTimeAfterSplitted(issueInfo.timeOriginalEstimate ? issueInfo.timeOriginalEstimate : 0)
@@ -766,22 +767,17 @@ export default function InfoModal() {
                                 </div>
                                 <div className="time-tracking" style={{ cursor: 'pointer' }}>
                                     <h6>TIME TRACKING</h6>
-                                    <div style={{ display: 'flex' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center' }}>
                                         <i className="fa fa-clock" />
                                         <div style={{ width: '100%' }}>
-                                            <div className="progress" onKeyDown={() => { }} onClick={() => {
-                                                setTimeTable(true);
-                                            }}>
-                                                <progress
-                                                    className="progress-bar"
-                                                    style={{ width: calculateProgress() + '%' }}
-                                                />
-                                            </div>
+                                            <Progress onClick={() => {
+                                                setTimeTable(true)
+                                            }} percent={Math.floor(calculateProgress())} size="small" status="active" />
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <p className="logged">{issueInfo?.timeSpent === 0 ? '0h' : convertMinuteToFormat(issueInfo?.timeSpent)} logged</p>
-                                                <p className="estimate-time">
-                                                    {issueInfo?.timeOriginalEstimate !== 0 && issueInfo?.timeSpent !== 0 ? (issueInfo?.timeOriginalEstimate - issueInfo?.timeSpent === 0 ? '0h' : convertMinuteToFormat(issueInfo?.timeOriginalEstimate - issueInfo?.timeSpent)) : '0h'} estimated
-                                                </p>
+                                                <span className="logged">{issueInfo?.timeSpent === 0 ? '0h' : convertMinuteToFormat(issueInfo?.timeSpent)} logged</span>
+                                                <span className="estimate-time">
+                                                    {issueInfo?.timeOriginalEstimate !== 0 && issueInfo?.timeSpent !== 0 ? (issueInfo?.timeOriginalEstimate - issueInfo?.timeSpent === 0 ? '0h' : convertMinuteToFormat(issueInfo?.timeOriginalEstimate - issueInfo?.timeSpent)) : '0h'} remaining
+                                                </span>
                                             </div>
 
                                             {issueInfo?.creator._id === userInfo?.id && timeTable === true ? (

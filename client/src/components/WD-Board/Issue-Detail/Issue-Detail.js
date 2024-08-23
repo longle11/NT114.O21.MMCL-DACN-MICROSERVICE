@@ -1,23 +1,32 @@
-import { Avatar, Button, DatePicker, Input, InputNumber, Popconfirm, Select } from 'antd';
-import React, { useRef, useState } from 'react'
+import { Avatar, Breadcrumb, Button, Checkbox, Col, DatePicker, Input, InputNumber, Modal, Popconfirm, Progress, Row, Select, Tag } from 'antd';
+import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { Editor } from '@tinymce/tinymce-react';
 import Parser from 'html-react-parser';
 import { Option } from 'antd/es/mentions';
-import { createWorklogHistory, deleteAssignee, deleteIssue, getIssueHistoriesList, getWorklogHistoriesList, updateInfoIssue } from '../../../redux/actions/IssueAction';
+import { createWorklogHistory, deleteAssignee, getIssueHistoriesList, getIssuesBacklog, getWorklogHistoriesList, updateInfoIssue } from '../../../redux/actions/IssueAction';
 import { createCommentAction } from '../../../redux/actions/CommentAction';
 import { showNotificationWithIcon } from '../../../util/NotificationUtil';
-import { GetProjectAction } from '../../../redux/actions/ListProjectAction';
+import { GetProcessListAction } from '../../../redux/actions/ListProjectAction';
 import { priorityTypeOptions, issueTypeOptions, iTagForPriorities, iTagForIssueTypes } from '../../../util/CommonFeatures';
-import { updateEpic } from '../../../redux/actions/CategoryAction';
+import { getEpicList, updateEpic } from '../../../redux/actions/CategoryAction';
+import { useParams } from 'react-router-dom';
+import { UserOutlined } from '@ant-design/icons';
+import Search from 'antd/es/input/Search';
+import './Issue-Detail.css'
 const { DateTime } = require('luxon');
 export default function IssueDetail() {
-    const issueInfo = useSelector(state => state.issue.issueInfo)
     const projectInfo = useSelector(state => state.listProject.projectInfo)
     const processList = useSelector(state => state.listProject.processList)
     const userInfo = useSelector(state => state.user.userInfo)
     const historyList = useSelector(state => state.issue.historyList)
     const worklogList = useSelector(state => state.issue.worklogList)
+    const [issueInfo, setIssueInfo] = useState({})
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [openDatePicker, setOpenDatePicker] = useState(false)
+    const epicList = useSelector(state => state.categories.epicList)
+    const issuesBacklog = useSelector(state => state.issue.issuesBacklog)
+    const { id } = useParams()
     const regexs = [
         /^(\d+)w([1-6])d([1-9]|1\d|2[0-4])h([1-9]|[1-5]\d|)m$/, //_w_d_h_m
         /^(\d+)d([1-9]|1\d|2[0-4])h([1-9]|[1-5]\d|)m$/,  //_d_h_m
@@ -35,10 +44,27 @@ export default function IssueDetail() {
         /^(\d+)h$/, //h 
         /^(\d+)m$/, //m
     ]
-    const [timeTable, setTimeTable] = useState(false)
-    const [openDatePicker, setOpenDatePicker] = useState(false)
-    const [trackingTime, setTrackingTime] = useState(0)
-    const epicList = useSelector(state => state.categories.epicList)
+    const handleOk = () => {
+        setIsModalOpen(false);
+        dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id.toString(), { timeSpent: formData.timeSpent }, issueInfo.timeSpent, formData.timeSpent, issueInfo.id, "updated", "time spent"))
+        dispatch(createWorklogHistory({
+            issue_id: issueInfo._id.toString(),
+            creator: userInfo.id,
+            working_date: formData.dateWorking,
+            description: formData.description,
+            timeSpent: convertMinuteToFormat(formData.timeSpent)
+        }))
+    };
+    const handleCancel = () => {
+        setIsModalOpen(false);
+    };
+
+
+    useEffect(() => {
+        dispatch(getIssuesBacklog(id))
+        dispatch(GetProcessListAction(id))
+        dispatch(getEpicList(id))
+    }, [])
 
     const [buttonActive, setButtonActive] = useState(1)
     const [editDescription, setEditDescription] = useState(true)
@@ -84,13 +110,9 @@ export default function IssueDetail() {
         })
     }
     const getCurrentEpic = () => {
-        console.log("heheh ", issueInfo);
-
         if (issueInfo?.epic_link === null) {
             return null
         }
-        console.log("index tra ve ", epicList?.map(epic => epic._id.toString() === issueInfo?.epic_link?._id.toString()));
-
         return epicList?.findIndex(epic => epic._id.toString() === issueInfo?.epic_link?._id.toString())
     }
 
@@ -130,7 +152,7 @@ export default function IssueDetail() {
     }
 
     const renderContentModal = () => {
-        if (issueInfo?.description !== null && issueInfo?.description.trim() !== '') {
+        if (issueInfo?.description !== null && issueInfo?.description?.trim() !== '') {
             return Parser(`${issueInfo?.description}`)
         }
 
@@ -307,6 +329,31 @@ export default function IssueDetail() {
         return timeAfterConverting
     }
 
+    const renderAllIssuesInProject = () => {
+        if (Object.keys(issueInfo).length === 0) {
+            if (issuesBacklog && issuesBacklog?.length !== 0) {
+                setIssueInfo(issuesBacklog[0])
+            }
+        }
+        const getAllIssues = issuesBacklog?.map((issue, index) => {
+            return <li onClick={() => {
+                setIssueInfo(issue)
+            }} className={`list-group-item`} key={issue._id.toString()} style={{ backgroundColor: issueInfo?._id === issue._id ? '#E9F2FF' : '#ffff  ' }}>
+                <p>{issue.summary}</p>
+                <div className='d-flex justify-content-between align-items-center'>
+                    <div className='d-flex align-items-center'>
+                        {iTagForIssueTypes(issue.issue_status)}
+                        {iTagForPriorities(issue.issue_priority)}
+                    </div>
+                    <Avatar icon={<UserOutlined />} />
+                </div>
+            </li>
+        })
+        return <ul className="list-group">
+            {getAllIssues}
+        </ul>
+    }
+
     const calculateProgress = () => {
         if (issueInfo?.timeSpent !== 0 && issueInfo?.timeOriginalEstimate !== 0) {
 
@@ -449,7 +496,7 @@ export default function IssueDetail() {
                 <h6>Comment</h6>
 
                 {/* Kiểm tra xem nếu người đó thuộc về issue thì mới có thể đăng bình luận */}
-                {issueInfo?.creator?._id === userInfo?.id || issueInfo?.assignees.findIndex(value => value._id === userInfo?.id) !== -1 ? (
+                {issueInfo?.creator?._id === userInfo?.id || issueInfo?.assignees?.findIndex(value => value._id === userInfo?.id) !== -1 ? (
                     <div className="block-comment" style={{ display: 'flex', flexDirection: 'column' }}>
                         <div className="input-comment d-flex">
                             <div className="avatar">
@@ -498,52 +545,126 @@ export default function IssueDetail() {
     }
 
 
-    return <div role="dialog" className="modal fade" id="infoModal" tabIndex={-1} aria-labelledby="infoModal" aria-hidden="true">
-        <div className="modal-dialog modal-info">
-            <div className="modal-content">
-                <div className="modal-header align-items-center">
-                    <div className="task-title">
-                        <Select
-                            placeholder={issueTypeOptions[issueInfo?.issue_status]?.label}
-                            defaultValue={issueTypeOptions[issueInfo?.issue_status]?.value}
-                            style={{ width: '100%' }}
-                            options={issueTypeOptions}
-                            disabled={issueInfo?.creator?._id !== userInfo?.id}
-                            onSelect={(value, option) => {
-
-                                dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id.toString(), { issue_status: value }, `${issueInfo.issue_status}`, `${value}`, userInfo.id, 'updated', 'status'))
-                            }}
-                            name="issue_status"
-                        />
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center' }} className="task-click">
+    return (
+        <div style={{ overflow: 'none', margin: '0 20px' }}>
+            <div className='issue-info-header'>
+                <Breadcrumb
+                    style={{ marginBottom: 10 }}
+                    items={[
                         {
-                            issueInfo?.creator?._id.toString() === userInfo?.id ? (
-                                <div>
-                                    <Popconfirm placement="topLeft"
-                                        title="Delete this issue?"
-                                        description="Are you sure to delete this issue from project?"
-                                        onConfirm={() => {
-                                            //dispatch su kien xoa nguoi dung khoi du an
-                                            dispatch(deleteIssue(issueInfo?._id))
-
-                                            //dispatch lại sự kiện load lại project
-                                            dispatch(GetProjectAction(issueInfo?.project_id, ""))
-                                        }} okText="Yes" cancelText="No">
-                                        <i className="fa fa-trash-alt" style={{ cursor: 'pointer' }} />
-                                    </Popconfirm>
-                                </div>
-                            ) : <></>
+                            title: <a href="">Projects</a>,
+                        },
+                        {
+                            title: <a href="">Hidden</a>,
                         }
-                        <button type="button" className="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">×</span>
-                        </button>
+                    ]}
+                />
+                <h4>Issues</h4>
+                <div className='d-flex align-items-center'>
+                    <Search
+                        className='issue-search'
+                        placeholder="Search issues"
+                        style={{
+                            width: 200
+                        }}
+                    />
+                    <div className='issue-options d-flex'>
+                        <div className='dropdown'>
+                            <Button type='primary' className='mr-2 ml-2 btn-options' id="btn-option1 dropdownTypeMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Type <i className="fa fa-angle-down ml-2" style={{ fontSize: 13, fontWeight: 'bold' }}></i>
+                            </Button>
+                            <div className="dropdown-menu" aria-labelledby="dropdownTypeMenu" style={{width: 'max-content', padding: '10px'}}>
+                                <p style={{fontSize: 13, marginBottom: 5}}>STANDARD ISSUE TYPES</p>
+                                <Checkbox.Group className='mb-3'>
+                                    <Row>
+                                        <Col span="16">
+                                            <Checkbox value="0">{iTagForIssueTypes(0)}</Checkbox>
+                                        </Col>
+                                        <Col span="16">
+                                            <Checkbox value="1">{iTagForIssueTypes(1)}</Checkbox>
+                                        </Col>
+                                        <Col span="16">
+                                            <Checkbox value="2">{iTagForIssueTypes(2)}</Checkbox>
+                                        </Col>
+                                    </Row>
+                                </Checkbox.Group>
+                                <p style={{fontSize: 13, marginBottom: 5}}>SUB-TASK ISSUE TYPE</p>
+                                <Checkbox value="3">Sub task</Checkbox>
+                            </div>
+                        </div>
+
+                        <div className='dropdown'>
+                            <Button type='primary' className='mr-2 btn-options' id="btn-option2 dropdownStatusMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Status <i className="fa fa-angle-down ml-2" style={{ fontSize: 13, fontWeight: 'bold' }}></i>
+                            </Button>
+                            <div className="dropdown-menu" aria-labelledby="dropdownStatusMenu">
+                                <Checkbox.Group style={{ width: '100%', margin: '10px' }}>
+                                    <Row>
+                                        {processList.map((process) => {
+                                            return <Col span="16">
+                                                <Checkbox value={process._id}><Tag color={process.tag_color}>{process.name_process}</Tag></Checkbox>
+                                            </Col>
+                                        })}
+                                    </Row>
+                                </Checkbox.Group>
+                            </div>
+                        </div>
+                        <div className='dropdown'>
+                            <Button type='primary' className='mr-2 btn-options' id="btn-option3 dropdownAssigneeMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Assignee <i className="fa fa-angle-down ml-2" style={{ fontSize: 13, fontWeight: 'bold' }}></i>
+                            </Button>
+                            <div className="dropdown-menu" aria-labelledby="dropdownAssigneeMenu">
+
+                            </div>
+                        </div>
+                        <div className='dropdown'>
+                            <Button type='primary' className='mr-2 btn-options' id="btn-option4 dropdownMoreMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                More <i className="fa fa-angle-down ml-2" style={{ fontSize: 13, fontWeight: 'bold' }}></i>
+                            </Button>
+                            <div className="dropdown-menu" aria-labelledby="dropdownMoreMenu">
+
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <Button type='primary' className='mr-2 btn-options'>Clear option filter </Button>
+                        <Button type='primary' className='mr-2 btn-options'>Save option filter </Button>
                     </div>
                 </div>
-                <div className="modal-body">
-                    <div className="container-fluid">
-                        <div className="row">
-                            <div className="col-8">
+            </div>
+            <div className="issue-info-body" style={{ width: '100%', padding: '5px 10px' }}>
+                <div className='row'>
+                    <div className='issue-info-left col-2' style={{ border: '1px solid #dddd', padding: 0, borderRadius: '5px', height: 'fit-content', maxHeight: 600, scrollbarWidth: 'none', overflowY: 'auto', backgroundColor: '#091e420f' }}>
+                        <div className='d-flex justify-content-between'>
+                            <button className='btn btn-transparent'>Created <i className="fa-solid fa-caret-down ml-2"></i></button>
+                            <div>
+                                <button className='btn btn-transparent' style={{ fontSize: 13 }}><i className="fa-solid fa-sort"></i></button>
+                                <button className='btn btn-transparent' onClick={() => {
+                                    dispatch(getIssuesBacklog(id))
+                                }}><i className="fa-solid fa-arrows-rotate" style={{ fontSize: 13 }}></i></button>
+                            </div>
+                        </div>
+                        <div>
+                            {renderAllIssuesInProject()}
+                        </div>
+                        <div style={{ padding: '8px', display: 'flex', justifyContent: 'center' }}>{issuesBacklog?.length === 0 ? "0 of 0" : `1 - ${issuesBacklog?.length} of ${issuesBacklog?.length}`}</div>
+                    </div>
+                    {(issueInfo !== null || issueInfo !== undefined) && Object.keys(issueInfo).length === 0 ? <div className='col-10'>No issues</div> : <div className='col-10 row'>
+                        <div className='issue-info-middle col-8'>
+                            <div className="task-title">
+                                <Select
+                                    placeholder={issueTypeOptions[issueInfo?.issue_status]?.label}
+                                    defaultValue={issueTypeOptions[issueInfo?.issue_status]?.value}
+                                    style={{ width: '20%' }}
+                                    options={issueTypeOptions}
+                                    disabled={issueInfo?.creator?._id !== userInfo?.id}
+                                    onSelect={(value, option) => {
+                                        dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id.toString(), { issue_status: value }, `${issueInfo.issue_status}`, `${value}`, userInfo.id, 'updated', 'status'))
+                                    }}
+                                    name="issue_status"
+                                />
+                            </div>
+                            <div className='mt-2'>
                                 <p className="issue_summary" style={{ fontSize: '24px', fontWeight: 'bold' }}>{issueInfo?.summary}</p>
                                 <div className="description">
                                     <p style={{ fontWeight: 'bold', fontSize: '15px' }}>Description</p>
@@ -585,7 +706,7 @@ export default function IssueDetail() {
                                     )}
                                 </div>
                                 <div className='activities'>
-                                    <h4>Activity</h4>
+                                    <h5>Activity</h5>
                                     <div>
                                         <span>Show:</span>
                                         <button className='btn btn-light ml-3 mr-2' onClick={() => { setButtonActive(0) }} style={{ padding: '0 10px', fontSize: '14px', fontWeight: '600', backgroundColor: buttonActive === 0 ? "#e9f2ff " : "#091e420f", color: buttonActive === 0 ? '#0c66e4' : "#44546f" }}>All</button>
@@ -596,20 +717,22 @@ export default function IssueDetail() {
                                 </div>
                                 {renderActivities()}
                             </div>
-                            <div className="col-4 p-0">
+                        </div>
+                        <div className="issue-info-right col-4">
+                            <div>
                                 <div className="status">
                                     <h6>TYPE</h6>
                                     <Select
                                         options={renderIssueType()}
                                         style={{ width: '50%' }}
-                                        disabled={issueInfo?.creator._id !== userInfo?.id}
+                                        disabled={issueInfo?.creator?._id !== userInfo?.id}
                                         onChange={(value, props) => {
                                             dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id, { issue_type: value }, issueInfo?.issue_type.name_process, props.label, userInfo.id, "updated", "issue type"))
                                         }}
                                         value={issueInfo?.issue_type?._id.toString()}
                                     />
                                 </div>
-                                <div className="assignees">
+                                <div className="assignees mt-3">
                                     <h6>ASSIGNEES</h6>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)' }}>
                                         {issueInfo?.assignees?.map((value, index) => {
@@ -634,7 +757,7 @@ export default function IssueDetail() {
                                             </div>
                                         })}
                                         {
-                                            issueInfo?.creator._id === userInfo?.id ? (
+                                            issueInfo?.creator?._id === userInfo?.id ? (
                                                 <button onKeyDown={() => { }} className='text-primary mt-2 mb-2 btn bg-transparent' style={{ fontSize: '12px', margin: '0px', cursor: 'pointer', display: addAssignee === false ? 'none' : 'block', padding: 0, textAlign: 'left' }} onClick={() => {
                                                     setAddAssignee(false)
                                                     dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { assignees: '66bb8785c618f818d7c18e71' }, null, "https://ui-avatars.com/api/?name=ltphilong+ltphilong", userInfo.id, "added", "assignees"))
@@ -666,15 +789,15 @@ export default function IssueDetail() {
                                         </div>
                                     ) : <></>}
                                 </div>
-                                <div className="reporter-sprint row">
+                                <div className="reporter-sprint row align-items-center">
                                     <div className='col-6'>
                                         <h6 className='mt-3'>CREATOR</h6>
                                         <div style={{ display: 'flex' }} className="item">
                                             <div className="avatar">
-                                                <Avatar src={issueInfo?.creator.avatar} />
+                                                <Avatar src={issueInfo?.creator?.avatar} />
                                             </div>
                                             <p className="name d-flex align-items-center ml-1 p-0" style={{ fontWeight: 'bold' }}>
-                                                {issueInfo?.creator.username}
+                                                {issueInfo?.creator?.username}
                                             </p>
                                         </div>
                                     </div>
@@ -692,7 +815,7 @@ export default function IssueDetail() {
                                                 //assign issue to new epic
                                                 dispatch(updateInfoIssue(issueInfo?._id.toString(), issueInfo?.project_id.toString(), { epic_link: value }, issueInfo?.epic_link === null ? "None" : issueInfo?.epic_link.epic_name, props.label, userInfo.id, "updated", "epic link"))
                                                 //update new issue in epic
-                                                dispatch(updateEpic(value, {issue_id: issueInfo?._id.toString(), epic_id: issueInfo?.epic_link === null ? "null" : issueInfo?.epic_link._id.toString()}, issueInfo?.project_id.toString()))
+                                                dispatch(updateEpic(value, { issue_id: issueInfo?._id.toString(), epic_id: issueInfo?.epic_link === null ? "null" : issueInfo?.epic_link._id.toString() }, issueInfo?.project_id.toString()))
                                             }}
                                             value={getCurrentEpic() !== null ? renderEpics()[getCurrentEpic()]?.value : "None"}
                                         />
@@ -722,7 +845,7 @@ export default function IssueDetail() {
                                         />
                                     </div>
                                 </div>
-                                <div className="priority" style={{ marginBottom: 20 }}>
+                                <div className="priority" style={{ marginBottom: 20, marginTop: 10 }}>
                                     <h6>PRIORITY</h6>
                                     <Select
                                         style={{ width: '100%' }}
@@ -765,121 +888,106 @@ export default function IssueDetail() {
                                 </div>
                                 <div className="time-tracking" style={{ cursor: 'pointer' }}>
                                     <h6>TIME TRACKING</h6>
-                                    <div style={{ display: 'flex' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center' }}>
                                         <i className="fa fa-clock" />
                                         <div style={{ width: '100%' }}>
-                                            <div className="progress" onKeyDown={() => { }} onClick={() => {
-                                                setTimeTable(true);
-                                            }}>
-                                                <progress
-                                                    className="progress-bar"
-                                                    style={{ width: calculateProgress() + '%' }}
-                                                />
-                                            </div>
+                                            <Progress onClick={() => {
+                                                setIsModalOpen(true)
+                                            }} percent={Math.floor(calculateProgress())} size="small" status="active" />
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <p className="logged">{issueInfo?.timeSpent === 0 ? '0h' : convertMinuteToFormat(issueInfo?.timeSpent)} logged</p>
-                                                <p className="estimate-time">
-                                                    {issueInfo?.timeOriginalEstimate !== 0 && issueInfo?.timeSpent !== 0 ? (issueInfo?.timeOriginalEstimate - issueInfo?.timeSpent === 0 ? '0h' : convertMinuteToFormat(issueInfo?.timeOriginalEstimate - issueInfo?.timeSpent)) : '0h'} estimated
-                                                </p>
+                                                <span className="logged">{issueInfo?.timeSpent === 0 ? '0h' : convertMinuteToFormat(issueInfo?.timeSpent)} logged</span>
+                                                <span className="estimate-time">
+                                                    {issueInfo?.timeOriginalEstimate !== 0 && issueInfo?.timeSpent !== 0 ? (issueInfo?.timeOriginalEstimate - issueInfo?.timeSpent === 0 ? '0h' : convertMinuteToFormat(issueInfo?.timeOriginalEstimate - issueInfo?.timeSpent)) : '0h'} remaining
+                                                </span>
                                             </div>
 
-                                            {issueInfo?.creator._id === userInfo?.id && timeTable === true ? (
-                                                <div>
-                                                    <div className='row'>
-                                                        <div className='col-6 p-0 pr-2'>
-                                                            <label htmlFor='timeSpent'>Time spent</label>
-                                                            <Input name="timeSpent" onBlur={(e) => {
-                                                                //tien hanh so sanh gia tri hien tai voi gia tri original
-                                                                if (validateOriginalTime(e.target.value)) {
-                                                                    const timeOri = issueInfo.timeOriginalEstimate
-                                                                    const timeSpe = calculateTimeAfterSplitted(e.target.value + issueInfo.timeSpent)
+                                            <Modal title="Basic Modal" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
+                                                <p>Original time estimate: {convertMinuteToFormat(issueInfo?.timeOriginalEstimate)}</p>
+                                                <div className='d-flex'>
+                                                    <div className='mr-2'>
+                                                        <label htmlFor='timeSpent'>Time spent</label>
+                                                        <Input name="timeSpent" onBlur={(e) => {
+                                                            //tien hanh so sanh gia tri hien tai voi gia tri original
+                                                            if (validateOriginalTime(e.target.value)) {
+                                                                const timeOri = issueInfo.timeOriginalEstimate
+                                                                const timeSpe = calculateTimeAfterSplitted(e.target.value + issueInfo.timeSpent)
 
-                                                                    if (compareTimeSpentWithTimeOriginal(e.target.value)) {
-                                                                        const getTimeRemaining = timeOri - timeSpe
+                                                                if (compareTimeSpentWithTimeOriginal(e.target.value)) {
+                                                                    const getTimeRemaining = timeOri - timeSpe
 
-                                                                        setFormData({
-                                                                            ...formData,
-                                                                            timeSpent: timeSpe,
-                                                                            timeRemaining: getTimeRemaining
-                                                                        })
-                                                                        showNotificationWithIcon('success', '', 'hop le nhe')
-                                                                    } else {
-                                                                        showNotificationWithIcon('error', '', 'Time spent phai nho hon time original')
-                                                                        setFormData({
-                                                                            ...formData,
-                                                                            timeSpent: 0,
-                                                                            timeRemaining: 0
-                                                                        })
-                                                                    }
+                                                                    setFormData({
+                                                                        ...formData,
+                                                                        timeSpent: timeSpe,
+                                                                        timeRemaining: getTimeRemaining
+                                                                    })
+                                                                    showNotificationWithIcon('success', '', 'hop le nhe')
                                                                 } else {
-                                                                    showNotificationWithIcon('error', '', 'Gia tri nhap vao khong hop le')
+                                                                    showNotificationWithIcon('error', '', 'Time spent phai nho hon time original')
                                                                     setFormData({
                                                                         ...formData,
                                                                         timeSpent: 0,
                                                                         timeRemaining: 0
                                                                     })
                                                                 }
-                                                            }} />
-                                                        </div>
-                                                        <div className='col-6 p-0 text-center pl-2'>
-                                                            <label htmlFor='timeRemaining'>Time remaining</label>
-                                                            <Input name="timeRemaining" disabled value={formData.timeRemaining !== 0 ? convertMinuteToFormat(formData.timeRemaining) : 'None'} />
-                                                        </div>
-                                                        <div className='description'>
-                                                            <p>Use the format: 2w3d4h5m</p>
-                                                            <ul>
-                                                                <li>w = weeks</li>
-                                                                <li>d = days</li>
-                                                                <li>h = hours</li>
-                                                                <li>m = minutes</li>
-                                                            </ul>
-                                                        </div>
-                                                        <div className='starting-date'>
-                                                            <label htmlFor='workingDate'>Date started<span className='text-danger'>*</span></label>
-                                                            <DatePicker name='workingDate' open={openDatePicker} onClick={() => {
+                                                            } else {
+                                                                showNotificationWithIcon('error', '', 'Gia tri nhap vao khong hop le')
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    timeSpent: 0,
+                                                                    timeRemaining: 0
+                                                                })
+                                                            }
+                                                        }} />
+                                                    </div>
+                                                    <div className='ml-2'>
+                                                        <label htmlFor='timeRemaining'>Time remaining</label>
+                                                        <Input name="timeRemaining" disabled value={formData.timeRemaining !== 0 ? convertMinuteToFormat(formData.timeRemaining) : 'None'} />
+                                                    </div>
+
+                                                </div>
+                                                <div className='d-flex flex-column'>
+                                                    <div className='description'>
+                                                        <p>Use the format: 2w3d4h5m</p>
+                                                        <ul>
+                                                            <li>w = weeks</li>
+                                                            <li>d = days</li>
+                                                            <li>h = hours</li>
+                                                            <li>m = minutes</li>
+                                                        </ul>
+                                                    </div>
+                                                    <div className='starting-date d-flex flex-column'>
+                                                        <label htmlFor='workingDate'>Date started<span className='text-danger'>*</span></label>
+                                                        <DatePicker name='workingDate'
+                                                            open={openDatePicker} style={{ width: '40%' }}
+                                                            onClick={() => {
                                                                 setOpenDatePicker(true)
-                                                            }} onOk={() => {
+                                                            }}
+                                                            onOk={() => {
                                                                 setOpenDatePicker(false)
-                                                            }} onChange={(date, dateString) => {
+                                                            }}
+                                                            onChange={(date, dateString) => {
                                                                 setFormData({
                                                                     ...formData,
                                                                     dateWorking: dateString
                                                                 })
+
                                                             }} showTime />
-                                                        </div>
-                                                        <div className='description'>
-                                                            <label htmlFor='workDescription'>Work description <span className='text-danger'>*</span></label>
-                                                            <textarea name="workDescription" style={{ width: '100%', height: '100px' }} onChange={(e) => {
-                                                                if (e.target.value.trim() !== "") {
-                                                                    setFormData({
-                                                                        ...formData,
-                                                                        description: e.target.value
-                                                                    })
-                                                                } else {
-                                                                    showNotificationWithIcon('error', '', 'Truong * khong duoc bo trong')
-                                                                }
-                                                            }} />
-                                                        </div>
-                                                        <div className='col-12 mt-3 p-0'>
-                                                            <Button type='primary mr-2' onClick={() => {
-                                                                setTimeTable(false)
-                                                                dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id.toString(), { timeSpent: formData.timeSpent }, issueInfo.timeSpent, formData.timeSpent, issueInfo.id, "updated", "time spent"))
-                                                                dispatch(createWorklogHistory({
-                                                                    issue_id: issueInfo._id.toString(),
-                                                                    creator: userInfo.id,
-                                                                    working_date: formData.dateWorking,
-                                                                    description: formData.description,
-                                                                    timeSpent: convertMinuteToFormat(formData.timeSpent)
-                                                                }))
-                                                            }}>Save</Button>
-                                                            <Button type='default' onClick={() => {
-                                                                console.log("Gia tri time table sau khi set la ", timeTable);
-                                                                setTimeTable(false)
-                                                            }}>Cancel</Button>
-                                                        </div>
+                                                    </div>
+                                                    <div className='description'>
+                                                        <label htmlFor='workDescription'>Work description <span className='text-danger'>*</span></label>
+                                                        <textarea name="workDescription" style={{ width: '100%', height: '100px' }} onChange={(e) => {
+                                                            if (e.target.value.trim() !== "") {
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    description: e.target.value
+                                                                })
+                                                            } else {
+                                                                showNotificationWithIcon('error', '', 'Truong * khong duoc bo trong')
+                                                            }
+                                                        }} />
                                                     </div>
                                                 </div>
-                                            ) : <></>}
+                                            </Modal>
                                         </div>
                                     </div>
                                 </div>
@@ -887,9 +995,9 @@ export default function IssueDetail() {
                                 <div style={{ color: '#929398' }}>{issueInfo?.creatAt !== issueInfo?.updateAt ? `Update at ${convertTime(issueInfo?.updateAt)}` : ""}</div>
                             </div>
                         </div>
-                    </div>
+                    </div>}
                 </div>
             </div>
         </div>
-    </div >
+    )
 }

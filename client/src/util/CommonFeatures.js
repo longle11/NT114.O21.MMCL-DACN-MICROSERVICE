@@ -32,19 +32,19 @@ export const iTagForPriorities = (priority) => {
     }
 }
 export const priorityTypeOptions = [
-    { label: <>{iTagForPriorities(0)} Highest</>, value: 0 },
-    { label: <>{iTagForPriorities(1)} High</>, value: 1 },
-    { label: <>{iTagForPriorities(2)} Medium</>, value: 2 },
-    { label: <>{iTagForPriorities(3)} Low</>, value: 3 },
-    { label: <>{iTagForPriorities(4)} Lowest</>, value: 4 }
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(0)} Highest</span>, value: 0 },
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(1)} High</span>, value: 1 },
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(2)} Medium</span>, value: 2 },
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(3)} Low</span>, value: 3 },
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(4)} Lowest</span>, value: 4 }
 ]
 export const issueTypeOptions = [
-    { label: <>{iTagForIssueTypes(0)} Story</>, value: 0 },
-    { label: <>{iTagForIssueTypes(1)} Task</>, value: 1 },
-    { label: <>{iTagForIssueTypes(2)} Bug</>, value: 2 }
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(0)} Story</span>, value: 0 },
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(1)} Task</span>, value: 1 },
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(2)} Bug</span>, value: 2 }
 ]
 export const issueTypeWithoutOptions = [
-    { label: <>{iTagForIssueTypes(0)} </>, value: 0 },
-    { label: <>{iTagForIssueTypes(1)} </>, value: 1 },
-    { label: <>{iTagForIssueTypes(2)} </>, value: 2 }
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(0)} </span>, value: 0 },
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(1)} </span>, value: 1 },
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(2)} </span>, value: 2 }
 ]

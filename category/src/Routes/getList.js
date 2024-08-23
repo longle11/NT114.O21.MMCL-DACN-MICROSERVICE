@@ -19,7 +19,6 @@ router.get('/epic-list/:projectId', async (req, res) => {
         .populate({
             path: 'issue_list'
         })
-    console.log("getEpics", getEpics);
     
     res.status(200).json({
         message: "Successfully get epic list",
@@ -35,7 +34,6 @@ router.get('/version-list/:projectId', async (req, res) => {
         .populate({
             path: 'issue_list'
         })
-    console.log("getVersions", getVersions);
     
     res.status(200).json({
         message: "Successfully get version list",
@@ -51,8 +49,6 @@ router.get('/epic/:epicId', async (req, res) => {
         .populate({
             path: 'issue_list'
         })
-    console.log("getEpics", getEpics);
-    
     res.status(200).json({
         message: "Successfully get epic by id",
         data: getEpics
@@ -66,7 +62,6 @@ router.get('/version/:versionId', async (req, res) => {
         .populate({
             path: 'issue_list'
         })
-    console.log("getVersion", getVersion);
     
     res.status(200).json({
         message: "Successfully get version by id",

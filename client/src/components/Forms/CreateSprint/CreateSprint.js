@@ -32,6 +32,8 @@ function CreateSprint(props) {
     ]
     const dispatch = useDispatch()
     useEffect(() => {
+        console.log("gia tri props ", props, " haha ", );
+        
         dispatch(submit_edit_form_action(handleSubmit))
     })
 
@@ -40,7 +42,12 @@ function CreateSprint(props) {
     const [endDate, setEndDate] = useState(null)
     const [duration, setDuration] = useState(5)
     const handleDateCustom = (time, value) => {
+        if(time === null) {
+            time = dayjs(new Date()).format("YYYY-MM-DD")
+        }
         if (value === 1) {
+            console.log("Vao trong nay co gia tri time la ", time , ' voi ket qua ', dayjs(time).add(7, 'd').format("YYYY-MM-DD hh:mm:ss"));
+            
             const calEndDate = dayjs(time).add(7, 'd').format("YYYY-MM-DD hh:mm:ss")
             setEndDate(calEndDate)
             setFieldValue('end_date', calEndDate)
@@ -84,7 +91,8 @@ function CreateSprint(props) {
                 <DatePicker
                     showTime
                     name="start_date"
-                    defaultValue={dayjs(props.currentSprint.start_date)}
+                    value={dayjs(props.currentSprint.start_date !== null ? props.currentSprint.start_date : dayjs(new Date()).format("YYYY-MM-DD hh:mm:ss"))}
+                    defaultValue=''
                     onChange={(value, dateString) => {
                         console.log("ngay dang chon ", dateString);
                         setStartDate(dateString)
@@ -94,11 +102,12 @@ function CreateSprint(props) {
                 />
             </div>
             <div className="form-group">
-                <label htmlFor="end_date">End name</label>
+                <label htmlFor="end_date">End date</label>
                 {duration === 5 ? <DatePicker
                     showTime
                     name="end_date"
-                    defaultValue={dayjs(props.currentSprint.end_date)}
+                    value={dayjs(props.currentSprint.end_date !== null ? props.currentSprint.end_date : dayjs(new Date()).format("YYYY-MM-DD hh:mm:ss"))}
+                    defaultValue=''
                     onChange={(value, dateString) => {
                         setEndDate(dateString)
                         setFieldValue('end_date', dateString)
@@ -120,8 +129,8 @@ const handleSubmitUpdateSprint = withFormik({
         return {
             project_id: templateSprint.project_id,
             sprint_name: templateSprint.sprint_name,
-            start_date: templateSprint.start_date,
-            end_date: templateSprint.end_date,
+            start_date: templateSprint.start_date ? templateSprint.start_date : dayjs(new Date()).format("YYYY-MM-DD hh:mm:ss"),
+            end_date: templateSprint.end_date !== null ? templateSprint.end_date : dayjs(new Date()).format("YYYY-MM-DD hh:mm:ss"),
             sprint_goal: templateSprint.sprint_goal,
         }
     },

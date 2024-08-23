@@ -6,7 +6,7 @@ const authCreatedListener = () => {
         const options = natsWrapper.client.subscriptionOptions()
             .setManualAckMode(true)
 
-        const subscription = natsWrapper.client.subscribe('auth:created', 'category-auth-created-group', options)
+        const subscription = natsWrapper.client.subscribe('auth:created', 'sprint-auth-created-group', options)
 
         subscription.on('message', async (msg) => {
 
@@ -17,8 +17,6 @@ const authCreatedListener = () => {
 
                 //tiến hành lưu vào auth db
                 await userModel.create(parseData)
-                console.log("Du lieu nhan duoc: ", parseData);
-
                 msg.ack()
             }
         })

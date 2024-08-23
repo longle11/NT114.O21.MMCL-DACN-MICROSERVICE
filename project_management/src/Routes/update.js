@@ -9,7 +9,6 @@ const router = express.Router()
 router.put('/update/:id', currentUserMiddleware, async (req, res, next) => {
     try {
         if (req.currentUser) {
-            const { category, description, nameProject } = req.body.props
             const id = req.params.id
             const projects = await projectModel.find({})
             const ids = projects.map(project => project._id.toString());
@@ -19,7 +18,7 @@ router.put('/update/:id', currentUserMiddleware, async (req, res, next) => {
             } else {
                 const updatedProject = await projectModel.updateOne(
                     { "_id": id },
-                    { $set: { "category": category, "description": description, "nameProject": nameProject } }
+                    { $set: { ...req.body } }
                 )
 
                 res.status(200).json({

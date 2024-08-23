@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom'
 import PropTypes from 'prop-types';
 import MenuBarHeader from '../components/Header/MenuBarHeader'
 import { userLoggedInAction } from '../redux/actions/UserAction'
+import { initialEdges, initialNodes } from '../components/Process-Workflow/abc'
 
 export default function MainPageTemplate({ Component }) {
     const isLoading = useSelector(state => state.loading.isLoading)
@@ -19,13 +20,15 @@ export default function MainPageTemplate({ Component }) {
     const navigate = useNavigate()
     useEffect(() => {
         dispatch(userLoggedInAction())
+
+        localStorage.setItem('initialNodes', JSON.stringify(initialNodes));
+        localStorage.setItem('initialEdges', JSON.stringify(initialEdges));
     }, [])
     const handleLogin = () => {
         return navigate("/login")
     }
     const content = () => {
         if (!isLoading) {
-            console.log(userInfo);
             if (userInfo !== null) {
                 return <div>
                     <MenuBarHeader />

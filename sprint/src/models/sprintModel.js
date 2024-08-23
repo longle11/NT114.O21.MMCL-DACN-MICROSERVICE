@@ -10,11 +10,11 @@ const sprintSchema = new mongoose.Schema({
         default: null
     },
     start_date: {
-        type: Date,
+        type: String,
         default: null
     },
     end_date: {
-        type: Date,
+        type: String,
         default: null
     },
     sprint_goal: {

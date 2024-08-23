@@ -18,6 +18,10 @@ import IssuesList from './components/WD-Board/Issues-List/IssuesList';
 import Epic from './components/Development/Epic/Epic-Dashboard/Epic';
 import EpicDetail from './components/Development/Epic/Epic-Detail/EpicDetail';
 import ReleaseDetail from './components/Development/Releases/Release-Detail/ReleaseDetail';
+import IssueDetail from './components/WD-Board/Issue-Detail/Issue-Detail';
+import ProcessWorkflow from './components/Process-Workflow/ProcessWorkflow';
+import WorkflowList from './components/WD-Board/Workflow/Workflow-List/WorkflowList';
+import WorkflowEdit from './components/WD-Board/Workflow/Workflow-Edit/WorkflowEdit';
 function App() {
   const dispatch = useDispatch()
   useEffect(() => {
@@ -29,7 +33,7 @@ function App() {
         <Loading />
         <Routes>
           <Route path='/manager' element={<MainPageTemplate Component={ProjectManager} />} />
-          <Route path='/projectDetail/:id/board' element={<MainPageTemplate Component={Dashboard} />} />
+          <Route path='/projectDetail/:id/board?/:sprintId' element={<MainPageTemplate Component={Dashboard} />} />
           <Route path='/projectDetail/:id/backlog' element={<MainPageTemplate Component={Backlog} />} />
           <Route path='/projectDetail/:id/active-sprints' element={<MainPageTemplate Component={SignUp} />} />
           <Route path='/projectDetail/:id/reports' element={<MainPageTemplate Component={ProjectManager} />} />
@@ -39,9 +43,13 @@ function App() {
           <Route path='/projectDetail/:id/versions/version-detail/:versionId' element={<MainPageTemplate Component={ReleaseDetail} />} />
           <Route path='/projectDetail/:id/issues' element={<MainPageTemplate Component={Create} />} />
           <Route path='/projectDetail/:id/list' element={<MainPageTemplate Component={IssuesList} />} />
+          <Route path='/projectDetail/:id/workflows' element={<MainPageTemplate Component={WorkflowList} />} />
+          <Route path='/projectDetail/:id/workflows/create-workflow' element={<MainPageTemplate Component={WorkflowEdit} />} />
+          <Route path='/projectDetail/:id/issues/issue-detail?/:issueId' element={<MainPageTemplate Component={IssueDetail} />} />
 
           <Route path='/' element={<MainPageTemplate Component={ProjectManager} />} />
           <Route path='/create' element={<MainPageTemplate Component={Create} />} />
+          <Route path='/workflow' Component={ProcessWorkflow}/>
 
 
           <Route path='/components' element={<MainPageTemplate Component={Create} />} />

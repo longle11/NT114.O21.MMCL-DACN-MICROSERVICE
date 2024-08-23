@@ -23,7 +23,7 @@ build:
         manual:
           - dest: .
             src: 'src/**/*.js'
-          - src: "***/*.css"
+          - src: "src/**/*.css"
             dest: .
     - image: longle2003/comment
       context: comment

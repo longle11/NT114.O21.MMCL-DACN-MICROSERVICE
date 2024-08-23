@@ -4,7 +4,6 @@ import React, { useEffect } from 'react'
 import { connect, useDispatch, useSelector } from 'react-redux'
 import { submit_edit_form_action } from '../../redux/actions/DrawerAction';
 import { getListCategories } from '../../redux/actions/CategoryAction';
-import { updateItemCategory } from '../../redux/actions/EditCategoryAction';
 import PropTypes from 'prop-types';
 
 function FormEdit(props) {
@@ -106,7 +105,6 @@ const handleSubmitForm = withFormik({
         }
     },
     handleSubmit: (values, { props, setSubmitting }) => {
-        props.dispatch(updateItemCategory(values))
     },
 
     displayName: 'BasicForm',

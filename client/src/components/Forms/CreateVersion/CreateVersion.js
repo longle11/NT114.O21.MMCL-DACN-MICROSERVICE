@@ -29,7 +29,6 @@ function CreateVersion(props) {
                 <div className='startdate-release'>
                     <p className='m-0'>Start date</p>
                     <DatePicker defaultValue={dayjs(props.currentVersion.start_date, "DD/MM/YYYY")} name='start_date' onChange={(date, dateString) => {
-                        console.log(date, dateString);
                         setFieldValue('start_date', dateString)
                     }}
                         format={"DD/MM/YYYY"} />
@@ -37,7 +36,6 @@ function CreateVersion(props) {
                 <div className='enddate-release ml-4'>
                     <p className='m-0'>Release date</p>
                     <DatePicker defaultValue={dayjs(props.currentVersion.end_date, "DD/MM/YYYY")} onChange={(date, dateString) => {
-                        console.log(date, dateString);
                         setFieldValue('end_date', dateString)
                     }}
                         format={"DD/MM/YYYY"} />

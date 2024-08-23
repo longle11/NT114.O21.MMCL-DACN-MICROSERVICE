@@ -3,6 +3,7 @@ import { DISPLAY_LOADING, GET_PROCESSES_PROJECT, GET_SPRINT_PROJECT, HIDE_LOADIN
 import { delay } from "../../util/Delay"
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
 import domainName from '../../util/Config'
+import { GetWorkflowListAction, ListProjectAction } from "./ListProjectAction"
 export const createProjectAction = (data) => {
     return async dispatch => {
         try {
@@ -33,20 +34,35 @@ export const createProjectAction = (data) => {
                 userInfo: getUserUpdated.data.data
             })
         } catch (error) {
-            console.log(error);
-            // if (error.response.status === 401) {
-            //     showNotificationWithIcon('error', '', 'Please sign in before posting comment')
-            //     await dispatch({
-            //         type: USER_LOGGED_IN,
-            //         status: false,
-            //         userInfo: null
-            //     })
-            //     window.location.reload();
-            // }
+
         }
         dispatch({
             type: HIDE_LOADING
         })
+    }
+}
+//cập nhật lại thông tin của project
+export const updateProjectAction = (project_id, props, navigate) => {
+    return async dispatch => {
+        try {
+            const res = await Axios.put(`${domainName}/api/projectmanagement/update/${project_id}`, props)
+            if (res.status === 200) {
+                dispatch(ListProjectAction())
+                showNotificationWithIcon('success', '', res.data.message)
+                if (props.sprint_id !== null) {
+                    navigate(`/projectDetail/${project_id}/board/${props.sprint_id}`)
+                }
+            }
+        } catch (error) {
+            if (error.response.status === 401) {
+                showNotificationWithIcon('error', '', 'Please sign in before posting comment')
+                dispatch({
+                    type: USER_LOGGED_IN,
+                    status: false,
+                    userInfo: null
+                })
+            }
+        }
     }
 }
 
@@ -65,12 +81,32 @@ export const createSprintAction = (props) => {
     return async dispatch => {
         try {
             const res = await Axios.post(`${domainName}/api/sprint/create`, props)
+
             if (res.status === 201) {
                 showNotificationWithIcon('success', 'Tao moi sprint', 'Tao moi thanh cong 1 sprint')
                 dispatch({
                     type: GET_SPRINT_PROJECT,
                     sprintList: res.data.data
                 })
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+}
+
+export const createWorkflowAction = (props) => {
+    return async dispatch => {
+        try {
+            const res = await Axios.post(`${domainName}/api/issueprocess/workflow/create`, props)
+
+            if (res.status === 201) {
+                dispatch(GetWorkflowListAction(props.project_id))
+                showNotificationWithIcon('success', 'Tao moi workflow', res.data.message)
+
+                //removing localstorage for edges and nodes is empty array
+                localStorage.removeItem('nodes')
+                localStorage.removeItem('edges')
             }
         } catch (error) {
             console.log(error);
@@ -94,16 +130,16 @@ export const deleteSprintAction = (sprintId, projectId) => {
 
         }
     }
-} 
+}
 
 export const updateSprintAction = (sprintId, props) => {
     return async dispatch => {
         try {
             console.log('Gia tri prop cua updateSprintAction ', props);
-            
+
             const res = await Axios.put(`${domainName}/api/sprint/update/${sprintId}`, props)
             console.log("res tra ve tu updateSprintAction ", res);
-            
+
             if (res.status === 200) {
                 showNotificationWithIcon('success', 'cap nhat', res.data.message)
                 dispatch({

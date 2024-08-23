@@ -1,10 +1,12 @@
 /* eslint-disable import/no-anonymous-default-export */
-import { GET_LIST_PROJECT_API, GET_PROCESSES_PROJECT, GET_PROJECT_API, GET_SPRINT_PROJECT } from "../constants/constant"
+import { GET_A_SPRINT, GET_LIST_PROJECT_API, GET_PROCESSES_PROJECT, GET_PROJECT_API, GET_SPRINT_PROJECT, GET_WORKFLOW_LIST } from "../constants/constant"
 const initialState = {
     listProject: [],
     projectInfo: {},
     processList: [],
-    sprintList: []
+    sprintList: [],
+    sprintInfo: {},
+    workflowList: []
 }
 
 export default (state = initialState, action) => {
@@ -20,6 +22,12 @@ export default (state = initialState, action) => {
             return { ...state }
         case GET_SPRINT_PROJECT:
             state.sprintList = action.sprintList
+            return { ...state }
+        case GET_A_SPRINT:
+            state.sprintInfo = action.sprintInfo
+            return { ...state }
+        case GET_WORKFLOW_LIST:
+            state.workflowList = action.workflowList
             return { ...state }
         default:
             return state

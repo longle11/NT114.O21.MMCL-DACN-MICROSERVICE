@@ -50,14 +50,10 @@ router.put('/version-update/:versionId', async (req, res) => {
             if (getVersion.issue_list.length === 0) {
                 getVersion.issue_list.push(req.body.issue_id)
             } else {
-                console.log("So thang truoc khi duoc them vao ", getVersion.issue_list);
-                
                 const getVersionIndex = getVersion.issue_list.findIndex(issue => issue?._id.toString() === req.body.issue_id)
                 if (getVersionIndex === -1) {  //neu chua ton tai
                     getVersion.issue_list.push(req.body.issue_id)
                 }
-                console.log("So thang duoc them vao ", getVersion.issue_list);
-                
             }
             req.body.issue_list = getVersion.issue_list
         }
