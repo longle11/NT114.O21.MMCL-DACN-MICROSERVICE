@@ -10,7 +10,6 @@ import { getUserKeyword, insertUserIntoProject } from '../../redux/actions/UserA
 import { NavLink, useNavigate } from 'react-router-dom';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
 import { deleteUserInProject } from '../../redux/actions/CreateProjectAction';
-import { Input } from "antd";
 import Search from 'antd/es/input/Search';
 export default function ProjectManager() {
     const dispatch = useDispatch()

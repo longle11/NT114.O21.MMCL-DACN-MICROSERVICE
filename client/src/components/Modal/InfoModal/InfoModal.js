@@ -1,5 +1,5 @@
 import { Avatar, Button, DatePicker, Input, InputNumber, Popconfirm, Progress, Select } from 'antd';
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { Editor } from '@tinymce/tinymce-react';
 import Parser from 'html-react-parser';
@@ -7,18 +7,24 @@ import { Option } from 'antd/es/mentions';
 import { createWorklogHistory, deleteAssignee, deleteIssue, getIssueHistoriesList, getWorklogHistoriesList, updateInfoIssue } from '../../../redux/actions/IssueAction';
 import { createCommentAction } from '../../../redux/actions/CommentAction';
 import { showNotificationWithIcon } from '../../../util/NotificationUtil';
-import { GetProjectAction } from '../../../redux/actions/ListProjectAction';
+import { GetProjectAction, GetWorkflowListAction } from '../../../redux/actions/ListProjectAction';
 import { priorityTypeOptions, issueTypeOptions, iTagForPriorities, iTagForIssueTypes } from '../../../util/CommonFeatures';
 import { updateEpic } from '../../../redux/actions/CategoryAction';
+import { useParams } from 'react-router-dom';
 const { DateTime } = require('luxon');
 
 export default function InfoModal() {
+    const { id } = useParams()
     const issueInfo = useSelector(state => state.issue.issueInfo)
     const projectInfo = useSelector(state => state.listProject.projectInfo)
     const processList = useSelector(state => state.listProject.processList)
+    const workflowList = useSelector(state => state.listProject.workflowList)
     const userInfo = useSelector(state => state.user.userInfo)
     const historyList = useSelector(state => state.issue.historyList)
     const worklogList = useSelector(state => state.issue.worklogList)
+    useEffect(() => {
+        dispatch(GetWorkflowListAction(id))
+    }, [])
     const regexs = [
         /^(\d+)w([1-6])d([1-9]|1\d|2[0-4])h([1-9]|[1-5]\d|)m$/, //_w_d_h_m
         /^(\d+)d([1-9]|1\d|2[0-4])h([1-9]|[1-5]\d|)m$/,  //_d_h_m
@@ -38,17 +44,14 @@ export default function InfoModal() {
     ]
     const [timeTable, setTimeTable] = useState(false)
     const [openDatePicker, setOpenDatePicker] = useState(false)
-    const [trackingTime, setTrackingTime] = useState(0)
     const epicList = useSelector(state => state.categories.epicList)
-
     const [buttonActive, setButtonActive] = useState(1)
     const [editDescription, setEditDescription] = useState(true)
     //tham số truyền vào sẽ là id của comment khi click vào chỉnh sửa
-    const [editComment, setEditComment] = useState('')
-    const [editContentComment, setEditContentComment] = useState('')
-
     const [addAssignee, setAddAssignee] = useState(true)
     const [description, setDescription] = useState('')
+    //su dung cho debounce time original
+    const inputTimeOriginal = useRef(null)
     //sử dụng cho phần bình luận
     //tham số isSubmit thì để khi bấm send thì mới thực hiện duyệt mảng comments
     const [comment, setComment] = useState({
@@ -57,8 +60,40 @@ export default function InfoModal() {
     })
     const dispatch = useDispatch()
 
-    //su dung cho debounce time original
-    const inputTimeOriginal = useRef(null)
+    //su dung de render option theo workflow chi dinh
+    const typeOptionsFollowWorkflow = (current_type) => {
+        const getWorkflowsActive = workflowList.filter(workflow => workflow.isActivated)
+        if(getWorkflowsActive.length !== 0) {
+            const getIndex = getWorkflowsActive.findIndex(workflow => workflow.issue_statuses.includes(issueInfo?.issue_status))
+            if(getIndex !== -1) {
+                const getCurrentWorkflow = getWorkflowsActive[getIndex]
+                const getEdges = getCurrentWorkflow.edges
+                const data = getEdges.filter(edge => {
+                    if (current_type === edge.source) {
+                        return true
+                    }
+                    return false
+                })
+        
+                const newdata = data.filter(option => processList.map(process => process._id).includes(option.target)).map(option => {
+                    const getNameNodeIndex = getCurrentWorkflow.nodes.findIndex(node => node.id === option.target)
+                    return {
+                        label: <span>{option.label} <i className="fa fa-long-arrow-alt-right ml-3 mr-3"></i><span style={{fontWeight: "bold"}}>{getCurrentWorkflow.nodes[getNameNodeIndex].data.label}</span></span>,
+                        value: option.target
+                    }
+                })
+                return newdata
+            }
+        }
+        return processList.filter(process => process._id !== current_type).map(process => {
+            return {
+                label: process.name_process,
+                value: process._id.toString()
+            }
+        })
+    }
+
+
 
     const [formData, setFormData] = useState({
         timeSpent: 0,
@@ -85,13 +120,9 @@ export default function InfoModal() {
         })
     }
     const getCurrentEpic = () => {
-        console.log("heheh ", issueInfo);
-
         if (issueInfo?.epic_link === null) {
             return null
         }
-        console.log("index tra ve ", epicList?.map(epic => epic._id.toString() === issueInfo?.epic_link?._id.toString()));
-
         return epicList?.findIndex(epic => epic._id.toString() === issueInfo?.epic_link?._id.toString())
     }
 
@@ -227,6 +258,7 @@ export default function InfoModal() {
     const compareTimeSpentWithTimeOriginal = (timeSpent) => {
         return issueInfo.timeOriginalEstimate >= calculateTimeAfterSplitted(timeSpent)
     }
+
 
     const convertMinuteToFormat = (time) => {
         if (time === 0 || time === undefined || time === NaN) {
@@ -600,7 +632,7 @@ export default function InfoModal() {
                             <div className="col-4 p-0">
                                 <div className="status">
                                     <h6>TYPE</h6>
-                                    <Select
+                                    {/* <Select
                                         options={renderIssueType()}
                                         style={{ width: '50%' }}
                                         disabled={issueInfo?.creator._id !== userInfo?.id}
@@ -608,6 +640,16 @@ export default function InfoModal() {
                                             dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id, { issue_type: value }, issueInfo?.issue_type.name_process, props.label, userInfo.id, "updated", "issue type"))
                                         }}
                                         value={issueInfo?.issue_type?._id.toString()}
+                                    /> */}
+
+                                    <Select
+                                        options={typeOptionsFollowWorkflow(issueInfo?.issue_type?._id.toString())}
+                                        style={{ width: '100%' }}
+                                        disabled={issueInfo?.creator._id !== userInfo?.id}
+                                        onChange={(value, props) => {
+                                            dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id, { issue_type: value }, issueInfo?.issue_type.name_process, props.label, userInfo.id, "updated", "issue type"))
+                                        }}
+                                        value={issueInfo?.issue_type?.name_process}
                                     />
                                 </div>
                                 <div className="assignees mt-3">
@@ -693,7 +735,7 @@ export default function InfoModal() {
                                                 //assign issue to new epic
                                                 dispatch(updateInfoIssue(issueInfo?._id.toString(), issueInfo?.project_id.toString(), { epic_link: value }, issueInfo?.epic_link === null ? "None" : issueInfo?.epic_link.epic_name, props.label, userInfo.id, "updated", "epic link"))
                                                 //update new issue in epic
-                                                dispatch(updateEpic(value, {issue_id: issueInfo?._id.toString(), epic_id: issueInfo?.epic_link === null ? "null" : issueInfo?.epic_link._id.toString()}, issueInfo?.project_id.toString()))
+                                                dispatch(updateEpic(value, { issue_id: issueInfo?._id.toString(), epic_id: issueInfo?.epic_link === null ? "null" : issueInfo?.epic_link._id.toString() }, issueInfo?.project_id.toString()))
                                             }}
                                             value={getCurrentEpic() !== null ? renderEpics()[getCurrentEpic()]?.value : "None"}
                                         />

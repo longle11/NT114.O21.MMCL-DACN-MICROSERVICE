@@ -23,6 +23,7 @@ export const GetProjectAction = (id, keyword) => {
     return async dispatch => {
         try {
             const res = await Axios.get(`${domainName}/api/projectmanagement/${id.toString()}?keyword=${keyword}`)
+            console.log("Gia tri project lay ra duoc trong GetProjectAction", res);
             
             dispatch({
                 type: GET_PROJECT_API,
@@ -106,6 +107,34 @@ export const GetWorkflowListAction = (project_id) => {
             })
         } catch (errors) {
 
+        }
+    }
+}
+
+export const UpdateWorkflowAction = (workflow_id, props) => {
+    return async dispatch => {
+        try {
+            const res = await Axios.put(`${domainName}/api/issueprocess/workflow/update/${workflow_id}`, props)
+            if(res.status === 200) {
+                showNotificationWithIcon('success', '', res.data.message)
+                window.location.reload();
+            }
+        } catch (errors) {
+            console.log("error UpdateWorkflowAction", errors);
+        }
+    }
+}
+
+export const DeleteWorkflowAction = (workflow_id) => {
+    return async dispatch => {
+        try {
+            const res = await Axios.delete(`${domainName}/api/issueprocess/workflow/delete/${workflow_id}`)
+            if(res.status === 200) {
+                showNotificationWithIcon('success', '', res.data.message)
+                window.location.reload();
+            }
+        } catch (errors) {
+            console.log("error UpdateWorkflowAction", errors);
         }
     }
 }

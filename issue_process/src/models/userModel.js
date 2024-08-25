@@ -16,6 +16,12 @@ userSchema.virtual('issuesRefAssignees', {
     foreignField: '_id',
     localField: 'assignees'
 })
+userSchema.virtual('workflowsRefCreator', {
+    ref: 'workflows',
+    foreignField: '_id',
+    localField: 'creator'
+})
+
 
 
 const userModel = new mongoose.model('users', userSchema)

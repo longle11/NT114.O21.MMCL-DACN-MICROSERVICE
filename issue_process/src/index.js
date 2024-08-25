@@ -49,6 +49,8 @@ connectToNats()
 
 app.use('/api/issueprocess', require('./Routes/create'))
 app.use('/api/issueprocess', require('./Routes/getProcess'))
+app.use('/api/issueprocess', require('./Routes/update'))
+app.use('/api/issueprocess', require('./Routes/delete'))
 
 app.listen(4006, () => {
     console.log('listening on port 4006');

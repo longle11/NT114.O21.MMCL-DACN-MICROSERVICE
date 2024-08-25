@@ -29,7 +29,7 @@ function App() {
   }, [dispatch])
   return (
     <>
-      <BrowserRouter> 
+      <BrowserRouter>
         <Loading />
         <Routes>
           <Route path='/manager' element={<MainPageTemplate Component={ProjectManager} />} />
@@ -43,13 +43,14 @@ function App() {
           <Route path='/projectDetail/:id/versions/version-detail/:versionId' element={<MainPageTemplate Component={ReleaseDetail} />} />
           <Route path='/projectDetail/:id/issues' element={<MainPageTemplate Component={Create} />} />
           <Route path='/projectDetail/:id/list' element={<MainPageTemplate Component={IssuesList} />} />
+          <Route path='/projectDetail/:id/workflows/create-workflow' Component={WorkflowEdit} />
           <Route path='/projectDetail/:id/workflows' element={<MainPageTemplate Component={WorkflowList} />} />
-          <Route path='/projectDetail/:id/workflows/create-workflow' element={<MainPageTemplate Component={WorkflowEdit} />} />
+          <Route path='/projectDetail/:id/workflows/edit/:workflowId' element={<MainPageTemplate Component={WorkflowEdit} />} />
           <Route path='/projectDetail/:id/issues/issue-detail?/:issueId' element={<MainPageTemplate Component={IssueDetail} />} />
 
           <Route path='/' element={<MainPageTemplate Component={ProjectManager} />} />
           <Route path='/create' element={<MainPageTemplate Component={Create} />} />
-          <Route path='/workflow' Component={ProcessWorkflow}/>
+          <Route path='/workflow' Component={ProcessWorkflow} />
 
 
           <Route path='/components' element={<MainPageTemplate Component={Create} />} />

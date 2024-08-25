@@ -19,11 +19,7 @@ const defaultViewport = { x: 0, y: 0, zoom: 0 };
 function View(props) {
     const [nodes, setNodes, onNodesChange] = useNodesState(JSON.parse(localStorage.getItem('nodes')));
     const [edges, setEdges, onEdgesChange] = useEdgesState(JSON.parse(localStorage.getItem('edges')));
-    useEffect(() => {
-        console.log("co su thay doi o day ", " node ", nodes);
-        console.log("co su thay doi o day ", " edge ", edges);
-        
-    }, [])
+    console.log(edges, JSON.parse(localStorage.getItem('edges')))
     return (
         <div style={{ width: '100wh', height: '60vh' }}>
             <ReactFlow

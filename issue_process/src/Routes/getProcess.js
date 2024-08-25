@@ -24,7 +24,9 @@ router.get('/:projectId', async (req, res) => {
 router.get('/workflow/:projectId', async (req, res) => {
     try {
         const workflowsInfo = await workflowModel.find({project_id: req.params.projectId})
-        
+            .populate({
+                path: 'creator'
+            })
         res.status(200).json({
             message: "Successfully got workflow list",
             data: workflowsInfo
@@ -34,5 +36,6 @@ router.get('/workflow/:projectId', async (req, res) => {
         
     }
 })
+
 
 module.exports = router

@@ -95,7 +95,7 @@ export const createSprintAction = (props) => {
     }
 }
 
-export const createWorkflowAction = (props) => {
+export const createWorkflowAction = (props, navigate) => {
     return async dispatch => {
         try {
             const res = await Axios.post(`${domainName}/api/issueprocess/workflow/create`, props)
@@ -103,6 +103,8 @@ export const createWorkflowAction = (props) => {
             if (res.status === 201) {
                 dispatch(GetWorkflowListAction(props.project_id))
                 showNotificationWithIcon('success', 'Tao moi workflow', res.data.message)
+
+                navigate(`/projectDetail/${props.project_id}/workflows`)
 
                 //removing localstorage for edges and nodes is empty array
                 localStorage.removeItem('nodes')

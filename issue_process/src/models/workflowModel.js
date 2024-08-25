@@ -15,11 +15,16 @@ const workflowSchema = new mongoose.Schema({
     },
     creator: {
         type: mongoose.Schema.Types.ObjectId,
-        default: null
+        default: null,
+        ref: 'users'
     },
     createAt: {
         type: Date,
         default: Date.now
+    },
+    isActivated: {
+        type: Boolean,
+        default: false
     },
     updateAt: {
         type: Date,
@@ -35,6 +40,10 @@ const workflowSchema = new mongoose.Schema({
                 label: {
                     type: String,
                     default: null
+                },
+                color: {
+                    type: String,
+                    default: '#dddd'
                 }
             },
             type: {
@@ -70,9 +79,37 @@ const workflowSchema = new mongoose.Schema({
             label: {
                 type: String,
                 default: null
+            },
+            type: {
+                type: String,
+                default: null
             }
         }
-    ]
+    ],
+    markerEnd: {
+        type: {
+            type: String,
+            default: null,
+        },
+        width: {
+            type: Number
+        },
+        height: {
+            type: Number
+        },
+        color: {
+            type: String
+        }
+
+    },
+    style: {
+        strokeWidth: {
+            type: Number
+        },
+        stroke: {
+            type: String
+        }
+    }
 })
 
 

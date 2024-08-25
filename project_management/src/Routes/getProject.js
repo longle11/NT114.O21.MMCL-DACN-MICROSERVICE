@@ -12,34 +12,35 @@ router.get('/:id', async (req, res, next) => {
         if (ids.includes(id)) {
             const currentProject = await projectModel
                 .findById(id)
-                .populate({
-                    path: 'members',
-                    select: '-__v'
-                })
-                .populate([
-                    {
-                        path: 'issues',
-                        select: '-__v',
-                        populate: {
-                            path: 'assignees',
-                            select: '-__v'
-                        }
-                    },
-                    {
-                        path: 'issues',
-                        select: '-__v',
-                        populate: {
-                            path: 'creator',
-                            select: '-__v'
-                        }
-                    }
-                ])
-            const filteredIssues = currentProject.issues.filter(issue => {
-                const regex = new RegExp(keyword, 'i');
-                return regex.test(issue.shortSummary);
-            });
+                // .populate({
+                //     path: 'members',
+                //     select: '-__v'
+                // })
+                // .populate([
+                //     {
+                //         path: 'issues',
+                //         select: '-__v',
+                //         populate: {
+                //             path: 'assignees',
+                //             select: '-__v'
+                //         }
+                //     },
+                //     {
+                //         path: 'issues',
+                //         select: '-__v',
+                //         populate: {
+                //             path: 'creator',
+                //             select: '-__v'
+                //         }
+                //     }
+                // ])
+            // const filteredIssues = currentProject.issues.filter(issue => {
+            //     const regex = new RegExp(keyword, 'i');
+            //     return regex.test(issue.shortSummary);
+            // });
 
-            currentProject.issues = filteredIssues
+
+            // currentProject.issues = filteredIssues
             res.status(200).json({
                 message: "Lay thanh cong project",
                 data: currentProject
