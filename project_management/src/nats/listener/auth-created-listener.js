@@ -13,11 +13,7 @@ const authCreatedListener = () => {
                 console.log(`Received event auth:created with sequence number: ${msg.getSequence()}`);
                 const parseData = JSON.parse(msg.getData())
                 //tiến hành lưu vào auth db
-                const user = await userModel.create({
-                    _id: parseData._id,
-                    username: parseData.username,
-                    avatar: parseData.avatar
-                })
+                const user = await userModel.create(parseData)
                 msg.ack()
             }
         })

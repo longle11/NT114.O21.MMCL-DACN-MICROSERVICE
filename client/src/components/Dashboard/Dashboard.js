@@ -6,7 +6,7 @@ import { AutoComplete, Avatar, Breadcrumb, Button, Input, Modal, Popover, Select
 import { getInfoIssue, updateInfoIssue } from '../../redux/actions/IssueAction';
 import { getUserKeyword, insertUserIntoProject } from '../../redux/actions/UserAction';
 import { CreateProcessACtion, GetProcessListAction, GetProjectAction, GetSprintAction, GetSprintListAction } from '../../redux/actions/ListProjectAction';
-import { deleteUserInProject } from '../../redux/actions/CreateProjectAction';
+import { deleteUserInProject, updateProjectAction } from '../../redux/actions/CreateProjectAction';
 import { DeleteOutlined } from '@ant-design/icons';
 import Search from 'antd/es/input/Search';
 import { iTagForIssueTypes, iTagForPriorities } from '../../util/CommonFeatures';
@@ -19,7 +19,6 @@ export default function Dashboard() {
     const dispatch = useDispatch()
 
     //sử dụng hiển thị tất cả issue hoặc chỉ các issue liên quan tới user
-    const [type, setType] = useState(0)
     const { id, sprintId } = useParams()
 
     const projectInfo = useSelector(state => state.listProject.projectInfo)
@@ -52,7 +51,7 @@ export default function Dashboard() {
     useEffect(() => {
         dispatch(GetProcessListAction(id))
         dispatch(GetSprintAction(sprintId))
-        console.log("chay vo tan a");
+        dispatch(GetProjectAction(id))
     }, [])
 
     //su dung cho truong hien thi member
@@ -138,8 +137,15 @@ export default function Dashboard() {
     const handleDragEnd = async (result) => {
         const source = result.source
         const dest = result.destination
+
+        console.log("source ", source.droppableId);
+        console.log("dest ", dest.droppableId);
+        
         if (dest === null) {
             return
+        }
+        if((source.droppableId.includes("process") && !dest.droppableId.includes("process")) || (dest.droppableId.includes("process") && !source.droppableId.includes("process"))) {
+            return null
         }
         if (source.droppableId === dest.droppableId) {
 
@@ -301,15 +307,10 @@ export default function Dashboard() {
                     style={{ marginBottom: 10 }}
                     items={[
                         {
-                            title: <a href="">Projects</a>,
+                            title: <a href="/">Projects</a>,
                         },
                         {
-                            title: <a href="/workflow" onClick={() => {
-                                //proceed store backlog in localstorage
-                                const processListCopy = [...processList]
-                                localStorage.setItem('nodes', JSON.stringify(processListCopy))
-                                localStorage.setItem('edges', JSON.stringify([{ id: `e0-${processListCopy[0]._id}`, source: '0', target: processListCopy[0]._id, label: 'Created' }]))
-                            }}>Hidden</a>,
+                            title: <a href={`/projectDetail/${id}/board`}>{projectInfo?.name_project}</a>,
                         }
                     ]}
                 />
@@ -317,9 +318,14 @@ export default function Dashboard() {
             <div className='title'>
                 <h4>{Object?.keys(sprintInfo).length === 0 ? "Dashboard" : sprintInfo.sprint_name}</h4>
                 <div className='d-flex'>
-                    <button className='btn btn-transparent m-0 mr-2' style={{ fontSize: '12px' }}>{projectInfo.marked === true ? <i className="fa-solid fa-star" style={{ color: '#ff8b00' }}></i> : <i className="fa-regular fa-star"></i>}</button>
-                    <Button className='m-0 mr-2' type='primary'><i className="fa fa-clock mr-2"></i>{sprintInfo !== null ? calculateTaskRemainingTime(dayjs(new Date()), dayjs(sprintInfo.end_date)) : "hehe"}</Button>
-                    <Button className='m-0 mr-2' type='primary'>Complete Sprint</Button>
+                    <button className='btn btn-transparent m-0 mr-2' onClick={() => {
+                        dispatch(updateProjectAction(id, {
+                            marked: !projectInfo?.marked
+                        }, navigate))
+                    }} style={{ fontSize: '12px' }}>{projectInfo.marked === true ? <i className="fa-solid fa-star" style={{ color: '#ff8b00', fontSize: 15 }}></i> : <i className="fa-solid fa-star" style={{ fontSize: 15 }}></i>}</button>
+                    {sprintId && sprintInfo !== null && Object.keys(sprintInfo).length !== 0 ? <Button className='m-0 mr-2' type='primary'><i className="fa fa-clock mr-2"></i>{calculateTaskRemainingTime(dayjs(new Date()), dayjs(sprintInfo.end_date))}</Button> : <></>}
+                    {sprintId && sprintInfo !== null && Object.keys(sprintInfo).length !== 0 ? <Button className='m-0 mr-2' type='primary'>Complete Sprint</Button> : <></>}
+
                     <NavLink to="https://github.com/longle11/NT114.O21.MMCL-DACN-MICROSERVICE" target="_blank" style={{ textDecoration: 'none' }}>
                         <Button className='m-0 mr-2' type='primary'>
                             <i className="fab fa-github mr-2"></i>
@@ -353,107 +359,135 @@ export default function Dashboard() {
                         </Avatar>
                     </Popover>
                 </div>
-                
-                
+                <div className="options-group" style={{ display: 'flex' }}>
+                    <Button className="mr-2 ml-3" type="primary">All isssues</Button>
+                    <Button>Only my issues</Button>
+                </div>
+
+
             </div>
-            <div className="content" style={{ overflowX: 'scroll', width: '100%', display: '-webkit-box', padding: '15px 20px', scrollbarWidth: 'none', backgroundColor: 'white' }}>
-                <DragDropContext onDragEnd={(result) => {
-                    handleDragEnd(result)
-                }}>
-                    {processList?.map((process, index) => (<div className="card" style={{ width: '16rem', height: '28rem', fontWeight: 'bold', scrollbarWidth: 'none' }}>
-                        <div className='d-flex justify-content-between align-items-center' style={{ backgroundColor: process.tag_color, color: 'white', padding: '3px 10px' }}>
-                            <div className="card-header d-flex align-items-center" style={{ color: 'black' }}>
-                                {process?.name_process} <Avatar className='ml-2' size={25}><span style={{fontSize: 12, display: 'flex'}}>{sprintInfo !== null ? sprintInfo?.issue_list?.filter(issue => issue.issue_type === process._id).length : 0}</span></Avatar>
-                                {/* {countEleStatus(0, type)} */}
-                            </div>
-                            <div className='dropdown'>
-                                <button style={{ height: '30px' }} className='btn btn-light p-0 pl-3 pr-3' type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <i className="fa-sharp fa-solid fa-bars"></i>
-                                </button>
-                                <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                    <button className="dropdown-item">Set column limit</button>
-                                    <button className="dropdown-item" onClick={() => {
-                                        setCurrentProcess(process)
-                                        showModal()
-                                    }}>Delete</button>
+            <DragDropContext onDragEnd={(result) => {
+                handleDragEnd(result)
+            }}>
+                <Droppable direction='horizontal' droppableId='process'>
+                    {(provided) => {
+                        return <div
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            className="content"
+                            style={{ overflowX: 'scroll', overflowY: 'hidden', height: 'fit-content', width: '100%', display: '-webkit-box', padding: '15px 20px', scrollbarWidth: 'none', backgroundColor: 'white' }}
+                        >
+                            {processList?.map((process, index) => {
+                                return <Draggable draggableId={process._id} key={process._id} index={index}>
+                                    {(provided) => {
+                                        return <div
+                                            ref={provided.innerRef}
+                                            {...provided.dragHandleProps}
+                                            {...provided.draggableProps}
+                                            className="card">
+                                                <div style={{ width: 'max-content', minWidth: '16rem', height: '28rem', fontWeight: 'bold', scrollbarWidth: 'none', overflowY: 'none' }}>
+                                                    <div className='d-flex justify-content-between align-items-center' style={{ backgroundColor: process.tag_color, color: 'white', padding: '3px 10px' }}>
+                                                        <div className="card-header d-flex align-items-center" style={{ color: 'black' }}>
+                                                            {process?.name_process} <Avatar className='ml-2' size={25}><span style={{ fontSize: 12, display: 'flex' }}>{sprintInfo !== null && Object.keys(sprintInfo).length !== 0 ? sprintInfo?.issue_list?.filter(issue => issue.issue_type === process._id).length : '0'}</span></Avatar>
+                                                            {/* {countEleStatus(0, type)} */}
+                                                        </div>
+                                                        <div className='dropdown'>
+                                                            <button style={{ height: '30px' }} className='btn btn-light p-0 pl-3 pr-3' type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                                <i className="fa-sharp fa-solid fa-bars"></i>
+                                                            </button>
+                                                            <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                                                <button className="dropdown-item">Set column limit</button>
+                                                                <button className="dropdown-item" onClick={() => {
+                                                                    setCurrentProcess(process)
+                                                                    showModal()
+                                                                }}>Delete</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ height: '100%', overflowY: 'auto', scrollbarWidth: 'none' }}>
+                                                        <Droppable droppableId={process._id}>
+                                                            {(provided) => {
+                                                                return <ul className="list-group list-group-flush" style={{ height: '100%' }} ref={provided.innerRef} {...provided.droppableProps}>
+                                                                    {index === 0 && sprintInfo !== null && sprintInfo?.issue_list?.length === 0 ? <div className='d-flex flex-column align-items-center ml-2 mr-2'>
+                                                                        <img src="https://jira-frontend-bifrost.prod-east.frontend.public.atl-paas.net/assets/agile.52407441.svg" style={{ height: 150, width: 150 }} alt="img-backlog" />
+                                                                        <p style={{ fontWeight: 'bold', marginBottom: 5 }}>Get started in the backlog</p>
+                                                                        <span style={{ fontWeight: 'normal', textAlign: 'center' }}>Plan and start a sprint to see issues here.</span>
+                                                                        <Button className='mt-2' danger onClick={() => {
+                                                                            navigate(`/projectDetail/${id}/backlog`)
+                                                                        }}>Go to Backlog</Button>
+                                                                    </div> : renderIssue(process._id)}
+                                                                    {provided.placeholder}
+                                                                </ul>
+                                                            }}
+                                                        </Droppable>
+                                                    </div>
+                                                </div>
+                                                {provided.placeholder}
+                                        </div>
+                                    }}
+                                </Draggable>
+                            })}
+                            <div className='add-process'>
+                                <Button style={{ display: !openAddProcess ? "block" : "none" }} onClick={() => {
+                                    setOpenAddProcess(true)
+                                }} type="primary"><i className="fa fa-plus"></i></Button>
+                                <div style={{ display: openAddProcess ? "block" : "none" }}>
+                                    <Input defaultValue='' value={valueProcess} style={{ width: '100%' }} onChange={(e) => {
+                                        setValueProcess(e.target.value)
+                                    }} />
+                                    <div className='d-flex justify-content-end'>
+                                        <Button onClick={() => {
+                                            if (valueProcess.trim() !== "") {
+                                                dispatch(CreateProcessACtion({
+                                                    project_id: id,
+                                                    name_process: valueProcess.toUpperCase()
+                                                }))
+                                                setOpenAddProcess(false)
+                                                setValueProcess('')
+                                            } else {
+                                                showNotificationWithIcon('error', '', 'Created failed, please entering again')
+                                            }
+                                        }} type="primary"><i class="fa fa-check"></i></Button>
+                                        <Button onClick={() => {
+                                            setOpenAddProcess(false)
+                                            setValueProcess('')
+                                        }}><i className="fa-solid fa-xmark"></i></Button>
+                                    </div>
                                 </div>
                             </div>
+                            {provided.placeholder}
                         </div>
-                        <div style={{ height: '100%', overflowY: 'auto', scrollbarWidth: 'none' }}>
-                            <Droppable droppableId={process._id}>
-                                {(provided) => {
-                                    return <ul className="list-group list-group-flush" style={{ height: '100%' }} ref={provided.innerRef} {...provided.droppableProps}>
-                                        {index === 0 && sprintInfo !== null && sprintInfo?.issue_list?.length === 0 ? <div className='d-flex flex-column align-items-center ml-2 mr-2'>
-                                            <img src="https://jira-frontend-bifrost.prod-east.frontend.public.atl-paas.net/assets/agile.52407441.svg" style={{ height: 150, width: 150 }} alt="img-backlog" />
-                                            <p style={{ fontWeight: 'bold', marginBottom: 5 }}>Get started in the backlog</p>
-                                            <span style={{ fontWeight: 'normal', textAlign: 'center' }}>Plan and start a sprint to see issues here.</span>
-                                            <Button className='mt-2' danger onClick={() => {
-                                                navigate(`/projectDetail/${id}/backlog`)
-                                            }}>Go to Backlog</Button>
-                                        </div> : renderIssue(process._id)}
-                                        {provided.placeholder}
-                                    </ul>
-                                }}
-                            </Droppable>
+                    }}
+                </Droppable>
+
+                <Modal
+                    open={open}
+                    onOk={handleOk}
+                    onCancel={handleCancel}
+                >
+                    <div className='d-flex'>
+                        <i className="glyphicon glyphicon-alert"></i>
+                        <span style={{ fontSize: '16px', fontWeight: 'bold' }}>Move work from <span>{currentProcess?.name_process}</span> column</span>
+                    </div>
+                    <p>Select a new home for any work with the <span>{currentProcess?.name_process}</span> status, including work in the backlog.</p>
+                    <div className='d-flex justify-content-between align-items-center'>
+                        <div className='d-flex flex-column'>
+                            <label htmlFor='currentProcess'>This status will be deleted:</label>
+                            <div style={{ textDecoration: 'line-through', backgroundColor: currentProcess?.tag_color, display: 'inline' }}>{currentProcess?.name_process}</div>
                         </div>
-                    </div>))}
-                </DragDropContext>
-                <div className='add-process'>
-                    <Button style={{ display: !openAddProcess ? "block" : "none" }} onClick={() => {
-                        setOpenAddProcess(true)
-                    }} type="primary"><i className="fa fa-plus"></i></Button>
-                    <div style={{ display: openAddProcess ? "block" : "none" }}>
-                        <Input defaultValue='' value={valueProcess} style={{ width: '100%' }} onChange={(e) => {
-                            setValueProcess(e.target.value)
-                        }} />
-                        <div className='d-flex justify-content-end'>
-                            <Button onClick={() => {
-                                if (valueProcess.trim() !== "") {
-                                    dispatch(CreateProcessACtion({
-                                        project_id: id,
-                                        name_process: valueProcess.toUpperCase()
-                                    }))
-                                    setOpenAddProcess(false)
-                                    setValueProcess('')
-                                } else {
-                                    showNotificationWithIcon('error', '', 'Created failed, please entering again')
-                                }
-                            }} type="primary"><i class="fa fa-check"></i></Button>
-                            <Button onClick={() => {
-                                setOpenAddProcess(false)
-                                setValueProcess('')
-                            }}><i className="fa-solid fa-xmark"></i></Button>
+                        <i className="fa fa-long-arrow-alt-right"></i>
+                        <div className='d-flex flex-column'>
+                            <label htmlFor='newProcess?'>Move existing issues to:</label>
+                            <Select
+                                showSearch
+                                optionFilterProp="label"
+                                options={renderProcessListOptions(currentProcess?._id.toString())}
+                                defaultValue={renderProcessListOptions(currentProcess?._id.toString())[0]?.value}
+                            />
                         </div>
                     </div>
-                </div>
-            </div>
-            <Modal
-                open={open}
-                onOk={handleOk}
-                onCancel={handleCancel}
-            >
-                <div className='d-flex'>
-                    <i className="glyphicon glyphicon-alert"></i>
-                    <span style={{ fontSize: '16px', fontWeight: 'bold' }}>Move work from <span>{currentProcess?.name_process}</span> column</span>
-                </div>
-                <p>Select a new home for any work with the <span>{currentProcess?.name_process}</span> status, including work in the backlog.</p>
-                <div className='d-flex justify-content-between align-items-center'>
-                    <div className='d-flex flex-column'>
-                        <label htmlFor='currentProcess'>This status will be deleted:</label>
-                        <div style={{ textDecoration: 'line-through', backgroundColor: currentProcess?.tag_color, display: 'inline' }}>{currentProcess?.name_process}</div>
-                    </div>
-                    <i className="fa fa-long-arrow-alt-right"></i>
-                    <div className='d-flex flex-column'>
-                        <label htmlFor='newProcess?'>Move existing issues to:</label>
-                        <Select
-                            showSearch
-                            optionFilterProp="label"
-                            options={renderProcessListOptions(currentProcess?._id.toString())}
-                            defaultValue={renderProcessListOptions(currentProcess?._id.toString())[0]?.value}
-                        />
-                    </div>
-                </div>
-            </Modal>
+                </Modal>
+            </DragDropContext>
         </div>
     )
 }

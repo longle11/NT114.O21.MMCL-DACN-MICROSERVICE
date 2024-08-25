@@ -11,11 +11,13 @@ import { ReactFlow } from '@xyflow/react';
 import './WorkflowView.css'
 import '@xyflow/react/dist/style.css';
 import CustomNode from '../Custom-Worklow-Node/CustomNode';
+import CustomNodeProcess from '../Custom-Worklow-Node/CustomNodeProcess';
 const nodeTypes = {
     custom: CustomNode,
+    customNodeProcess: CustomNodeProcess,
 };
 
-const defaultViewport = { x: 0, y: 0, zoom: 0 };
+const defaultViewport = { x: 0, y: 0, zoom: 1.5};
 function View(props) {
     const [nodes, setNodes, onNodesChange] = useNodesState(JSON.parse(localStorage.getItem('nodes')));
     const [edges, setEdges, onEdgesChange] = useEdgesState(JSON.parse(localStorage.getItem('edges')));
@@ -25,12 +27,9 @@ function View(props) {
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
                 nodeTypes={nodeTypes}
                 fitViewOptions={{ padding: 0.5 }}
                 defaultViewport={defaultViewport}
-                maxZoom={0.5}
                 fitView>
                 <MiniMap />
                 <Controls />

@@ -12,7 +12,7 @@ function Create(props) {
     const handlEditorChange = (content, editor) => {
         setFieldValue('description', content)
     }
-    
+
     const dispatch = useDispatch()
     const categoryList = useSelector(state => state.categories.categoryList)
     useEffect(() => {
@@ -36,7 +36,7 @@ function Create(props) {
             <div className="info">
                 <form onSubmit={handleSubmit}>
                     <div className='form-group'>
-                        <p>Name <span style={{color: 'red'}}>(*)</span></p>
+                        <p>Name <span style={{ color: 'red' }}>(*)</span></p>
                         <input onChange={handleChange} className='form-control' name='name_project' />
                     </div>
                     <div className='form-group'>
@@ -91,7 +91,7 @@ const handleCreateProject = withFormik({
         if (values.name_project.trim() !== '' && values.description.trim() !== '') {
             if (props.userInfo) {
                 values.creator = props.userInfo.id
-                props.dispatch(createProjectAction({...values, members: [props.userInfo.id]}))
+                props.dispatch(createProjectAction({ ...values, members: [{ user_info: props.userInfo.id, user_role: 0 }] }))
             } else {
                 showNotificationWithIcon('error', 'Tạo dự án', 'Vui lòng đăng nhập trước khi tạo dự án')
             }

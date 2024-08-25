@@ -17,11 +17,7 @@ const authCreatedListener = () => {
                 const parseData = JSON.parse(msg.getData())
 
                 //tiến hành lưu vào auth db
-                await userModel.create({
-                    _id: parseData._id,
-                    username: parseData.username,
-                    avatar: parseData.avatar
-                })
+                await userModel.create(parseData)
 
                 msg.ack()
             }

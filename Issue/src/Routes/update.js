@@ -10,8 +10,6 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
     try {
         if (req.currentUser) {
             const { id } = req.params
-            console.log("Gia tri body duoc lay ra tu du an ", req.body);
-            
             const issueIds = await issueModel.find({})
             const ids = issueIds.map(issue => issue._id.toString());
             if (!ids.includes(id)) {
@@ -21,6 +19,10 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                 //kiem tra xem assignees co duoc them vao hay khong
                 let listAssignees = currentIssue.assignees
                 if (req.body.assignees != null) {
+                    //check whether this user is already in this issue
+                    if(listAssignees.includes(req.body.assignees)) {
+                        throw new BadRequestError('User is already belonged to this project')
+                    }
                     listAssignees = listAssignees.concat(req.body.assignees)
                     //them assignees moi vao danh sach neu duoc them vao    
                     req.body.assignees = listAssignees
@@ -34,10 +36,6 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                 }
 
                 await issueModel.updateOne({ _id: id }, { $set: { ...req.body } })
-                const finddd = await issueModel.findById(id)
-
-                console.log("Gia tri finddd la ", finddd);
-                
                 const copyIssue = {
                     _id: currentIssue._id,
                     summary: currentIssue.summary,
@@ -51,7 +49,6 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                     issue_type: currentIssue.issue_type,
                     ...req.body
                 }
-                console.log("GIA TRI SAU KHI CAP NHAT VA GUI LEN NATS ", copyIssue, " CO BODY ", req.body);
 
                 // public su kien toi projectmanagement service
                 await issuePublisher(copyIssue, 'issue:updated')

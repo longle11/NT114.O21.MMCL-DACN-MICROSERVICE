@@ -62,6 +62,7 @@ export default function InfoModal() {
 
     //su dung de render option theo workflow chi dinh
     const typeOptionsFollowWorkflow = (current_type) => {
+
         const getWorkflowsActive = workflowList.filter(workflow => workflow.isActivated)
         if(getWorkflowsActive.length !== 0) {
             const getIndex = getWorkflowsActive.findIndex(workflow => workflow.issue_statuses.includes(issueInfo?.issue_status))
@@ -74,18 +75,20 @@ export default function InfoModal() {
                     }
                     return false
                 })
-        
-                const newdata = data.filter(option => processList.map(process => process._id).includes(option.target)).map(option => {
+                console.log("Gia tri data thu duoc la ", data)
+                const newdata = data?.filter(option => processList.map(process => process._id).includes(option.target)).map(option => {
                     const getNameNodeIndex = getCurrentWorkflow.nodes.findIndex(node => node.id === option.target)
-                    return {
-                        label: <span>{option.label} <i className="fa fa-long-arrow-alt-right ml-3 mr-3"></i><span style={{fontWeight: "bold"}}>{getCurrentWorkflow.nodes[getNameNodeIndex].data.label}</span></span>,
-                        value: option.target
+                    if(getCurrentWorkflow.nodes[getNameNodeIndex]?.data) {
+                        return {
+                            label: <span>{option?.label} <i className="fa fa-long-arrow-alt-right ml-3 mr-3"></i><span style={{fontWeight: "bold"}}>{getCurrentWorkflow.nodes[getNameNodeIndex]?.data?.label}</span></span>,
+                            value: option.target
+                        }
                     }
                 })
                 return newdata
             }
         }
-        return processList.filter(process => process._id !== current_type).map(process => {
+        return processList?.filter(process => process._id !== current_type).map(process => {
             return {
                 label: process.name_process,
                 value: process._id.toString()
@@ -133,7 +136,10 @@ export default function InfoModal() {
             })
             return !(issueInfo?.creator._id === value._id || isExisted !== -1)
         }).map((value, index) => {
-            return <Option key={value._id} value={value._id}>{value.username}</Option>
+            
+            return <Option key={value.user_info._id} value={value.user_info._id}>
+                <span style={{fontWeight: 'bold'}}>{value.user_info.username}</span> ({value.user_info.email})
+            </Option>
         })
     }
 
@@ -415,8 +421,8 @@ export default function InfoModal() {
         } else if (name_status.toLowerCase() === "status") {
             return <div>{iTagForIssueTypes(old_status)} <i className="fa-solid fa-arrow-right-long ml-3 mr-3"></i>  {iTagForIssueTypes(new_status)}</div>
         } else if (name_status.toLowerCase() === "assignees") {
-            const getAvatar = new_status.indexOf("+")
-            return <div><span style={{ fontWeight: 'bold' }}>Assignees</span> <i className="fa-solid fa-arrow-left-long ml-3 mr-3"></i>  <Avatar src={new_status.substring(0, getAvatar)} /> {new_status.substring(getAvatar + 1)}</div>
+            const getAvatar = new_status?.indexOf("=")
+            return <div><span style={{ fontWeight: 'bold' }}>Assignees</span> <i className="fa-solid fa-arrow-left-long ml-3 mr-3"></i>  <Avatar src={new_status} /> {new_status?.substring(getAvatar + 1)}</div>
         } else if (name_status.toLowerCase() === "time original estimate" || name_status.toLowerCase() === "time spent") {
             return <div>{convertMinuteToFormat(old_status)} <i className="fa-solid fa-arrow-right-long ml-3 mr-3"></i> {convertMinuteToFormat()}</div>
         } else if (name_status.toLowerCase() === "sprint" || name_status.toLowerCase().includes("epic") || name_status.toLowerCase().includes("version") || name_status.toLowerCase().includes("point") || name_status.toLowerCase().includes("type")) {
@@ -680,7 +686,6 @@ export default function InfoModal() {
                                             issueInfo?.creator._id === userInfo?.id ? (
                                                 <button onKeyDown={() => { }} className='text-primary mt-2 mb-2 btn bg-transparent' style={{ fontSize: '12px', margin: '0px', cursor: 'pointer', display: addAssignee === false ? 'none' : 'block', padding: 0, textAlign: 'left' }} onClick={() => {
                                                     setAddAssignee(false)
-                                                    dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { assignees: '66bb8785c618f818d7c18e71' }, null, "https://ui-avatars.com/api/?name=ltphilong+ltphilong", userInfo.id, "added", "assignees"))
                                                 }} >
                                                     <i className="fa fa-plus" style={{ marginRight: 5 }} />Add more
                                                 </button>
@@ -694,13 +699,16 @@ export default function InfoModal() {
                                                 onBlur={() => {
                                                     setAddAssignee(true)
                                                 }}
-                                                style={{ width: '200px' }}
+                                                style={{ width: '200px', marginTop: 10 }}
                                                 placeholder="Select a person"
                                                 optionFilterProp="children"
                                                 disabled={issueInfo?.creator._id !== userInfo?.id}
                                                 onSelect={(value, option) => {
                                                     setAddAssignee(true)
-                                                    dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { assignees: value }, null, "https://ui-avatars.com/api/?name=ltphilong+ltphilong", userInfo.id, "added", "assignees"))
+                                                    const getUserIndex = projectInfo?.members.findIndex(user => user.user_info._id.toString() === value)
+                                                    if(getUserIndex !== -1) {
+                                                        dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id, { assignees: value }, null, projectInfo?.members[getUserIndex].user_info.avatar, userInfo.id, "added", "assignees"))
+                                                    }
                                                 }}
                                                 filterOption={(input, option) => option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
                                             >

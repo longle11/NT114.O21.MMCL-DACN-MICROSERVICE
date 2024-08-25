@@ -111,13 +111,13 @@ export const GetWorkflowListAction = (project_id) => {
     }
 }
 
-export const UpdateWorkflowAction = (workflow_id, props) => {
+export const UpdateWorkflowAction = (workflow_id, props, navigate) => {
     return async dispatch => {
         try {
             const res = await Axios.put(`${domainName}/api/issueprocess/workflow/update/${workflow_id}`, props)
             if(res.status === 200) {
                 showNotificationWithIcon('success', '', res.data.message)
-                window.location.reload();
+                navigate(`/projectDetail/${props.project_id}/workflows`)
             }
         } catch (errors) {
             console.log("error UpdateWorkflowAction", errors);
@@ -131,7 +131,7 @@ export const DeleteWorkflowAction = (workflow_id) => {
             const res = await Axios.delete(`${domainName}/api/issueprocess/workflow/delete/${workflow_id}`)
             if(res.status === 200) {
                 showNotificationWithIcon('success', '', res.data.message)
-                window.location.reload();
+                window.location.reload()
             }
         } catch (errors) {
             console.log("error UpdateWorkflowAction", errors);

@@ -8,6 +8,10 @@ const userSchema = mongoose.Schema({
     avatar: {
         type: String,
         default: null
+    },
+    email: {
+        type: String,
+        default: null
     }
 })
 

@@ -164,7 +164,8 @@ router.post('/token/:id', async (req, res, next) => {
                 const data = {
                     _id: currentUser._id,
                     username: currentUser.username,
-                    avatar: currentUser.avatar
+                    avatar: currentUser.avatar,
+                    email: currentUser.email
                 }
                 //đăng ký sự kiện publish lên nats
                 authPublisher(data, 'auth:created')

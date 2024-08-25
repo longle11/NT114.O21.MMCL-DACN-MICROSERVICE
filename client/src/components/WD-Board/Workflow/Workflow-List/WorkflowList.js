@@ -119,13 +119,13 @@ export default function WorkflowList() {
                     <div className="dropdown">
                         <Button className='mr-2 text-primary' type="default" icon={<EditOutlined />} size='large' id={`dropdownMenu${index}`} data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" />
                         <div className="dropdown-menu" aria-labelledby={`dropdownMenu${index}`}>
-                            <a className="dropdown-item" href={`/projectDetail/${id}/workflows/edit/${record._id}`}>Edit</a>
-                            {/* {projectInfo?.activated_workflows?.includes(record._id) ? <a className="dropdown-item" href="##" onClick={() => {
-
-                            }}>Delete</a> : <></>} */}
-                            <a className="dropdown-item" href="##" onClick={() => {
+                            <a className="dropdown-item" href={`/projectDetail/${id}/workflows/edit/${record._id}`} onClick={() => {
+                                localStorage.setItem('nodes', JSON.stringify(record.nodes))
+                                localStorage.setItem('edges', JSON.stringify(record.edges))
+                            }}>Edit</a>
+                            {record?.isActivated ? <></> : <a className="dropdown-item" href="##" onClick={() => {
                                 dispatch(DeleteWorkflowAction(record._id))
-                            }}>Delete</a>
+                            }}>Delete</a>}
                             {record.isActivated ? <a className="dropdown-item" href="##" onClick={() => {
                                 //handle event when user clicks to move to inactive
                                 dispatch(UpdateWorkflowAction(record._id, { isActivated: false }))

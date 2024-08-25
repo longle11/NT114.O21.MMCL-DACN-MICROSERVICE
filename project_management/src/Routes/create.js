@@ -9,22 +9,14 @@ const router = express.Router()
 router.post('/create', currentUserMiddleware, async (req, res, next) => {
     try {
         if (req.currentUser) {
-            const { name_project, description, category, creator } = req.body;
             const projects = await projectModel.find({})
             const listNames = projects.map(project => project.name_project);
             //neu project chua ton tai
-            if (listNames.includes(name_project)) {
+            if (listNames.includes(req.body.name_project)) {
                 throw new BadRequestError("Project already existed")
             } else {
-                let members = []
-                members.push(creator)
-                const newProject = await new projectModel({
-                    name_project,
-                    description,
-                    category,
-                    creator
-                }).save()
-                console.log(newProject);
+                const newProject = await new projectModel(req.body).save()
+                
                 res.status(201).json({
                     message: "Initial success project",
                     data: newProject
@@ -34,6 +26,8 @@ router.post('/create', currentUserMiddleware, async (req, res, next) => {
             throw new UnauthorizedError("Authentication failed")
         }
     } catch (error) {
+        console.log(error);
+        
         next(error)
     }
 })

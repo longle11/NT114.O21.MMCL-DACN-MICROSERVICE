@@ -24,7 +24,7 @@ import { showNotificationWithIcon } from '../../../../util/NotificationUtil';
 import { useDispatch, useSelector } from 'react-redux';
 import { createWorkflowAction } from '../../../../redux/actions/CreateProjectAction';
 import { NavLink, useNavigate, useParams } from 'react-router-dom';
-import { GetProcessListAction, GetProjectAction } from '../../../../redux/actions/ListProjectAction';
+import { GetProcessListAction, GetProjectAction, GetWorkflowListAction, UpdateWorkflowAction } from '../../../../redux/actions/ListProjectAction';
 import { issueTypeOptions, issueTypeWithoutOptions } from '../../../../util/CommonFeatures';
 const nodeTypes = {
     custom: CustomNode,
@@ -33,6 +33,7 @@ const nodeTypes = {
 function WorflowEditView(props) {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const navigate = useNavigate()
+    const dispatch = useDispatch()
     const [isModalCreatingWorkflowlOpen, setModalCreatingWorkflowOpen] = useState(false)
     const [isModalProcessOpen, setIsModalProcessOpen] = useState(false)
     const [valueConnection, setValueConnection] = useState({})
@@ -43,18 +44,19 @@ function WorflowEditView(props) {
     const edgeReconnectSuccessful = useRef(true);
     const processList = useSelector(state => state.listProject.processList)
     const projectInfo = useSelector(state => state.listProject.projectInfo)
+    const workflowList = useSelector(state => state.listProject.workflowList)
     const userInfo = useSelector(state => state.user.userInfo)
-    const { id } = useParams()
+    const { id, workflowId } = useParams()
     //state for creating new workflow information
     const [workflowName, setWorkflowName] = useState('')
     const [statuses, setStatuses] = useState(issueTypeOptions)
 
 
-    const dispatch = useDispatch()
 
     useEffect(() => {
         dispatch(GetProcessListAction(id))
         dispatch(GetProjectAction(id))
+        dispatch(GetWorkflowListAction(id))
     }, [])
 
     const onConnect = useCallback((params) => {
@@ -72,6 +74,47 @@ function WorflowEditView(props) {
         edgeReconnectSuccessful.current = true;
         setEdges((els) => reconnectEdge(oldEdge, newConnection, els));
     }, []);
+
+
+    //use for users permit modify available workflow, not for creating new
+    const renderCurrentStatuesForUpdating = () => {
+        if (workflowId) {
+            const getWorkflow = workflowList?.filter(workflow => workflow._id === workflowId)
+            if (getWorkflow?.length !== 0) {
+                const issueStatusArrs = []
+                getWorkflow[0].issue_statuses?.forEach(status => {
+                    issueStatusArrs.push(issueTypeOptions[status])
+                    return issueTypeOptions[status]
+                })
+                return issueStatusArrs
+            } 
+        }
+        return issueTypeOptions
+    }
+    const renderCurrentNameWorkflowForUpdating = () => {
+        if (workflowId) {
+            const getWorkflow = workflowList?.filter(workflow => workflow._id === workflowId)
+            if (getWorkflow?.length !== 0) {
+                return getWorkflow[0].name_workflow
+            }
+        }
+        return null
+    }
+
+    const renderCurrentStatuesWithoutNameForUpdating = () => {
+        if (workflowId) {
+            const getWorkflow = workflowList?.filter(workflow => workflow._id === workflowId)
+            if (getWorkflow?.length !== 0) {
+                const arrs = getWorkflow[0].issue_statuses.map(indexStatus => {
+                    return <span>{issueTypeWithoutOptions[indexStatus].label}</span>
+                })
+
+                return <span className='d-flex align-items-center'>{arrs}</span>
+            } 
+        }
+        return <span className='d-flex align-items-center'> {issueTypeWithoutOptions.map(status => <span>{status.label}</span>)}</span>
+    }
+
 
     const nodeOptions = () => {
         return nodes?.map(node => {
@@ -202,14 +245,25 @@ function WorflowEditView(props) {
                 showNotificationWithIcon('error', '', 'Name workflow can not be left blank')
             }
             else {
-                dispatch(createWorkflowAction({
-                    project_id: id,
-                    name_workflow: workflowName,
-                    issue_statuses: statuses?.map(status => parseInt(status)),
-                    creator: userInfo.id,
-                    nodes: customNode,
-                    edges: customEdge,
-                }, navigate))
+                //if id is existed, for updating else for creating
+                if(workflowId) {
+                    dispatch(UpdateWorkflowAction(workflowId, {
+                        project_id: id,
+                        name_workflow: workflowName,
+                        issue_statuses: statuses?.map(status => parseInt(status)),
+                        nodes: customNode,
+                        edges: customEdge,
+                    }, navigate))
+                }else {
+                    dispatch(createWorkflowAction({
+                        project_id: id,
+                        name_workflow: workflowName,
+                        issue_statuses: statuses?.map(status => parseInt(status)),
+                        creator: userInfo.id,
+                        nodes: customNode,
+                        edges: customEdge,
+                    }, navigate))
+                }
 
                 setStatuses([])
                 setWorkflowName('')
@@ -224,7 +278,6 @@ function WorflowEditView(props) {
 
     const onReconnectEnd = useCallback((_, edge) => {
         if (!edgeReconnectSuccessful.current) {
-            console.log("edge on onReconnectEnd ", edge);
             setEdges((eds) => eds.filter((e) => e.id !== edge.id));
         }
 
@@ -314,11 +367,16 @@ function WorflowEditView(props) {
                 <div>
                     <button className='btn btn-transparent' onClick={() => {
                         navigate(`/projectDetail/${id}/workflows`)
+                        localStorage.removeItem('nodes')
+                        localStorage.removeItem('edges')
                     }}><i className="fa fa-times" style={{ fontSize: '40px' }}></i></button>
                 </div>
 
                 <div className='d-flex flex-column'>
-                    <p className='d-flex m-0 align-items-center'><span style={{fontWeight: 'bold', marginRight: '4px'}}>Workflow for</span> {issueTypeWithoutOptions.map(status => <span style={{fontSize: '10px !important'}}>{status.label}</span>)}</p>
+                    <p className='d-flex m-0 align-items-center'>
+                        <span style={{ fontWeight: 'bold', marginRight: '4px' }}>Workflow for </span>
+                        {renderCurrentStatuesWithoutNameForUpdating()}
+                    </p>
                     <NavLink to={`/projectDetail/${id}/board`}>{projectInfo.name_project}</NavLink>
                 </div>
                 <WorkflowSideBar />
@@ -332,11 +390,14 @@ function WorflowEditView(props) {
                     }}>Add connection</button>
                 </div>
                 <div>
-                    {nodes?.length === 1 || edges?.length === 0 ? <button className='btn btn-light mr-2' disabled style={{ height: 'fit-content' }}>Update Workflow</button> : <button className='btn btn-light mr-2' style={{ height: 'fit-content' }} onClick={() => {
+                    {nodes?.length === 1 || edges?.length === 0 ? <button className='btn btn-light mr-2' disabled style={{ height: 'fit-content' }}>{workflowId ? "Update Workflow" : "Create new workflow"}</button> : <button className='btn btn-light mr-2' style={{ height: 'fit-content' }} onClick={() => {
                         setModalCreatingWorkflowOpen(true)
-                    }}>Update Workflow</button>}
+                    }}>{workflowId ? "Update Workflow" : "Create new workflow"}</button>}
                     <button className='btn btn-dark' style={{ height: 'fit-content' }} onClick={() => {
                         navigate(`/projectDetail/${id}/workflows`)
+
+                        localStorage.removeItem('nodes')
+                        localStorage.removeItem('edges')
                     }}>Close</button>
                 </div>
             </div>
@@ -384,7 +445,7 @@ function WorflowEditView(props) {
                     <div className='row'>
                         <div className='col-6 d-flex flex-column'>
                             <label htmlFor='fromStatus'>From status</label>
-                            <Select defaultValue={null} value={valueConnection !== null && Object.keys(valueConnection).length !== 0 ? valueConnection.source : null}  options={nodeOptions()} id='fromStatus' onSelect={(value) => {
+                            <Select defaultValue={null} value={valueConnection !== null && Object.keys(valueConnection).length !== 0 ? valueConnection.source : null} options={nodeOptions()} id='fromStatus' onSelect={(value) => {
                                 valueConnection.source = value
                                 valueConnection.sourceHandle = null
                             }} />
@@ -418,14 +479,14 @@ function WorflowEditView(props) {
             <Modal destroyOnClose="true" title="Create workflow" open={isModalCreatingWorkflowlOpen} onOk={handleCreatingWorkflowOk} onCancel={handleCreatingWorkflowCancel}>
                 <p>Changes to this workflow will apply to the issue statuses selected.</p>
                 <label>Enter a new name for your workflow <span className='text-danger'>*</span></label>
-                <Input onChange={(e) => {
+                <Input defaultValue={renderCurrentNameWorkflowForUpdating()} onChange={(e) => {
                     setWorkflowName(e.target.value)
                 }} />
                 <label className='mt-2'>Select the issue statuses you want to copy this workflow to: <span className='text-danger'>*</span></label>
                 <Select
                     mode="multiple"
                     placeholder="Please select"
-                    defaultValue={issueTypeOptions}
+                    defaultValue={renderCurrentStatuesForUpdating()}
                     options={issueTypeOptions}
                     onChange={(value) => {
                         setStatuses(value)

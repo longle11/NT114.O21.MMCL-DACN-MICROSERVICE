@@ -12,28 +12,35 @@ router.get('/:id', async (req, res, next) => {
         if (ids.includes(id)) {
             const currentProject = await projectModel
                 .findById(id)
-                // .populate({
-                //     path: 'members',
-                //     select: '-__v'
-                // })
-                // .populate([
-                //     {
-                //         path: 'issues',
-                //         select: '-__v',
-                //         populate: {
-                //             path: 'assignees',
-                //             select: '-__v'
-                //         }
-                //     },
-                //     {
-                //         path: 'issues',
-                //         select: '-__v',
-                //         populate: {
-                //             path: 'creator',
-                //             select: '-__v'
-                //         }
-                //     }
-                // ])
+                .populate({
+                    path: 'members',
+                    populate: {
+                        path: 'user_info'
+                    },      
+                    select: '-__v'
+                })
+                .populate({
+                    path: 'creator',
+                    select: '-__v'
+                })
+            // .populate([
+            //     {
+            //         path: 'issues',
+            //         select: '-__v',
+            //         populate: {
+            //             path: 'assignees',
+            //             select: '-__v'
+            //         }
+            //     },
+            //     {
+            //         path: 'issues',
+            //         select: '-__v',
+            //         populate: {
+            //             path: 'creator',
+            //             select: '-__v'
+            //         }
+            //     }
+            // ])
             // const filteredIssues = currentProject.issues.filter(issue => {
             //     const regex = new RegExp(keyword, 'i');
             //     return regex.test(issue.shortSummary);
@@ -45,7 +52,7 @@ router.get('/:id', async (req, res, next) => {
                 message: "Lay thanh cong project",
                 data: currentProject
             })
-        }else {
+        } else {
             throw new BadRequestError("Project not found")
         }
 

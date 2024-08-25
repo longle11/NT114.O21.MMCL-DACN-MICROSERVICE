@@ -26,7 +26,7 @@ app.use('/api/users', require('./Routes/login'))
 app.use('/api/users', require('./Routes/currentUser'))
 app.use('/api/users', require('./Routes/logout'))
 app.use('/api/users', require('./Routes/update'))
-
+app.use('/api/users', require('./Routes/getUser'))
 
 app.use(errorHandler)
 

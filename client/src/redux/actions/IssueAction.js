@@ -127,6 +127,10 @@ export const updateInfoIssue = (issueId, projectId, props, old_status, new_statu
             // } else {
             //     showNotificationWithIcon('error', '', 'Update failed issue')
             // }
+
+            if (error.response.status === 400) {
+                showNotificationWithIcon('error', '', error.response.data.message)
+            } 
         }
     }
 }

@@ -8,6 +8,10 @@ const userSchema = new mongoose.Schema({
     avatar: {
         type: String,
         default: null
+    },
+    email: {
+        type: String,
+        default: null
     }
 })
 
@@ -20,7 +24,13 @@ userSchema.virtual('ProjectRefCategory', {
 userSchema.virtual('ProjectRefCreator', {
     ref: 'projects',
     localField: '_id',
-    foreignField: 'issues'
+    foreignField: 'user_info'
+})
+
+userSchema.virtual('ProjectRefUserRole', {
+    ref: 'issues',
+    localField: '_id',
+    foreignField: 'user_info'
 })
 
 userSchema.virtual('IssueRefAssignees', {

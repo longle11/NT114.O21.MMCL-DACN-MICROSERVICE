@@ -34,7 +34,7 @@ export const createProjectAction = (data) => {
                 userInfo: getUserUpdated.data.data
             })
         } catch (error) {
-
+            console.log("Gia tri loi cua createProjectAction", error)
         }
         dispatch({
             type: HIDE_LOADING
@@ -52,15 +52,11 @@ export const updateProjectAction = (project_id, props, navigate) => {
                 if (props.sprint_id !== null) {
                     navigate(`/projectDetail/${project_id}/board/${props.sprint_id}`)
                 }
+                window.location.reload()
             }
         } catch (error) {
-            if (error.response.status === 401) {
-                showNotificationWithIcon('error', '', 'Please sign in before posting comment')
-                dispatch({
-                    type: USER_LOGGED_IN,
-                    status: false,
-                    userInfo: null
-                })
+            if (error?.response?.status === 400) {
+                showNotificationWithIcon('error', '', error.response.data.message)
             }
         }
     }
@@ -137,10 +133,7 @@ export const deleteSprintAction = (sprintId, projectId) => {
 export const updateSprintAction = (sprintId, props) => {
     return async dispatch => {
         try {
-            console.log('Gia tri prop cua updateSprintAction ', props);
-
             const res = await Axios.put(`${domainName}/api/sprint/update/${sprintId}`, props)
-            console.log("res tra ve tu updateSprintAction ", res);
 
             if (res.status === 200) {
                 showNotificationWithIcon('success', 'cap nhat', res.data.message)
@@ -154,4 +147,21 @@ export const updateSprintAction = (sprintId, props) => {
 
         }
     }
-} 
+}
+
+export const addUserToProject = (email, role, project_id) => {
+    return async dispatch => {
+        try {
+            const res = await Axios.get(`${domainName}/api/users/findUser?keyword=${email}`)
+
+            if (res.status === 200) {
+                dispatch(updateProjectAction(project_id, { user_info: res.data.data._id.toString(), user_role: role }, null))
+                
+            }else {
+                showNotificationWithIcon('success', 'cap nhat', "Successfully added a new user into project")
+            }
+        } catch (error) {
+
+        }
+    }
+}

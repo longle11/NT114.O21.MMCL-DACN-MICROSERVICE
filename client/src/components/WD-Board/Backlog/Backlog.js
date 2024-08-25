@@ -26,6 +26,7 @@ export default function Backlog() {
     const sprintList = useSelector(state => state.listProject.sprintList)
     const versionList = useSelector(state => state.categories.versionList)
     const projectInfo = useSelector(state => state.listProject.projectInfo)
+    const workflowList = useSelector(state => state.listProject.workflowList)
     const dispatch = useDispatch()
     const onChange = (checkedValues) => {
         console.log('checked = ', checkedValues);
@@ -40,6 +41,28 @@ export default function Backlog() {
         old_stored_place: null,
         new_stored_place: 0 //mac dinh se luu tru vao backlog
     })
+
+    //create default type for issue base on workflow's status
+    const defaultForIssueType = (current_status) => {
+        const getCurrentWorkflowsActive = workflowList.filter(workflow => workflow.isActivated)
+        if (getCurrentWorkflowsActive !== null && getCurrentWorkflowsActive.length === 0) {
+            //it means that doesn't have any workflow is applied so we will get the first value in process
+            return processList[0]._id
+        } else {
+            //proceed to get workflow contains current_status
+            const getWorkflow = getCurrentWorkflowsActive.filter(workflow => workflow.issue_statuses.includes(current_status))
+            if (getWorkflow !== null && getWorkflow.length === 0) {  //although existing workflows, it doesn't contains this status
+                return processList[0]._id
+            } else {
+                const edges = getWorkflow[0].edges
+                //get the edge has souce id equal 0
+                const getEdge = edges.filter(edge => edge.source === '0')
+                //proceed link that destination of edges to default issue type
+                
+                return getEdge[0].target
+            }
+        }
+    }
 
     const handleOk = async () => {
         if (getIssueToOtherPlaces.old_stored_place !== null) {
@@ -417,7 +440,7 @@ export default function Backlog() {
                                 </Tooltip>
                             })}
                         </div>
-                        {sprint.issue_list.length !== 0 ? <button className='btn btn-primary' onClick={() => {
+                        {sprint.issue_list.length !== 0 || projectInfo.sprint_id !== null? <button className='btn btn-primary' onClick={() => {
                             //allow to start sprint if no sprints are started and only when a sprint has start and end date
                             //with start date greater than or equal current day
                             if (sprint.start_date !== null && dayjs(sprint.start_date) >= dayjs(new Date())) {
@@ -603,22 +626,27 @@ export default function Backlog() {
 
                                     options={issueTypeWithoutOptions} />
                                 <Input placeholder="What need to be done?" onChange={(e) => {
-                                    setSummary(e.target.value)
+                                    if(e.target.value.trim() !== "") {
+                                        setSummary(e.target.value)
+                                    }
                                 }} onKeyUp={(e) => {
                                     if (e.key === "Enter") {
-                                        dispatch(createIssue({
-                                            project_id: id,
-                                            issue_status: issueStatus,
-                                            summary: summary,
-                                            creator: userInfo.id,
-                                            current_sprint: currentSprint._id.toString()
-                                        }, issuesBacklog, null, null, userInfo.id))
-
-                                        //set default is 0 which means story
-                                        setIssueStatus(0)
-
-                                        //set value for summary to ''
-                                        setSummary('')
+                                        if(summary.trim() !== "") {
+                                            dispatch(createIssue({
+                                                project_id: id,
+                                                issue_status: issueStatus,
+                                                summary: summary,
+                                                creator: userInfo.id,
+                                                issue_type: defaultForIssueType(issueStatus),
+                                                current_sprint: currentSprint._id.toString()
+                                            }, issuesBacklog, null, null, userInfo.id))
+    
+                                            //set default is 0 which means story
+                                            setIssueStatus(0)
+    
+                                            //set value for summary to ''
+                                            setSummary('')
+                                        }
                                     }
                                 }} onBlur={() => {
                                     setOpenCreatingSprint({
@@ -955,20 +983,24 @@ export default function Backlog() {
                                             options={issueTypeWithoutOptions}
                                         />
                                         <Input placeholder="What need to be done?" onChange={(e) => {
-                                            setSummary(e.target.value)
+                                            if(e.target.value.trim() !== "") {
+                                                setSummary(e.target.value)
+                                            }
                                         }} onKeyUp={(e) => {
-                                            if (e.key === "Enter") {
-                                                dispatch(createIssue({
-                                                    project_id: id,
-                                                    issue_status: issueStatus,
-                                                    summary: summary,
-                                                    creator: userInfo.id,
-                                                    issue_type: processList[0]._id,
-                                                    current_sprint: null
-                                                }, issuesBacklog, null, null, userInfo.id))
-                                                //set default is 0 which means story
-                                                setIssueStatus(0)
-                                                setSummary('')
+                                            if(summary.trim() !== "") {
+                                                if (e.key === "Enter") {
+                                                    dispatch(createIssue({
+                                                        project_id: id,
+                                                        issue_status: issueStatus,
+                                                        summary: summary,
+                                                        creator: userInfo.id,
+                                                        issue_type: defaultForIssueType(issueStatus),
+                                                        current_sprint: null
+                                                    }, issuesBacklog, null, null, userInfo.id))
+                                                    //set default is 0 which means story
+                                                    setIssueStatus(0)
+                                                    setSummary('')
+                                                }
                                             }
                                         }} onBlur={() => {
                                             setOpenCreatingBacklog(false)

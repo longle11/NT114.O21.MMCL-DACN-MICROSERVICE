@@ -48,3 +48,18 @@ export const issueTypeWithoutOptions = [
     { label: <span className="align-items-center d-flex">{iTagForIssueTypes(1)} </span>, value: 1 },
     { label: <span className="align-items-center d-flex">{iTagForIssueTypes(2)} </span>, value: 2 }
 ]
+
+export const userPermissions = [
+    {
+        label: 'Administrator',
+        value: '0',
+    },
+    {
+        label: 'Member',
+        value: '1',
+    },
+    {
+        label: 'Viewer',
+        value: '2',
+    },
+]

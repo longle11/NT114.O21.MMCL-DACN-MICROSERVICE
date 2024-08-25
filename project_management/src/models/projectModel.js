@@ -15,8 +15,11 @@ const projectSchema = new mongoose.Schema({
     },
     members: [
         {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'users'
+            user_info: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'users'
+            },
+            user_role: Number
         }
     ],
     category: {
