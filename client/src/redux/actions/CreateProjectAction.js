@@ -4,6 +4,7 @@ import { delay } from "../../util/Delay"
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
 import domainName from '../../util/Config'
 import { GetWorkflowListAction, ListProjectAction } from "./ListProjectAction"
+import { updateUserInfo } from "./UserAction"
 export const createProjectAction = (data) => {
     return async dispatch => {
         try {
@@ -24,15 +25,7 @@ export const createProjectAction = (data) => {
             })
 
 
-            //tien hanh cap nhat thong tin cho user
-            const getUserUpdated = await Axios.post(`${domainName}/api/users/update/${data.creator.toString()}`, {
-                project_working: result.data.data._id
-            })
-
-            dispatch({
-                type: USER_LOGGED_IN,
-                userInfo: getUserUpdated.data.data
-            })
+            dispatch(updateUserInfo(data.creator.toString(), { project_working: result.data.data._id }))
         } catch (error) {
             console.log("Gia tri loi cua createProjectAction", error)
         }
@@ -156,8 +149,8 @@ export const addUserToProject = (email, role, project_id) => {
 
             if (res.status === 200) {
                 dispatch(updateProjectAction(project_id, { user_info: res.data.data._id.toString(), user_role: role }, null))
-                
-            }else {
+
+            } else {
                 showNotificationWithIcon('success', 'cap nhat', "Successfully added a new user into project")
             }
         } catch (error) {

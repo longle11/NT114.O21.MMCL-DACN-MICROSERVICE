@@ -119,3 +119,7 @@
 div.content:hover {
     scrollbar-width: thin !important;
 }
+
+div.process-header:hover div.dropdown button.btn-dashboard-setting {
+    display: block !important;
+}

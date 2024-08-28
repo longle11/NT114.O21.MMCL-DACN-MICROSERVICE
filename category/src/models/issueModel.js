@@ -5,6 +5,10 @@ const issueSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    ordinal_number: {
+        type: Number,
+        default: 1
+    },
     creator: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users'

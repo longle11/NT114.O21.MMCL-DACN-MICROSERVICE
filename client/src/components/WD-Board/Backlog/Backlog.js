@@ -18,6 +18,10 @@ import { GET_ISSUES_BACKLOG, GET_SPRINT_PROJECT } from '../../../redux/constants
 import Axios from 'axios';
 import domainName from '../../../util/Config';
 import CreateVersion from '../../Forms/CreateVersion/CreateVersion';
+import { showNotificationWithIcon } from '../../../util/NotificationUtil';
+import { delay } from '../../../util/Delay';
+import { UserOutlined } from '@ant-design/icons';
+import { updateUserInfo } from '../../../redux/actions/UserAction';
 export default function Backlog() {
     const [onChangeVersion, setOnChangeVersion] = useState(false)
     const [onChangeEpic, setOnChangeEpic] = useState(false)
@@ -27,7 +31,26 @@ export default function Backlog() {
     const versionList = useSelector(state => state.categories.versionList)
     const projectInfo = useSelector(state => state.listProject.projectInfo)
     const workflowList = useSelector(state => state.listProject.workflowList)
+    const epicList = useSelector(state => state.categories.epicList)
+
+    const userInfo = useSelector(state => state.user.userInfo)
+    const { id } = useParams()
+    const [issueStatus, setIssueStatus] = useState(0)
+    const [summary, setSummary] = useState('')
+    const [openCreatingBacklog, setOpenCreatingBacklog] = useState(false)
+    const [openCreatingSprint, setOpenCreatingSprint] = useState({
+        id: null,
+        open: false
+    })
     const dispatch = useDispatch()
+    useEffect(() => {
+        dispatch(getIssuesBacklog(id))
+        dispatch(getEpicList(id))
+        dispatch(GetProcessListAction(id))
+        dispatch(GetSprintListAction(id))
+        dispatch(getVersionList(id))
+        dispatch(GetProjectAction(id))
+    }, [])
     const onChange = (checkedValues) => {
         console.log('checked = ', checkedValues);
     };
@@ -58,12 +81,14 @@ export default function Backlog() {
                 //get the edge has souce id equal 0
                 const getEdge = edges.filter(edge => edge.source === '0')
                 //proceed link that destination of edges to default issue type
-                
+
                 return getEdge[0].target
             }
         }
     }
 
+
+    //thanh phan chung voi dashboard trong complete sprint => se gom lai sau
     const handleOk = async () => {
         if (getIssueToOtherPlaces.old_stored_place !== null) {
             if (getIssueToOtherPlaces.new_stored_place === 0) {
@@ -100,8 +125,20 @@ export default function Backlog() {
                     }
                 }
 
-            } else {
+            } else {    //move to other sprints
+                const getIssueListInCurrentSprint = getIssueToOtherPlaces.old_stored_place.issue_list
+                //proceed update current_sprint field to other sprints in Issue service
+                const getNewSprintInfo = sprintList.filter(sprint => sprint._id === getIssueToOtherPlaces.new_stored_place)
+                for (let index = 0; index < getIssueListInCurrentSprint.length; index++) {
+                    await delay(100)
+                    dispatch(updateSprintAction(getIssueToOtherPlaces.new_stored_place, { issue_id: getIssueListInCurrentSprint[index]._id.toString() }))
+                }
+                for (let index = 0; index < getIssueListInCurrentSprint.length; index++) {
+                    dispatch(updateInfoIssue(getIssueListInCurrentSprint[index]._id.toString(), id, { current_sprint: getIssueToOtherPlaces.new_stored_place }, getIssueToOtherPlaces.old_stored_place.sprint_name, getNewSprintInfo[0].sprint_name, userInfo.id, "updated", "sprint"))
+                }
 
+                // //proceed delete all issues in current sprint
+                dispatch(deleteSprintAction(getIssueToOtherPlaces.old_stored_place._id.toString(), id))
             }
         }
 
@@ -137,24 +174,7 @@ export default function Backlog() {
         return storedOptions
     }
 
-    const epicList = useSelector(state => state.categories.epicList)
-    useEffect(() => {
-        dispatch(getIssuesBacklog(id))
-        dispatch(getEpicList(id))
-        dispatch(GetProcessListAction(id))
-        dispatch(GetSprintListAction(id))
-        dispatch(getVersionList(id))
-        dispatch(GetProjectAction(id))
-    }, [])
-    const userInfo = useSelector(state => state.user.userInfo)
-    const { id } = useParams()
-    const [issueStatus, setIssueStatus] = useState(0)
-    const [summary, setSummary] = useState('')
-    const [openCreatingBacklog, setOpenCreatingBacklog] = useState(false)
-    const [openCreatingSprint, setOpenCreatingSprint] = useState({
-        id: null,
-        open: false
-    })
+
 
 
     const handleDragEnd = (result) => {
@@ -245,7 +265,6 @@ export default function Backlog() {
         } else if (dest.droppableId.includes("version") && source.droppableId.includes("backlog")) {
             const getVersionId = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
             const getIndexVersion = versionList.findIndex(version => version._id.toString() === getVersionId)
-            console.log("versionList ", versionList, " getIndexVersion ", getIndexVersion);
 
             if (getIndexVersion !== -1) {
                 const getCurrentIssue = issuesBacklog.filter(issue => issue.current_sprint === null)[source.index]
@@ -291,11 +310,14 @@ export default function Backlog() {
                         key={issue._id.toString()}
                         onClick={() => {
                             dispatch(getInfoIssue(issue._id.toString()))
+
+                            //dispatch event to update viewed issue in auth service
+                            dispatch(updateUserInfo(userInfo?.id, { viewed_issue: issue._id }))
                         }}
                         className="issues-backlog-detail issue-info p-0">
-                        <div style={{ cursor: 'pointer', borderBottom: '1px solid #ddd', padding: '5px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ cursor: 'pointer', borderBottom: '1px solid #ddd', backgroundColor: '#ffff', padding: '5px 5px 5px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div className='content-issue-backlog'>
-                                {iTagForIssueTypes(issue.issue_status)}
+                                <span>{iTagForIssueTypes(issue.issue_status)} <span className='mr-3' style={{ color: '#5e6c84', fontWeight: 'bold' }}>WD-{issue.ordinal_number?.toString()}</span></span>
                                 <span>{issue.summary}</span>
                             </div>
                             <div className='attach-issue-backlog d-flex align-items-center'>
@@ -303,13 +325,12 @@ export default function Backlog() {
                                 {issue.epic_link !== null ? <Tag color={issue.epic_link.tag_color}>{issue.epic_link.epic_name}</Tag> : <></>}
                                 {/* specify which epics does issue belong to? */}
                                 {issue.fix_version !== null ? <Tag className='ml-2' color={issue.fix_version.tag_color}>{issue.fix_version.version_name}</Tag> : <></>}
+                                {/* issue type */}
+                                {issue.issue_type !== null ? <Tag className='ml-2' color={issue?.issue_type?.tag_color}>{issue?.issue_type?.name_process}</Tag> : <></>}
                                 {/* Assigness */}
                                 <div className='ml-2'>
-                                    {/* <Avatar icon={<UserOutlined />} /> */}
-                                    <Avatar src={issue.creator.avatar} />
+                                    {issue.assignees?.length === 0 ? <Avatar icon={<UserOutlined />} /> : <Avatar src={issue?.creator?.avatar} />}
                                 </div>
-                                {/* issue id */}
-                                <span className='ml-2'>WD-{issue._id.toString()}</span>
                                 {/* priority backlog */}
                                 <span className='ml-2'>{iTagForPriorities(issue.issue_priority)}</span>
                                 {/* Story points for issue Backlog */}
@@ -390,7 +411,7 @@ export default function Backlog() {
                     return <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        style={{ listStyle: 'none', padding: 0, border: '1px solid #ddd', height: 'fit-content', maxHeight: '200px', overflowY: 'auto', scrollbarWidth: 'none' }}>
+                        style={{ listStyle: 'none', padding: 0, border: '1px solid #ddd', height: 'fit-content', maxHeight: '197px', overflowY: 'auto', scrollbarWidth: 'none' }}>
                         {issuesInBacklog}
                         {provided.placeholder}
                     </div>
@@ -414,14 +435,14 @@ export default function Backlog() {
         if (sprintList === null) {
             return <></>
         }
-        return sprintList?.map(sprint => {
+        return sprintList?.filter(sprint => sprint?._id.toString() !== projectInfo?.sprint_id?.toString())?.map(sprint => {
             return <div className='issues-info-sprint m-0 mb-4' style={{ width: '100%', backgroundColor: '#f7f8f9' }}>
-                <div className="d-flex justify-content-between align-items-center mb-1" style={{ padding: '5px 10px' }}>
+                <div className="d-flex justify-content-between align-items-center" style={{ padding: '10px 20px' }}>
                     <div
                         className='d-flex'
                         data-toggle="collapse"
                         data-target={`#issueSprintCollapse-${sprint._id.toString()}`}
-                        aria-expanded="true"
+                        aria-expanded="false"
                         aria-controls={`issueSprintCollapse-${sprint._id.toString()}`}>
                         <h6 className='m-0' style={{ lineHeight: '26px' }}>{sprint.sprint_name}</h6>
                         <button style={{ fontSize: '13px', margin: '0 5px' }} className="btn btn-transparent p-0" onClick={() => {
@@ -440,11 +461,13 @@ export default function Backlog() {
                                 </Tooltip>
                             })}
                         </div>
-                        {sprint.issue_list.length !== 0 || projectInfo.sprint_id !== null? <button className='btn btn-primary' onClick={() => {
+                        {sprint.issue_list.length !== 0 || projectInfo.sprint_id !== null ? <button className='btn btn-primary' onClick={() => {
                             //allow to start sprint if no sprints are started and only when a sprint has start and end date
                             //with start date greater than or equal current day
-                            if (sprint.start_date !== null && dayjs(sprint.start_date) >= dayjs(new Date())) {
+                            if (projectInfo.sprint_id !== null && sprint.start_date !== null && dayjs(sprint.start_date).format('dd/mm/yyyy') >= dayjs(new Date()).format('dd/mm/yyyy')) {
                                 dispatch(updateProjectAction(id, { sprint_id: sprint._id }, navigate))
+                            } else {
+                                showNotificationWithIcon('error', '', 'Information is invalid, please checking again')
                             }
                         }}>Start sprint</button> : <button className='btn btn-primary' disabled>Start sprint</button>}
                         {/* display drop down to select more options in current sprint */}
@@ -473,133 +496,135 @@ export default function Backlog() {
                         </div>
                     </div>
                 </div>
-                <div id={`issueSprintCollapse-${sprint._id.toString()}`} className='collapse show'>
-                    <div className='sprint-info d-flex flex-column' style={{ padding: '5px 10px' }}>
+                <div id={`issueSprintCollapse-${sprint._id.toString()}`} className={`collapse ${sprint.issue_list.length === 0 ? 'show' : ''}`}>
+                    <div className='sprint-info d-flex flex-column' style={{ padding: '5px 20px' }}>
                         {sprint.start_date !== null && sprint.end_date !== null ? <span><span style={{ fontWeight: 'bold' }}>Date: </span> {dayjs(sprint.start_date).format("DD/MM/YYYY hh:mm")} - {dayjs(sprint.end_date).format("DD/MM/YYYY hh:mm")}</span> : <></>}
-                        {sprint.sprint_goal !== null ? <span><span style={{ fontWeight: 'bold' }}>Description: </span>{sprint.sprint_goal}</span> : <></>}
+                        {sprint.sprint_goal !== null ? <span style={{ width: '80%' }}><span style={{ fontWeight: 'bold' }}>Description: </span>{sprint.sprint_goal}</span> : <></>}
                     </div>
 
                     <Droppable droppableId={`sprint-${sprint._id.toString()}`} >
                         {(provided) => {
                             return <div ref={provided.innerRef} {...provided.droppableProps}>
-                                {sprint.issue_list.length === 0 ? <div style={{ padding: 0, border: '2px dashed #ddd', height: sprint.issue_list.length > 1 ? 150 : 50, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                    {sprint.issue_list.length === 1 ? <div className='description-sprint d-flex align-items-center'>
-                                        <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1BtLhkORsgCvCDFhKq9ZQ0ICDjaxJAntxfA&s)' style={{ width: '50px', height: '50px' }} alt="sprint img" />
-                                        <div className='description-text-sprint d-flex flex-column ml-2'>
-                                            <span style={{ fontWeight: '700' }}>Plan your sprint</span>
-                                            <span>Drag issues from the <b>Backlog</b> section, or create new issues, to plan the work for this sprint.<br /> Select <b>Start sprint</b> when you're ready</span>
-                                        </div>
-                                    </div> : <div className='description-sprint d-flex align-items-center'>
+                                {sprint.issue_list.length === 0 && sprintList.length === 1 ? <div className='description-sprint d-flex align-items-center' style={{ padding: 0, border: '2px dashed #ddd', height: 150, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                    <img src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1BtLhkORsgCvCDFhKq9ZQ0ICDjaxJAntxfA&s)' style={{ width: '50px', height: '50px' }} alt="sprint img" />
+                                    <div className='description-text-sprint d-flex flex-column ml-2'>
+                                        <span style={{ fontWeight: '700' }}>Plan your sprint</span>
+                                        <span>Drag issues from the <b>Backlog</b> section, or create new issues, to plan the work for this sprint.<br /> Select <b>Start sprint</b> when you're ready</span>
+                                    </div>
+                                </div> : <div>
+                                    {sprint.issue_list.length === 0 ? <div className='description-sprint d-flex align-items-center' style={{ padding: 0, border: '2px dashed #ddd', height: 50, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                         <span>Plan a sprint by dragging the sprint footer down below some issues, or by dragging issues here</span>
-                                    </div>}
-                                </div> : <div className='issues-list-sprint'>
-                                    {sprint.issue_list !== null ? sprint.issue_list?.map((issue, index) => {
-                                        return <Draggable
-                                            key={issue._id?.toString()}
-                                            draggableId={issue._id?.toString()}
-                                            index={index}>
-                                            {(provided) => {
-                                                return <div
-                                                    className='issue-info'
-                                                    ref={provided.innerRef}
-                                                    {...provided.draggableProps}
-                                                    {...provided.dragHandleProps}
-                                                    onClick={() => {
-                                                        dispatch(getInfoIssue(issue._id.toString()))
-                                                    }}
-                                                    data-toggle="modal"
-                                                    data-target="#infoModal">
-                                                    <div style={{ cursor: 'pointer', border: '1px solid #ddd', borderBottom: 'none', borderBottom: '1px solid #ddd', padding: '5px 20px', paddingRight: 5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                        <div className='content-issue-sprint'>
-                                                            {iTagForIssueTypes(issue.issue_status)}
-                                                            <span>{issue.summary}</span>
-                                                        </div>
-                                                        <div className='attach-issue-sprint d-flex align-items-center'>
-                                                            {/* specify which components does issue belong to? */}
-                                                            {issue.epic_link !== null ? <Tag color={issue?.epic_link?.tag_color}>{issue?.epic_link?.epic_name}</Tag> : <></>}
-                                                            {/* specify which epics does issue belong to? */}
-                                                            {issue.fix_version !== null ? <Tag className='ml-2' color={issue?.fix_version?.tag_color}>{issue?.fix_version?.version_name}</Tag> : <></>}
-                                                            {/* Assigness */}
-                                                            <div className='ml-2'>
-                                                                {/* <Avatar icon={<UserOutlined />} /> */}
-                                                                <Avatar src={issue?.creator?.avatar} />
+                                    </div> : <div className='issues-list-sprint' style={{ maxHeight: '197px', overflowY: 'auto', height: 'fit-content', scrollbarWidth: 'none' }}>
+                                        {sprint.issue_list !== null ? sprint.issue_list?.map((issue, index) => {
+                                            return <Draggable
+                                                key={issue._id?.toString()}
+                                                draggableId={issue._id?.toString()}
+                                                index={index}>
+                                                {(provided) => {
+                                                    return <div
+                                                        className='issue-info'
+                                                        ref={provided.innerRef}
+                                                        {...provided.draggableProps}
+                                                        {...provided.dragHandleProps}
+                                                        onClick={() => {
+                                                            dispatch(getInfoIssue(issue._id.toString()))
+
+                                                            //dispatch event to update viewed issue in auth service
+                                                            dispatch(updateUserInfo(userInfo?.id, { viewed_issue: issue._id }))
+                                                        }}
+                                                        data-toggle="modal"
+                                                        data-target="#infoModal">
+                                                        <div className="issues" style={{ cursor: 'pointer', border: '1px solid #ddd', borderBottom: 'none', padding: '5px 20px', paddingRight: 5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            <div className='content-issue-sprint'>
+                                                                <span>{iTagForIssueTypes(issue.issue_status)} <span className='mr-3' style={{ color: '#5e6c84', fontWeight: 'bold' }}>WD-{issue.ordinal_number?.toString()}</span></span>
+                                                                <span>{issue.summary}</span>
                                                             </div>
-                                                            {/* issue id */}
-                                                            <span className='ml-2'>WD-{issue?._id?.toString()}</span>
-                                                            {/* priority sprint */}
-                                                            <span className='ml-2'>{iTagForPriorities(issue.issue_priority)}</span>
-                                                            {/* Story points for issue sprint */}
-                                                            <span className='ml-2'>{issue?.story_point !== null ? <Avatar size={20}><span className='d-flex' style={{ fontSize: 10 }}>{issue?.story_point}</span></Avatar> : <Avatar size={20}>-</Avatar>}</span>
-                                                            <button
-                                                                className='ml-1 setting-issue btn btn-light'
-                                                                id="dropdownMenuButton"
-                                                                data-toggle="dropdown"
-                                                                aria-haspopup="true"
-                                                                aria-expanded="false"
-                                                                style={{ visibility: 'hidden' }}
-                                                                onClick={() => {
-                                                                    setDropDownLeft(false)
-                                                                }}>
-                                                                <i className="fa fa-bars"></i>
-                                                            </button >
-                                                            <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                                                <li style={{ padding: '5px 15px' }}>
-                                                                    <div className='d-flex justify-content-between align-items-center'>
-                                                                        <span style={{ marginRight: 20 }}>Move to</span>
-                                                                        <i className="fa fa-angle-right" style={{ fontSize: 13 }}></i>
-                                                                    </div>
-                                                                    <ul className="dropdown-menu dropdown-submenu">
-                                                                        {sprintList?.filter(sp => sp._id.toString() !== sprint._id.toString()).map(sprint => {
-                                                                            return <li style={{ padding: '5px 15px' }}>{sprint.sprint_name}</li>
-                                                                        })}
-                                                                        <hr style={{ margin: '2px 0' }} />
-                                                                        <li style={{ padding: '5px 15px' }}>Top of backlog</li>
-                                                                        <li style={{ padding: '5px 15px' }}>Move up</li>
-                                                                        <li style={{ padding: '5px 15px' }}>Move down</li>
-                                                                        <li style={{ padding: '5px 15px' }}>Bottom of backlog</li>
-                                                                    </ul>
-                                                                </li>
-                                                                <hr style={{ margin: '2px 0' }} />
-                                                                <li style={{ padding: '5px 15px' }}>Copy issue link</li>
-                                                                <hr style={{ margin: '2px 0' }} />
-                                                                <li style={{ padding: '5px 15px' }}>
-                                                                    <div className='d-flex justify-content-between align-items-center'>
-                                                                        <span style={{ marginRight: 20 }}>Assignee</span>
-                                                                        <i className="fa fa-angle-right" style={{ fontSize: 13 }}></i>
-                                                                    </div>
-                                                                    <ul className="dropdown-menu dropdown-submenu">
-                                                                        <li style={{ padding: '5px 15px' }}>
-                                                                            <Search
-                                                                                placeholder="Search"
-                                                                                style={{
-                                                                                    width: 200
-                                                                                }}
-                                                                            />
-                                                                        </li>
-                                                                        <hr style={{ margin: '2px 0' }} />
-                                                                        {/* dispay info members in project */}
-                                                                    </ul>
-                                                                </li>
-                                                                <li style={{ padding: '5px 15px' }}>
-                                                                    <div className='d-flex justify-content-between align-items-center'>
-                                                                        <span style={{ marginRight: 20 }}>Story point estimate</span>
-                                                                        <i className="fa fa-angle-right" style={{ fontSize: 13 }}></i>
-                                                                    </div>
-                                                                    <ul className="dropdown-menu dropdown-submenu">
-                                                                        <li style={{ padding: '5px 15px' }}>
-                                                                            <InputNumber min={1} max={100} />
-                                                                        </li>
-                                                                    </ul>
-                                                                </li>
-                                                                <hr style={{ margin: '2px 0' }} />
-                                                                <li style={{ padding: '5px 15px' }}>Delete</li>
-                                                            </ul>
+                                                            <div className='attach-issue-sprint d-flex align-items-center'>
+                                                                {/* specify which components does issue belong to? */}
+                                                                {issue.epic_link !== null ? <Tag color={issue?.epic_link?.tag_color}>{issue?.epic_link?.epic_name}</Tag> : <></>}
+                                                                {/* specify which epics does issue belong to? */}
+                                                                {issue.fix_version !== null ? <Tag className='ml-2' color={issue?.fix_version?.tag_color}>{issue?.fix_version?.version_name}</Tag> : <></>}
+                                                                {/* issue type */}
+                                                                {issue.issue_type !== null ? <Tag className='ml-2' color={issue?.issue_type?.tag_color}>{issue?.issue_type?.name_process}</Tag> : <></>}
+                                                                {/* Assigness */}
+                                                                <div className='ml-2'>
+                                                                    {issue.assignees?.length === 0 ? <Avatar icon={<UserOutlined />} /> : <Avatar src={issue?.creator?.avatar} />}
+                                                                </div>
+                                                                {/* priority sprint */}
+                                                                <span className='ml-2'>{iTagForPriorities(issue.issue_priority)}</span>
+                                                                {/* Story points for issue sprint */}
+                                                                <span className='ml-2'>{issue?.story_point !== null ? <Avatar size={20}><span className='d-flex' style={{ fontSize: 10 }}>{issue?.story_point}</span></Avatar> : <Avatar size={20}>-</Avatar>}</span>
+                                                                <button
+                                                                    className='ml-1 setting-issue btn btn-light'
+                                                                    id="dropdownMenuButton"
+                                                                    data-toggle="dropdown"
+                                                                    aria-haspopup="true"
+                                                                    aria-expanded="false"
+                                                                    style={{ visibility: 'hidden' }}
+                                                                    onClick={() => {
+                                                                        setDropDownLeft(false)
+                                                                    }}>
+                                                                    <i className="fa fa-bars"></i>
+                                                                </button >
+                                                                <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                                                    <li style={{ padding: '5px 15px' }}>
+                                                                        <div className='d-flex justify-content-between align-items-center'>
+                                                                            <span style={{ marginRight: 20 }}>Move to</span>
+                                                                            <i className="fa fa-angle-right" style={{ fontSize: 13 }}></i>
+                                                                        </div>
+                                                                        <ul className="dropdown-menu dropdown-submenu">
+                                                                            {sprintList?.filter(sp => sp._id.toString() !== sprint._id.toString()).map(sprint => {
+                                                                                return <li style={{ padding: '5px 15px' }}>{sprint.sprint_name}</li>
+                                                                            })}
+                                                                            <hr style={{ margin: '2px 0' }} />
+                                                                            <li style={{ padding: '5px 15px' }}>Top of backlog</li>
+                                                                            <li style={{ padding: '5px 15px' }}>Move up</li>
+                                                                            <li style={{ padding: '5px 15px' }}>Move down</li>
+                                                                            <li style={{ padding: '5px 15px' }}>Bottom of backlog</li>
+                                                                        </ul>
+                                                                    </li>
+                                                                    <hr style={{ margin: '2px 0' }} />
+                                                                    <li style={{ padding: '5px 15px' }}>Copy issue link</li>
+                                                                    <hr style={{ margin: '2px 0' }} />
+                                                                    <li style={{ padding: '5px 15px' }}>
+                                                                        <div className='d-flex justify-content-between align-items-center'>
+                                                                            <span style={{ marginRight: 20 }}>Assignee</span>
+                                                                            <i className="fa fa-angle-right" style={{ fontSize: 13 }}></i>
+                                                                        </div>
+                                                                        <ul className="dropdown-menu dropdown-submenu">
+                                                                            <li style={{ padding: '5px 15px' }}>
+                                                                                <Search
+                                                                                    placeholder="Search"
+                                                                                    style={{
+                                                                                        width: 200
+                                                                                    }}
+                                                                                />
+                                                                            </li>
+                                                                            <hr style={{ margin: '2px 0' }} />
+                                                                            {/* dispay info members in project */}
+                                                                        </ul>
+                                                                    </li>
+                                                                    <li style={{ padding: '5px 15px' }}>
+                                                                        <div className='d-flex justify-content-between align-items-center'>
+                                                                            <span style={{ marginRight: 20 }}>Story point estimate</span>
+                                                                            <i className="fa fa-angle-right" style={{ fontSize: 13 }}></i>
+                                                                        </div>
+                                                                        <ul className="dropdown-menu dropdown-submenu">
+                                                                            <li style={{ padding: '5px 15px' }}>
+                                                                                <InputNumber min={1} max={100} />
+                                                                            </li>
+                                                                        </ul>
+                                                                    </li>
+                                                                    <hr style={{ margin: '2px 0' }} />
+                                                                    <li style={{ padding: '5px 15px' }}>Delete</li>
+                                                                </ul>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            }}
-                                        </Draggable>
-                                    }) : <></>}
+                                                }}
+                                            </Draggable>
+                                        }) : <></>}
+                                    </div>}
                                 </div>}
                                 {provided.placeholder}
                             </div>
@@ -625,36 +650,39 @@ export default function Backlog() {
                                     }}
 
                                     options={issueTypeWithoutOptions} />
-                                <Input placeholder="What need to be done?" onChange={(e) => {
-                                    if(e.target.value.trim() !== "") {
-                                        setSummary(e.target.value)
-                                    }
-                                }} onKeyUp={(e) => {
-                                    if (e.key === "Enter") {
-                                        if(summary.trim() !== "") {
-                                            dispatch(createIssue({
-                                                project_id: id,
-                                                issue_status: issueStatus,
-                                                summary: summary,
-                                                creator: userInfo.id,
-                                                issue_type: defaultForIssueType(issueStatus),
-                                                current_sprint: currentSprint._id.toString()
-                                            }, issuesBacklog, null, null, userInfo.id))
-    
-                                            //set default is 0 which means story
-                                            setIssueStatus(0)
-    
-                                            //set value for summary to ''
-                                            setSummary('')
+                                <Input placeholder="What need to be done?"
+                                    onChange={(e) => {
+                                        if (e.target.value.trim() !== "") {
+                                            setSummary(e.target.value)
                                         }
-                                    }
-                                }} onBlur={() => {
-                                    setOpenCreatingSprint({
-                                        id: null,
-                                        open: false
-                                    })
-                                    setSummary('    ')
-                                }} style={{ border: 'none', borderRadius: 0 }} />
+                                    }}
+                                    onKeyUp={(e) => {
+                                        if (e.key === "Enter") {
+                                            if (summary.trim() !== "") {
+                                                const tempSummary = summary
+                                                //set default is 0 which means story
+                                                setIssueStatus(0)
+                                                //set value for summary to ''
+                                                setSummary('')
+                                                dispatch(createIssue({
+                                                    project_id: id,
+                                                    issue_status: issueStatus,
+                                                    summary: tempSummary,
+                                                    creator: userInfo.id,
+                                                    issue_type: defaultForIssueType(issueStatus),
+                                                    current_sprint: currentSprint._id.toString()
+                                                }, issuesBacklog, null, null, userInfo.id))
+                                            }
+                                        }
+                                    }}
+                                    onBlur={() => {
+                                        setOpenCreatingSprint({
+                                            id: null,
+                                            open: false
+                                        })
+                                        setSummary('')
+                                    }}
+                                    style={{ border: 'none', borderRadius: 0 }} />
                             </div>
                         }
                         return <></>
@@ -672,7 +700,8 @@ export default function Backlog() {
                 {(provided) => {
                     return <div
                         key={version._id.toString()}
-                        style={{ border: '2px solid #aaa', borderRadius: '10px' }}
+                        style={{ border: '1px solid #aaa', borderRadius: '3px' }}
+                        className='mt-1'
                         ref={provided.innerRef}
                         {...provided.droppableProps}>
                         <button style={{ width: '100%', textAlign: 'left', backgroundColor: version.tag_color }} className="btn btn-transparent" type="button" data-toggle="collapse" data-target={versionID} aria-expanded="false" aria-controls={versionTag}>
@@ -706,7 +735,9 @@ export default function Backlog() {
                                         <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
                                             <span>Completed </span>
                                             <div style={{ width: 100 }}>
-                                                <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{version?.issue_list?.length}</span></Avatar>
+                                                <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{version?.issue_list?.filter(issue => {
+                                                    return issue.issue_type === processList[processList.length - 1]._id
+                                                }).length}</span></Avatar>
                                             </div>
                                         </div>
                                         <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
@@ -742,7 +773,7 @@ export default function Backlog() {
             return <Droppable key={`epic-${epic._id.toString()}`} droppableId={`epic-${epic._id.toString()}`}>
                 {(provided) => {
                     return <div
-                        className='card'
+                        className='card mt-1'
                         key={epic._id.toString()}
                         ref={provided.innerRef}
                         {...provided.droppableProps}>
@@ -768,7 +799,7 @@ export default function Backlog() {
                                     <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
                                         <span>Completed </span>
                                         <div style={{ width: 100 }}>
-                                            <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{epic?.issue_list?.length}</span></Avatar>
+                                            <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{epic?.issue_list?.filter(issue => issue.issue_type === processList[processList.length - 1]._id).length}</span></Avatar>
                                         </div>
                                     </div>
                                     <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
@@ -796,7 +827,7 @@ export default function Backlog() {
         </div>
     }
     return (
-        <div style={{ margin: '10px 40px' }}>
+        <div>
             <Breadcrumb
                 style={{ marginBottom: 10 }}
                 items={[
@@ -841,7 +872,15 @@ export default function Backlog() {
                         VERSIONS <i className="fa fa-angle-down ml-2"></i>
                     </Button>
                     <div className="dropdown-menu" aria-labelledby="dropdownVersionButton">
-                        <p style={{ padding: '5px 20px' }}>Unreleased versions in this project</p>
+                        {versionList !== null && versionList?.length > 0 ? <Checkbox.Group style={{ width: '100%' }} onChange={onChange}>
+                            <Row>
+                                {versionList?.map(version => {
+                                    return <Col span={16} style={{ padding: '5px 10px' }}>
+                                        <Checkbox value={version._id}>{version.version_name}</Checkbox>
+                                    </Col>
+                                })}
+                            </Row>
+                        </Checkbox.Group> : <p style={{ padding: '5px 20px' }}>Unreleased versions in this project</p>}
                         <hr />
                         <div className='d-flex align-items-center' style={{ padding: '5px 20px' }}>
                             <Switch onChange={() => {
@@ -856,17 +895,19 @@ export default function Backlog() {
                         Epics <i className="fa fa-angle-down ml-2"></i>
                     </Button>
                     <div className="dropdown-menu" aria-labelledby="dropdownEpicButton" style={{ width: 'fit-content' }}>
-                        <Checkbox.Group style={{ width: 'fit-content' }} onChange={onChange}>
-                            <Row>
-                                {epicList?.map(epic => {
-                                    return <Col span={16} style={{ padding: '5px 10px' }}>
-                                        <Checkbox value={epic._id}>{epic.epic_name}</Checkbox>
-                                    </Col>
-                                })}
-                            </Row>
-                        </Checkbox.Group>
+                        {
+                            epicList !== null && epicList?.length > 0 ? <Checkbox.Group style={{ width: '100%' }} onChange={onChange}>
+                                <Row>
+                                    {epicList?.map(epic => {
+                                        return <Col span={16} style={{ padding: '5px 10px' }}>
+                                            <Checkbox value={epic._id}>{epic.epic_name}</Checkbox>
+                                        </Col>
+                                    })}
+                                </Row>
+                            </Checkbox.Group> : <span className='d-flex justify-content-center'>No epics recently</span>
+                        }
                         <hr />
-                        <div className='d-flex align-items-center'>
+                        <div className='d-flex align-items-center' style={{ padding: '0 10px' }}>
                             <Switch onChange={() => {
                                 setOnChangeEpic(!onChangeEpic)
                             }} value={onChangeEpic} />
@@ -882,8 +923,16 @@ export default function Backlog() {
                     }}>
                         <div className="card version-info-backlog" style={{ width: '25rem', display: onChangeVersion ? 'block' : 'none', margin: '10px 0', height: 'fit-content' }}>
                             {versionList?.length !== 0 ? <div>
-                                <button style={{ width: '100%', textAlign: 'left', border: '2px solid #aaa', borderRadius: '10px' }} className='btn btn-transparent'>Issue without version</button>
-                                {renderVersionList()}
+                                <div className='d-flex justify-content-between' style={{ padding: '5px 10px' }}>
+                                    <h6>Version</h6>
+                                    <i className="fa-solid fa-xmark" onClick={() => {
+                                        setOnChangeVersion(!onChangeVersion)
+                                    }}></i>
+                                </div>
+                                <div style={{ margin: '10px 5px' }}>
+                                    <button style={{ width: '100%', textAlign: 'left', border: '1px solid #aaa', borderRadius: '3px' }} className='btn btn-transparent'>Issue without version</button>
+                                    {renderVersionList()}
+                                </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
                                     <div style={{ padding: '10px', display: 'flex', alignItems: 'center' }} className='version-footer'>
                                         <i className="fa fa-plus mr-2"></i>
@@ -914,7 +963,7 @@ export default function Backlog() {
                         <div
                             className="card epic-info-backlog"
                             style={{ width: '25rem', display: onChangeEpic ? 'block' : 'none', margin: '10px 5px', height: 'fit-content', maxHeight: 500, overflowY: 'auto' }}>
-                            <div className='d-flex justify-content-between' style={{ padding: '5px 10px' }}>
+                            <div className='d-flex justify-content-between mt-2' style={{ padding: '5px 10px' }}>
                                 <h6>Epic</h6>
                                 <i className="fa-solid fa-xmark" onClick={() => {
                                     setOnChangeEpic(!onChangeEpic)
@@ -938,28 +987,29 @@ export default function Backlog() {
                             </div>
                         </div>
 
-                        <div className='d-flex flex-column' style={{ width: '100%' }}>
+                        <div className='d-flex flex-column mt-2 mb-2 ' style={{ width: '100%', overflowY: 'auto', height: '75vh' }}>
                             {renderSprintList()}
-                            <div className='issues-info-backlog' style={{ backgroundColor: '#f7f8f9' }}>
+                            <div className='issues-info-backlog mt-2' style={{ backgroundColor: '#f7f8f9' }}>
                                 <div
-                                    className="d-flex justify-content-between align-items-center mb-4"
+                                    className="d-flex justify-content-between align-items-center mb-2"
                                     data-toggle="collapse" data-target="#issueBacklogCollapse"
                                     aria-expanded="false"
                                     aria-controls="issueBacklogCollapse"
-                                    style={{ width: '100%', margin: '10px', padding: '5px 10px' }}>
+                                    style={{ margin: '10px', padding: '5px 10px' }}>
                                     <h6 className='m-0'>Backlog <span>7 issues</span></h6>
                                     <div className='d-flex align-items-center'>
                                         <div className='mr-2'>
                                             {processList?.map((process) => {
-                                                const countIssueProcess = issuesBacklog.filter(issue => {
-                                                    return issue?.issue_type?.toString() === process._id.toString()
+                                                const countIssueProcess = issuesBacklog.filter(issue => issue.current_sprint === null).filter(issue => {
+                                                    return issue?.issue_type?._id?.toString() === process?._id?.toString()
                                                 }).length
                                                 return <Tooltip placement="bottom" title={`${process.name_process[0] + process.name_process.toLowerCase().substring(1)} ${countIssueProcess} of ${issuesBacklog.length} (issue count)`}>
                                                     <Avatar size={'small'} style={{ backgroundColor: process.tag_color }}>{countIssueProcess}</Avatar>
                                                 </Tooltip>
                                             })}
                                         </div>
-                                        <button className='btn btn-primary' onClick={() => {
+                                        <button className='btn btn-primary' onClick={(e) => {
+                                            e.stopPropagation()
                                             dispatch(createSprintAction({
                                                 project_id: id,
                                                 sprint_name: null
@@ -983,23 +1033,24 @@ export default function Backlog() {
                                             options={issueTypeWithoutOptions}
                                         />
                                         <Input placeholder="What need to be done?" onChange={(e) => {
-                                            if(e.target.value.trim() !== "") {
+                                            if (e.target.value.trim() !== "") {
                                                 setSummary(e.target.value)
                                             }
                                         }} onKeyUp={(e) => {
-                                            if(summary.trim() !== "") {
+                                            if (summary.trim() !== "") {
                                                 if (e.key === "Enter") {
+                                                    //set default is 0 which means story
+                                                    setIssueStatus(0)
+                                                    setSummary('')
+                                                    const tempSummary = summary
                                                     dispatch(createIssue({
                                                         project_id: id,
                                                         issue_status: issueStatus,
-                                                        summary: summary,
+                                                        summary: tempSummary,
                                                         creator: userInfo.id,
                                                         issue_type: defaultForIssueType(issueStatus),
                                                         current_sprint: null
                                                     }, issuesBacklog, null, null, userInfo.id))
-                                                    //set default is 0 which means story
-                                                    setIssueStatus(0)
-                                                    setSummary('')
                                                 }
                                             }
                                         }} onBlur={() => {
@@ -1014,6 +1065,7 @@ export default function Backlog() {
                 </div>
             </div>
             <Modal
+                destroyOnClose="true"
                 open={open}
                 onOk={handleOk}
                 onCancel={handleCancel}

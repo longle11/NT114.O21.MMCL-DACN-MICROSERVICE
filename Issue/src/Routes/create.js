@@ -11,6 +11,14 @@ const router = express.Router()
 
 router.post("/create", async (req, res, next) => {
     try {
+        //generate the newest number for issue in ordinal number
+        const getAllIssuesInProjectId = await issueModel.find({ project_id: req.body.project_id })
+        if (getAllIssuesInProjectId.length === 0) {
+            req.body.ordinal_number = 1
+        } else {
+            const ordinalNumberArrs = getAllIssuesInProjectId.map(issue => issue.ordinal_number)
+            req.body.ordinal_number = Math.max(...ordinalNumberArrs) + 1
+        }
 
         const issue = new issueModel(req.body)
         const newIssue = await issue.save()
@@ -28,7 +36,8 @@ router.post("/create", async (req, res, next) => {
             creator: newIssue.creator,
             epic_link: newIssue.epic_link,
             fix_version: newIssue.fix_version,
-            issue_type: newIssue.issue_type
+            issue_type: newIssue.issue_type,
+            ordinal_number: newIssue.ordinal_number
         }
 
         await issuePublisher(issueCopy, 'issue:created')

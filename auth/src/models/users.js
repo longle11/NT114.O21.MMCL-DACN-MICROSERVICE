@@ -36,17 +36,35 @@ const userSchema = new mongoose.Schema({
         default: null
     },
     tokenExp: {
-        type: Date, 
+        type: Date,
         default: Date.now()
     },
     status: {
         type: String,
         default: "pending"
-    }
+    },
+    assigned_issues: [
+        {
+            issue_id: mongoose.Schema.Types.ObjectId,
+            createAt: Date
+        }
+    ],
+    working_issues: [
+        {
+            issue_id: mongoose.Schema.Types.ObjectId,
+            createAt: Date
+        }
+    ],
+    viewed_issues: [
+        {
+            issue_id: mongoose.Schema.Types.ObjectId,
+            createAt: Date
+        }
+    ]
 })
 
 
-userSchema.pre("save", function(next) {
+userSchema.pre("save", function (next) {
     // if(this.isModified("password")) {
     //     //tien hanh ma hoa 
     //     const salt = bcrypt.genSaltSync(10)
@@ -57,7 +75,7 @@ userSchema.pre("save", function(next) {
     next()
 })
 
-userSchema.methods.generateToken = function() {
+userSchema.methods.generateToken = function () {
     //create randomly a string has length equal 4
     const getToken = crypto.randomBytes(config.lengthByteRandom).toString('hex')
     //Can not save original string but has to encrypt that token

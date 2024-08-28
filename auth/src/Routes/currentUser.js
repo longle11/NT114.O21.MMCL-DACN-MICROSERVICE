@@ -18,7 +18,10 @@ router.get("/currentuser", currentUserMiddleware,async (req, res) => {
                 username: getUserInfo.username,
                 email: getUserInfo.email,
                 avatar: getUserInfo.avatar,
-                project_working: getUserInfo.project_working
+                project_working: getUserInfo.project_working,
+                viewed_issues: getUserInfo.viewed_issues,
+                assigned_issues: getUserInfo.assigned_issues,
+                working_issues: getUserInfo.working_issues
             }
         }
     }

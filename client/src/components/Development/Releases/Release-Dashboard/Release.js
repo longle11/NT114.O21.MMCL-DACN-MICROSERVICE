@@ -94,12 +94,13 @@ export default function Release() {
                     />
                 </div>
             </div>
-            <div className="d-flex flex-column align-items-center">
+            {versionList !== null && versionList?.length > 0 ? <Table columns={columns} dataSource={versionList} /> : <div className="d-flex flex-column align-items-center">
                 <img alt="new img" style={{ width: '200px' }} src="https://jira-frontend-bifrost.prod-east.frontend.public.atl-paas.net/assets/releases-80px.782fa98d.svg" />
                 <p>Versions help you package and schedule project deliveries. <br /> Add a vision to start collecting and releasing your work</p>
                 <button className='btn btn-primary' onClick={() => {
                     dispatch(drawer_edit_form_action(<CreateVersion currentVersion={
                         { 
+                            id: null,
                             project_id: id, 
                             description: '', 
                             version_name: '', 
@@ -108,8 +109,8 @@ export default function Release() {
                             version_id: null
                         }} />, 'Create', '500px'))
                 }}>Create version</button>
-            </div>
-            <Table columns={columns} dataSource={versionList} />
+            </div>}
+            
         </div>
     )
 }

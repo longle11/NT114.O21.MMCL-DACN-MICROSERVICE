@@ -52,8 +52,8 @@ export default function ProjectManager() {
             }}
             defaultValue=''
             options={listUser?.reduce((newListUser, user) => {
-                if (user._id !== userInfo?.id) {
-                    return [...newListUser, { label: user.username, value: user._id }]
+                if (user.user_info._id !== userInfo?.id) {
+                    return [...newListUser, { label: user.user_info.username, value: user.user_info._id }]
                 }
                 return newListUser
             }, [])}
@@ -75,7 +75,7 @@ export default function ProjectManager() {
             dataIndex: 'avatar',
             key: 'avatar',
             render: (text, record, index) => {
-                return <Avatar src={text} size={30} alt={index} />
+                return <Avatar src={record.user_info.avatar} size={30} alt={index} />
             }
         },
         {
@@ -83,7 +83,7 @@ export default function ProjectManager() {
             dataIndex: 'username',
             key: 'username',
             render: (text, record, index) => {
-                return <span>{text}</span>
+                return <span>{record.user_info.username}</span>
             }
         },
         {
@@ -163,14 +163,14 @@ export default function ProjectManager() {
             key: 'members',
             render: (text, record, index) => {  //userInfo?.id === record.creator._id
                 return <>
-                    {userInfo?.id === record.creator?._id ? (
+                    {userInfo?.id === record.user_info?.creator?._id ? (
                         <div>
                             {
                                 record.members?.slice(0, 3).map((user, index) => {
-                                    return <Popover key={user._id} content={() => {
+                                    return <Popover key={user.user_info._id} content={() => {
                                         renderMembers(record, user)
                                     }} title="Members">
-                                        <Avatar key={user._id} src={<img src={user.avatar} alt="avatar" />} />
+                                        <Avatar key={user.user_info._id} src={<img src={user.user_info.avatar} alt="avatar" />} />
                                     </Popover>
                                 })
                             }
@@ -183,7 +183,7 @@ export default function ProjectManager() {
                         </div>) : (
                         <div>
                             {record.members?.slice(0, 3).map((user, index) => {
-                                return <Avatar key={user._id} src={<img src={user.avatar} alt="avatar" />} />
+                                return <Avatar key={user.user_info._id} src={<img src={user.user_info.avatar} alt="avatar" />} />
                             })}
                             {record.members?.length >= 3 ? <Avatar>...</Avatar> : ''}
                         </div>)
@@ -234,7 +234,7 @@ export default function ProjectManager() {
             render: (text, record, index) => {
                 if (userInfo?.id === record.creator?._id) {
                     return <div>
-                        <button className="btn btn-primary"><i class="fa fa-bars"></i></button>
+                        <button className="btn btn-primary"><i className="fa fa-bars"></i></button>
                     </div>
                 } else {
                     return <></>

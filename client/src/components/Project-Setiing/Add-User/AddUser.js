@@ -12,13 +12,13 @@ export default function AddUser() {
     const projectInfo = useSelector(state => state.listProject.projectInfo)
     const userInfo = useSelector(state => state.user.userInfo)
     const { id } = useParams()
-    const [userEmail, setUserEmail] = useState('')
-    const [userRole, setuserRole] = useState(0)
     const dispatch = useDispatch()
     useEffect(() => {
         dispatch(GetProjectAction(id))
     }, [])
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [userEmail, setUserEmail] = useState('')
+    const [userRole, setuserRole] = useState(0)
     const handleOk = () => {
         setIsModalOpen(false);
         dispatch(addUserToProject(userEmail, userRole, id))

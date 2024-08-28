@@ -7,6 +7,7 @@ import { SHOW_MODAL_INPUT_TOKEN } from '../../redux/constants/constant'
 import './MenuBarHeader.css'
 import { drawer_edit_form_action } from '../../redux/actions/DrawerAction'
 import FormEdit from '../Forms/FormEdit'
+import { iTagForIssueTypes } from '../../util/CommonFeatures'
 
 export default function MenuBarHeader() {
     const userInfo = useSelector(state => state.user.userInfo)
@@ -14,6 +15,8 @@ export default function MenuBarHeader() {
     const listProject = useSelector(state => state.listProject.listProject)
     const [currentPassowrd, setCurrentPassowrd] = useState('')
     const [newPassword, setNewPassword] = useState('')
+    const [isDisplayWorkingOn, setIsDisplayWorkingOn] = useState(false)
+
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const renderProjectInfo = () => {
@@ -65,15 +68,84 @@ export default function MenuBarHeader() {
                             }} style={{ cursor: "pointer", padding: '5px 10px', fontSize: '13px' }} href="##">Create your project</a>
                         </div>
                     </li>
-                    <li className="nav-item dropdown mr-2">
-                        <NavLink className="nav-link dropdown-toggle" to="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <li className={`nav-item mr-2`} style={{ position: 'relative' }}>
+                        <NavLink onClick={() => {
+                            setIsDisplayWorkingOn(!isDisplayWorkingOn)
+                        }} className="nav-link dropdown-toggle" to="#" id="navbarDropdown" role="button">
                             Your Work
                         </NavLink>
-                        <div className="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <a className="dropdown-item" href="/">Action</a>
-                            <a className="dropdown-item" href="/">Another action</a>
-                            <div className="dropdown-divider" />
-                            <a className="dropdown-item" href="/">Something else here</a>
+                        <div className={`nav-working-on ${isDisplayWorkingOn ? 'show' : ''}`} style={{ maxHeight: 450, minWidth: 350 }}>
+                            <divz>
+                                <ul className="nav nav-tabs" id="myTab" role="tablist">
+                                    <li className="nav-item">
+                                        <a className="nav-link active" id="assignedToMe-tab" data-toggle="tab" href="#assignedToMe" role="tab" aria-controls="assignedToMe" aria-selected="true">Assigned to me</a>
+                                    </li>
+                                    <li className="nav-item">
+                                        <a className="nav-link" id="recent-tab" data-toggle="tab" href="#recent" role="tab" aria-controls="recent" aria-selected="false">Recent</a>
+                                    </li>
+                                    <li className="nav-item">
+                                        <a className="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">Contact</a>
+                                    </li>
+                                </ul>
+                                <div className="tab-content" id="myTabContent">
+                                    <div className="tab-pane fade show active" id="assignedToMe" role="tabpanel" aria-labelledby="assignedToMe-tab">
+                                        <p style={{ padding: '20px 40px', margin: '0', marginTop: 10 }}>You have no open issues assigned to you</p>
+                                        <hr className='mb-0' />
+                                        <div className='tab-content-move' style={{ padding: '10px 20px', margin: '10px 0' }}>
+                                            <NavLink to={"#"} style={{ textDecoration: 'none' }}>Go to your Work Page</NavLink>
+                                        </div>
+                                    </div>
+                                    <div className="tab-pane fade" id="recent" role="tabpanel" aria-labelledby="recent-tab">
+                                        <div className='d-flex flex-column' style={{ margin: '0' }}>
+                                            <div style={{ height: 300, overflowY: 'auto', scrollbarWidth: 'thin', marginTop: 10 }}>
+                                                <span style={{ fontSize: 13, fontWeight: 'bold', margin: '10px 8px' }}>WORKED ON</span>
+                                                <div className="list-group m-0" style={{ border: 'none' }}>
+                                                    {
+                                                        //  only display 10 issues newest
+                                                        userInfo?.working_issues.length > 0 ? userInfo?.working_issues?.slice(0, userInfo?.working_issues.length > 10 ? 10 : userInfo?.working_issues.length).map(issue => {
+                                                            return <a href={`/projectDetail/${issue.project_id}/issues/issue-detail/${issue.issue_id}`} className="list-group-item list-group-item-action d-flex align-items-center pt-2 pb-2 pl-2 pr-4 ml-0" style={{ border: 'none' }}>
+                                                                <span>{iTagForIssueTypes(1)}</span>
+                                                                <div className='d-flex flex-column' style={{ width: '100%' }}>
+                                                                    <span>{issue.summary}</span>
+                                                                    <div className='d-flex align-items-center'>
+                                                                        <span className='mr-2'>WD-{issue.ordinal_number?.toString()}</span>
+                                                                        <i className="fa-solid fa-circle mr-2" style={{ fontSize: 5 }} />
+                                                                        <span>{issue.name_project}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </a>
+                                                        }) : <p style={{ padding: '20px 40px', margin: '0' }}>You have no open issues worked on</p>
+                                                    }
+                                                </div>
+                                                <span style={{ fontSize: 13, fontWeight: 'bold', margin: '10px 8px' }}>VIEW</span>
+                                                <div className="list-group m-0" style={{ border: 'none' }}>
+                                                    {
+                                                        //  only display 10 issues newest
+                                                        userInfo?.viewed_issues.length > 0 ? userInfo?.viewed_issues?.slice(0, userInfo?.viewed_issues.length > 10 ? 10 : userInfo?.viewed_issues.length).map(issue => {
+                                                            return <a href={`/projectDetail/${issue.project_id}/issues/issue-detail/${issue.issue_id}`} className="list-group-item list-group-item-action d-flex align-items-center pt-2 pb-2 pl-2 pr-4 ml-0" style={{ border: 'none' }}>
+                                                                <span>{iTagForIssueTypes(1)}</span>
+                                                                <div className='d-flex flex-column' style={{ width: '100%' }}>
+                                                                    <span>{issue.summary}</span>
+                                                                    <div className='d-flex align-items-center'>
+                                                                        <span className='mr-2'>WD-{issue.ordinal_number?.toString()}</span>
+                                                                        <i className="fa-solid fa-circle mr-2" style={{ fontSize: 5 }} />
+                                                                        <span>{issue.name_project}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </a>
+                                                        }) : <p style={{ padding: '20px 40px', margin: '0' }}>You have no open issues worked on</p>
+                                                    }
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                        <hr className='mb-0' />
+                                        <div className='tab-content-move' style={{ padding: '10px 20px', margin: '10px 0' }}>
+                                            <NavLink to={"#"} style={{ textDecoration: 'none' }}>Go to your Work Page</NavLink>
+                                        </div>
+                                    </div>
+                                </div>
+                            </divz>
                         </div>
                     </li>
                     <li className='nav-item mr-5'>
@@ -104,7 +176,7 @@ export default function MenuBarHeader() {
                                 </div>
                             </div>
                             <div className="dropdown-item" style={{ marginTop: '10px', padding: '10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <NavLink style={{ cursor: "pointer", fontSize: '13px', color: 'black', textDecoration: 'none' }} to={`/profile/${userInfo?.id}`} >Manage your account</NavLink>
+                                <NavLink style={{ cursor: "pointer", fontSize: '13px', color: 'black', textDecoration: 'none' }} to={`/recent/${userInfo?.id}`} >Manage your account</NavLink>
                                 <i className="fa fa-info-circle" aria-hidden="true"></i>
                             </div>
                             <div className="dropdown-item" style={{ marginTop: '10px', padding: '10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} onClick={() => {
@@ -117,7 +189,7 @@ export default function MenuBarHeader() {
                                 <i className="fa fa-key" aria-hidden="true"></i>
                             </div>
                             <div className="dropdown-item" style={{ marginTop: '10px', padding: '10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <NavLink style={{ cursor: "pointer", fontSize: '13px', color: 'black', textDecoration: 'none' }} to={`/profile/${userInfo?.id}`} >Logout</NavLink>
+                                <NavLink style={{ cursor: "pointer", fontSize: '13px', color: 'black', textDecoration: 'none' }} to={`/recent/${userInfo?.id}`} >Logout</NavLink>
                                 <i className="fa fa-info-circle" aria-hidden="true"></i>
                             </div>
                         </div>

@@ -29,8 +29,10 @@ router.get("/:issueId", currentUserMiddleware, async (req, res, next) => {
                 .populate({
                     path: 'issue_type'
                 })
-            console.log("isue lay ra ", issue);
-            
+                .populate({
+                    path: 'project_id'
+                })
+
             return res.status(200).json({
                 message: "Successfully retrieve the issue",
                 data: issue
@@ -39,8 +41,40 @@ router.get("/:issueId", currentUserMiddleware, async (req, res, next) => {
             throw new BadRequestError("Issue not found")
         }
     } catch (error) {
-        console.log("error", error);
         next(error)
+    }
+})
+
+router.get("/issues/all", async (req, res) => {
+    try {
+    const issueList = await issueModel.find({})
+        .populate({
+            path: 'creator',
+            select: '-__v'
+        })
+        .populate({
+            path: 'assignees',
+            select: '-__v'
+        })
+        .populate({
+            path: 'current_sprint'
+        })
+        .populate({
+            path: 'epic_link'
+        })
+        .populate({
+            path: 'issue_type'
+        })
+        .populate({
+            path: 'project_id'
+        })
+
+    return res.status(200).json({
+        message: "Successfully retrieve the issue list",
+        data: issueList
+    })
+    }catch(error) {
+        console.log(error);
     }
 })
 
@@ -71,6 +105,12 @@ router.get("/backlog/:projectId", async (req, res) => {
             })
             .populate({
                 path: 'current_sprint'
+            })
+            .populate({
+                path: 'project_id'
+            })
+            .populate({
+                path: 'issue_type'
             })
         if (getAllIssuesInProject.length !== 0) {
             return res.status(200).json({

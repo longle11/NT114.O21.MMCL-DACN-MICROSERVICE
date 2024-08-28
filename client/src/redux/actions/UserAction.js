@@ -3,6 +3,7 @@ import { DISPLAY_LOADING, GET_USER_BY_KEYWORD_API, HIDE_LOADING, SHOW_MODAL_INPU
 import { ListProjectAction } from "./ListProjectAction"
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
 import domainName from '../../util/Config'
+import { renderIssueInfoMenuDashboard } from "../../util/SubFunctionsInRedux"
 export const getUserKeyword = (keyword) => {
     return async dispatch => {
         try {
@@ -25,6 +26,22 @@ export const insertUserIntoProject = (props) => {
             showNotificationWithIcon('success', 'Insert user', 'Successfully inserted in this project')
         } catch (error) {
             showNotificationWithIcon('error', 'Insert user', 'User already in this project')
+        }
+    }
+}
+
+export const updateUserInfo = (user_id, props) => {
+    return async dispatch => {
+        try {
+            //tien hanh cap nhat thong tin cho user
+            const getUserUpdated = await Axios.post(`${domainName}/api/users/update/${user_id}`, props)
+
+            dispatch({
+                type: USER_LOGGED_IN,
+                userInfo: getUserUpdated.data.data
+            })
+        } catch (error) {
+
         }
     }
 }
@@ -117,7 +134,7 @@ export const userLoginAction = (email, password) => {
                 email,
                 password
             })
-            if(res.status === 200) {
+            if (res.status === 200) {
                 showNotificationWithIcon("success", "Loggin", res.data.message)
                 loggedIn = true
             }
@@ -126,16 +143,22 @@ export const userLoginAction = (email, password) => {
                 const res = await Axios.get(`${domainName}/api/users/currentuser`)
 
                 if (res.data.currentUser) {
-                    dispatch({
-                        type: USER_LOGGED_IN,
-                        userInfo: res.data.currentUser
-                    })
+                    const getAllIssues = await Axios.get(`${domainName}/api/issue/issues/all`)
+                    if (getAllIssues.status === 200) {
+                        res.data.currentUser.working_issues = renderIssueInfoMenuDashboard(getAllIssues, res.data.currentUser.working_issues)
+                        res.data.currentUser.viewed_issues = renderIssueInfoMenuDashboard(getAllIssues, res.data.currentUser.viewed_issues)
+
+                        dispatch({
+                            type: USER_LOGGED_IN,
+                            userInfo: res.data.currentUser
+                        })
+                    }
                 }
             }
         } catch (error) {
-            if(error.response.status === 401) {
+            if (error.response.status === 401) {
                 showNotificationWithIcon("error", "Loggin", error.response.data.message)
-            }else if(error.response.status === 400) {
+            } else if (error.response.status === 400) {
                 showNotificationWithIcon("error", "Loggin", error.response.data.message)
                 dispatch({
                     type: SHOW_MODAL_INPUT_TOKEN,
@@ -159,10 +182,16 @@ export const userLoggedInAction = () => {
                     userInfo: null
                 })
             } else {
-                dispatch({
-                    type: USER_LOGGED_IN,
-                    userInfo: res.data.currentUser
-                })
+                const getAllIssues = await Axios.get(`${domainName}/api/issue/issues/all`)
+                if (getAllIssues.status === 200) {
+                    res.data.currentUser.working_issues = renderIssueInfoMenuDashboard(getAllIssues, res.data.currentUser.working_issues)
+                    res.data.currentUser.viewed_issues = renderIssueInfoMenuDashboard(getAllIssues, res.data.currentUser.viewed_issues)
+
+                    dispatch({
+                        type: USER_LOGGED_IN,
+                        userInfo: res.data.currentUser
+                    })
+                }
             }
 
             dispatch({
@@ -219,11 +248,11 @@ export const getTokenAction = (userId) => {
     return async dispatch => {
         try {
             const res = await Axios.get(`${domainName}/api/users/token/${userId}`)
-            if(res.status === 200) {
+            if (res.status === 200) {
                 showNotificationWithIcon('success', 'Notification', res.data.message)
             }
         } catch (error) {
-            if(error?.response.status === 400) {
+            if (error?.response.status === 400) {
                 showNotificationWithIcon('error', 'Notification', error.response.data.message)
             }
         }

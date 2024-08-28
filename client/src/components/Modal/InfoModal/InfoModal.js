@@ -22,9 +22,51 @@ export default function InfoModal() {
     const userInfo = useSelector(state => state.user.userInfo)
     const historyList = useSelector(state => state.issue.historyList)
     const worklogList = useSelector(state => state.issue.worklogList)
+    const epicList = useSelector(state => state.categories.epicList)
+
+    const [timeTable, setTimeTable] = useState(false)
+    const [openDatePicker, setOpenDatePicker] = useState(false)
+    const [buttonActive, setButtonActive] = useState(1)
+    const [editDescription, setEditDescription] = useState(true)
+    //tham số truyền vào sẽ là id của comment khi click vào chỉnh sửa
+    const [addAssignee, setAddAssignee] = useState(true)
+    const [description, setDescription] = useState('')
+     //sử dụng cho phần bình luận
+    //tham số isSubmit thì để khi bấm send thì mới thực hiện duyệt mảng comments
+    const [comment, setComment] = useState({
+        content: '',
+        isSubmit: true,
+    })
+    const [formData, setFormData] = useState({
+        timeSpent: 0,
+        dateWorking: '',
+        description: '',
+        timeRemaining: 0
+    })
     useEffect(() => {
+        setComment({
+            content: '',
+            isSubmit: true,
+        })
+        setAddAssignee(true)
+        setDescription('')
+        setButtonActive(1)
+        setEditDescription(true)
+        setOpenDatePicker(false)
+        setTimeTable(false)
+        setFormData({
+            timeSpent: 0,
+            dateWorking: '',
+            description: '',
+            timeRemaining: 0
+        })
         dispatch(GetWorkflowListAction(id))
-    }, [])
+    }, [issueInfo])
+    //su dung cho debounce time original
+    const inputTimeOriginal = useRef(null)
+   
+    const dispatch = useDispatch()
+
     const regexs = [
         /^(\d+)w([1-6])d([1-9]|1\d|2[0-4])h([1-9]|[1-5]\d|)m$/, //_w_d_h_m
         /^(\d+)d([1-9]|1\d|2[0-4])h([1-9]|[1-5]\d|)m$/,  //_d_h_m
@@ -42,23 +84,6 @@ export default function InfoModal() {
         /^(\d+)h$/, //h 
         /^(\d+)m$/, //m
     ]
-    const [timeTable, setTimeTable] = useState(false)
-    const [openDatePicker, setOpenDatePicker] = useState(false)
-    const epicList = useSelector(state => state.categories.epicList)
-    const [buttonActive, setButtonActive] = useState(1)
-    const [editDescription, setEditDescription] = useState(true)
-    //tham số truyền vào sẽ là id của comment khi click vào chỉnh sửa
-    const [addAssignee, setAddAssignee] = useState(true)
-    const [description, setDescription] = useState('')
-    //su dung cho debounce time original
-    const inputTimeOriginal = useRef(null)
-    //sử dụng cho phần bình luận
-    //tham số isSubmit thì để khi bấm send thì mới thực hiện duyệt mảng comments
-    const [comment, setComment] = useState({
-        content: '',
-        isSubmit: true,
-    })
-    const dispatch = useDispatch()
 
     //su dung de render option theo workflow chi dinh
     const typeOptionsFollowWorkflow = (current_type) => {
@@ -97,13 +122,6 @@ export default function InfoModal() {
     }
 
 
-
-    const [formData, setFormData] = useState({
-        timeSpent: 0,
-        dateWorking: '',
-        description: '',
-        timeRemaining: 0
-    })
     const renderIssueType = () => {
         return processList?.map(process => {
             return {
@@ -409,6 +427,29 @@ export default function InfoModal() {
     }
 
 
+    const renderAssignees = () => {
+        return issueInfo?.assignees?.map((value, index) => {
+            return <div key={value._id} style={{ display: 'flex', alignItems: 'center', marginRight: '5px' }} className="item mt-2">
+                <div className="avatar">
+                    <Avatar key={value._id} src={value.avatar} />
+                </div>
+                <p className="name d-flex align-items-center ml-1" style={{ fontWeight: 'bold' }}>
+                    {value.username}
+                    {issueInfo?.creator._id === userInfo?.id ? (
+                        <Popconfirm placement="topLeft"
+                            title="Delete this user?"
+                            description="Are you sure to delete this user from project?"
+                            onConfirm={() => {
+                                //dispatch su kien xoa nguoi dung khoi du an
+                                dispatch(deleteAssignee(issueInfo?._id, issueInfo?.projectId, value._id))
+                            }} okText="Yes" cancelText="No">
+                            <i className="fa fa-times text-danger" style={{ marginLeft: 5 }} />
+                        </Popconfirm>
+                    ) : <></>}
+                </p>
+            </div>
+        })
+    }
 
 
     function capitalizeFirstLetter(str) {
@@ -581,7 +622,7 @@ export default function InfoModal() {
                 </div>
                 <div className="modal-body">
                     <div className="container-fluid">
-                        <div className="row">
+                        <div className="row" style={{height: 630}}>
                             <div className="col-8">
                                 <p className="issue_summary" style={{ fontSize: '24px', fontWeight: 'bold' }}>{issueInfo?.summary}</p>
                                 <div className="description">
@@ -635,7 +676,7 @@ export default function InfoModal() {
                                 </div>
                                 {renderActivities()}
                             </div>
-                            <div className="col-4 p-0">
+                            <div className="col-4 p-0" style={{height: 600, overflowY: 'auto', scrollbarWidth: 'none'}}>
                                 <div className="status">
                                     <h6>TYPE</h6>
                                     {/* <Select
@@ -661,27 +702,7 @@ export default function InfoModal() {
                                 <div className="assignees mt-3">
                                     <h6>ASSIGNEES</h6>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)' }}>
-                                        {issueInfo?.assignees?.map((value, index) => {
-                                            return <div key={value._id} style={{ display: 'flex', alignItems: 'center', marginRight: '5px' }} className="item mt-2">
-                                                <div className="avatar">
-                                                    <Avatar key={value._id} src={value.avatar} />
-                                                </div>
-                                                <p className="name d-flex align-items-center ml-1" style={{ fontWeight: 'bold' }}>
-                                                    {value.username}
-                                                    {issueInfo?.creator._id === userInfo?.id ? (
-                                                        <Popconfirm placement="topLeft"
-                                                            title="Delete this user?"
-                                                            description="Are you sure to delete this user from project?"
-                                                            onConfirm={() => {
-                                                                //dispatch su kien xoa nguoi dung khoi du an
-                                                                dispatch(deleteAssignee(issueInfo?._id, issueInfo?.projectId, value._id))
-                                                            }} okText="Yes" cancelText="No">
-                                                            <i className="fa fa-times text-danger" style={{ marginLeft: 5 }} />
-                                                        </Popconfirm>
-                                                    ) : <></>}
-                                                </p>
-                                            </div>
-                                        })}
+                                        {renderAssignees()}
                                         {
                                             issueInfo?.creator._id === userInfo?.id ? (
                                                 <button onKeyDown={() => { }} className='text-primary mt-2 mb-2 btn bg-transparent' style={{ fontSize: '12px', margin: '0px', cursor: 'pointer', display: addAssignee === false ? 'none' : 'block', padding: 0, textAlign: 'left' }} onClick={() => {
@@ -759,10 +780,10 @@ export default function InfoModal() {
                                     <div className='col-6'>
                                         <h6 className='mt-3'>STORY POINT</h6>
                                         <InputNumber min={0} max={1000} defaultValue={issueInfo?.story_point} value={issueInfo?.story_point} onBlur={(e) => {
-                                            if (e.target.value >= 0 && e.target.value <= 1000) {
+                                            if (e.target.value > 0 && e.target.value <= 1000) {
                                                 dispatch(updateInfoIssue(issueInfo?._id.toString(), issueInfo?.project_id?.toString(), { story_point: e.target.value }, issueInfo?.story_point === null ? "None" : issueInfo?.story_point?.toString(), e.target.value, userInfo.id, "updated", "story point"))
                                             } else {
-                                                showNotificationWithIcon('error', '', 'Error')
+                                                showNotificationWithIcon('error', '', 'Story point\'s value must greater than 0')
                                             }
                                         }} />
                                     </div>
@@ -920,7 +941,6 @@ export default function InfoModal() {
                                                                 }))
                                                             }}>Save</Button>
                                                             <Button type='default' onClick={() => {
-                                                                console.log("Gia tri time table sau khi set la ", timeTable);
                                                                 setTimeTable(false)
                                                             }}>Cancel</Button>
                                                         </div>
@@ -930,8 +950,8 @@ export default function InfoModal() {
                                         </div>
                                     </div>
                                 </div>
-                                <div style={{ color: '#929398' }}>Create at {convertTime(issueInfo?.creatAt)}</div>
-                                <div style={{ color: '#929398' }}>{issueInfo?.creatAt !== issueInfo?.updateAt ? `Update at ${convertTime(issueInfo?.updateAt)}` : ""}</div>
+                                <div style={{ color: '#929398' }}>Created at {convertTime(issueInfo?.createAt)}</div>
+                                <div style={{ color: '#929398' }}>{convertTime(issueInfo?.createAt) !== convertTime(issueInfo?.updateAt) ? `Updated at ${convertTime(issueInfo?.updateAt)}` : "No updated recently"}</div>
                             </div>
                         </div>
                     </div>

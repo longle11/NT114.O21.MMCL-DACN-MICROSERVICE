@@ -14,6 +14,9 @@ router.get('/list', async (req, res, next) => {
             })
             .populate({
                 path: 'members',
+                populate: {
+                    path: 'user_info'
+                },  
                 select: '-__v'
             })
         if(data) {

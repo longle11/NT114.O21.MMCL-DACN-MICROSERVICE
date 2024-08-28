@@ -1,15 +1,20 @@
 import Axios from "axios"
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
-import {  GET_INFO_ISSUE, GET_ISSUE_HISTORIES_LIST, GET_ISSUES_BACKLOG, GET_WORKLOG_HISTORIES_LIST, USER_LOGGED_IN } from "../constants/constant"
+import { GET_INFO_ISSUE, GET_ISSUE_HISTORIES_LIST, GET_ISSUES_BACKLOG, GET_WORKLOG_HISTORIES_LIST, USER_LOGGED_IN } from "../constants/constant"
 import { GetProjectAction } from "./ListProjectAction"
 import domainName from '../../util/Config'
 import { delay } from "../../util/Delay"
+import { updateUserInfo } from "./UserAction"
 export const createIssue = (props, issuesBacklog, old_status, new_status, creator_history) => {
     return async dispatch => {
         try {
             const res = await Axios.post(`${domainName}/api/issue/create`, props)
 
             if (res.status === 201) {
+
+                //update working issues on auth service
+                dispatch(updateUserInfo(res.data.data.creator, { working_issue: res.data.data._id.toString() }))
+
                 //tien hanh tao history cho issue
                 dispatch(createIssueHistory({
                     issue_id: res.data.data._id.toString(),
@@ -38,7 +43,7 @@ export const createIssue = (props, issuesBacklog, old_status, new_status, creato
 
         } catch (error) {
             console.log(error);
-            if (error.response.status === 401) {
+            if (error.response?.status === 401) {
                 showNotificationWithIcon('error', '', 'Please sign in before posting comment')
                 dispatch({
                     type: USER_LOGGED_IN,
@@ -62,7 +67,7 @@ export const getInfoIssue = (id) => {
                 type: GET_INFO_ISSUE,
                 issueInfo: res.data.data
             })
-            await delay(1000)            
+            await delay(1000)
         } catch (error) {
             console.log("error in getInfoIssue action", error);
         }
@@ -74,7 +79,7 @@ export const getIssuesBacklog = (projectId) => {
         try {
             const res = await Axios.get(`${domainName}/api/issue/backlog/${projectId}`)
             console.log("ket qua tra ve ", res.data.data);
-            
+
             dispatch({
                 type: GET_ISSUES_BACKLOG,
                 issuesBacklog: res.data.data
@@ -88,7 +93,7 @@ export const getIssuesBacklog = (projectId) => {
 export const updateInfoIssue = (issueId, projectId, props, old_status, new_status, creator_history, type_history, name_status) => {
     return async dispatch => {
         try {
-            const res = await Axios.put(`${domainName}/api/issue/update/${issueId}`, props)
+            const res = await Axios.put(`${domainName}/api/issue/update/${issueId}`, { ...props, updateAt: Date.now() })
             // //tien hanh tao history cho issue
             dispatch(createIssueHistory({
                 issue_id: res.data.data._id.toString(),
@@ -100,7 +105,7 @@ export const updateInfoIssue = (issueId, projectId, props, old_status, new_statu
             }))
 
             const backlogList = await Axios.get(`${domainName}/api/issue/backlog/${projectId}`)
-            
+
             dispatch({
                 type: GET_ISSUES_BACKLOG,
                 issuesBacklog: backlogList.data.data
@@ -115,7 +120,7 @@ export const updateInfoIssue = (issueId, projectId, props, old_status, new_statu
             showNotificationWithIcon("success", "Cập nhật", "Successfully updated issue")
         } catch (error) {
             console.log(error);
-            
+
             // if (error.response.status === 401) {
             //     showNotificationWithIcon('error', '', 'Please sign in before posting comment')
             //     dispatch({
@@ -130,7 +135,7 @@ export const updateInfoIssue = (issueId, projectId, props, old_status, new_statu
 
             if (error.response.status === 400) {
                 showNotificationWithIcon('error', '', error.response.data.message)
-            } 
+            }
         }
     }
 }
@@ -236,7 +241,7 @@ export const createIssueHistory = (props) => {
             }
         } catch (error) {
             console.log("error trong nay", error);
-            
+
             showNotificationWithIcon("error", "", "loi tao lich su")
         }
     }
@@ -246,13 +251,13 @@ export const createWorklogHistory = (props) => {
     return async dispatch => {
         try {
             const res = await Axios.post(`${domainName}/api/issuehistory/worklog-create`, props)
-            
+
             if (res.status === 201) {
                 showNotificationWithIcon("success", "", "Tao thanh cong work log")
             }
         } catch (error) {
             console.log("error trong nay", error);
-            
+
             showNotificationWithIcon("error", "", "loi tao work log")
         }
     }

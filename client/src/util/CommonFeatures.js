@@ -11,6 +11,12 @@ export const iTagForIssueTypes = (type) => {
     if (type == 2) {
         return <i className="fa-solid fa-circle-exclamation mr-2" style={{ color: '#cd1317', fontSize: '20px' }} ></i>
     }
+    if(type == 3) {
+        return <i className="fa-solid fa-bolt mr-2" style={{ color: 'purple', fontSize: '20px' }} ></i>
+    }
+    if(type == 4) {
+        return <i className="fa-solid fa-list-check mr-2" style={{ color: '#e97f33', fontSize: '20px' }} ></i>
+    }
 }
 
 export const iTagForPriorities = (priority) => {    
@@ -41,7 +47,10 @@ export const priorityTypeOptions = [
 export const issueTypeOptions = [
     { label: <span className="align-items-center d-flex">{iTagForIssueTypes(0)} Story</span>, value: 0 },
     { label: <span className="align-items-center d-flex">{iTagForIssueTypes(1)} Task</span>, value: 1 },
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(2)} Bug</span>, value: 2 }
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(2)} Bug</span>, value: 2 },
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(3)} Epic</span>, value: 3 },
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(4)} Subtask</span>, value: 4 }
+
 ]
 export const issueTypeWithoutOptions = [
     { label: <span className="align-items-center d-flex">{iTagForIssueTypes(0)} </span>, value: 0 },

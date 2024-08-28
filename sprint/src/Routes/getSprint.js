@@ -8,13 +8,19 @@ router.get('/:projectId', async (req, res, next) => {
             .populate({
                 path: 'issue_list',
                 populate: {
+                    path: 'creator'
+                }
+            })
+            .populate({
+                path: 'issue_list',
+                populate: {
                     path: 'epic_link'
                 }
             })
             .populate({
                 path: 'issue_list',
                 populate: {
-                    path: 'creator'
+                    path: 'assignees'
                 }
             })
         res.status(200).json({
@@ -39,6 +45,12 @@ router.get('/getsprint/:sprintId', async (req, res, next) => {
                 path: 'issue_list',
                 populate: {
                     path: 'epic_link'
+                }
+            })
+            .populate({
+                path: 'issue_list',
+                populate: {
+                    path: 'assignees'
                 }
             })
         res.status(200).json({

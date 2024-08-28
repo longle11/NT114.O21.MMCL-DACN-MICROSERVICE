@@ -15,6 +15,9 @@ div.epic-footer:hover {
     background-color: #dddd;
 }
 
+div.issues:last-child {
+    border-bottom: 1px solid #dddd;
+}
 div.issue-info:hover button.setting-issue {
     visibility: visible !important;
 }

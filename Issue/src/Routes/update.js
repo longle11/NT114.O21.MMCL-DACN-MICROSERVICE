@@ -8,6 +8,8 @@ const router = express.Router()
 
 router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
     try {
+        console.log("log ", req.body);
+        
         if (req.currentUser) {
             const { id } = req.params
             const issueIds = await issueModel.find({})
@@ -33,6 +35,13 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                 if (req.body.timeSpent) {
                     timeSpent += req.body.timeSpent
                     req.body.timeSpent = timeSpent
+                }
+
+                //add sprint has been compeleted into the old sprint
+                if(req.body?.old_sprint) {
+                    currentIssue.old_sprint.push(req.body.old_sprint)
+
+                    req.body.old_sprint = [...currentIssue.old_sprint]
                 }
 
                 await issueModel.updateOne({ _id: id }, { $set: { ...req.body } })

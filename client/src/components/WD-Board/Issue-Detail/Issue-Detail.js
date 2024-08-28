@@ -546,7 +546,7 @@ export default function IssueDetail() {
 
 
     return (
-        <div style={{ overflow: 'none', margin: '0 20px' }}>
+        <div style={{ overflow: 'none', height: '100vh' }}>
             <div className='issue-info-header'>
                 <Breadcrumb
                     style={{ marginBottom: 10 }}
@@ -573,8 +573,8 @@ export default function IssueDetail() {
                             <Button type='primary' className='mr-2 ml-2 btn-options' id="btn-option1 dropdownTypeMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 Type <i className="fa fa-angle-down ml-2" style={{ fontSize: 13, fontWeight: 'bold' }}></i>
                             </Button>
-                            <div className="dropdown-menu" aria-labelledby="dropdownTypeMenu" style={{width: 'max-content', padding: '10px'}}>
-                                <p style={{fontSize: 13, marginBottom: 5}}>STANDARD ISSUE TYPES</p>
+                            <div className="dropdown-menu" aria-labelledby="dropdownTypeMenu" style={{ width: 'max-content', padding: '10px' }}>
+                                <p style={{ fontSize: 13, marginBottom: 5 }}>STANDARD ISSUE TYPES</p>
                                 <Checkbox.Group className='mb-3'>
                                     <Row>
                                         <Col span="16">
@@ -588,7 +588,7 @@ export default function IssueDetail() {
                                         </Col>
                                     </Row>
                                 </Checkbox.Group>
-                                <p style={{fontSize: 13, marginBottom: 5}}>SUB-TASK ISSUE TYPE</p>
+                                <p style={{ fontSize: 13, marginBottom: 5 }}>SUB-TASK ISSUE TYPE</p>
                                 <Checkbox value="3">Sub task</Checkbox>
                             </div>
                         </div>
@@ -718,7 +718,7 @@ export default function IssueDetail() {
                                 {renderActivities()}
                             </div>
                         </div>
-                        <div className="issue-info-right col-4">
+                        <div className="issue-info-right col-4" style={{ overflowY: 'auto', height: '75vh' }}>
                             <div>
                                 <div className="status">
                                     <h6>TYPE</h6>

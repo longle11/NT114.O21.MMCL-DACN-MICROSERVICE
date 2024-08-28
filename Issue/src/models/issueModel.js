@@ -1,7 +1,14 @@
 const mongoose = require("mongoose")
 
 const issueSchema = new mongoose.Schema({
-    project_id: mongoose.Schema.Types.ObjectId,
+    project_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'projects'
+    },
+    ordinal_number: {
+        type: Number,
+        default: 1
+    },
     creator: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users'

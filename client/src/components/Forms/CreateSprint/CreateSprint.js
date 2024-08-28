@@ -32,8 +32,6 @@ function CreateSprint(props) {
     ]
     const dispatch = useDispatch()
     useEffect(() => {
-        console.log("gia tri props ", props, " haha ", );
-        
         dispatch(submit_edit_form_action(handleSubmit))
     })
 
@@ -46,8 +44,6 @@ function CreateSprint(props) {
             time = dayjs(new Date()).format("YYYY-MM-DD")
         }
         if (value === 1) {
-            console.log("Vao trong nay co gia tri time la ", time , ' voi ket qua ', dayjs(time).add(7, 'd').format("YYYY-MM-DD hh:mm:ss"));
-            
             const calEndDate = dayjs(time).add(7, 'd').format("YYYY-MM-DD hh:mm:ss")
             setEndDate(calEndDate)
             setFieldValue('end_date', calEndDate)

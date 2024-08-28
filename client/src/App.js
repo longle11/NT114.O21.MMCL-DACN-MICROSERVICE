@@ -19,10 +19,9 @@ import Epic from './components/Development/Epic/Epic-Dashboard/Epic';
 import EpicDetail from './components/Development/Epic/Epic-Detail/EpicDetail';
 import ReleaseDetail from './components/Development/Releases/Release-Detail/ReleaseDetail';
 import IssueDetail from './components/WD-Board/Issue-Detail/Issue-Detail';
-import ProcessWorkflow from './components/Process-Workflow/ProcessWorkflow';
 import WorkflowList from './components/WD-Board/Workflow/Workflow-List/WorkflowList';
 import WorkflowEdit from './components/WD-Board/Workflow/Workflow-Edit/WorkflowEdit';
-import AddUser from './components/Project-Setting/Add-User/AddUser';
+import AddUser from './components/Project-Setiing/Add-User/AddUser';
 function App() {
   const dispatch = useDispatch()
   useEffect(() => {
@@ -52,7 +51,6 @@ function App() {
 
           <Route path='/' element={<MainPageTemplate Component={ProjectManager} />} />
           <Route path='/create' element={<MainPageTemplate Component={Create} />} />
-          <Route path='/workflow' Component={ProcessWorkflow} />
 
 
           <Route path='/components' element={<MainPageTemplate Component={Create} />} />

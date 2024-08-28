@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react'
 import InfoModal from '../components/Modal/InfoModal/InfoModal'
-import SideBar from '../components/SideBar/SideBar'
 import '../components/MenuBar/MenuBar.css'
 import '../components/Dashboard/Dashboard.css'
 import '../components/SideBar/SideBar.css'
@@ -11,8 +10,8 @@ import { useNavigate } from 'react-router-dom'
 import PropTypes from 'prop-types';
 import MenuBarHeader from '../components/Header/MenuBarHeader'
 import { userLoggedInAction } from '../redux/actions/UserAction'
-import { initialEdges, initialNodes } from '../components/Process-Workflow/abc'
-
+import { Layout } from 'antd'
+import MenuBar from '../components/MenuBar/MenuBar'
 export default function MainPageTemplate({ Component }) {
     const isLoading = useSelector(state => state.loading.isLoading)
     const userInfo = useSelector(state => state.user.userInfo)
@@ -20,10 +19,8 @@ export default function MainPageTemplate({ Component }) {
     const navigate = useNavigate()
     useEffect(() => {
         dispatch(userLoggedInAction())
-
-        localStorage.setItem('initialNodes', JSON.stringify(initialNodes));
-        localStorage.setItem('initialEdges', JSON.stringify(initialEdges));
     }, [])
+
     const handleLogin = () => {
         return navigate("/login")
     }
@@ -32,14 +29,22 @@ export default function MainPageTemplate({ Component }) {
             if (userInfo !== null) {
                 return <div>
                     <MenuBarHeader />
-                    <div style={{ overflow: 'hidden', display: 'flex' }}>
-                        <DrawerHOC />
-                        {userInfo.project_working !== null ? <SideBar /> : <></>}
-                        {/* <MenuBar /> */}
-                        <div style={{ width: '100%', padding: 0 }} className='main'>
-                            <Component />
-                        </div>
-                        <InfoModal />
+                    <div style={{ display: 'flex' }}>
+                        <Layout
+                            style={{
+                                minHeight: '100vh',
+                                backgroundColor: '#ffff',
+                                overflowY: 'hidden'
+                            }}
+                        >
+                            { userInfo.project_working !== null ? <MenuBar /> : <></> }
+                            <DrawerHOC />
+                            {/* <MenuBar /> */}
+                            <div style={{ width: '100%', padding: '0 10px', marginBottom: '20px',  height: '90vh' }} className='main'>
+                                <Component />
+                            </div>
+                            <InfoModal />
+                        </Layout>
                     </div>
                 </div>
             }

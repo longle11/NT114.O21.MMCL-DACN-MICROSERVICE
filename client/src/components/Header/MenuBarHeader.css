@@ -1,6 +1,29 @@
 .current-project:hover {
     background-color: #e9ecef;
 }
+
 .current-project:hover div.project-marked {
     display: block !important;
+}
+
+div.nav-working-on {
+    width: max-content;
+    position: absolute;
+    z-index: 999999;
+    left: 10px;
+    top: 105%;
+    display: none;
+    background-color: #dddd;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, .15);
+    border-radius: .25rem;
+}
+
+div.nav-working-on.show {
+    display: block !important;
+}
+
+div.tab-content-move:hover {
+    background-color: #dddd;
 }

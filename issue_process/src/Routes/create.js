@@ -8,21 +8,29 @@ var color = randomColor({ luminosity: 'light' });
 router.post('/create', async (req, res, next) => {
     try {
         const data = req.body
+        console.log("req.body ,", req.body);
+        
+        const checkExisted = await issueProcessModel.find({ name_process: req.body.name_process })
+        if (checkExisted.length === 0) {
+            const issueProcess = new issueProcessModel({ ...data, tag_color: req.body?.tag_color ? req._construct.body.tag_color : color })
+            const newIssueProcess = await issueProcess.save()
 
-        const issueProcess = new issueProcessModel({ ...data, tag_color: req.body?.tag_color ? req._construct.body.tag_color : color })
-        const newIssueProcess = await issueProcess.save()
+            const issueProcessDataCopy = {
+                _id: newIssueProcess._id,
+                name_process: newIssueProcess.name_process
+            }
 
-        const issueProcessDataCopy = {
-            _id: newIssueProcess._id,
-            name_process: newIssueProcess.name_process
+            await servicePublisher(issueProcessDataCopy, 'issueprocess:created')
+
+            return res.status(201).json({
+                message: "Successfully created a issue process",
+                data: newIssueProcess
+            })
         }
-
-        await servicePublisher(issueProcessDataCopy, 'issueprocess:created')
-
-        res.status(201).json({
-            message: "Successfully created a issue process",
-            data: newIssueProcess
+        return res.status(400).json({
+            message: 'Name process is already existed'
         })
+
     } catch (error) {
         console.log(error);
     }
@@ -112,7 +120,7 @@ router.post('/create/default/:id', async (req, res) => {
             //     y += 50
             // }
 
-      
+
 
         }
         // await workflowModel.findByIdAndUpdate(workflowCreate._id, { $set: { edges, nodes } })
@@ -133,7 +141,6 @@ router.post('/workflow/create', async (req, res) => {
     try {
         const newWorkflow = new workflowModel(req.body)
         const getNewWorkflow = await newWorkflow.save()
-        console.log("haha ", getNewWorkflow)
         return res.status(201).json({
             message: "Successfully created a new workflow",
             data: getNewWorkflow

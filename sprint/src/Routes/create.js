@@ -12,8 +12,11 @@ router.post('/create', async (req, res, next) => {
             const getName = getSprintByProjectID[getSprintByProjectID.length - 1].sprint_name
             const generateNumber = Number.isInteger(parseInt(getName[getName.length - 1])) ? (parseInt(getName[getName.length - 1]) + 1).toString() : " 1"
             const sprint_name = getSprintByProjectID[getSprintByProjectID.length - 1].sprint_name
-            
-            req.body.sprint_name = sprint_name.substring(0, sprint_name.length -1)  + generateNumber
+            if(Number.isInteger(parseInt(sprint_name[sprint_name.length - 1]))) {
+                req.body.sprint_name = sprint_name.substring(0, sprint_name.length - 1) + generateNumber
+            }else {
+                req.body.sprint_name = sprint_name.substring(0) + generateNumber
+            }
         }
 
         const sprint = new sprintModel(newData)
