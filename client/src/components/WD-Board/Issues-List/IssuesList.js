@@ -1,8 +1,7 @@
 import { Avatar, Breadcrumb, Button, Form, Input, Select, Space, Table, Tag } from 'antd'
-import Search from 'antd/es/input/Search'
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { issueTypeOptions, issueTypeWithoutOptions, iTagForIssueTypes, iTagForPriorities, renderAssignees, renderIssueType, renderSprintList } from '../../../util/CommonFeatures'
+import { issueTypeWithoutOptions, iTagForIssueTypes, iTagForPriorities, renderAssignees, renderIssueType, renderSprintList } from '../../../util/CommonFeatures'
 import { createIssue, getIssuesBacklog, updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
@@ -27,7 +26,7 @@ import {
 import { getEpicList, getVersionList } from '../../../redux/actions/CategoryAction'
 import { showNotificationWithIcon } from '../../../util/NotificationUtil'
 import { calculateTimeAfterSplitted, convertMinuteToFormat, validateOriginalTime } from '../../../validations/TimeValidation'
-import MemberProject from '../../../child-components/Issue-Tag/Member-Project/MemberProject'
+import MemberProject from '../../../child-components/Member-Project/MemberProject'
 
 
 
@@ -274,7 +273,7 @@ export default function IssuesList() {
       return null
     }
     else if (key === 'fix_version') {
-      return <Tag color={record.fix_version?.tag_color}>{record.fix_version?.epic_name}</Tag>
+      return <Tag color={record.fix_version?.tag_color}>{record.fix_version?.version_name}</Tag>
     }
     else if (key === 'timeOriginalEstimate') {
       if (record.timeOriginalEstimate !== 0) {

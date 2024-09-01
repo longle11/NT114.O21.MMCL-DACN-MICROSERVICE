@@ -7,14 +7,23 @@ import CreateVersion from '../../../Forms/CreateVersion/CreateVersion';
 import { NavLink, useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { getVersionList } from '../../../../redux/actions/CategoryAction';
+import { GetProcessListAction } from '../../../../redux/actions/ListProjectAction';
 export default function Release() {
     const dispatch = useDispatch()
     const { id } = useParams()
     const versionList = useSelector(state => state.categories.versionList)
+    const processList = useSelector(state => state.listProject.processList)
     const projectInfo = useSelector(state => state.listProject.projectInfo)
     useEffect(() => {
         dispatch(getVersionList(id))
+        dispatch(GetProcessListAction(id))
     }, [])
+
+    const calculatePercentageForProgress = (record) => {
+        return Math.round((record.issue_list?.filter(issue => {
+            return issue.issue_type === processList[processList.length - 1]?._id
+        })?.length / record.issue_list?.length) * 100)
+    }
     const columns = [
         {
             title: 'Version',
@@ -42,13 +51,13 @@ export default function Release() {
                     return <span>0 issues</span>
                 }
                 return <Progress
-                    percent={0}
+                    percent={calculatePercentageForProgress(record)}
                     percentPosition={{
                         align: 'center',
                         type: 'inner',
                     }}
-                    size={[200, 20]}
-                    strokeColor="#E6F4FF"
+                    size={[200, 10]}
+                    strokeColor="lightblue"
                 />
             }
         },
@@ -92,29 +101,13 @@ export default function Release() {
                         }
                     ]}
                 />
-                <div className='d-flex justify-content-between'>
-                    <h5>Release</h5>
-                    <div className='mr-3'> 
-                        <Button onClick={() => {
-                            dispatch(drawer_edit_form_action(<CreateVersion currentVersion={
-                                {
-                                    id: null,
-                                    project_id: id,
-                                    description: '',
-                                    version_name: '',
-                                    start_date: dayjs(new Date()).format('DD/MM/YYYY'),
-                                    end_date: dayjs(new Date()).format('DD/MM/YYYY'),
-                                    version_id: null
-                                }} />, 'Create', '500px'))
-                        }}>Create version</Button>
-                    </div>
-                </div>
+                <h5>Release</h5>
             </div>
             {versionList !== null && versionList?.length > 0 ? <div>
                 <div>
                     {/* Phan chua thanh search va checkbox */}
-                    <div className="search-info-releases d-flex">
-                        <div className="search-block">
+                    <div className="search-info-releases">
+                        <div className="search-block d-flex justify-content-between">
                             <Search
                                 placeholder="input search text"
                                 style={{ width: 300 }}
@@ -122,6 +115,18 @@ export default function Release() {
 
                                 }}
                             />
+                            <Button className='mr-3' onClick={() => {
+                                dispatch(drawer_edit_form_action(<CreateVersion currentVersion={
+                                    {
+                                        id: null,
+                                        project_id: id,
+                                        description: '',
+                                        version_name: '',
+                                        start_date: dayjs(new Date()).format('DD/MM/YYYY'),
+                                        end_date: dayjs(new Date()).format('DD/MM/YYYY'),
+                                        version_id: null
+                                    }} />, 'Create', '500px'))
+                            }}>Create version</Button>
                         </div>
                     </div>
                 </div>

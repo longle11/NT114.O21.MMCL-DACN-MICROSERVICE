@@ -25,13 +25,9 @@ const versionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users'
     },
-    progress: {
-        type: Number,
-        default: null
-    },
     version_status: {
-        type: Number,
-        default: null
+        type: Number,   //0 means unreleased, 1 released, 2 archieved
+        default: 0
     },
     tag_color: {
         type: String,

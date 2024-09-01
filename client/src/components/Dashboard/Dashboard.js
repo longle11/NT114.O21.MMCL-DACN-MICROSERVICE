@@ -2,12 +2,11 @@ import React, { useEffect, useRef, useState } from 'react'
 import DrawerHOC from '../../HOC/DrawerHOC'
 import { NavLink, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Avatar, Breadcrumb, Button, Input, Modal, Popover, Select, Table, Tooltip } from 'antd';
+import { Avatar, Breadcrumb, Button, Input, Modal, Select, Tooltip } from 'antd';
 import { getInfoIssue, updateInfoIssue } from '../../redux/actions/IssueAction';
 import { CreateProcessACtion, GetProcessListAction, GetProjectAction, GetSprintAction, GetSprintListAction } from '../../redux/actions/ListProjectAction';
-import { addUserToProject, deleteUserInProject, updateProjectAction, updateSprintAction } from '../../redux/actions/CreateProjectAction';
-import Search from 'antd/es/input/Search';
-import { iTagForIssueTypes, iTagForPriorities, userPermissions } from '../../util/CommonFeatures';
+import { updateProjectAction } from '../../redux/actions/CreateProjectAction';
+import { iTagForIssueTypes, iTagForPriorities } from '../../util/CommonFeatures';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
 import dayjs from 'dayjs';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
@@ -16,8 +15,8 @@ import './Dashboard.css'
 import { DISPLAY_LOADING, HIDE_LOADING } from '../../redux/constants/constant';
 import { displayComponentInModal } from '../../redux/actions/ModalAction';
 import CompleteSprintModal from '../Modal/CompleteSprintModal/CompleteSprintModal';
-import MemberProject from '../../child-components/Issue-Tag/Member-Project/MemberProject';
 import { calculateTaskRemainingTime } from '../../validations/TimeValidation';
+import MemberProject from '../../child-components/Member-Project/MemberProject';
 export default function Dashboard() {
     const dispatch = useDispatch()
 

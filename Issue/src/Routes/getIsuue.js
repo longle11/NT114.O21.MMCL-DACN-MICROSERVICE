@@ -161,7 +161,7 @@ router.post("/backlog/:projectId", async (req, res) => {
             .populate({
                 path: 'old_sprint'
             })
-        console.log("get all issue in this project", getAllIssuesInProject);
+        // console.log("get all issue in this project", getAllIssuesInProject);
         
         if (getAllIssuesInProject.length !== 0) {
             return res.status(200).json({

@@ -1,12 +1,12 @@
 import { Avatar, Button, Input, Modal, Popover, Select, Table } from 'antd'
 import Search from 'antd/es/input/Search'
 import React, { useState } from 'react'
-import { GetProjectAction } from '../../../redux/actions/ListProjectAction'
+import { GetProjectAction } from '../../redux/actions/ListProjectAction'
 import { useDispatch } from 'react-redux'
-import { addUserToProject, deleteUserInProject } from '../../../redux/actions/CreateProjectAction'
 import { DeleteOutlined } from '@ant-design/icons';
-import { showNotificationWithIcon } from '../../../util/NotificationUtil'
 import { userPermissions } from '../../util/CommonFeatures'
+import { addUserToProject, deleteUserInProject } from '../../redux/actions/CreateProjectAction'
+import { showNotificationWithIcon } from '../../util/NotificationUtil'
 
 export default function MemberProject(props) {
     const projectInfo = props.projectInfo

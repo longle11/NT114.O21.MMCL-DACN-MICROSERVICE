@@ -34,10 +34,15 @@ router.get('/version-list/:projectId', async (req, res) => {
         .populate({
             path: 'issue_list'
         })
-    
-    res.status(200).json({
-        message: "Successfully get version list",
-        data: getVersions
+    if(getVersions) {
+        return res.status(200).json({
+            message: "Successfully get version list",
+            data: getVersions
+        })
+    }
+
+    return res.status(400).json({
+        message: "Failed to get version list",
     })
 })
 

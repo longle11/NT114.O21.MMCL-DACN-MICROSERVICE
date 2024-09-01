@@ -589,7 +589,7 @@ export default function InfoModal() {
                                                 //assign issue to new epic
                                                 dispatch(updateInfoIssue(issueInfo?._id.toString(), issueInfo?.project_id.toString(), { epic_link: value }, issueInfo?.epic_link === null ? "None" : issueInfo?.epic_link.epic_name, props.label, userInfo.id, "updated", "epic link"))
                                                 //update new issue in epic
-                                                dispatch(updateEpic(value, { issue_id: issueInfo?._id.toString(), epic_id: issueInfo?.epic_link === null ? "null" : issueInfo?.epic_link._id.toString() }, issueInfo?.project_id.toString()))
+                                                dispatch(updateEpic(value, { issue_id: issueInfo?._id.toString(), epic_id: issueInfo?.epic_link === null ? null : issueInfo?.epic_link._id.toString() }, issueInfo?.project_id.toString()))
                                             }}
                                             value={getCurrentEpic() !== null ? renderEpics()[getCurrentEpic()]?.value : "None"}
                                         />

@@ -36,10 +36,6 @@ export const GetProjectAction = (id, keyword, navigate) => {
                         navigate(`/projectDetail/${id}/board`)
                     }
                 }
-                console.log("dang tien anh batt dau dispatch ne ",{
-                    type: GET_PROJECT_API,
-                    data: res.data.data
-                } );
                 
                 dispatch({
                     type: GET_PROJECT_API,

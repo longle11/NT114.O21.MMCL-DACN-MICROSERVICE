@@ -20,9 +20,9 @@ import domainName from '../../../util/Config';
 import CreateVersion from '../../Forms/CreateVersion/CreateVersion';
 import { showNotificationWithIcon } from '../../../util/NotificationUtil';
 import { delay } from '../../../util/Delay';
-import IssueTag from '../../../child-components/Issue-Tag/IssueTag';
 import { displayComponentInModal } from '../../../redux/actions/ModalAction';
 import CompleteSprintModal from '../../Modal/CompleteSprintModal/CompleteSprintModal';
+import IssueTag from '../../../child-components/IssueTag/IssueTag';
 export default function Backlog() {
     const [onChangeVersion, setOnChangeVersion] = useState(false)
     const [onChangeEpic, setOnChangeEpic] = useState(false)
@@ -257,7 +257,7 @@ export default function Backlog() {
                 const getEpicIdInIssue = getCurrentIssue.epic_link?._id.toString()
                 const getEpicNameInIssue = getCurrentIssue.epic_link !== null ? getCurrentIssue.epic_link.epic_name : "None"
                 //tien hanh them issue vao epic
-                dispatch(updateEpic(epicList[getIndexEpic]._id.toString(), { issue_id: getCurrentIssue._id.toString(), epic_id: getEpicIdInIssue ? getEpicIdInIssue : "null" }, id))
+                dispatch(updateEpic(epicList[getIndexEpic]._id.toString(), { issue_id: getCurrentIssue._id.toString(), epic_id: getEpicIdInIssue ? getEpicIdInIssue : null }, id))
                 //tien hanh them id cua epic vao epic link trong issue
                 dispatch(updateInfoIssue(getCurrentIssue._id.toString(), id, { epic_link: epicList[getIndexEpic]._id.toString() }, getEpicNameInIssue, epicList[getIndexEpic].epic_name, userInfo.id, "updated", "epic link"))
             }
@@ -276,7 +276,7 @@ export default function Backlog() {
 
 
                 //tien hanh them issue vao epic
-                dispatch(updateEpic(epicList[getIndexSprintSource]._id.toString(), { issue_id: getCurrentIssue._id.toString(), epic_id: getEpicIdInIssue ? getEpicIdInIssue : "null" }, id))
+                dispatch(updateEpic(epicList[getIndexSprintSource]._id.toString(), { issue_id: getCurrentIssue._id.toString(), epic_id: getEpicIdInIssue ? getEpicIdInIssue : null }, id))
                 //tien hanh them id cua epic vao epic link trong issue
                 dispatch(updateInfoIssue(getCurrentIssue._id.toString(), id, { epic_link: epicList[getIndexEpic]._id.toString() }, getEpicNameInIssue, epicList[getIndexEpic].epic_name, userInfo.id, "updated", "epic link"))
             }
@@ -290,7 +290,7 @@ export default function Backlog() {
                 const getVersionIdInIssue = getCurrentIssue.fix_version?._id.toString()
                 const getVersionNameInIssue = getCurrentIssue.fix_version !== null ? getCurrentIssue.fix_version.version_name : "None"
                 //tien hanh them issue vao version
-                dispatch(updateVersion(versionList[getIndexVersion]._id.toString(), { issue_id: getCurrentIssue._id.toString(), version_id: getVersionIdInIssue ? getVersionIdInIssue : "null" }, id))
+                dispatch(updateVersion(versionList[getIndexVersion]._id.toString(), { issue_id: getCurrentIssue._id.toString(), version_id: getVersionIdInIssue ? getVersionIdInIssue : null }, id))
                 //tien hanh them id cua version vao version link trong issue
                 dispatch(updateInfoIssue(getCurrentIssue._id.toString(), id, { fix_version: versionList[getIndexVersion]._id.toString() }, getVersionNameInIssue, versionList[getIndexVersion].version_name, userInfo.id, "updated", "version"))
             }
@@ -309,7 +309,7 @@ export default function Backlog() {
 
 
                 //tien hanh them issue vao version
-                dispatch(updateVersion(versionList[getIndexSprintSource]._id.toString(), { issue_id: getCurrentIssue._id.toString(), version_id: getVersionIdInIssue ? getVersionIdInIssue : "null" }, id))
+                dispatch(updateVersion(versionList[getIndexSprintSource]._id.toString(), { issue_id: getCurrentIssue._id.toString(), version_id: getVersionIdInIssue ? getVersionIdInIssue : null }, id))
                 //tien hanh them id cua version vao version link trong issue
                 dispatch(updateInfoIssue(getCurrentIssue._id.toString(), id, { fix_version: versionList[getIndexVersion]._id.toString() }, getVersionNameInIssue, versionList[getIndexVersion].version_name, userInfo.id, "updated", "epic"))
             }

@@ -64,7 +64,7 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
 
                 // public su kien toi projectmanagement service
                 await issuePublisher(copyIssue, 'issue:updated')
-                console.log("vao duoc tan ben trong nay roi");
+                console.log("vao duoc tan ben trong nay roi", currentIssue);
                 
                 return res.status(200).json({
                     message: "Successfully updated this issue",

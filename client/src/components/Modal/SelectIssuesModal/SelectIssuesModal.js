@@ -21,9 +21,8 @@ export default function SelectIssuesModal(props) {
         if (issues !== null && issues.length > 0 && versionInfo !== null && userInfo !== null && issuesBacklog !== null) {
             // console.log("issues ",issues);
             // console.log("versionInfo._id ", versionInfo._id);
-            
             // add all issues to version
-            dispatch(updateVersion(versionInfo._id, { issue_list: issues }))
+            dispatch(updateVersion(versionInfo._id, { issue_list: issues }, versionInfo.project_id))
             // add version id to issue
             const getIssueListInBacklog = issuesBacklog.filter(issue => issues.includes(issue._id))
 
@@ -40,7 +39,7 @@ export default function SelectIssuesModal(props) {
         }
     }
     const renderOptions = () => {
-        return issuesBacklog.map(issue => {
+        return issuesBacklog?.filter(issue => !(issue.isCompleted || issue.fix_version?._id === versionInfo._id)).map(issue => {
             return {
                 label: <div className='d-flex align-items-center'>
                     <span className='mr-1'>{iTagForIssueTypes(issue.issue_status)}</span>
