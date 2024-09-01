@@ -31,6 +31,12 @@ const sprintSchema = new mongoose.Schema({
             ref: 'issues' 
         }
     ],
+    completed_issue_list: [
+        {
+            type: mongoose.Schema.Types.ObjectId, 
+            ref: 'issues' 
+        }
+    ],
     sprint_status: {
         type: String,
         default: 'pending'

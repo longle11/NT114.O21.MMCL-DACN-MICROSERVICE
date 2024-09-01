@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { Editor } from '@tinymce/tinymce-react';
 import Parser from 'html-react-parser';
-import { Option } from 'antd/es/mentions';
 import { createWorklogHistory, deleteAssignee, deleteIssue, getIssueHistoriesList, getWorklogHistoriesList, updateInfoIssue } from '../../../redux/actions/IssueAction';
 import { createCommentAction } from '../../../redux/actions/CommentAction';
 import { showNotificationWithIcon } from '../../../util/NotificationUtil';
@@ -11,6 +10,8 @@ import { GetProjectAction, GetWorkflowListAction } from '../../../redux/actions/
 import { priorityTypeOptions, issueTypeOptions, iTagForPriorities, iTagForIssueTypes } from '../../../util/CommonFeatures';
 import { updateEpic } from '../../../redux/actions/CategoryAction';
 import { useParams } from 'react-router-dom';
+import { updateUserInfo } from '../../../redux/actions/UserAction';
+import { calculateTimeAfterSplitted, convertMinuteToFormat, validateOriginalTime } from '../../../validations/TimeValidation';
 const { DateTime } = require('luxon');
 
 export default function InfoModal() {
@@ -31,7 +32,7 @@ export default function InfoModal() {
     //tham số truyền vào sẽ là id của comment khi click vào chỉnh sửa
     const [addAssignee, setAddAssignee] = useState(true)
     const [description, setDescription] = useState('')
-     //sử dụng cho phần bình luận
+    //sử dụng cho phần bình luận
     //tham số isSubmit thì để khi bấm send thì mới thực hiện duyệt mảng comments
     const [comment, setComment] = useState({
         content: '',
@@ -64,34 +65,16 @@ export default function InfoModal() {
     }, [issueInfo])
     //su dung cho debounce time original
     const inputTimeOriginal = useRef(null)
-   
-    const dispatch = useDispatch()
 
-    const regexs = [
-        /^(\d+)w([1-6])d([1-9]|1\d|2[0-4])h([1-9]|[1-5]\d|)m$/, //_w_d_h_m
-        /^(\d+)d([1-9]|1\d|2[0-4])h([1-9]|[1-5]\d|)m$/,  //_d_h_m
-        /^(\d+)h([1-9]|[1-5]\d|)m$/,   //h_m
-        /^(\d+)w([1-7])d([1-9]|1\d|2[0-4])h$/, //_w_d_h
-        /^(\d+)w([1-7])d([1-9]|[1-5]\d|)m$/, //_w_d_m
-        /^(\d+)w([1-9]|1\d|2[0-4])h([1-9]|[1-5]\d|)m$/, //_w_h_m
-        /^(\d+)w[1-7]d$/,   //_w_d
-        /^(\d+)w([1-9]|1\d|2[0-4])h$/, //_w_h
-        /^(\d+)w([1-9]|[1-5]\d|)m$/,    //_w_m
-        /^(\d+)d([1-9]|1\d|2[0-4])h$/,   //_d_h
-        /^(\d+)d([1-9]|[1-5]\d|)m$/, //_d_m
-        /^(\d+)w$/, //w
-        /^(\d+)d$/, //d
-        /^(\d+)h$/, //h 
-        /^(\d+)m$/, //m
-    ]
+    const dispatch = useDispatch()
 
     //su dung de render option theo workflow chi dinh
     const typeOptionsFollowWorkflow = (current_type) => {
 
         const getWorkflowsActive = workflowList.filter(workflow => workflow.isActivated)
-        if(getWorkflowsActive.length !== 0) {
+        if (getWorkflowsActive.length !== 0) {
             const getIndex = getWorkflowsActive.findIndex(workflow => workflow.issue_statuses.includes(issueInfo?.issue_status))
-            if(getIndex !== -1) {
+            if (getIndex !== -1) {
                 const getCurrentWorkflow = getWorkflowsActive[getIndex]
                 const getEdges = getCurrentWorkflow.edges
                 const data = getEdges.filter(edge => {
@@ -100,12 +83,11 @@ export default function InfoModal() {
                     }
                     return false
                 })
-                console.log("Gia tri data thu duoc la ", data)
                 const newdata = data?.filter(option => processList.map(process => process._id).includes(option.target)).map(option => {
                     const getNameNodeIndex = getCurrentWorkflow.nodes.findIndex(node => node.id === option.target)
-                    if(getCurrentWorkflow.nodes[getNameNodeIndex]?.data) {
+                    if (getCurrentWorkflow.nodes[getNameNodeIndex]?.data) {
                         return {
-                            label: <span>{option?.label} <i className="fa fa-long-arrow-alt-right ml-3 mr-3"></i><span style={{fontWeight: "bold"}}>{getCurrentWorkflow.nodes[getNameNodeIndex]?.data?.label}</span></span>,
+                            label: <span>{option?.label} <i className="fa fa-long-arrow-alt-right ml-3 mr-3"></i><span style={{ fontWeight: "bold" }}>{getCurrentWorkflow.nodes[getNameNodeIndex]?.data?.label}</span></span>,
                             value: option.target
                         }
                     }
@@ -150,14 +132,14 @@ export default function InfoModal() {
     const renderOptionAssignee = () => {
         return projectInfo?.members?.filter((value, index) => {
             const isExisted = issueInfo?.assignees?.findIndex((user) => {
-                return user._id === value._id
+                return user._id === value.user_info._id
             })
-            return !(issueInfo?.creator._id === value._id || isExisted !== -1)
-        }).map((value, index) => {
-            
-            return <Option key={value.user_info._id} value={value.user_info._id}>
-                <span style={{fontWeight: 'bold'}}>{value.user_info.username}</span> ({value.user_info.email})
-            </Option>
+            return !(issueInfo?.creator._id === value.user_info._id || isExisted !== -1)
+        }).map((valueIssue, index) => {
+            return {
+                label: <span><span style={{ fontWeight: 'bold' }}>{valueIssue.user_info.username}</span> ({valueIssue.user_info.email})</span>,
+                value: valueIssue.user_info._id
+            }
         })
     }
 
@@ -196,173 +178,16 @@ export default function InfoModal() {
         return <p>There is no description yet</p>
     }
 
-    const validateOriginalTime = (input) => {
-        for (const regex of regexs) {
-            if (input.match(regex)) {
-                return true
-            }
-        }
-        return false
-    }
+    
 
-    const splitTimeToObject = (time) => {
-        var indexForW = -1, startForW = 0, indexForD = -1, startForD = 0, indexForH = -1, startForH = 0, indexForM = -1, startForM = 0
-        var startIndex = 0
-        var timeObject = []
-        if (time !== null || time !== undefined) {
-            for (var index = 0; index < time?.length; index++) {
-                if (time[index] === 'w') {
-                    startForW = startIndex
-                    indexForW = index
-                    startIndex = index
-                }
-                if (time[index] === 'd') {
-                    startForD = startIndex
-                    indexForD = index
-                    startIndex = index
-                }
-                if (time[index] === 'h') {
-                    startForH = startIndex
-                    indexForH = index
-                    startIndex = index
-                }
-                if (time[index] === 'm') {
-                    startForM = startIndex
-                    indexForM = index
-                    startIndex = index
-                }
-            }
-        }
-
-        if (indexForW !== -1) {
-            timeObject.push({
-                key: 'w',
-                value: time.substring(startForW !== 0 ? startForW + 1 : 0, indexForW)
-            })
-        }
-        if (indexForD !== -1) {
-            timeObject.push({
-                key: 'd',
-                value: time.substring(startForD !== 0 ? startForD + 1 : 0, indexForD)
-            })
-        }
-        if (indexForH !== -1) {
-            timeObject.push({
-                key: 'h',
-                value: time.substring(startForH !== 0 ? startForH + 1 : 0, indexForH)
-            })
-        }
-        if (indexForM !== -1) {
-            timeObject.push({
-                key: 'm',
-                value: time.substring(startForM !== 0 ? startForM + 1 : 0, indexForM)
-            })
-        }
-        return timeObject
-    }
-
-    const calculateTimeAfterSplitted = (time) => {
-        const timeObject = splitTimeToObject(time)
-        var totalTimeConvertToMinute = 0
-        for (var index = 0; index < timeObject.length; index++) {
-            if (timeObject[index].key === 'w') {
-                totalTimeConvertToMinute += parseInt(timeObject[index].value) * 7 * 24 * 60
-            } else if (timeObject[index].key === 'd') {
-                totalTimeConvertToMinute += parseInt(timeObject[index].value) * 24 * 60
-            } else if (timeObject[index].key === 'h') {
-                totalTimeConvertToMinute += parseInt(timeObject[index].value) * 60
-            } else if (timeObject[index].key === 'm') {
-                totalTimeConvertToMinute += parseInt(timeObject[index].value)
-            }
-        }
-
-        return totalTimeConvertToMinute
-    }
+    
 
     const compareTimeSpentWithTimeOriginal = (timeSpent) => {
         return issueInfo.timeOriginalEstimate >= calculateTimeAfterSplitted(timeSpent)
     }
 
 
-    const convertMinuteToFormat = (time) => {
-        if (time === 0 || time === undefined || time === NaN) {
-            return "None"
-        }
-        var timeAfterConverting = ''
-
-        //truong hop neu lon hon week
-        if (time >= 7 * 24 * 60) {
-            const getWeek = parseInt(time / (7 * 24 * 60))
-            timeAfterConverting += getWeek + 'w'
-            var timeRemaining = time - getWeek * 7 * 24 * 60
-            //neu truong hop lon hon 1 ngay
-            if (timeRemaining >= 24 * 60) {
-                const getDay = parseInt(timeRemaining / (24 * 60))
-                //neu lon hon 1 ngay
-                timeAfterConverting += getDay + 'd'
-                timeRemaining -= getDay * 24 * 60
-                //neu lon hon 1 gio
-                if (timeRemaining >= 60) {
-                    const getHour = parseInt(timeRemaining / 60)
-                    timeAfterConverting += getHour + 'h'
-                    timeRemaining -= getHour * 60
-                    if (timeRemaining !== 0) {
-                        timeAfterConverting += timeRemaining + 'm'
-                    }
-                } else {
-                    //neu nho hon 1 gio
-                    timeAfterConverting += timeRemaining + 'm'
-                }
-            } else {
-                const getHour = parseInt(timeRemaining / 60)
-                if (getHour >= 1) {
-                    timeAfterConverting += getHour + 'h'
-                    timeRemaining -= getHour * 60
-                    if (timeRemaining !== 0) {
-                        timeAfterConverting += timeRemaining + 'm'
-                    }
-                } else {
-                    timeAfterConverting += timeRemaining + 'm'
-                }
-            }
-        } else {
-            //truong hop nho hon 1 tuan
-            const getDay = parseInt(time / (24 * 60))
-            if (getDay >= 1) {
-                timeAfterConverting += getDay + 'd'
-                time -= getDay * 24 * 60
-                //neu lon hon 1 gio
-                if (time >= 60) {
-                    const getHour = parseInt(time / 60)
-                    timeAfterConverting += getHour + 'h'
-                    time -= getHour * 60
-                    if (time !== 0) {
-                        timeAfterConverting += time + 'm'
-                    }
-                } else {
-                    if (time !== 0) {
-                        timeAfterConverting += time + 'm'
-                    }
-                }
-            } else {
-                //truong hop nho hon 1 ngay
-                const getHour = parseInt(time / 60)
-                if (getHour >= 1) {
-                    timeAfterConverting += getHour + 'h'
-                    time -= getHour * 60
-                    if (time !== 0) {
-                        timeAfterConverting += time + 'm'
-                    }
-                } else {
-                    if (time !== 0) {
-                        timeAfterConverting += time + 'm'
-                    }
-                }
-            }
-        }
-
-        return timeAfterConverting
-    }
+    
 
     const calculateProgress = () => {
         if (issueInfo?.timeSpent !== 0 && issueInfo?.timeOriginalEstimate !== 0) {
@@ -578,7 +403,7 @@ export default function InfoModal() {
     }
 
 
-    return <div role="dialog" className="modal fade" id="infoModal" tabIndex={-1} aria-labelledby="infoModal" aria-hidden="true">
+    return <div role="dialog" className="modal fade" id="infoModal" tabIndex={-1} style={{zIndex: 9999999999}} aria-labelledby="infoModal" aria-hidden="true">
         <div className="modal-dialog modal-info">
             <div className="modal-content">
                 <div className="modal-header align-items-center">
@@ -622,7 +447,7 @@ export default function InfoModal() {
                 </div>
                 <div className="modal-body">
                     <div className="container-fluid">
-                        <div className="row" style={{height: 630}}>
+                        <div className="row" style={{ height: 630 }}>
                             <div className="col-8">
                                 <p className="issue_summary" style={{ fontSize: '24px', fontWeight: 'bold' }}>{issueInfo?.summary}</p>
                                 <div className="description">
@@ -676,7 +501,7 @@ export default function InfoModal() {
                                 </div>
                                 {renderActivities()}
                             </div>
-                            <div className="col-4 p-0" style={{height: 600, overflowY: 'auto', scrollbarWidth: 'none'}}>
+                            <div className="col-4 p-0" style={{ height: 600, overflowY: 'auto', scrollbarWidth: 'none' }}>
                                 <div className="status">
                                     <h6>TYPE</h6>
                                     {/* <Select
@@ -722,19 +547,19 @@ export default function InfoModal() {
                                                 }}
                                                 style={{ width: '200px', marginTop: 10 }}
                                                 placeholder="Select a person"
-                                                optionFilterProp="children"
                                                 disabled={issueInfo?.creator._id !== userInfo?.id}
                                                 onSelect={(value, option) => {
                                                     setAddAssignee(true)
                                                     const getUserIndex = projectInfo?.members.findIndex(user => user.user_info._id.toString() === value)
-                                                    if(getUserIndex !== -1) {
+                                                    if (getUserIndex !== -1) {
+                                                        //update user info will receive that task in auth service
+                                                        dispatch(updateUserInfo(value, { assigned_issue: issueInfo?._id }))
+
                                                         dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id, { assignees: value }, null, projectInfo?.members[getUserIndex].user_info.avatar, userInfo.id, "added", "assignees"))
                                                     }
                                                 }}
-                                                filterOption={(input, option) => option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
-                                            >
-                                                {renderOptionAssignee()}
-                                            </Select>
+                                                options={renderOptionAssignee()}
+                                            />
                                         </div>
                                     ) : <></>}
                                 </div>

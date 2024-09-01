@@ -24,7 +24,9 @@ export const GetProjectAction = (id, keyword, navigate) => {
         try {
             const res = await Axios.get(`${domainName}/api/projectmanagement/${id.toString()}?keyword=${keyword}`)
             if (res.status === 200) {
-                if (res.data.data.sprint_id) {
+                console.log("thang res tra ve trong GetProjectAction", res);
+                
+                if (res.data.data?.sprint_id) {
                     dispatch(GetSprintAction(res.data.data.sprint_id))
                     if(navigate !== null) {
                         navigate(`/projectDetail/${id}/board/${res.data.data.sprint_id}`)
@@ -34,6 +36,11 @@ export const GetProjectAction = (id, keyword, navigate) => {
                         navigate(`/projectDetail/${id}/board`)
                     }
                 }
+                console.log("dang tien anh batt dau dispatch ne ",{
+                    type: GET_PROJECT_API,
+                    data: res.data.data
+                } );
+                
                 dispatch({
                     type: GET_PROJECT_API,
                     data: res.data.data
@@ -41,7 +48,8 @@ export const GetProjectAction = (id, keyword, navigate) => {
             }
 
         } catch (errors) {
-
+            console.log(errors);
+            
         }
     }
 }
@@ -79,10 +87,10 @@ export const CreateProcessACtion = (props) => {
     }
 }
 
-export const GetSprintListAction = (project_id) => {
+export const GetSprintListAction = (project_id, props) => {
     return async dispatch => {
         try {
-            const res = await Axios.get(`${domainName}/api/sprint/${project_id}`)
+            const res = await Axios.post(`${domainName}/api/sprint/${project_id}`, props)
             console.log("GetSprintListAction ", res);
 
             dispatch({

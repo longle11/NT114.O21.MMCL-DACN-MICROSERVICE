@@ -29,6 +29,8 @@ function CreateVersion(props) {
                 <div className='startdate-release'>
                     <p className='m-0'>Start date</p>
                     <DatePicker defaultValue={dayjs(props.currentVersion.start_date, "DD/MM/YYYY")} name='start_date' onChange={(date, dateString) => {
+                        console.log("gia tri lay ra ", dateString);
+                        
                         setFieldValue('start_date', dateString)
                     }}
                         format={"DD/MM/YYYY"} />
@@ -53,7 +55,6 @@ const handleSubmitForm = withFormik({
     enableReinitialize: true,
     mapPropsToValues: (props) => {
         const currentVersion = props.currentVersion
-        console.log("gia tri hien tai ne cu ", currentVersion);
         
         return {
             project_id: currentVersion.project_id,
@@ -64,8 +65,6 @@ const handleSubmitForm = withFormik({
         }
     },
     handleSubmit: (values, { props }) => {
-        console.log("submit ", values);
-        
         if(props.currentVersion.id === null) {
             props.dispatch(createVersion({
                 project_id: values.project_id,

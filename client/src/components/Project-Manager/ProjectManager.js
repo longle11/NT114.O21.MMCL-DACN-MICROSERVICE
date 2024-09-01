@@ -127,7 +127,7 @@ export default function ProjectManager() {
             dataIndex: 'name_project',
             key: 'name_project',
             render: (text, record, index) => {
-                if (record?.creator?._id === userInfo?.id || record.members.findIndex(user => user._id === userInfo?.id) !== -1) {
+                if (record?.creator?._id === userInfo?.id || record.members.findIndex(user => user.user_info._id === userInfo?.id) !== -1) {
                     return <NavLink to={`/projectDetail/${record._id}/board`} onClick={() => {
                         dispatch(GetProjectAction(record._id, ""))
                     }} style={{ textDecoration: 'none' }}>

@@ -24,7 +24,7 @@ router.post("/create", async (req, res, next) => {
         const newIssue = await issue.save()
 
         if (req.body?.current_sprint !== null) {
-            await issuePublisher({ sprint_id: newIssue.current_sprint.toString(), issue_id: newIssue._id.toString() }, 'issueInsertToSprint:created')
+            await issuePublisher({ sprint_id: newIssue.current_sprint?.toString(), issue_id: newIssue._id.toString() }, 'issueInsertToSprint:created')
         }
 
         const issueCopy = {

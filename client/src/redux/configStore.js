@@ -7,6 +7,7 @@ import EditCategoryReducer from './reducers/EditCategoryReducer'
 import UserReducer from './reducers/UserReducer'
 import IssueReducer from './reducers/IssueReducer'
 import LoadingReducer from './reducers/LoadingReducer'
+import ModalReducer from './reducers/ModalReducer'
 const rootReducer = combineReducers({
     //reducer khai báo ở đây
     categories: CategoryReducer,
@@ -15,7 +16,8 @@ const rootReducer = combineReducers({
     editCategory: EditCategoryReducer,
     user: UserReducer,
     issue: IssueReducer,
-    loading: LoadingReducer
+    loading: LoadingReducer,
+    isOpenModal: ModalReducer
 })
 
 const store = createStore(rootReducer, applyMiddleware(thunk))

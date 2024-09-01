@@ -8,8 +8,6 @@ var color = randomColor({ luminosity: 'light' });
 router.post('/create', async (req, res, next) => {
     try {
         const data = req.body
-        console.log("req.body ,", req.body);
-        
         const checkExisted = await issueProcessModel.find({ name_process: req.body.name_process })
         if (checkExisted.length === 0) {
             const issueProcess = new issueProcessModel({ ...data, tag_color: req.body?.tag_color ? req._construct.body.tag_color : color })
@@ -17,7 +15,8 @@ router.post('/create', async (req, res, next) => {
 
             const issueProcessDataCopy = {
                 _id: newIssueProcess._id,
-                name_process: newIssueProcess.name_process
+                name_process: newIssueProcess.name_process,
+                tag_color: newIssueProcess.tag_color
             }
 
             await servicePublisher(issueProcessDataCopy, 'issueprocess:created')
@@ -68,11 +67,7 @@ router.post('/create/default/:id', async (req, res) => {
         // var x = 200, y = 500
         for (let process of templateProcess) {
             const newProcess = new issueProcessModel(process)
-            const getNewProcess = await newProcess.save()
-            await servicePublisher({
-                _id: getNewProcess._id.toString(),
-                name_process: getNewProcess.name_process
-            }, 'issueprocess:created')
+            await newProcess.save()
             // if (process.name_process.toLowerCase() === 'to do') {
             //     //push create flow first
             //     nodes.push({
@@ -123,10 +118,21 @@ router.post('/create/default/:id', async (req, res) => {
 
 
         }
+
         // await workflowModel.findByIdAndUpdate(workflowCreate._id, { $set: { edges, nodes } })
         //dispatch event to make default id for workflows default in projectModel
         // await servicePublisher({ workflow_id: workflowCreate._id.toString(), project_id: workflowCreate.project_id.toString() }, "workflow:created")
         const processList = await issueProcessModel.find({ project_id: req.params.id })
+        await servicePublisher({ processList: processList.map(process => {
+            console.log("mac dinh duoc tao ra la ", process );
+            
+            return {
+                _id: process._id,
+                name_process: process.name_process,
+                tag_color: process.tag_color
+            }
+        }) }, 'issueprocess:created')
+
         res.status(201).json({
             message: "Successfully create default template for processes",
             data: processList

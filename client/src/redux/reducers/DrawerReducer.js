@@ -3,12 +3,12 @@ import { CLOSE_DRAWER, OPEN_DRAWER, OPEN_FORM_EDIT_DRAWER, SUBMIT_FORM_EDIT_DRAW
 
 const initialState = {
     visible: false,
-    component: <p>hello world</p>,
+    component: <p>Drawer test something</p>,
     textButton: "Submit",
     width: 720,
     padding: '0',
     submit: (props) => {
-        alert("hello world")
+        alert("test")
     }
 }
 

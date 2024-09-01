@@ -72,11 +72,19 @@ router.put('/update/:id', currentUserMiddleware, async (req, res, next) => {
                         const find_index_col_from = getProject.table_issues_list.findIndex(col => col.til_index === req.body?.table_col_key_from)
                         const find_index_col_to = getProject.table_issues_list.findIndex(col => col.til_index === req.body?.table_col_key_to)
                         if (find_index_col_from !== -1 && find_index_col_to !== -1) {
+                            console.log("gia tri from ", find_index_col_from);
+                            console.log("gia tri to ", find_index_col_to);
+                            
                             console.log("vao day de swap ne From ",getProject.table_issues_list[find_index_col_from] );
-                            console.log("vao day de swap ne From ",getProject.table_issues_list[find_index_col_to] );
+                            
+                            console.log("vao day de swap ne to ",getProject.table_issues_list[find_index_col_to] );
                             
                             getProject.table_issues_list[find_index_col_from].til_index = req.body?.table_col_key_to
                             getProject.table_issues_list[find_index_col_to].til_index = req.body?.table_col_key_from
+
+                            console.log("gia tri sau khi hoan doi la from ", getProject.table_issues_list[find_index_col_from]);
+                            console.log("gia tri sau khi hoan doi la to ", getProject.table_issues_list[find_index_col_to]);
+                            
                         }
 
                         req.body.table_issues_list = [...getProject.table_issues_list]
@@ -90,7 +98,6 @@ router.put('/update/:id', currentUserMiddleware, async (req, res, next) => {
                     { "_id": id },
                     { $set: { ...req.body } }
                 )
-
                 res.status(200).json({
                     message: "Successfully updated project",
                     data: updatedProject

@@ -5,8 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Avatar, Breadcrumb, Button, Input, Modal, Popover, Select, Table, Tooltip } from 'antd';
 import { getInfoIssue, updateInfoIssue } from '../../redux/actions/IssueAction';
 import { CreateProcessACtion, GetProcessListAction, GetProjectAction, GetSprintAction, GetSprintListAction } from '../../redux/actions/ListProjectAction';
-import { addUserToProject, deleteSprintAction, deleteUserInProject, updateProjectAction, updateSprintAction } from '../../redux/actions/CreateProjectAction';
-import { DeleteOutlined } from '@ant-design/icons';
+import { addUserToProject, deleteUserInProject, updateProjectAction, updateSprintAction } from '../../redux/actions/CreateProjectAction';
 import Search from 'antd/es/input/Search';
 import { iTagForIssueTypes, iTagForPriorities, userPermissions } from '../../util/CommonFeatures';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
@@ -14,9 +13,11 @@ import dayjs from 'dayjs';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { delay } from '../../util/Delay';
 import './Dashboard.css'
-import { DISPLAY_LOADING, GET_SPRINT_PROJECT, HIDE_LOADING } from '../../redux/constants/constant';
-import Axios from 'axios';
-import domainName from '../../util/Config';
+import { DISPLAY_LOADING, HIDE_LOADING } from '../../redux/constants/constant';
+import { displayComponentInModal } from '../../redux/actions/ModalAction';
+import CompleteSprintModal from '../Modal/CompleteSprintModal/CompleteSprintModal';
+import MemberProject from '../../child-components/Issue-Tag/Member-Project/MemberProject';
+import { calculateTaskRemainingTime } from '../../validations/TimeValidation';
 export default function Dashboard() {
     const dispatch = useDispatch()
 
@@ -24,7 +25,6 @@ export default function Dashboard() {
     const { id, sprintId } = useParams()
 
     const projectInfo = useSelector(state => state.listProject.projectInfo)
-    const [valueDashboard, setValueDashboard] = useState('')
     const listUser = useSelector(state => state.user.list)
     const userInfo = useSelector(state => state.user.userInfo)
     const processList = useSelector(state => state.listProject.processList)
@@ -32,6 +32,14 @@ export default function Dashboard() {
     const [currentProcess, setCurrentProcess] = useState(null)
     const sprintInfo = useSelector(state => state.listProject.sprintInfo)
     const [valueProcess, setValueProcess] = useState('')
+    useEffect(() => {
+        dispatch(GetProcessListAction(id))
+        if (sprintId) {
+            dispatch(GetSprintAction(sprintId))
+        }
+        dispatch(GetProjectAction(id, null, navigate))
+        dispatch(GetSprintListAction(id))
+    }, [])
     //su dung cho debounce search
     const search = useRef(null)
     const navigate = useNavigate()
@@ -39,97 +47,11 @@ export default function Dashboard() {
     const [open, setOpen] = useState(false);
     const [openAddProcess, setOpenAddProcess] = useState(false)
 
-    const [userEmail, setUserEmail] = useState('')
-    const [userRole, setuserRole] = useState(0)
-    const [isModalOpen, setIsModalOpen] = useState(false)
+  
+    
+
     const [lockDroppable, setLockDroppable] = useState(true)
-    const [isModalCompletingSprintOpen, setIsModalCompletingSprintOpen] = useState(false);
-    //handle when deleting a sprint to move issues to other places
-    const [getIssueToOtherPlaces, setGetIssueToOtherPlaces] = useState({
-        old_stored_place: null,
-        new_stored_place: 0 //mac dinh se luu tru vao backlog
-    })
 
-    const handleCompletingSprintOk = async () => {
-        setIsModalCompletingSprintOpen(false);
-        if (getIssueToOtherPlaces.old_stored_place !== null) {
-            if (getIssueToOtherPlaces.new_stored_place === 0) {
-                const getIssueListInCurrentSprint = getIssueToOtherPlaces.old_stored_place.issue_list
-                //proceed update current_sprint field to backlog in Issue service
-                for (let index = 0; index < getIssueListInCurrentSprint.length; index++) {
-                    dispatch(updateInfoIssue(getIssueListInCurrentSprint[index]._id.toString(), id, { current_sprint: null, old_sprint:  getIssueToOtherPlaces.old_stored_place._id }, getIssueToOtherPlaces.old_stored_place.sprint_name, "backlog", userInfo.id, "updated", "sprint"))
-                }
-                //proceed delete all issues in current sprint
-                dispatch(deleteSprintAction(getIssueToOtherPlaces.old_stored_place._id.toString(), id))
-            } else if (getIssueToOtherPlaces.new_stored_place === 1) {
-                const old_sprint_list = sprintList.map(sprint => sprint._id.toString())
-                const old_sprint_name = getIssueToOtherPlaces.old_stored_place.sprint_name
-                //proceed delete all issues in current sprint
-                dispatch(deleteSprintAction(getIssueToOtherPlaces.old_stored_place._id.toString(), id))
-                //proceed create new sprint and insert all issue from old sprint to new sprint
-                const res = await Axios.post(`${domainName}/api/sprint/create`, { issue_list: getIssueToOtherPlaces.old_stored_place.issue_list, project_id: id })
-                if (res.status === 201) {
-                    dispatch({
-                        type: GET_SPRINT_PROJECT,
-                        sprintList: res.data.data
-                    })
-
-                    //get index of new sprint just created to update current_issue field in backlog
-                    const getIndexOfNewSprint = res.data.data.findIndex(sprint => {
-                        return !old_sprint_list.includes(sprint._id.toString())
-                    })
-
-                    if (getIndexOfNewSprint !== -1) {
-                        for (let index = 0; index < res.data.data[getIndexOfNewSprint].issue_list.length; index++) {
-                            const newSprint = res.data.data[getIndexOfNewSprint]
-                            dispatch(updateInfoIssue(newSprint.issue_list[index]._id.toString(), id, { current_sprint: newSprint._id.toString(), old_sprint: getIssueToOtherPlaces.old_stored_place._id }, old_sprint_name, newSprint.sprint_name, userInfo.id, "updated", "sprint"))
-                        }
-                    }
-                }
-
-            } else {    //move to other sprints
-                const getIssueListInCurrentSprint = getIssueToOtherPlaces.old_stored_place.issue_list
-                //proceed update current_sprint field to other sprints in Issue service
-                const getNewSprintInfo = sprintList.filter(sprint => sprint._id === getIssueToOtherPlaces.new_stored_place)
-                for (let index = 0; index < getIssueListInCurrentSprint.length; index++) {
-                    await delay(100)
-                    dispatch(updateSprintAction(getIssueToOtherPlaces.new_stored_place, { issue_id: getIssueListInCurrentSprint[index]._id.toString()}))
-                }
-                for (let index = 0; index < getIssueListInCurrentSprint.length; index++) {
-                    dispatch(updateInfoIssue(getIssueListInCurrentSprint[index]._id.toString(), id, { current_sprint: getIssueToOtherPlaces.new_stored_place, old_sprint: getIssueToOtherPlaces.old_stored_place._id }, getIssueToOtherPlaces.old_stored_place.sprint_name, getNewSprintInfo[0].sprint_name, userInfo.id, "updated", "sprint"))
-                }
-
-                // //proceed delete all issues in current sprint
-                dispatch(deleteSprintAction(getIssueToOtherPlaces.old_stored_place._id.toString(), id))
-            }
-        }
-
-        navigate(`/projectDetail/${id}/backlog`)
-
-        dispatch(updateProjectAction(id, { sprint_id: null }, null))
-
-        //proceed move to backlog page and delete this sprint out project and change it's status to "finished"
-
-        setGetIssueToOtherPlaces({
-            old_stored_place: null,
-            new_stored_place: 0
-        })
-    };
-    const handleCompletingSprintCancel = () => {
-        setIsModalCompletingSprintOpen(false);
-    };
-
-    const handleAddUserToProjectOk = () => {
-        setIsModalOpen(false);
-        dispatch(addUserToProject(userEmail, userRole, id))
-        setUserEmail('')
-        setuserRole(0)
-    };
-
-
-    const handleAddUserToProjectCancel = () => {
-        setIsModalOpen(false);
-    };
 
     const showModal = () => {
         setOpen(true);
@@ -144,79 +66,12 @@ export default function Dashboard() {
         setOpen(false);
     };
 
-    useEffect(() => {
-        dispatch(GetProcessListAction(id))
-        dispatch(GetSprintAction(sprintId))
-        dispatch(GetProjectAction(id, null, navigate))
-        dispatch(GetSprintListAction(id))
-    }, [])
 
-
-    const optionsMoveUncompletedIssues = () => {
-        const options = [
-            {
-                label: 'Backlog',
-                value: 0
-            },
-            {
-                label: 'New Sprint',
-                value: 1
-            }
-        ]
-        const getSprints = sprintList?.filter(sprint => sprint._id !== projectInfo?.sprint_id).map(sprint => {
-            return {
-                label: sprint.sprint_name,
-                value: sprint._id.toString()
-            }
-        })
-
-        return options.concat(getSprints)
-    }
+    
 
     //su dung cho truong hien thi member
-    const memberColumns = [
-        {
-            title: 'Avatar',
-            dataIndex: 'avatar',
-            key: 'avatar',
-            render: (text, record, index) => {
-                return <Avatar src={record.user_info.avatar} size={30} alt={index} />
-            }
-        },
-        {
-            title: 'Username',
-            dataIndex: 'username',
-            key: 'username',
-            render: (text, record, index) => {
-                return <span>{record.user_info.username}</span>
-            }
-        },
-        {
-            title: 'Action',
-            key: 'action',
-            dataIndex: '_id',
-            render: (text, record, index) => {
-                if (projectInfo?.creator._id.toString().toString() === userInfo.id) {
-                    return text !== userInfo.id ? (
-                        <Button type="primary" onClick={() => {
-                            dispatch(deleteUserInProject(text, projectInfo?._id))
+    
 
-                            dispatch(GetProjectAction(projectInfo?._id, ""))
-                        }} icon={<DeleteOutlined />} size='large' />
-                    ) : <></>
-                }
-                return <></>
-            }
-        }
-    ];
-    const renderTableMembers = (table) => {
-        return <>{table}</>
-    }
-    const renderAvatarMembers = (value, table) => {
-        return <Popover key={value.user_info._id} content={renderTableMembers(table)} title="Members">
-            <Avatar src={value.user_info.avatar} key={value.user_info._id} />
-        </Popover>
-    }
 
     const renderProcessListOptions = (currentProcessId) => {
         var processListOptions = []
@@ -234,16 +89,7 @@ export default function Dashboard() {
         return processListOptions
     }
 
-    const calculateTaskRemainingTime = (currentDate, endDate) => {
-        if (endDate !== null) {
-            const diff = endDate.diff(currentDate, 'day', true);
-            const days = Math.floor(diff);
-            const hours = Math.floor((diff - days) * 24);
-
-            return `${days} days ${hours} hours`
-        }
-        return null
-    }
+    
 
     const renderTooltipForRemainingDay = (sprintInfo) => {
         if (Object.keys(sprintInfo).length !== 0) {
@@ -274,12 +120,13 @@ export default function Dashboard() {
         const source = result.source
         const dest = result.destination
 
-        console.log("source ", source.droppableId);
-        console.log("dest ", dest.droppableId);
+        console.log("source ", source?.droppableId);
+        console.log("dest ", dest?.droppableId);
 
-        if (dest === null) {
-            return
+        if (dest?.droppableId === undefined || source?.droppableId === undefined) {
+            return null
         }
+
         if ((source.droppableId.includes("process") && !dest.droppableId.includes("process")) || (dest.droppableId.includes("process") && !source.droppableId.includes("process"))) {
             return null
         }
@@ -287,12 +134,14 @@ export default function Dashboard() {
 
         } else {
             const getSourceTypeIndex = processList.findIndex(process => process._id === source.droppableId)
-            const getIssue = sprintInfo.issue_list.filter(issue => issue.issue_type === processList[getSourceTypeIndex]._id)[source.index]
+            const getIssue = sprintInfo.issue_list.filter(issue => issue.issue_type._id === processList[getSourceTypeIndex]._id)[source.index]
             const getDestTypeIndex = processList.findIndex(process => process._id === dest.droppableId)
             dispatch({
                 type: DISPLAY_LOADING
             })
-            dispatch(updateInfoIssue(getIssue._id, id, { issue_type: dest.droppableId }, processList[getSourceTypeIndex].name_process, processList[getDestTypeIndex].name_process, userInfo.id, "updated", "type"))
+            if (Number.isInteger(getSourceTypeIndex) && getIssue && Number.isInteger(getDestTypeIndex)) {
+                dispatch(updateInfoIssue(getIssue._id, id, { issue_type: dest.droppableId }, processList[getSourceTypeIndex].name_process, processList[getDestTypeIndex].name_process, userInfo.id, "updated", "type"))
+            }
             await delay(1000)
 
             dispatch(GetSprintAction(sprintId))
@@ -304,16 +153,9 @@ export default function Dashboard() {
 
     //type là loại được chọn để hiển thị (tất cả vấn đề / các vấn đề thuộc user)
     const renderIssue = (processId) => {
-        // let listIssues = projectInfo?.issues
-        // if (type === 1) {
-        //     listIssues = listIssues?.filter(issue => {
-        //         return (issue.assignees.findIndex(value => value._id === userInfo.id) !== -1) || (issue.creator._id === userInfo.id)
-        //     })
-        // }
-
         if (sprintInfo === null) return <></>
         const listIssues = sprintInfo?.issue_list
-        return listIssues?.filter((issue, index) => processId === issue.issue_type).map((issue, index) => {
+        return listIssues?.filter((issue, index) => processId === issue.issue_type._id).map((issue, index) => {
             return <Draggable draggableId={issue._id} index={index} key={issue._id}>
                 {(provided) => {
                     return <li
@@ -326,7 +168,8 @@ export default function Dashboard() {
                         {...provided.dragHandleProps}
                         onClick={() => {
                             dispatch(getInfoIssue(issue._id))
-                        }} onKeyDown={() => { }}>
+                        }}
+                        onKeyDown={() => { }}>
                         <div style={{ cursor: 'pointer' }}>
                             <p>
                                 {issue.summary}
@@ -355,7 +198,6 @@ export default function Dashboard() {
                                 </div>
                             </div>
                         </div>
-
                     </li>
                 }}
             </Draggable>
@@ -464,7 +306,7 @@ export default function Dashboard() {
                     }} style={{ fontSize: '12px' }}>{projectInfo.marked === true ? <i className="fa-solid fa-star" style={{ color: '#ff8b00', fontSize: 15 }}></i> : <i className="fa-solid fa-star" style={{ fontSize: 15 }}></i>}</button>
                     {sprintId && sprintInfo !== null && Object.keys(sprintInfo).length !== 0 ? <Tooltip placement='bottom' title={renderTooltipForRemainingDay(sprintInfo)}><span className='m-0 mr-2 align-items-center d-flex bg-light' style={{ padding: '10px 20px' }}><i className="fa fa-clock mr-2"></i>{calculateTaskRemainingTime(dayjs(new Date()), dayjs(sprintInfo.end_date))}</span></Tooltip> : <></>}
                     {sprintId && sprintInfo !== null && Object.keys(sprintInfo).length !== 0 ? <Button className='m-0 mr-2' type='primary' onClick={() => {
-                        setIsModalCompletingSprintOpen(true)
+                        dispatch(displayComponentInModal(<CompleteSprintModal sprintInfo={sprintInfo} processList={processList} id={id} userInfo={userInfo} sprintList={sprintList}  projectInfo={projectInfo}/>))
                     }}>Complete Sprint</Button> : <></>}
 
                     <NavLink to="https://github.com/longle11/NT114.O21.MMCL-DACN-MICROSERVICE" target="_blank" style={{ textDecoration: 'none' }}>
@@ -478,41 +320,7 @@ export default function Dashboard() {
                 </div>
             </div>
             <p>{sprintInfo === null || sprintInfo === undefined || Object?.keys(sprintInfo).length === 0 ? "" : sprintInfo.sprint_goal}</p>
-            <div className="info" style={{ display: 'flex' }}>
-                <div className="search-block">
-                    <Search
-                        placeholder="Search"
-                        style={{ width: 200 }}
-                        onSearch={value => {
-                            dispatch(GetProjectAction(projectInfo?._id, value))
-                        }}
-                    />
-                </div>
-                <div className="avatar-group" style={{ display: 'flex' }}>
-                    <Avatar.Group>
-                        {projectInfo?.members?.map((value, index) => {
-                            const table = <Table columns={memberColumns} rowKey={value._id} dataSource={projectInfo?.members} />
-                            return renderAvatarMembers(value, table)
-                        })}
-                    </Avatar.Group>
-                    {/* <Popover placement="right" title="Add User" content={renderMembersAndFeatureAdd()} trigger="click">
-                        <Avatar style={{ backgroundColor: '#87d068' }}>
-                            <i className="fa fa-plus"></i>
-                        </Avatar>
-                    </Popover> */}
-                    <Avatar style={{ backgroundColor: '#87d068' }} onClick={() => {
-                        setIsModalOpen(true)
-                    }}>
-                        <i className="fa fa-plus"></i>
-                    </Avatar>
-                </div>
-                <div className="options-group" style={{ display: 'flex' }}>
-                    <Button className="mr-2 ml-3" type="primary">All isssues</Button>
-                    <Button>Only my issues</Button>
-                </div>
-
-
-            </div>
+            <MemberProject projectInfo={projectInfo} id={id} userInfo={userInfo}/>
             <DragDropContext onDragStart={(e) => {
                 if (e.draggableId.includes('process')) {
                     setLockDroppable(false)
@@ -541,7 +349,9 @@ export default function Dashboard() {
                                             <div style={{ width: 'max-content', minWidth: '16rem', height: '28rem', fontWeight: 'bold', scrollbarWidth: 'none', overflowY: 'none' }}>
                                                 <div className='d-flex justify-content-between align-items-center process-header' style={{ backgroundColor: process.tag_color, color: 'white', padding: '3px 10px' }}>
                                                     <div className="card-header d-flex align-items-center " style={{ color: 'black' }}>
-                                                        {process?.name_process} <Avatar className='ml-2' size={25}><span style={{ fontSize: 12, display: 'flex' }}>{sprintInfo !== null && Object.keys(sprintInfo).length !== 0 ? sprintInfo?.issue_list?.filter(issue => issue.issue_type === process._id).length : '0'}</span></Avatar>
+                                                        {process?.name_process} <Avatar className='ml-2' size={25}><span style={{ fontSize: 12, display: 'flex' }}>{sprintInfo !== null && Object.keys(sprintInfo).length !== 0 ? sprintInfo?.issue_list?.filter(issue => {
+                                                            return issue.issue_type._id === process._id
+                                                        }).length : '0'}</span></Avatar>
                                                     </div>
                                                     <div className='dropdown'>
                                                         <button style={{ height: '30px', display: 'none' }} className='btn btn-light p-0 pl-3 pr-3 btn-dashboard-setting' type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -556,23 +366,21 @@ export default function Dashboard() {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div style={{ height: '100%', overflowY: 'auto', scrollbarWidth: 'none' }}>
-                                                    <Droppable droppableId={process._id}>
-                                                        {(provided) => {
-                                                            return <ul className="list-group list-group-flush" style={{ height: '100%' }} ref={provided.innerRef} {...provided.droppableProps}>
-                                                                {index === 0 && sprintInfo !== null && sprintInfo?.issue_list?.length === 0 ? <div className='d-flex flex-column align-items-center ml-2 mr-2'>
-                                                                    <img src="https://jira-frontend-bifrost.prod-east.frontend.public.atl-paas.net/assets/agile.52407441.svg" style={{ height: 150, width: 150 }} alt="img-backlog" />
-                                                                    <p style={{ fontWeight: 'bold', marginBottom: 5 }}>Get started in the backlog</p>
-                                                                    <span style={{ fontWeight: 'normal', textAlign: 'center' }}>Plan and start a sprint to see issues here.</span>
-                                                                    <Button className='mt-2' danger onClick={() => {
-                                                                        navigate(`/projectDetail/${id}/backlog`)
-                                                                    }}>Go to Backlog</Button>
-                                                                </div> : renderIssue(process._id)}
-                                                                {provided.placeholder}
-                                                            </ul>
-                                                        }}
-                                                    </Droppable>
-                                                </div>
+                                                <Droppable droppableId={process._id}>
+                                                    {(provided) => {
+                                                        return <ul className="list-group list-group-flush" style={{overflowY: 'auto', height: '24rem', scrollbarWidth: 'none'}} ref={provided.innerRef} {...provided.droppableProps}>
+                                                            {index === 0 && sprintId === null ? <div className='d-flex flex-column align-items-center ml-2 mr-2 mt-5'>
+                                                                <img src="https://jira-frontend-bifrost.prod-east.frontend.public.atl-paas.net/assets/agile.52407441.svg" style={{ height: 150, width: 150 }} alt="img-backlog" />
+                                                                <p style={{ fontWeight: 'bold', marginBottom: 5 }}>Get started in the backlog</p>
+                                                                <span style={{ fontWeight: 'normal', textAlign: 'center' }}>Plan and start a sprint to see issues here.</span>
+                                                                <Button className='mt-2' danger onClick={() => {
+                                                                    navigate(`/projectDetail/${id}/backlog`)
+                                                                }}>Go to Backlog</Button>
+                                                            </div> : renderIssue(process._id)}
+                                                            {provided.placeholder}
+                                                        </ul>
+                                                    }}
+                                                </Droppable>
                                             </div>
                                             {provided.placeholder}
                                         </div>
@@ -639,66 +447,7 @@ export default function Dashboard() {
                         </div>
                     </div>
                 </Modal>
-                <Modal destroyOnClose="true" title={`Add new user to project ${projectInfo?.name_project}`} open={isModalOpen} onOk={handleAddUserToProjectOk} onCancel={handleAddUserToProjectCancel}>
-                    <div>
-                        <label htmlFor='email'>Email</label>
-                        <Input name='email' placeholder="e.g., longle@company.com" onChange={(e) => {
-                            if (e.target.value.trim() === "") {
-                                showNotificationWithIcon('error', '', 'Email can not be left blank')
-                            } else {
-                                setUserEmail(e.target.value)
-                            }
-                        }} />
-                    </div>
-                    <div className='d-flex flex-column mt-2'>
-                        <label htmlFor='role'>Role</label>
-                        <Select
-                            name="role"
-                            defaultValue={userPermissions[userRole].label}
-                            style={{
-                                width: 'max-content',
-                            }}
-                            onChange={(value) => {
-                                setuserRole(value)
-                            }}
-                            options={userPermissions}
-                        />
-                    </div>
-                </Modal>
-                <Modal destroyOnClose="true" open={isModalCompletingSprintOpen} onOk={handleCompletingSprintOk} onCancel={handleCompletingSprintCancel}>
-                    <h5>Complete sprint {sprintInfo?.sprint_name}</h5>
-                    <label htmlFor='uncompleted_issues'>Uncompleted issues:</label>
-                    <ul>
-                        {
-                            processList?.filter(process => process.name_process.toLowerCase() !== "done").map(process => {
-                                const countIssues = sprintInfo?.issue_list?.filter(issue => issue.issue_type === process._id).length
-                                return <li>{countIssues} issues for <span style={{ fontWeight: 'bold' }}>{process?.name_process?.toLowerCase()}</span></li>
-                            })
-                        }
-                    </ul>
-                    <label htmlFor='completed_issues'>Completed issues:</label>
-                    <ul>
-                        {
-                            processList?.filter(process => process.name_process.toLowerCase() === "done").map(process => {
-                                const countIssues = sprintInfo?.issue_list?.filter(issue => issue.issue_type === process._id).length
-                                return <li>{countIssues} issues for <span style={{ fontWeight: 'bold' }}>{process?.name_process?.toLowerCase()}</span></li>
-                            })
-                        }
-                    </ul>
-                    <div className='d-flex flex-column'>
-                        <label htmlFor='moveTaskTo'>Move uncompleted issues to</label>
-                        <Select
-                            options={optionsMoveUncompletedIssues()}
-                            onSelect={(value) => {
-                                setGetIssueToOtherPlaces({
-                                    old_stored_place: sprintInfo,
-                                    new_stored_place: value
-                                })
-                            }}
-                            style={{ width: '100%' }}
-                        />
-                    </div>
-                </Modal>
+                
             </DragDropContext>
         </div>
     )

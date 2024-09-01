@@ -22,6 +22,7 @@ import IssueDetail from './components/WD-Board/Issue-Detail/Issue-Detail';
 import WorkflowList from './components/WD-Board/Workflow/Workflow-List/WorkflowList';
 import WorkflowEdit from './components/WD-Board/Workflow/Workflow-Edit/WorkflowEdit';
 import AddUser from './components/Project-Setiing/Add-User/AddUser';
+import YourWork from './components/Your-Work/YourWork';
 function App() {
   const dispatch = useDispatch()
   useEffect(() => {
@@ -48,6 +49,7 @@ function App() {
           <Route path='/projectDetail/:id/workflows/edit/:workflowId' Component={WorkflowEdit} />
           <Route path='/projectDetail/:id/issues/issue-detail?/:issueId' element={<MainPageTemplate Component={IssueDetail} />} />
           <Route path='/projectDetail/:id/settings/access' element={<MainPageTemplate Component={AddUser} />} />
+          <Route path='/your-work' element={<MainPageTemplate Component={YourWork} />} />
 
           <Route path='/' element={<MainPageTemplate Component={ProjectManager} />} />
           <Route path='/create' element={<MainPageTemplate Component={Create} />} />

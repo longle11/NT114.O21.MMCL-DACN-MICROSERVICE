@@ -8,9 +8,9 @@ const router = express.Router()
 
 router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
     try {
-        console.log("log ", req.body);
-        
         if (req.currentUser) {
+            console.log("body ", req.body);
+            
             const { id } = req.params
             const issueIds = await issueModel.find({})
             const ids = issueIds.map(issue => issue._id.toString());
@@ -42,6 +42,9 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                     currentIssue.old_sprint.push(req.body.old_sprint)
 
                     req.body.old_sprint = [...currentIssue.old_sprint]
+
+                    console.log("thang ", currentIssue.summary, "co gia tri ", req.body.old_sprint);
+                    
                 }
 
                 await issueModel.updateOne({ _id: id }, { $set: { ...req.body } })
@@ -61,7 +64,8 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
 
                 // public su kien toi projectmanagement service
                 await issuePublisher(copyIssue, 'issue:updated')
-
+                console.log("vao duoc tan ben trong nay roi");
+                
                 return res.status(200).json({
                     message: "Successfully updated this issue",
                     data: currentIssue

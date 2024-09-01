@@ -12,6 +12,8 @@ import MenuBarHeader from '../components/Header/MenuBarHeader'
 import { userLoggedInAction } from '../redux/actions/UserAction'
 import { Layout } from 'antd'
 import MenuBar from '../components/MenuBar/MenuBar'
+import { ListProjectAction } from '../redux/actions/ListProjectAction'
+import ModalHOC from '../HOC/ModalHOC'
 export default function MainPageTemplate({ Component }) {
     const isLoading = useSelector(state => state.loading.isLoading)
     const userInfo = useSelector(state => state.user.userInfo)
@@ -19,6 +21,7 @@ export default function MainPageTemplate({ Component }) {
     const navigate = useNavigate()
     useEffect(() => {
         dispatch(userLoggedInAction())
+        dispatch(ListProjectAction())
     }, [])
 
     const handleLogin = () => {
@@ -39,8 +42,9 @@ export default function MainPageTemplate({ Component }) {
                         >
                             { userInfo.project_working !== null ? <MenuBar /> : <></> }
                             <DrawerHOC />
+                            <ModalHOC />
                             {/* <MenuBar /> */}
-                            <div style={{ width: '100%', padding: '0 10px', marginBottom: '20px',  height: '90vh' }} className='main'>
+                            <div style={{ width: '100%', padding: '0 10px', marginBottom: '20px',  height: '90vh', overflowX: 'hidden' }} className='main'>
                                 <Component />
                             </div>
                             <InfoModal />

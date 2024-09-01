@@ -1,6 +1,6 @@
 import Axios from "axios"
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
-import { GET_INFO_ISSUE, GET_ISSUE_HISTORIES_LIST, GET_ISSUES_BACKLOG, GET_WORKLOG_HISTORIES_LIST, USER_LOGGED_IN } from "../constants/constant"
+import { GET_INFO_ISSUE, GET_ISSUE_HISTORIES_LIST, GET_ISSUE_LIST, GET_ISSUES_BACKLOG, GET_WORKLOG_HISTORIES_LIST, USER_LOGGED_IN } from "../constants/constant"
 import { GetProjectAction } from "./ListProjectAction"
 import domainName from '../../util/Config'
 import { delay } from "../../util/Delay"
@@ -13,7 +13,7 @@ export const createIssue = (props, issuesBacklog, old_status, new_status, creato
             if (res.status === 201) {
 
                 //update working issues on auth service
-                dispatch(updateUserInfo(res.data.data.creator, { working_issue: res.data.data._id.toString() }))
+                dispatch(updateUserInfo(res.data.data.creator, { working_issue: res.data.data._id.toString(), issue_action: "Created" }))
 
                 //tien hanh tao history cho issue
                 dispatch(createIssueHistory({
@@ -74,11 +74,10 @@ export const getInfoIssue = (id) => {
     }
 }
 
-export const getIssuesBacklog = (projectId) => {
+export const getIssuesBacklog = (projectId, props) => {
     return async dispatch => {
         try {
-            const res = await Axios.get(`${domainName}/api/issue/backlog/${projectId}`)
-            console.log("ket qua tra ve ", res.data.data);
+            const res = await Axios.post(`${domainName}/api/issue/backlog/${projectId}`, props)
 
             dispatch({
                 type: GET_ISSUES_BACKLOG,
@@ -86,6 +85,18 @@ export const getIssuesBacklog = (projectId) => {
             })
         } catch (error) {
             console.log(error);
+        }
+    }
+}
+
+export const getAllIssue = () => {
+    return async dispatch => {
+        const getAllIssues = await Axios.get(`${domainName}/api/issue/issues/all`)
+        if (getAllIssues.status === 200) {
+            dispatch({
+                type: GET_ISSUE_LIST,
+                issueList: getAllIssues.data.data
+            })
         }
     }
 }

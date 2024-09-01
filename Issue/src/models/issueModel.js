@@ -59,11 +59,13 @@ const issueSchema = new mongoose.Schema({
         ref: 'sprints',
         default: null
     },
-    old_sprint: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'sprints',
-        default: null
-    },
+    old_sprint: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'sprints',
+            default: null
+        }
+    ],
     timeSpent: {
         type: Number,
         default: 0
@@ -79,6 +81,10 @@ const issueSchema = new mongoose.Schema({
     updateAt: {
         type: Date,
         default: Date.now
+    },
+    isCompleted: {
+        type: Boolean,
+        default: false
     }
 })
 

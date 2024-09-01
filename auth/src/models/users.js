@@ -52,7 +52,8 @@ const userSchema = new mongoose.Schema({
     working_issues: [
         {
             issue_id: mongoose.Schema.Types.ObjectId,
-            createAt: Date
+            createAt: Date,
+            action: String
         }
     ],
     viewed_issues: [

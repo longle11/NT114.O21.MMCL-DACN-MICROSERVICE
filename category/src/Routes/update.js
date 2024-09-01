@@ -68,6 +68,15 @@ router.put('/version-update/:versionId', async (req, res) => {
             }
         }
 
+        if(req.body?.issue_list) {
+            const getVersion = await versionModel.findById(req.body.version_id)
+            if(getVersion) {
+                req.body.issue_list = getVersion.issue_list.concat(req.body.issue_list)
+            }
+            console.log("mang sau khi cap naht ", req.body.issue_list);
+            
+        }
+
         req.body.issue_id = null
         req.body.version_id = null
 

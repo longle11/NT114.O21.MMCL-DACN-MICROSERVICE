@@ -21,7 +21,7 @@ router.get("/currentuser", currentUserMiddleware,async (req, res) => {
                 project_working: getUserInfo.project_working,
                 viewed_issues: getUserInfo.viewed_issues,
                 assigned_issues: getUserInfo.assigned_issues,
-                working_issues: getUserInfo.working_issues
+                working_issues: getUserInfo.working_issues,
             }
         }
     }

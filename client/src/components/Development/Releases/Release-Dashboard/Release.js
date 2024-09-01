@@ -1,6 +1,6 @@
 import Search from 'antd/es/input/Search'
 import React, { useEffect } from 'react'
-import { Progress, Table, Tag } from 'antd';
+import { Breadcrumb, Button, Progress, Table, Tag } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import { drawer_edit_form_action } from '../../../../redux/actions/DrawerAction';
 import CreateVersion from '../../../Forms/CreateVersion/CreateVersion';
@@ -11,9 +11,9 @@ export default function Release() {
     const dispatch = useDispatch()
     const { id } = useParams()
     const versionList = useSelector(state => state.categories.versionList)
+    const projectInfo = useSelector(state => state.listProject.projectInfo)
     useEffect(() => {
         dispatch(getVersionList(id))
-        console.log("versionList ", versionList);
     }, [])
     const columns = [
         {
@@ -79,38 +79,70 @@ export default function Release() {
     ];
 
     return (
-        <div >
-            <p>Projects / longle project</p>
-            <h5>Release</h5>
-            {/* Phan chua thanh search va checkbox */}
-            <div className="search-info-releases d-flex">
-                <div className="search-block">
-                    <Search
-                        placeholder="input search text"
-                        style={{ width: 300 }}
-                        onSearch={value => {
-
-                        }}
-                    />
+        <div>
+            <div>
+                <Breadcrumb
+                    style={{ marginBottom: 10 }}
+                    items={[
+                        {
+                            title: <a href="/">Projects</a>,
+                        },
+                        {
+                            title: <a href={`/projectDetail/${id}/board`}>{projectInfo?.name_project}</a>,
+                        }
+                    ]}
+                />
+                <div className='d-flex justify-content-between'>
+                    <h5>Release</h5>
+                    <div className='mr-3'> 
+                        <Button onClick={() => {
+                            dispatch(drawer_edit_form_action(<CreateVersion currentVersion={
+                                {
+                                    id: null,
+                                    project_id: id,
+                                    description: '',
+                                    version_name: '',
+                                    start_date: dayjs(new Date()).format('DD/MM/YYYY'),
+                                    end_date: dayjs(new Date()).format('DD/MM/YYYY'),
+                                    version_id: null
+                                }} />, 'Create', '500px'))
+                        }}>Create version</Button>
+                    </div>
                 </div>
             </div>
-            {versionList !== null && versionList?.length > 0 ? <Table columns={columns} dataSource={versionList} /> : <div className="d-flex flex-column align-items-center">
+            {versionList !== null && versionList?.length > 0 ? <div>
+                <div>
+                    {/* Phan chua thanh search va checkbox */}
+                    <div className="search-info-releases d-flex">
+                        <div className="search-block">
+                            <Search
+                                placeholder="input search text"
+                                style={{ width: 300 }}
+                                onSearch={value => {
+
+                                }}
+                            />
+                        </div>
+                    </div>
+                </div>
+                <Table className='mt-3' columns={columns} dataSource={versionList} />
+            </div> : <div className="d-flex flex-column align-items-center" style={{ height: '70vh' }}>
                 <img alt="new img" style={{ width: '200px' }} src="https://jira-frontend-bifrost.prod-east.frontend.public.atl-paas.net/assets/releases-80px.782fa98d.svg" />
                 <p>Versions help you package and schedule project deliveries. <br /> Add a vision to start collecting and releasing your work</p>
                 <button className='btn btn-primary' onClick={() => {
                     dispatch(drawer_edit_form_action(<CreateVersion currentVersion={
-                        { 
+                        {
                             id: null,
-                            project_id: id, 
-                            description: '', 
-                            version_name: '', 
-                            start_date: dayjs(new Date()).format('DD/MM/YYYY'), 
+                            project_id: id,
+                            description: '',
+                            version_name: '',
+                            start_date: dayjs(new Date()).format('DD/MM/YYYY'),
                             end_date: dayjs(new Date()).format('DD/MM/YYYY'),
                             version_id: null
                         }} />, 'Create', '500px'))
                 }}>Create version</button>
             </div>}
-            
+
         </div>
     )
 }

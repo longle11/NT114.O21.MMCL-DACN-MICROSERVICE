@@ -31,7 +31,7 @@ const issueSchema = new mongoose.Schema({
     },
     issue_type: {
         type: mongoose.Schema.Types.ObjectId,
-        default: null
+        ref: 'issueProcesses'
     },
     assignees: [
         {
@@ -48,6 +48,11 @@ issueSchema.virtual('sprintsRefIssueList', {
     ref: 'sprints',
     foreignField: '_id',
     localField: 'issue_list'
+})
+issueSchema.virtual('sprintsRefCompletedIssueList', {
+    ref: 'sprints',
+    foreignField: '_id',
+    localField: 'completed_issue_list'
 })
 
 const issueModel = mongoose.model('issues', issueSchema)

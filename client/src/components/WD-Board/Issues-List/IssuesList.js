@@ -1,13 +1,13 @@
-import { Avatar, Breadcrumb, Button, Input, Select, Table, Tag } from 'antd'
+import { Avatar, Breadcrumb, Button, Form, Input, Select, Space, Table, Tag } from 'antd'
 import Search from 'antd/es/input/Search'
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { issueTypeWithoutOptions, iTagForIssueTypes, iTagForPriorities } from '../../../util/CommonFeatures'
-import { createIssue, getIssuesBacklog } from '../../../redux/actions/IssueAction'
+import { issueTypeOptions, issueTypeWithoutOptions, iTagForIssueTypes, iTagForPriorities, renderAssignees, renderIssueType, renderSprintList } from '../../../util/CommonFeatures'
+import { createIssue, getIssuesBacklog, updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import './IssuesList.css'
-import { GetProcessListAction, GetProjectAction } from '../../../redux/actions/ListProjectAction'
+import { GetProcessListAction, GetProjectAction, GetSprintListAction } from '../../../redux/actions/ListProjectAction'
 import { UserOutlined } from '@ant-design/icons';
 import { updateProjectAction } from '../../../redux/actions/CreateProjectAction'
 import {
@@ -20,77 +20,26 @@ import {
 } from '@dnd-kit/core';
 import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 import {
-  arrayMove,
   horizontalListSortingStrategy,
   SortableContext,
   useSortable,
 } from '@dnd-kit/sortable';
+import { getEpicList, getVersionList } from '../../../redux/actions/CategoryAction'
+import { showNotificationWithIcon } from '../../../util/NotificationUtil'
+import { calculateTimeAfterSplitted, convertMinuteToFormat, validateOriginalTime } from '../../../validations/TimeValidation'
+import MemberProject from '../../../child-components/Issue-Tag/Member-Project/MemberProject'
 
 
-const DragIndexContext = createContext({
-  active: -1,
-  over: -1,
-});
-const dragActiveStyle = (dragState, id) => {
-  const { active, over, direction } = dragState;
-  // drag active style
-  let style = {};
-  if (active && active === id) {
-    style = {
-      backgroundColor: 'gray',
-      opacity: 0.5,
-    };
-  }
-  // dragover dashed style
-  else if (over && id === over && active !== over) {
-    style =
-      direction === 'right'
-        ? {
-          borderRight: '1px dashed gray',
-        }
-        : {
-          borderLeft: '1px dashed gray',
-        };
-  }
-  return style;
-};
-const TableBodyCell = (props) => {
-  const dragState = useContext(DragIndexContext);
-  return (
-    <td
-      {...props}
-      style={{
-        ...props.style,
-        ...dragActiveStyle(dragState, props.id),
-      }}
-    />
-  );
-};
-const TableHeaderCell = (props) => {
-  const dragState = useContext(DragIndexContext);
-  const { attributes, listeners, setNodeRef, isDragging } = useSortable({
-    id: props.id,
-  });
-  const style = {
-    ...props.style,
-    cursor: 'move',
-    ...(isDragging
-      ? {
-        position: 'relative',
-        zIndex: 9999,
-        userSelect: 'none',
-      }
-      : {}),
-    ...dragActiveStyle(dragState, props.id),
-  };
-  return <th {...props} ref={setNodeRef} style={style} {...attributes} {...listeners} />;
-};
+
 
 export default function IssuesList() {
   const listProject = useSelector(state => state.listProject.listProject)
   const issuesBacklog = useSelector(state => state.issue.issuesBacklog)
-  const processList = useSelector(state => state.listProject.processList)
   const projectInfo = useSelector(state => state.listProject.projectInfo)
+  const epicList = useSelector(state => state.categories.epicList)
+  const versionList = useSelector(state => state.categories.versionList)
+  const sprintList = useSelector(state => state.listProject.sprintList)
+  const processList = useSelector(state => state.listProject.processList)
   const userInfo = useSelector(state => state.user.userInfo)
   const dispatch = useDispatch()
   const { id } = useParams()
@@ -101,66 +50,273 @@ export default function IssuesList() {
     dispatch(getIssuesBacklog(id))
     dispatch(GetProcessListAction(id))
     dispatch(GetProjectAction(id, null, null))
+    dispatch(getEpicList(id))
+    dispatch(getVersionList(id))
+    dispatch(GetSprintListAction(id))
   }, [])
+  const EditableContext = React.createContext(null);
+  const EditableRow = ({ index, ...props }) => {
+    const [form] = Form.useForm();
+    return (
+      <Form form={form} component={false}>
+        <EditableContext.Provider value={form}>
+          <tr {...props} />
+        </EditableContext.Provider>
+      </Form>
+    );
+  };
+  const EditableCell = ({
+    title,
+    editable,
+    children,
+    dataIndex,
+    record,
+    ...restProps
+  }) => {
+    const [editing, setEditing] = useState(false);
+    const ref = useRef(null);
+    const form = useContext(EditableContext);
+    useEffect(() => {
+      if (editing) {
+        ref.current?.focus();
+      }
+    }, [editing]);
+    const toggleEdit = () => {
+      setEditing(!editing);
+      form.setFieldsValue({
+        [dataIndex]: record[dataIndex],
+      });
+    };
+    const save = async (record) => {
+      try {
+        const values = await form.validateFields();
+        if (values?.timeOriginalEstimate) {
+          if (validateOriginalTime(values.timeOriginalEstimate)) {
+            const oldValue = calculateTimeAfterSplitted(record.timeOriginalEstimate ? record.timeOriginalEstimate : 0)
+            const newValue = calculateTimeAfterSplitted(values.timeOriginalEstimate)
 
+            dispatch(updateInfoIssue(record?._id, projectInfo?._id, { timeOriginalEstimate: newValue }, oldValue, newValue, userInfo.id, "updated", "time original estimate"))
+            showNotificationWithIcon('success', '', "Truong du lieu hop le")
+          } else {
+            showNotificationWithIcon('error', '', "Truong du lieu nhap vao khong hop le")
+          }
+        }
+
+        toggleEdit();
+
+      } catch (errInfo) {
+        console.log('save failed:', errInfo);
+      }
+    };
+    let childNode = children;
+    if (editable) {
+      childNode = editing ? (
+        <Form.Item
+          style={{
+            margin: 0,
+          }}
+          name={dataIndex}
+        // rules={[
+        //   {
+        //     required: true,
+        //     message: `${title} is required.`,
+        //   },
+        // ]}
+        >
+          {record.isCompleted === false ? renderEditingCellsInRow(ref, dataIndex, save, record) : setEditing(false)}
+        </Form.Item>
+      ) : (
+        <div
+          className="editable-cell-value-wrap"
+          style={{
+            paddingInlineEnd: 24,
+          }}
+          onClick={toggleEdit}
+        >
+          {children}
+        </div>
+      );
+    }
+    return <td {...restProps}>{childNode}</td>;
+  };
+
+  const DragIndexContext = createContext({
+    active: -1,
+    over: -1,
+  });
+  const dragActiveStyle = (dragState, id) => {
+    const { active, over, direction } = dragState;
+    // drag active style
+    let style = {};
+    if (active && active === id) {
+      style = {
+        backgroundColor: 'gray',
+        opacity: 0.5,
+      };
+    }
+    // dragover dashed style
+    else if (over && id === over && active !== over) {
+      style =
+        direction === 'right'
+          ? {
+            borderRight: '1px dashed gray',
+          }
+          : {
+            borderLeft: '1px dashed gray',
+          };
+    }
+    return style;
+  };
+
+  const TableHeaderCell = (props) => {
+    const dragState = useContext(DragIndexContext);
+    const { attributes, listeners, setNodeRef, isDragging } = useSortable({
+      id: props.id,
+    });
+    const style = {
+      ...props.style,
+      cursor: 'move',
+      ...(isDragging
+        ? {
+          position: 'relative',
+          zIndex: 9999,
+          userSelect: 'none',
+        }
+        : {}),
+      ...dragActiveStyle(dragState, props.id),
+    };
+    return <th {...props} ref={setNodeRef} style={style} {...attributes} {...listeners} />;
+  };
+  const components = {
+    header: {
+      cell: TableHeaderCell,
+    },
+    body: {
+      row: EditableRow,
+      cell: (EditableCell),
+    },
+  }
+  const renderEditingCellsInRow = (ref, dataIndex, save, record) => {
+    if (dataIndex === 'summary') {
+      return <Input ref={ref} onPressEnter={() => {
+        save(record)
+      }} onBlur={() => {
+        save(record)
+      }} />
+    } else if (dataIndex === 'issue_status') {
+      return <Select ref={ref} onPressEnter={() => {
+        save(record)
+      }} onBlur={() => {
+        save(record)
+      }} options={issueTypeWithoutOptions} onSelect={(value) => value} />
+    } else if (dataIndex === 'issue_type') {
+      const renderOptions = renderIssueType(processList, id)
+      return <Select ref={ref} onPressEnter={() => {
+        save(record)
+      }} onBlur={() => {
+        save(record)
+      }} options={renderOptions.filter(option => option.value !== record.issue_type._id)} onSelect={(value) => value} />
+    } else if (dataIndex === 'assignees') {
+      return <Select ref={ref} onPressEnter={() => {
+        save(record)
+      }} onBlur={() => {
+        save(record)
+      }} options={renderAssignees(listProject, id, userInfo)} onSelect={(value) => value} optionRender={(option) => {
+        return <Space>
+          <div>
+            {option.data.desc}
+          </div>
+        </Space>
+      }} />
+    } else if (dataIndex === 'current_sprint') {
+      return <Select ref={ref} onPressEnter={() => {
+        save(record)
+      }} onBlur={() => {
+        save(record)
+      }} options={renderSprintList(sprintList, id)} onSelect={(value) => value} />
+    } else if (dataIndex === 'timeOriginalEstimate') {
+      return <Input ref={ref} defaultValue={''} onPressEnter={() => {
+        save(record)
+      }} onBlur={() => {
+        save(record)
+      }} />
+    }
+  }
   const renderValueColumns = (text, record, index, key) => {
     if (key === 'issue_status') {
       return iTagForIssueTypes(record?.issue_status)
-    } 
+    }
     else if (key === 'summary') {
       return <span>{record?.summary}</span>
-    } 
+    }
     else if (key === 'issue_type') {
-      return <Tag color={record.issue_type.tag_color}>{record.issue_type.name_process}</Tag>
-    } 
+      return <Tag color={record.issue_type?.tag_color}>{record.issue_type?.name_process}</Tag>
+    }
     else if (key === 'issue_priority') {
       return iTagForPriorities(record.issue_priority)
-    } 
+    }
     else if (key === 'assignees') {
-      return <span><Avatar icon={<UserOutlined />} style={{ backgroundColor: 'red' }} size={30} /> <span className='ml-2'>Unassignee</span></span>
-    } 
+      return <span className='d-flex align-items-center'><Avatar icon={<UserOutlined />} size={30} /> <span className='ml-2'>Unassignee</span></span>
+    }
     else if (key === 'creator') {
       return <span><Avatar src={record.creator.avatar} className='mr-2' />{record.creator.username}</span>
-    } 
+    }
     else if (key === 'createAt') {
       return <Tag color="#87d068">{dayjs(record.createAt).format("DD/MM/YYYY")}</Tag>
-    } 
+    }
     else if (key === 'updateAt') {
       return <Tag color="#2db7f5">{dayjs(record.updateAt).format("DD/MM/YYYY")}</Tag>
-    } 
+    }
     else if (key === 'epic_link') {
       return record.epic_link !== null ? <Tag color={record.epic_link?.tag_color}>{record.epic_link?.epic_name}</Tag> : null
-    } 
+    }
     else if (key === 'parent') {
       return null
-    } 
-    else if(key === 'fix_version') {
-      return <Tag color={record.fix_version.tag_color}>{record.fix_version.epic_name}</Tag>
     }
-    else if(key === 'timeOriginalEstimate') {
-      return <span>{record.timeOriginalEstimate}</span>
+    else if (key === 'fix_version') {
+      return <Tag color={record.fix_version?.tag_color}>{record.fix_version?.epic_name}</Tag>
     }
-    else if(key === 'timeSpent') {
+    else if (key === 'timeOriginalEstimate') {
+      if (record.timeOriginalEstimate !== 0) {
+        return <span>{convertMinuteToFormat(record.timeOriginalEstimate)}</span>
+      } else {
+        return <span>None</span>
+      }
+    }
+    else if (key === 'timeSpent') {
       return <span>{record.timeSpent}</span>
     }
-    else if(key === 'timeRemaining') {
+    else if (key === 'timeRemaining') {
       return <span>{record.timeRemaining}</span>
     }
-    else if(key === 'current_sprint') {
-      return <span>{record.current_sprint.sprint_name}</span>
+    else if (key === 'current_sprint') {
+      return <Tag>{record.current_sprint?.sprint_name}</Tag>
     }
-    else if(key === 'story_point') {
+    else if (key === 'old_sprint') {
+      return <div className='d-flex'>
+        {record.old_sprint?.filter((sprint, index) => record.old_sprint.map(sprint => sprint._id).indexOf(sprint._id) === index).map((sprint) => {
+          return <Tag key={sprint._id}>{sprint.sprint_name}</Tag>
+        })}
+      </div>
+    }
+    else if (key === 'story_point') {
       return <span>{record.story_point}</span>
     }
   }
 
   const renderColumns = () => {
-    const data = projectInfo?.table_issues_list?.filter(col => col.isShowed).sort((a, b) => a.index - b.index).map(col => {
+    const data = projectInfo?.table_issues_list?.filter(col => col.isShowed).map(col => {
+      var allowEdit = false
+      if (["issue_type", "issue_priority", "summary", "issue_status", "assignees", "current_sprint", "epic_link", "fix_version", "story_point", "timeOriginalEstimate", "timeRemaining"].includes(col.key)) {
+        allowEdit = true
+      }
       return {
         title: col.title,
         dataIndex: col.key,
         key: col.key,
+        editable: allowEdit,
         index: col.til_index,
+        width: 150,
         filters: [
           {
             text: 'Sort A -> Z',
@@ -175,13 +331,13 @@ export default function IssuesList() {
             value: 3
           }
         ],
-        width: 'fit-content',
         render: (text, record, index) => {
           return renderValueColumns(text, record, index, col.key)
         }
       }
-    })
-    
+    }).sort((a, b) => a.index - b.index)
+
+
     if (data?.length !== 0) {
       return data?.map((column) => ({
         ...column,
@@ -189,9 +345,13 @@ export default function IssuesList() {
         onHeaderCell: () => ({
           id: `${column.index}`,
         }),
-        onCell: () => ({
+        onCell: (record) => ({
           id: `${column.index}`,
-        }),
+          editable: column.editable,
+          dataIndex: column.dataIndex,
+          title: column.title,
+          record
+        })
       }))
     }
     return null
@@ -256,27 +416,9 @@ export default function IssuesList() {
         <span className='btn btn-light' style={{ fontSize: 13 }}><i className="fa-duotone fa-solid fa-comments"></i> Give feedback</span>
       </div>
       <div className='d-flex align-items-center mb-4'>
-        <Search
-          placeholder="Search List"
-          style={{
-            width: 200
-          }}
-        />
-        <div className='issues-members-list ml-3'>
-          {listProject?.members?.map(user => <Avatar size={40} src={user.avatar} />)}
-          <Avatar.Group>
-            <Avatar icon={<UserOutlined />} style={{ backgroundColor: 'red' }} size={30} />
-            <Avatar icon={<UserOutlined />} style={{ backgroundColor: 'blue' }} size={30} />
-            <Avatar icon={<UserOutlined />} style={{ backgroundColor: 'green' }} size={30} />
-            <Avatar icon={<UserOutlined />} style={{ backgroundColor: 'red' }} size={30} />
-            <Avatar icon={<UserOutlined />} style={{ backgroundColor: 'purple' }} size={30} />
-            <Avatar icon={<UserOutlined />} style={{ backgroundColor: 'black' }} size={30} />
-            <Avatar icon={<UserOutlined />} style={{ backgroundColor: 'pink' }} size={30} />
-            <Avatar size={30}><i className="fa-solid fa-user-plus" style={{ fontSize: 14, display: 'flex' }}></i></Avatar>
-          </Avatar.Group>
-        </div>
+        <MemberProject projectInfo={projectInfo} id={id} userInfo={userInfo}/>
       </div>
-      <div className='issues-info' style={{ height: '75vh', overflowY: 'auto', scrollbarWidth: 'none' }}>
+      <div className='issues-info' style={{ height: '70vh', overflowY: 'auto', scrollbarWidth: 'none' }}>
         {(renderColumns() !== null || renderColumns() !== undefined) && renderColumns()?.length > 0 ? <div className='d-flex'>
           <DndContext
             sensors={sensors}
@@ -292,18 +434,12 @@ export default function IssuesList() {
                   dataSource={issuesBacklog}
                   bordered
                   size='middle'
-                  style={{ width: '93%' }}
+                  style={{ width: '100%' }}
                   scroll={{
-                    x: 'max-content'
+                    x: 'max-content',
+                    y: 380
                   }}
-                  components={{
-                    header: {
-                      cell: TableHeaderCell,
-                    },
-                    body: {
-                      cell: TableBodyCell,
-                    },
-                  }}
+                  components={components}
                   rowKey="key"
                   footer={() => {
                     return !openCreatingBacklog ? <button className='btn btn-transparent btn-create-issue' style={{ fontSize: '14px', color: '#ddd' }} onClick={() => {

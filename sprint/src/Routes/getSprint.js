@@ -2,7 +2,8 @@ const express = require('express')
 const router = express.Router()
 const sprintModel = require('../models/sprintModel');
 const userModel = require('../models/userModel');
-router.get('/:projectId', async (req, res, next) => {
+const issueModel = require('../models/issueModel');
+router.post('/:projectId', async (req, res, next) => {
     try {
         const getSprintsByProjectID = await sprintModel.find({ project_id: req.params.projectId })
             .populate({
@@ -20,9 +21,16 @@ router.get('/:projectId', async (req, res, next) => {
             .populate({
                 path: 'issue_list',
                 populate: {
+                    path: 'issue_type'
+                }
+            })
+            .populate({
+                path: 'issue_list',
+                populate: {
                     path: 'assignees'
                 }
             })
+
         res.status(200).json({
             message: "Successfully got sprint list",
             data: getSprintsByProjectID
@@ -50,9 +58,16 @@ router.get('/getsprint/:sprintId', async (req, res, next) => {
             .populate({
                 path: 'issue_list',
                 populate: {
+                    path: 'issue_type'
+                }
+            })
+            .populate({
+                path: 'issue_list',
+                populate: {
                     path: 'assignees'
                 }
             })
+
         res.status(200).json({
             message: "Successfully got a sprint",
             data: getSprintById

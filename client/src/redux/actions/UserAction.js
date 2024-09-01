@@ -35,13 +35,14 @@ export const updateUserInfo = (user_id, props) => {
         try {
             //tien hanh cap nhat thong tin cho user
             const getUserUpdated = await Axios.post(`${domainName}/api/users/update/${user_id}`, props)
-
+            
             dispatch({
                 type: USER_LOGGED_IN,
                 userInfo: getUserUpdated.data.data
             })
         } catch (error) {
-
+            console.log("error getUserUpdated updateUserInfo", error);
+            
         }
     }
 }
@@ -144,9 +145,10 @@ export const userLoginAction = (email, password) => {
 
                 if (res.data.currentUser) {
                     const getAllIssues = await Axios.get(`${domainName}/api/issue/issues/all`)
-                    if (getAllIssues.status === 200) {
+                    if (getAllIssues.status === 200) {                        
                         res.data.currentUser.working_issues = renderIssueInfoMenuDashboard(getAllIssues, res.data.currentUser.working_issues)
                         res.data.currentUser.viewed_issues = renderIssueInfoMenuDashboard(getAllIssues, res.data.currentUser.viewed_issues)
+                        res.data.currentUser.assigned_issues = renderIssueInfoMenuDashboard(getAllIssues, res.data.currentUser.assigned_issues)
 
                         dispatch({
                             type: USER_LOGGED_IN,
@@ -184,8 +186,10 @@ export const userLoggedInAction = () => {
             } else {
                 const getAllIssues = await Axios.get(`${domainName}/api/issue/issues/all`)
                 if (getAllIssues.status === 200) {
+
                     res.data.currentUser.working_issues = renderIssueInfoMenuDashboard(getAllIssues, res.data.currentUser.working_issues)
                     res.data.currentUser.viewed_issues = renderIssueInfoMenuDashboard(getAllIssues, res.data.currentUser.viewed_issues)
+                    res.data.currentUser.assigned_issues = renderIssueInfoMenuDashboard(getAllIssues, res.data.currentUser.assigned_issues)
 
                     dispatch({
                         type: USER_LOGGED_IN,

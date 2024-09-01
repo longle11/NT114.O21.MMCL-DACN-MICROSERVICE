@@ -69,7 +69,6 @@ export const getVersionList = (project_id) => {
                     type: GET_VERSION,
                     versionList: res.data.data
                 })
-                showNotificationWithIcon("success", "Notification", res.data.message)
             }
         } catch (error) {
             showNotificationWithIcon("error", "Notification", "Failed to get version")

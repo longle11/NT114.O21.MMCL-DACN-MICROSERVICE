@@ -91,7 +91,7 @@ const handleCreateProject = withFormik({
         if (values.name_project.trim() !== '' && values.description.trim() !== '') {
             if (props.userInfo) {
                 values.creator = props.userInfo.id
-                props.dispatch(createProjectAction({ ...values, members: [{ user_info: props.userInfo.id, user_role: 0 }] }))
+                props.dispatch(createProjectAction({ ...values, members: [{ user_info: props.userInfo.id, user_role: 0 }], sprint_id: null }))
             } else {
                 showNotificationWithIcon('error', 'Tạo dự án', 'Vui lòng đăng nhập trước khi tạo dự án')
             }

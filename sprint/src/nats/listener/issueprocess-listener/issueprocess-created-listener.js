@@ -6,7 +6,7 @@ const issueProcessCreatedListener = () => {
         const options = natsWrapper.client.subscriptionOptions()
             .setManualAckMode(true)
 
-        const subscription = natsWrapper.client.subscribe('issueprocess:created', 'issue-issueprocess-created-group', options)
+        const subscription = natsWrapper.client.subscribe('issueprocess:created', 'sprint-issueprocess-created-group', options)
 
         subscription.on('message', async (msg) => {
 
@@ -15,10 +15,19 @@ const issueProcessCreatedListener = () => {
 
                 const parseData = JSON.parse(msg.getData())
 
-                //tiến hành lưu vào issueProcess db
-                await issueProcessModel.create(parseData)
-                console.log("Du lieu nhan duoc: ", parseData);
-                msg.ack()
+                if (parseData?.processList) {
+                    const processList = parseData?.processList
+                    for(let index = 0; index < processList.length; index++) {
+                        const data = new issueProcessModel(processList[index])
+                        await data.save()
+                    }
+                    msg.ack()
+                } else {
+                    //tiến hành lưu vào issueProcess db
+                    await issueProcessModel.create(parseData)
+                    console.log("Du lieu nhan duoc: ", parseData);
+                    msg.ack()
+                }
             }
         })
     } catch (error) {

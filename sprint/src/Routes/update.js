@@ -4,7 +4,11 @@ const sprintModel = require('../models/sprintModel');
 const servicePublisher = require('../nats/publisher/service-publisher');
 router.put('/update/:sprintId', async (req, res, next) => {
     try {
+        console.log("body ", req.body);
         const getSprint = await sprintModel.findById(req.params.sprintId)
+        if (req.body?.issue_list) {
+            req.body.issue_list = getSprint.issue_list.concat(req.body.issue_list)
+        }
         if (getSprint !== null) {
             if (req.body.issue_id) {
                 //find to see whether issue id is existed in sprint list or not 
@@ -14,21 +18,22 @@ router.put('/update/:sprintId', async (req, res, next) => {
                     getSprint.issue_list.push(req.body.issue_id)
                     req.body.issue_list = getSprint.issue_list
                 } else {
-                    getSprint.issue_list.splice(findIndex, 1)
+                    getSprint.issue_list.splice(parseInt(findIndex), 1)
                     req.body.issue_list = getSprint.issue_list
                 }
+
+
                 //thiet lap gia tri issue_id sang null de khong can chen vao danh sach
                 req.body.issue_id = null
             }
-            await sprintModel.updateOne({ _id: req.params.sprintId }, { ...req.body })
+            const data = await sprintModel.updateOne({ _id: req.params.sprintId }, { ...req.body })
+            console.log("data ", data);
 
-            const getSprintList = await sprintModel.find({ project_id: req.body.project_id })
-                .populate({
-                    path: 'issue_list',
-                    populate: {
-                        path: 'creator'
-                    }
-                })
+
+            const getSprintList = await sprintModel.find({ project_id: getSprint.project_id })
+
+            console.log("mang sau khi lay ra ", getSprintList);
+
             res.status(200).json({
                 message: "Successfully updated a sprint",
                 data: getSprintList

@@ -4,6 +4,10 @@ const issueProcessSchema = mongoose.Schema({
     name_process: {
         type: String, 
         default: null
+    },
+    tag_color: {
+        type: String,
+        default: '#ddd'
     }
 })
 
