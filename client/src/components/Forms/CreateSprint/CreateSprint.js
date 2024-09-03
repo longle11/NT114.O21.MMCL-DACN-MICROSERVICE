@@ -36,8 +36,8 @@ function CreateSprint(props) {
     })
 
     const { handleChange, handleSubmit, setFieldValue } = props
-    const [startDate, setStartDate] = useState(null)
-    const [endDate, setEndDate] = useState(null)
+    const [startDate, setStartDate] = useState(props.currentSprint.start_date)
+    const [endDate, setEndDate] = useState(props.currentSprint.end_date)
     const [duration, setDuration] = useState(5)
     const handleDateCustom = (time, value) => {
         if(time === null) {
@@ -87,10 +87,9 @@ function CreateSprint(props) {
                 <DatePicker
                     showTime
                     name="start_date"
-                    value={dayjs(props.currentSprint.start_date !== null ? props.currentSprint.start_date : dayjs(new Date()).format("YYYY-MM-DD hh:mm:ss"))}
-                    defaultValue=''
+                    value={dayjs(startDate)}
+                    defaultValue={dayjs(startDate ? startDate : dayjs(new Date()).format("YYYY-MM-DD hh:mm:ss"))}
                     onChange={(value, dateString) => {
-                        console.log("ngay dang chon ", dateString);
                         setStartDate(dateString)
                         setFieldValue('start_date', dateString)
                         handleDateCustom(dateString, duration)
@@ -102,8 +101,8 @@ function CreateSprint(props) {
                 {duration === 5 ? <DatePicker
                     showTime
                     name="end_date"
-                    value={dayjs(props.currentSprint.end_date !== null ? props.currentSprint.end_date : dayjs(new Date()).format("YYYY-MM-DD hh:mm:ss"))}
-                    defaultValue=''
+                    defaultValue={dayjs(endDate !== null ? endDate : dayjs(new Date()).format("YYYY-MM-DD hh:mm:ss"))}
+                    value={dayjs(endDate)}
                     onChange={(value, dateString) => {
                         setEndDate(dateString)
                         setFieldValue('end_date', dateString)

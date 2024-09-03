@@ -1,17 +1,19 @@
 import { Avatar, Button, Input, Modal, Popover, Select, Table } from 'antd'
 import Search from 'antd/es/input/Search'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { GetProjectAction } from '../../redux/actions/ListProjectAction'
 import { useDispatch } from 'react-redux'
 import { DeleteOutlined } from '@ant-design/icons';
 import { userPermissions } from '../../util/CommonFeatures'
 import { addUserToProject, deleteUserInProject } from '../../redux/actions/CreateProjectAction'
 import { showNotificationWithIcon } from '../../util/NotificationUtil'
+import { getIssuesBacklog } from '../../redux/actions/IssueAction'
 
 export default function MemberProject(props) {
     const projectInfo = props.projectInfo
     const userInfo = props.userInfo
     const id = props.id
+    const allIssues = props.allIssues
     const dispatch = useDispatch()
     const renderTableMembers = (table) => {
         return <>{table}</>
@@ -26,7 +28,7 @@ export default function MemberProject(props) {
         setUserEmail('')
         setuserRole(0)
     };
-
+    const [searchMyIssue, setSearchMyIssue] = useState(null)
 
     const handleAddUserToProjectCancel = () => {
         setIsModalOpen(false);
@@ -91,48 +93,55 @@ export default function MemberProject(props) {
                             return renderAvatarMembers(value, table)
                         })}
                     </Avatar.Group>
-                    {/* <Popover placement="right" title="Add User" content={renderMembersAndFeatureAdd()} trigger="click">
-                        <Avatar style={{ backgroundColor: '#87d068' }}>
-                            <i className="fa fa-plus"></i>
-                        </Avatar>
-                    </Popover> */}
                     <Avatar style={{ backgroundColor: '#87d068' }} onClick={() => {
-                        // setIsModalOpen(true)
+                        setIsModalOpen(true)
                     }}>
                         <i className="fa fa-plus"></i>
                     </Avatar>
                 </div>
                 <div className="options-group" style={{ display: 'flex' }}>
-                    <Button className="mr-2 ml-3" type="primary">All isssues</Button>
-                    <Button>Only my issues</Button>
+                    <Button type={`${searchMyIssue === null ? "primary" : "default"}`} onClick={() => {
+                        if (searchMyIssue !== null) {
+                            setSearchMyIssue(null)
+                        }
+                    }} className=' ml-2 mr-2 d-flex justify-content-center'>All issues {searchMyIssue === null ? <span>({allIssues?.length})</span> : <></>}</Button>
+                    <Button type={`${searchMyIssue !== null ? "primary" : "default"}`} onClick={() => {
+                        if (searchMyIssue === null) {
+                            setSearchMyIssue(userInfo.id)
+                        } else {
+                            setSearchMyIssue(null)
+                        }
+                    }}>
+                        Only my issues {searchMyIssue !== null ? <span>({allIssues?.filter(issue => (issue.creator._id === userInfo.id || issue.assignees.map(currentIssue => currentIssue._id).includes(userInfo.id))).length})</span> : <></>}
+                    </Button>
                 </div>
             </div>
             <Modal destroyOnClose="true" title={`Add new user to project ${projectInfo?.name_project}`} open={isModalOpen} onOk={handleAddUserToProjectOk} onCancel={handleAddUserToProjectCancel}>
-                    <div>
-                        <label htmlFor='email'>Email</label>
-                        <Input name='email' placeholder="e.g., longle@company.com" onChange={(e) => {
-                            if (e.target.value.trim() === "") {
-                                showNotificationWithIcon('error', '', 'Email can not be left blank')
-                            } else {
-                                setUserEmail(e.target.value)
-                            }
-                        }} />
-                    </div>
-                    <div className='d-flex flex-column mt-2'>
-                        <label htmlFor='role'>Role</label>
-                        <Select
-                            name="role"
-                            defaultValue={userPermissions[userRole].label}
-                            style={{
-                                width: 'max-content',
-                            }}
-                            onChange={(value) => {
-                                setuserRole(value)
-                            }}
-                            options={userPermissions}
-                        />
-                    </div>
-                </Modal>
+                <div>
+                    <label htmlFor='email'>Email</label>
+                    <Input name='email' placeholder="e.g., longle@company.com" onChange={(e) => {
+                        if (e.target.value.trim() === "") {
+                            showNotificationWithIcon('error', '', 'Email can not be left blank')
+                        } else {
+                            setUserEmail(e.target.value)
+                        }
+                    }} />
+                </div>
+                <div className='d-flex flex-column mt-2'>
+                    <label htmlFor='role'>Role</label>
+                    <Select
+                        name="role"
+                        defaultValue={userPermissions[userRole].label}
+                        style={{
+                            width: 'max-content',
+                        }}
+                        onChange={(value) => {
+                            setuserRole(value)
+                        }}
+                        options={userPermissions}
+                    />
+                </div>
+            </Modal>
         </div>
     )
 }

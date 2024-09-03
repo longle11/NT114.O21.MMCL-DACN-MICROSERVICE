@@ -32,12 +32,12 @@ export default function MainPageTemplate({ Component }) {
             if (userInfo !== null) {
                 return <div>
                     <MenuBarHeader />
-                    <div style={{ display: 'flex' }}>
+                    <div style={{ display: 'flex', width: '100%' }}>
                         <Layout
                             style={{
                                 minHeight: '100vh',
                                 backgroundColor: '#ffff',
-                                overflowY: 'hidden'
+                                overflowY: 'auto'
                             }}
                         >
                             { userInfo.project_working !== null ? <MenuBar /> : <></> }

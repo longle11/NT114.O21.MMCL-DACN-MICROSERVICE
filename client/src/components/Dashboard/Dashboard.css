@@ -40,7 +40,7 @@
     border: 1px solid transparent;
     height: 40px;
     border-radius: 50%;
-}
+}   
 
 .avatar img {
     width: 40px;
@@ -122,4 +122,19 @@ div.content:hover {
 
 div.process-header:hover div.dropdown button.btn-dashboard-setting {
     display: block !important;
+}
+
+div.list-group:hover a.dashboard-creating-issue {
+    display: block !important;
+}
+
+div.list-group:hover a.dashboard-creating-issue:hover {
+    background-color: #dddd;
+}
+
+.dashboard-edit-select-ant div.ant-select-selector {
+    border: none !important
+}   
+input.dashboard-edit-input-ant.ant-input:focus {
+    box-shadow: none !important;
 }

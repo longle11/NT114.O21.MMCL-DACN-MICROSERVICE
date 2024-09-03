@@ -1,7 +1,7 @@
 import { Avatar, Breadcrumb, Button, Form, Input, Select, Space, Table, Tag } from 'antd'
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { issueTypeWithoutOptions, iTagForIssueTypes, iTagForPriorities, renderAssignees, renderIssueType, renderSprintList } from '../../../util/CommonFeatures'
+import { issueTypeWithoutOptions, iTagForIssueTypes, iTagForPriorities, renderAssignees, renderEpicList, renderIssueType, renderSprintList, renderVersionList } from '../../../util/CommonFeatures'
 import { createIssue, getIssuesBacklog, updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
@@ -239,6 +239,22 @@ export default function IssuesList() {
       }} onBlur={() => {
         save(record)
       }} />
+    } else if (dataIndex === 'epic_link') {
+      const renderOptions = renderEpicList(epicList, id)
+      console.log("renderOptions ", renderOptions);
+      return <Select ref={ref} onPressEnter={() => {
+        save(record)
+      }} onBlur={() => {
+        save(record)
+      }} options={renderOptions.filter(option => option.value !== record.epic_link?._id)} onSelect={(value) => value} />
+    }
+    else if (dataIndex === 'fix_version') {
+      const renderOptions = renderVersionList(versionList, id)
+      return <Select ref={ref} onPressEnter={() => {
+        save(record)
+      }} onBlur={() => {
+        save(record)
+      }} options={renderOptions.filter(option => option.value !== record.fix_version?._id)} onSelect={(value) => value} />
     }
   }
   const renderValueColumns = (text, record, index, key) => {
@@ -273,6 +289,7 @@ export default function IssuesList() {
       return null
     }
     else if (key === 'fix_version') {
+      if (record.fix_version === null) return <></>
       return <Tag color={record.fix_version?.tag_color}>{record.fix_version?.version_name}</Tag>
     }
     else if (key === 'timeOriginalEstimate') {
@@ -403,10 +420,10 @@ export default function IssuesList() {
         style={{ marginBottom: 10 }}
         items={[
           {
-            title: <a href="">Projects</a>,
+            title: <a href="/manager">Projects</a>,
           },
           {
-            title: <a href="">Hidden</a>,
+            title: <a href={`/projectDetail/${id}/board`}>{projectInfo?.name_project}</a>,
           }
         ]}
       />
@@ -415,7 +432,7 @@ export default function IssuesList() {
         <span className='btn btn-light' style={{ fontSize: 13 }}><i className="fa-duotone fa-solid fa-comments"></i> Give feedback</span>
       </div>
       <div className='d-flex align-items-center mb-4'>
-        <MemberProject projectInfo={projectInfo} id={id} userInfo={userInfo}/>
+        <MemberProject projectInfo={projectInfo} id={id} userInfo={userInfo} />
       </div>
       <div className='issues-info' style={{ height: '70vh', overflowY: 'auto', scrollbarWidth: 'none' }}>
         {(renderColumns() !== null || renderColumns() !== undefined) && renderColumns()?.length > 0 ? <div className='d-flex'>
@@ -480,7 +497,7 @@ export default function IssuesList() {
                               creator: userInfo.id,
                               issue_type: processList.length === 0 ? null : processList[0]._id,
                               current_sprint: null
-                            }, issuesBacklog, null, null, userInfo.id))
+                            }, id, userInfo.id, null))
                             //set default is 0 which means story
                           }
                         })} />

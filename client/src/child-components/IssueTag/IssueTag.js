@@ -325,10 +325,6 @@ export default function IssueTag(props) {
                     ...editSummary,
                     open: issue._id
                 })
-                console.log("gia tri sau khi doi ", {
-                    ...editSummary,
-                    open: issue._id
-                });
 
             }} className='btn btn-light ml-2 btn-edit-summary d-none'><i className="fa fa-pencil-alt" style={{ fontSize: 13 }}></i></button>
         </div>
@@ -530,8 +526,8 @@ export default function IssueTag(props) {
                 //dispatch event to update viewed issue in auth service
                 dispatch(updateUserInfo(userInfo?.id, { viewed_issue: issue._id }))
             }}
-            className="issues-detail issue-info p-0">
-            <div style={{ cursor: 'pointer', borderBottom: '1px solid #ddd', backgroundColor: '#ffff', padding: '5px 5px 5px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            className="issues-detail issue-info p-0 issue-info-items">
+            <div style={{ cursor: 'pointer', backgroundColor: '#ffff', padding: '5px 5px 5px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div className='content-issue d-flex align-items-center'>
                     <span>{iTagForIssueTypes(issue.issue_status)} <span className='mr-3' style={{ color: '#5e6c84', fontWeight: 'bold' }}>WD-{issue.ordinal_number?.toString()}</span></span>
                     {renderSummary()}

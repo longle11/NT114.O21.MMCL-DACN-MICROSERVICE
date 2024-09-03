@@ -4,6 +4,7 @@ const versionModel = require("../models/versionModel")
 const router = express.Router()
 router.put('/update/:epicId', async (req, res) => {
     const getEpic = await epicModel.findById(req.params.epicId)
+    console.log("params lay ra ", req.body);
 
     if (getEpic) {
         if (req.body.issue_id) {
@@ -16,7 +17,7 @@ router.put('/update/:epicId', async (req, res) => {
                 }
             }
             req.body.issue_list = getEpic.issue_list
-            
+
         }
         if (req.body.epic_id) {
             const deleteIssueEpic = await epicModel.findById(req.body.epic_id)
@@ -45,8 +46,16 @@ router.put('/update/:epicId', async (req, res) => {
 router.put('/version-update/:versionId', async (req, res) => {
     const getVersion = await versionModel.findById(req.params.versionId)
     console.log("req.body", req.body);
-    
+
     if (getVersion) {
+
+        if (req.body?.issue_list) {
+            const getVersion = await versionModel.findById(req.params.versionId)
+            if (getVersion) {
+                req.body.issue_list = getVersion.issue_list.concat(req.body.issue_list)
+            }
+        }
+
         if (req.body.issue_id) {
             if (getVersion.issue_list.length === 0) {
                 getVersion.issue_list.push(req.body.issue_id)
@@ -58,11 +67,7 @@ router.put('/version-update/:versionId', async (req, res) => {
             }
             req.body.issue_list = getVersion.issue_list
         }
-        console.log("gia tri req.body?.version_id ", req.body?.version_id);
-        
         if (req.body?.version_id) {
-            console.log("tu vao 1");
-
             const deleteIssueVersion = await versionModel.findById(req.params.versionId)
             if (deleteIssueVersion) {
                 const index = deleteIssueVersion.issue_list.findIndex(issue => issue._id.toString() === req.body.issue_id)
@@ -73,22 +78,12 @@ router.put('/version-update/:versionId', async (req, res) => {
             }
         }
 
-        if(req.body?.issue_list) {
-            console.log("tu vao 2");
-            
-            const getVersion = await versionModel.findById(req.params.versionId)
-            if(getVersion) {
-                req.body.issue_list = getVersion.issue_list.concat(req.body.issue_list)
-            }
-        }
-
-        if(req.body?.remove_issue_list) {
+        if (req.body?.remove_issue_list) {
             const getVersion = await versionModel.findById(req.params.versionId)
             req.body.issue_list = getVersion.issue_list.filter(issue => !req.body.remove_issue_list.includes(issue.toString()))
             req.body.remove_issue_list = null
-
-            console.log("mang sau khi cat ", req.body.issue_list, "req.body ", req.body);
         }
+
 
         req.body.issue_id = null
         req.body.version_id = null
@@ -96,7 +91,7 @@ router.put('/version-update/:versionId', async (req, res) => {
         await versionModel.findByIdAndUpdate(req.params.versionId, { $set: { ...req.body } })
 
         console.log("xuong tan duoi nay roi ne");
-        
+
 
         return res.status(200).json({
             message: "Successfully updated an epic",

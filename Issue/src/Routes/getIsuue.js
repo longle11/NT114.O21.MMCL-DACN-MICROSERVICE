@@ -32,6 +32,10 @@ router.get("/:issueId", currentUserMiddleware, async (req, res, next) => {
                 .populate({
                     path: 'project_id'
                 })
+                .populate({
+                    path: 'fix_version',
+                    select: '-__v'
+                })
 
             return res.status(200).json({
                 message: "Successfully retrieve the issue",

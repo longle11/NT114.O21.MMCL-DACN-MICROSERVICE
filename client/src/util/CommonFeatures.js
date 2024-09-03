@@ -1,69 +1,74 @@
 import { Avatar } from "antd"
 
-export const iTagForIssueTypes = (type) => {
+
+export const iTagForIssueTypes = (type, marginRight, fontSize) => {
+    if (fontSize === null) fontSize = 18
+    if (marginRight === null) marginRight = "mr-2"
     //0 la story
     if (type == 0) {
-        return <i className="fa-solid fa-bookmark mr-2" style={{ color: '#65ba43', fontSize: '20px' }} ></i>
+        return <i className={`fa-solid fa-bookmark ${marginRight}`} style={{ color: '#65ba43', fontSize: fontSize }} ></i>
     }
     //1 la task
     if (type == 1) {
-        return <i className="fa-solid fa-square-check mr-2" style={{ color: '#4fade6', fontSize: '20px' }} ></i>
+        return <i className={`fa-solid fa-square-check ${marginRight}`} style={{ color: '#4fade6', fontSize: fontSize }} ></i>
     }
     //2 la bug
     if (type == 2) {
-        return <i className="fa-solid fa-circle-exclamation mr-2" style={{ color: '#cd1317', fontSize: '20px' }} ></i>
+        return <i className={`fa-solid fa-circle-exclamation ${marginRight}`} style={{ color: '#cd1317', fontSize: fontSize }} ></i>
     }
     if (type == 3) {
-        return <i className="fa-solid fa-bolt mr-2" style={{ color: 'purple', fontSize: '20px' }} ></i>
+        return <i className={`fa-solid fa-bolt ${marginRight}`} style={{ color: 'purple', fontSize: fontSize }} ></i>
     }
     if (type == 4) {
-        return <i className="fa-solid fa-list-check mr-2" style={{ color: '#e97f33', fontSize: '20px' }} ></i>
+        return <i className={`fa-solid fa-list-check ${marginRight}`} style={{ color: '#e97f33', fontSize: fontSize }} ></i>
     }
 
     return null
 }
 
-export const iTagForPriorities = (priority) => {
+export const iTagForPriorities = (priority, marginRight, fontSize) => {
+    if (fontSize === null) fontSize = 18
+    if (marginRight === null) marginRight = "mr-2"
     if (priority == 0) {
-        return <i className="fa fa-angle-double-up mr-2" style={{ color: '#cd1317', fontSize: '20px' }} />
+        return <i className={`fa fa-angle-double-up ${marginRight}`} style={{ color: '#cd1317', fontSize: fontSize }} />
     }
     if (priority == 1) {
-        return <i className="fa fa-chevron-up mr-2" style={{ color: '#e9494a', fontSize: '20px' }} />
+        return <i className={`fa fa-chevron-up ${marginRight}`} style={{ color: '#e9494a', fontSize: fontSize }} />
     }
     if (priority == 2) {
-        return <i className="fa fa-equals mr-2" style={{ color: '#e97f33', fontSize: '20px' }} />
+        return <i className={`fa fa-equals ${marginRight}`} style={{ color: '#e97f33', fontSize: fontSize }} />
     }
     if (priority == 3) {
 
-        return <i className="fa fa-chevron-down mr-2" style={{ color: '#2d8738', fontSize: '20px' }} />
+        return <i className={`fa fa-chevron-down ${marginRight}`} style={{ color: '#2d8738', fontSize: fontSize }} />
     }
     if (priority == 4) {
-        return <i className="fa fa-angle-double-down mr-2" style={{ color: '#57a55a', fontSize: '20px' }} />
+        return <i className={`fa fa-angle-double-down ${marginRight}`} style={{ color: '#57a55a', fontSize: fontSize }} />
     }
 
     return null
 }
 export const priorityTypeOptions = [
-    { label: <span className="align-items-center d-flex">{iTagForPriorities(0)} Highest</span>, value: 0 },
-    { label: <span className="align-items-center d-flex">{iTagForPriorities(1)} High</span>, value: 1 },
-    { label: <span className="align-items-center d-flex">{iTagForPriorities(2)} Medium</span>, value: 2 },
-    { label: <span className="align-items-center d-flex">{iTagForPriorities(3)} Low</span>, value: 3 },
-    { label: <span className="align-items-center d-flex">{iTagForPriorities(4)} Lowest</span>, value: 4 }
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(0, null, null)} Highest</span>, value: 0 },
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(1, null, null)} High</span>, value: 1 },
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(2, null, null)} Medium</span>, value: 2 },
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(3, null, null)} Low</span>, value: 3 },
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(4, null, null)} Lowest</span>, value: 4 }
 ]
 export const issueTypeOptions = [
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(0)} Story</span>, value: 0 },
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(1)} Task</span>, value: 1 },
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(2)} Bug</span>, value: 2 },
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(3)} Epic</span>, value: 3 },
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(4)} Subtask</span>, value: 4 }
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(0, null, null)} Story</span>, value: 0 },
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(1, null, null)} Task</span>, value: 1 },
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(2, null, null)} Bug</span>, value: 2 },
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(3, null, null)} Epic</span>, value: 3 },
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(4, null, null)} Subtask</span>, value: 4 }
 
 ]
 export const issueTypeWithoutOptions = [
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(0)} </span>, value: 0 },
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(1)} </span>, value: 1 },
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(2)} </span>, value: 2 },
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(3)} </span>, value: 3 },
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(4)} </span>, value: 4 },
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(0, null, null)} </span>, value: 0 },
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(1, null, null)} </span>, value: 1 },
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(2, null, null)} </span>, value: 2 },
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(3, null, null)} </span>, value: 3 },
+    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(4, null, null)} </span>, value: 4 },
 ]
 
 export const userPermissions = [
@@ -140,7 +145,7 @@ export const renderAssignees = (listProject, project_id, userInfo) => {
     const index = listProject.findIndex(project => project._id === project_id)
     if (index !== -1) {
         console.log("thang lay ra duoc listProject[index] ", listProject[index].members);
-        
+
         return listProject[index].members.filter(user => user.user_info._id !== userInfo.id).map(user => {
             return {
                 desc: <div className='d-flex align-items-center' style={{ width: 'fit-content' }}>

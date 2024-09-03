@@ -6,7 +6,8 @@ import { drawer_edit_form_action } from '../../../../redux/actions/DrawerAction'
 import CreateVersion from '../../../Forms/CreateVersion/CreateVersion';
 import { NavLink, useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { getVersionList } from '../../../../redux/actions/CategoryAction';
+import './Release.css'
+import { deleteVersion, getVersionList } from '../../../../redux/actions/CategoryAction';
 import { GetProcessListAction } from '../../../../redux/actions/ListProjectAction';
 export default function Release() {
     const dispatch = useDispatch()
@@ -14,6 +15,7 @@ export default function Release() {
     const versionList = useSelector(state => state.categories.versionList)
     const processList = useSelector(state => state.listProject.processList)
     const projectInfo = useSelector(state => state.listProject.projectInfo)
+    const userInfo = useSelector(state => state.user.userInfo)
     useEffect(() => {
         dispatch(getVersionList(id))
         dispatch(GetProcessListAction(id))
@@ -39,7 +41,7 @@ export default function Release() {
             sorter: (a, b) => a.status - b.status,
             with: '10%',
             render: (text, record) => {
-                return <Tag color={record.tag_color}>Unrelease</Tag>
+                return <Tag color={record.tag_color}><span style={{color: '#dddd', fontWeight: 'bold'}}>Unrelease</span></Tag>
             }
         },
         {
@@ -80,9 +82,36 @@ export default function Release() {
         {
             title: 'Description',
             dataIndex: 'description',
-            width: '30%',
+            width: 'max-content',
             render: (text, record) => {
                 return <span>{record.description}</span>
+            }
+        },
+        {
+            title: '',
+            dataIndex: '',
+            width: '',
+            render: (text, record) => {
+                return <div className="btn-group">
+                    <Button data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i className="fa fa-ellipsis-h"></i></Button>
+                    <div className="dropdown-menu" style={{ width: 'max-content' }}>
+                        <a className='release-edit' href='##' onClick={() => {
+                            dispatch(deleteVersion(record._id, record.issue_list, record.version_name, userInfo))
+                        }} style={{ padding: '10px', color: 'black', textDecoration: 'none', width: '100%', display: 'block' }}>Delete</a>
+                        <a className='release-edit' href='##' onClick={() => {
+                            dispatch(drawer_edit_form_action(<CreateVersion currentVersion={
+                                {
+                                    id: record._id,
+                                    project_id: id,
+                                    description: record.description,
+                                    version_name: record.version_name,
+                                    start_date: dayjs(record.start_date).format('DD/MM/YYYY'),
+                                    end_date: dayjs(record.end_date).format('DD/MM/YYYY'),
+                                    version_id: null
+                                }} />, 'Create', '500px'))
+                        }} style={{ padding: '10px', color: 'black', textDecoration: 'none', width: '100%', display: 'block' }}>Edit</a>
+                    </div>
+                </div>
             }
         },
     ];

@@ -1,8 +1,6 @@
 const express = require('express')
 const router = express.Router()
 const sprintModel = require('../models/sprintModel');
-const userModel = require('../models/userModel');
-const issueModel = require('../models/issueModel');
 router.post('/:projectId', async (req, res, next) => {
     try {
         const getSprintsByProjectID = await sprintModel.find({ project_id: req.params.projectId })
@@ -16,6 +14,12 @@ router.post('/:projectId', async (req, res, next) => {
                 path: 'issue_list',
                 populate: {
                     path: 'epic_link'
+                }
+            })
+            .populate({
+                path: 'issue_list',
+                populate: {
+                    path: 'fix_version'
                 }
             })
             .populate({

@@ -5,7 +5,8 @@ import { GetProjectAction } from "./ListProjectAction"
 import domainName from '../../util/Config'
 import { delay } from "../../util/Delay"
 import { updateUserInfo } from "./UserAction"
-export const createIssue = (props, issuesBacklog, old_status, new_status, creator_history) => {
+import { updateSprintAction } from "./CreateProjectAction"
+export const createIssue = (props, project_id, creator_history, sprintId) => {
     return async dispatch => {
         try {
             const res = await Axios.post(`${domainName}/api/issue/create`, props)
@@ -20,10 +21,15 @@ export const createIssue = (props, issuesBacklog, old_status, new_status, creato
                     issue_id: res.data.data._id.toString(),
                     createBy: creator_history,
                     type_history: "created",
-                    name_status: "Issue",
-                    old_status: old_status,
-                    new_status: new_status
+                    name_status: "issue",
+                    old_status: null,
+                    new_status: null
                 }))
+
+                if (sprintId !== null) {
+                    //add this new issue to sprint
+                    dispatch(updateSprintAction(sprintId, { issue_id: res.data.data._id }))
+                }
 
                 // //sau khi tao thanh cong issue thi tien hanh cap nhat lai danh sach project
                 // await Axios.put(`${domainName}/api/projectmanagement/insert/issue`, { project_id: props.projectId, issue_id: res.data?.data._id })
@@ -32,13 +38,7 @@ export const createIssue = (props, issuesBacklog, old_status, new_status, creato
                 // dispatch(GetProjectAction(props.projectId, ""))
                 showNotificationWithIcon('success', '', 'Successfully create issue')
 
-                //add new issue into backlog without calling api
-                const newIssueInBacklog = [...issuesBacklog, res.data.data]
-
-                dispatch({
-                    type: GET_ISSUES_BACKLOG,
-                    issuesBacklog: newIssueInBacklog
-                })
+                dispatch(getIssuesBacklog(project_id))
             }
 
         } catch (error) {
@@ -115,7 +115,7 @@ export const updateInfoIssue = (issueId, projectId, props, old_status, new_statu
                 new_status: new_status
             }))
 
-            const backlogList = await Axios.get(`${domainName}/api/issue/backlog/${projectId}`)
+            const backlogList = await Axios.post(`${domainName}/api/issue/backlog/${projectId}`)
 
             dispatch({
                 type: GET_ISSUES_BACKLOG,

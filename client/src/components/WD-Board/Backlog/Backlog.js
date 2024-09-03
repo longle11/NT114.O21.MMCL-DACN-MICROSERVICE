@@ -1,4 +1,4 @@
-import { Button, Tag, Avatar, Col, Switch, Checkbox, Row, Input, Select, Tooltip, Modal, Breadcrumb } from 'antd'
+import { Button, Tag, Avatar, Col, Switch, Checkbox, Row, Input, Select, Tooltip, Modal, Breadcrumb, Progress } from 'antd'
 import Search from 'antd/es/input/Search'
 import React, { useEffect, useState } from 'react'
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
@@ -42,6 +42,11 @@ export default function Backlog() {
         sprintArrs: [],
         curentSprintClicked: ''
     })
+
+    //trigger collapse to show more info epic when user clicks to arrow down
+    const [showEpic, setShowEpic] = useState(null)
+    const [showVersion, setShowVersion] = useState(null)
+
     const [countEpic, setCountEpic] = useState(0)
     const [countVersion, setCountVersion] = useState(0)
     const userInfo = useSelector(state => state.user.userInfo)
@@ -55,6 +60,12 @@ export default function Backlog() {
         open: false
     })
 
+
+    const calculatePercentageForProgress = (record) => {
+        return Math.round((record.issue_list?.filter(issue => {
+            return issue.issue_type === processList[processList.length - 1]?._id
+        })?.length / record.issue_list?.length) * 100)
+    }
 
     const dispatch = useDispatch()
     useEffect(() => {
@@ -182,7 +193,7 @@ export default function Backlog() {
                 value: 1
             }
         ]
-        const sprintOptions = sprintList.filter(sprint => sprint._id.toString() !== currentSprintId).map(sprint => {
+        const sprintOptions = sprintList?.filter(sprint => sprint._id.toString() !== currentSprintId).map(sprint => {
             return {
                 label: sprint.sprint_name,
                 value: sprint._id.toString()
@@ -338,7 +349,7 @@ export default function Backlog() {
                     return <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        style={{ listStyle: 'none', zIndex: 1, padding: 0, border: '1px solid #ddd', height: 'fit-content', maxHeight: '197px', overflowY: 'auto', scrollbarWidth: 'none' }}>
+                        style={{ listStyle: 'none', zIndex: 1, padding: 0, height: 'fit-content', maxHeight: '197px', overflowY: 'auto', scrollbarWidth: 'none' }}>
                         {issuesInBacklog}
                         {provided.placeholder}
                     </div>
@@ -387,12 +398,11 @@ export default function Backlog() {
         if (!sprintList) {
             return <></>
         }
-        
         const newSprintList = sprintList?.filter(sprint => sprint.sprint_status === 'pending' || sprint.sprint_status === 'processing').map(sprint => {
             return {
                 ...sprint, issue_list: [...sprint.issue_list.filter(issue => {
                     //find the issue belongs to issues in backlog
-                    if (issuesBacklog.map(currentIssue => currentIssue._id).includes(issue._id)) {
+                    if (issuesBacklog?.map(currentIssue => currentIssue?._id).includes(issue?._id)) {
                         return true
                     }
                     return false
@@ -536,7 +546,7 @@ export default function Backlog() {
                     </button>
                     {sprintList?.map(currentSprint => {
                         if (currentSprint._id.toString() === openCreatingSprint.id && openCreatingSprint.open && currentSprint._id.toString() === sprint._id.toString()) {
-                            return <div className='d-flex' style={{ display: openCreatingSprint ? 'block' : 'none' }}>
+                            return <div className='d-flex' style={{ display: openCreatingSprint ? 'block' : 'none', border: '2px solid #2684FF' }}>
                                 <Select style={{ border: 'none', borderRadius: 0 }}
                                     defaultValue={issueTypeWithoutOptions[0].value}
                                     onChange={(value, option) => {
@@ -565,7 +575,7 @@ export default function Backlog() {
                                                     creator: userInfo.id,
                                                     issue_type: defaultForIssueType(issueStatus),
                                                     current_sprint: currentSprint._id.toString()
-                                                }, issuesBacklog, null, null, userInfo.id))
+                                                }, id, userInfo.id, null))
                                             }
                                         }
                                     }}
@@ -598,29 +608,47 @@ export default function Backlog() {
                         className={`mt-1 ${chooseVersion?.includes(version._id) ? "selected_version" : "unselected_version"}`}
                         ref={provided.innerRef}
                         {...provided.droppableProps}>
-                        <button onClick={() => {
-                            //if this version is selected, when users click again, it will remove out chooseVersion
-                            if (chooseVersion?.includes(version._id)) { //this case means, version has already existed in chooseVersion => remove it from chooseVersion
-                                const index = chooseVersion.findIndex(currentVersion => currentVersion === version._id)
-                                chooseVersion.splice(index, 1)
-                            } else {
-                                chooseVersion.push(version._id)
+                        <button onClick={(e) => {
+                            if (e.target.tagName === "BUTTON") {
+                                //if this version is selected, when users click again, it will remove out chooseVersion
+                                if (chooseVersion?.includes(version._id)) { //this case means, version has already existed in chooseVersion => remove it from chooseVersion
+                                    const index = chooseVersion.findIndex(currentVersion => currentVersion === version._id)
+                                    chooseVersion.splice(index, 1)
+                                } else {
+                                    chooseVersion.push(version._id)
+                                }
+                                dispatch(getIssuesBacklog(id, {
+                                    epics: chooseEpic,
+                                    versions: chooseVersion
+                                }))
+                                setChooseVersion([...chooseVersion])
                             }
-                            dispatch(getIssuesBacklog(id, {
-                                epics: chooseEpic,
-                                versions: chooseVersion
-                            }))
-                            setChooseVersion([...chooseVersion])
-                        }} style={{ width: '100%', textAlign: 'left', backgroundColor: version.tag_color }} className="btn btn-transparent" type="button" data-toggle="collapse" data-target={versionID} aria-expanded="false" aria-controls={versionTag}>
-                            <i className="fa-solid fa-caret-down mr-3"></i>{version.version_name}
+                        }} style={{ width: '100%', textAlign: 'left', backgroundColor: chooseVersion.includes(version._id) ? '#85B8FF' : version.tag_color }} className="btn btn-transparent">
+                            <a data-toggle="collapse"
+                                href={versionID}
+                                role="button"
+                                style={{ color: 'black' }}
+                                aria-controls={versionTag}
+                                onClick={(e) => {
+                                    if (version._id === showVersion) {
+                                        setShowVersion(null)
+                                    } else {
+                                        setShowVersion(version._id)
+                                    }
+                                }}
+                                aria-expanded="false" >
+                                <i className="fa-solid fa-caret-down mr-3"></i>
+                            </a>{version.version_name}
                         </button>
-                        <div className="collapse" id={versionTag} style={{ padding: '5px 5px' }}>
+                        <div className={`collapse card-body ${showVersion === version._id ? "show" : ""}`} id={versionTag} style={{ padding: '5px 5px' }}>
                             <div className='d-flex flex-column'>
                                 <div>
-                                    <Input style={{ border: 0, height: 40, marginTop: 10, marginBottom: 10 }} defaultValue={version.description} disabled />
-                                    <NavLink to={`/projectDetail/${id}/releases`}>Details</NavLink>
+                                    <div className="progress mb-2" style={{ height: '10px !important' }}>
+                                        <div className="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow={calculatePercentageForProgress(version)} aria-valuemin={0} aria-valuemax={100} style={{ width: `${calculatePercentageForProgress(version)}%` }} />
+                                    </div>
+                                    <NavLink to={`/projectDetail/${id}/versions/version-detail/${version._id}`}>Details</NavLink>
                                 </div>
-                                <hr style={{ width: '100%', height: 8 }} />
+                                <hr style={{ width: '100%', height: 8, marginTop: 5 }} />
                                 <div style={{ padding: '5px 10px' }}>
                                     <div>
                                         <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
@@ -685,34 +713,47 @@ export default function Backlog() {
                         ref={provided.innerRef}
                         {...provided.droppableProps}>
                         <button
-                            style={{ width: '100%', textAlign: 'left', backgroundColor: epic.tag_color, borderRadius: 3 }}
+                            style={{ width: '100%', textAlign: 'left', backgroundColor: chooseEpic.includes(epic._id) ? '#85B8FF' : epic.tag_color, borderRadius: 3 }}
                             className="btn btn-transparent"
-                            type="button"
-                            onClick={() => {
-                                //if this epic is selected, when users click again, it will remove out chooseEpic
-                                if (chooseEpic?.includes(epic._id)) { //this case means, epic has already existed in chooseEpic => remove it from chooseEpic
-                                    const index = chooseEpic.findIndex(currentEpic => {
-                                        return currentEpic === epic._id
+                            onClick={(e) => {
+                                if (e.target.tagName === "BUTTON") {
+                                    //if this epic is selected, when users click again, it will remove out chooseEpic
+                                    if (chooseEpic?.includes(epic._id)) { //this case means, epic has already existed in chooseEpic => remove it from chooseEpic
+                                        const index = chooseEpic.findIndex(currentEpic => {
+                                            return currentEpic === epic._id
 
-                                    })
-                                    chooseEpic.splice(index, 1)
-                                } else {
-                                    chooseEpic.push(epic._id)
+                                        })
+                                        chooseEpic.splice(index, 1)
+                                    } else {
+                                        chooseEpic.push(epic._id)
+                                    }
+                                    dispatch(getIssuesBacklog(id, {
+                                        epics: chooseEpic,
+                                        versions: chooseVersion
+                                    }))
+                                    setChooseEpic([...chooseEpic])
                                 }
-                                dispatch(getIssuesBacklog(id, {
-                                    epics: chooseEpic,
-                                    versions: chooseVersion
-                                }))
-                                setChooseEpic([...chooseEpic])
-                            }}
-                            data-toggle="collapse"
-                            data-target={epicID}
-                            aria-expanded="false"
-                            aria-controls={epicTag}>
-                            <i className="fa-solid fa-caret-down mr-3"></i>{epic.epic_name}
+                            }}>
+                            <a data-toggle="collapse"
+                                href={epicID}
+                                role="button"
+                                style={{ color: 'black' }}
+                                aria-controls={epicTag}
+                                onClick={(e) => {
+                                    if (epic._id === showEpic) {
+                                        setShowEpic(null)
+                                    } else {
+                                        setShowEpic(epic._id)
+                                    }
+                                }}
+                                aria-expanded="false" >
+                                <i className="fa-solid fa-caret-down mr-3"></i>
+                            </a>{epic.epic_name}
                         </button>
-                        <div className="collapse card-body" id={epicTag} style={{ padding: '5px 10px' }}>
+                        <div className={`collapse card-body ${showEpic === epic._id ? "show" : ""}`} id={epicTag} style={{ padding: '5px 10px' }}>
                             <div className='d-flex flex-column'>
+                                <NavLink className="mt-2" to={`/projectDetail/${id}/epics/epic-detail/${epic._id}`}>Details</NavLink>
+                                <hr style={{ width: '100%', height: 8, marginTop: 5 }} />
                                 <div>
                                     <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
                                         <span>Issues </span>
@@ -882,14 +923,14 @@ export default function Backlog() {
                     <DragDropContext onDragEnd={(result) => {
                         handleDragEnd(result)
                     }}>
-                        <div className={`card version-info-backlog`} style={{ width: '25rem', display: onChangeVersion ? 'block' : 'none', margin: '10px 0', height: 'fit-content' }}>
+                        <div className={`card version-info-backlog mr-1`} style={{ width: '25rem', display: onChangeVersion ? 'block' : 'none', margin: '10px 0', height: 'fit-content' }}>
+                            <div className='d-flex justify-content-between mt-2' style={{ padding: '5px 10px' }}>
+                                <h6 className='m-0'>Versions</h6>
+                                <i className="fa-solid fa-xmark" onClick={() => {
+                                    setOnChangeVersion(!onChangeVersion)
+                                }}></i>
+                            </div>
                             {versionList?.length !== 0 ? <div>
-                                <div className='d-flex justify-content-between' style={{ padding: '5px 10px' }}>
-                                    <h6>Version</h6>
-                                    <i className="fa-solid fa-xmark" onClick={() => {
-                                        setOnChangeVersion(!onChangeVersion)
-                                    }}></i>
-                                </div>
                                 <div style={{ margin: '10px 5px' }}>
                                     <button onClick={() => {
                                         //if this version is selected, when users click again, it will remove out chooseVersion
@@ -911,25 +952,44 @@ export default function Backlog() {
                                     <div style={{ padding: '10px', display: 'flex', alignItems: 'center' }} className='version-footer'>
                                         <i className="fa fa-plus mr-2"></i>
                                         <NavLink style={{ width: '100%', textDecoration: 'none', display: 'block', color: 'black' }} to='#' onClick={() => {
-                                            dispatch(drawer_edit_form_action(<CreateVersion />, 'Create', '760px'))
+                                            dispatch(drawer_edit_form_action(<CreateVersion currentVersion={
+                                                {
+                                                    id: null,
+                                                    project_id: id,
+                                                    description: '',
+                                                    version_name: '',
+                                                    start_date: dayjs(new Date()).format('DD/MM/YYYY'),
+                                                    end_date: dayjs(new Date()).format('DD/MM/YYYY'),
+                                                    version_id: null
+                                                }
+                                            } />, 'Create', '500px'))
                                         }}>Create new versions</NavLink>
                                     </div>
                                     <div style={{ padding: '10px', display: 'flex', alignItems: 'center' }} className='version-footer'>
                                         <i className="fa fa-link mr-2"></i>
-                                        <NavLink to={`/projectDetail/${id}/versions`} style={{ color: 'black', textDecoration: 'none' }}>Viewed linked pages</NavLink>
+                                        <NavLink to={`/projectDetail/${id}/releases`} style={{ color: 'black', textDecoration: 'none' }}>Viewed linked pages</NavLink>
                                     </div>
                                 </div>
                             </div> : <div style={{ height: 'fit-content' }}>
-                                <div className='d-flex justify-content-between' style={{ padding: '5px 10px' }}>
-                                    <h6 className='m-0'>Versions</h6>
-                                    <i className="fa-solid fa-xmark" onClick={() => {
-                                        setOnChangeVersion(!onChangeVersion)
-                                    }}></i>
+                                <div className="card-body d-flex flex-column justify-content-center align-items-center">
+                                    <img style={{ width: 100 }} src="https://jira-frontend-bifrost.prod-east.frontend.public.atl-paas.net/assets/releases-80px.782fa98d.svg" />
+                                    <p className='text-center'>Versions help you package and schedule project deliveries.</p>
+                                    <p className='text-center'>Your unreleased versions will appear here so you can manage them directly from the backlog.</p>
                                 </div>
-                                <div className="card-body d-flex flex-column justify-content-center">
-                                    <img src="https://jira-frontend-bifrost.prod-east.frontend.public.atl-paas.net/assets/releases-80px.782fa98d.svg" />
-                                    <p>Versions help you package and schedule project deliveries.</p>
-                                    <p>Your unreleased versions will appear here so you can manage them directly from the backlog.</p>
+                                <div style={{ padding: '10px 20px' }} className='backlog-creating-sprint'>
+                                    <NavLink onClick={() => {
+                                        dispatch(drawer_edit_form_action(<CreateVersion currentVersion={
+                                            {
+                                                id: null,
+                                                project_id: id,
+                                                description: '',
+                                                version_name: '',
+                                                start_date: dayjs(new Date()).format('DD/MM/YYYY'),
+                                                end_date: dayjs(new Date()).format('DD/MM/YYYY'),
+                                                version_id: null
+                                            }
+                                        } />, 'Create', '500px'))
+                                    }} style={{ textDecoration: 'none', color: 'black' }}><i className="fa fa-plus mr-2"></i>Create version</NavLink>
                                 </div>
                             </div>}
                         </div>
@@ -943,41 +1003,65 @@ export default function Backlog() {
                                     setOnChangeEpic(!onChangeEpic)
                                 }}></i>
                             </div>
-                            <div className="card-body d-flex flex-column justify-content-center p-2">
-                                <button onClick={() => {
-                                    //if this epic is selected, when users click again, it will remove out chooseEpic
-                                    if (chooseEpic?.includes(null)) { //this case means, epic has already existed in chooseEpic => remove it from chooseEpic
-                                        const index = chooseEpic.findIndex(currentEpic => currentEpic === null)
-                                        chooseEpic.splice(index, 1)
-                                    } else {
-                                        chooseEpic.push(null)
-                                    }
+                            {
+                                epicList !== null && epicList.length > 0 ? <div>
+                                    <div className="card-body d-flex flex-column justify-content-center p-2">
+                                        <button onClick={() => {
+                                            //if this epic is selected, when users click again, it will remove out chooseEpic
+                                            if (chooseEpic?.includes(null)) { //this case means, epic has already existed in chooseEpic => remove it from chooseEpic
+                                                const index = chooseEpic.findIndex(currentEpic => currentEpic === null)
+                                                chooseEpic.splice(index, 1)
+                                            } else {
+                                                chooseEpic.push(null)
+                                            }
 
-                                    dispatch(getIssuesBacklog(id, {
-                                        epics: chooseEpic,
-                                        versions: chooseVersion
-                                    }))
-                                    setChooseEpic([...chooseEpic])
-                                }} style={{ width: '100%', textAlign: 'left', border: '1px solid #aaa', borderRadius: 3 }} className={`btn btn-transparent ${chooseEpic?.includes(null) ? "selected_epic" : "unselected_epic"}`}>Issue without epic</button>
-                                {renderEpicList()}
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                                <div style={{ padding: '10px', display: 'flex', alignItems: 'center' }} className='epic-footer'>
-                                    <i className="fa fa-plus mr-2"></i>
-                                    <NavLink style={{ width: '100%', textDecoration: 'none', display: 'block', color: 'black' }} to='#' onClick={() => {
-                                        dispatch(drawer_edit_form_action(<CreateEpic currentEpic={{ project_id: id, creator: userInfo.id, summary: '', epic_name: '' }} />, 'Create', '760px'))
-                                    }}>Create issue in epic</NavLink>
+                                            dispatch(getIssuesBacklog(id, {
+                                                epics: chooseEpic,
+                                                versions: chooseVersion
+                                            }))
+                                            setChooseEpic([...chooseEpic])
+                                        }} style={{ width: '100%', textAlign: 'left', border: '1px solid #aaa', borderRadius: 3 }} className={`btn btn-transparent ${chooseEpic?.includes(null) ? "selected_epic" : "unselected_epic"}`}>Issue without epic</button>
+                                        {renderEpicList()}
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                                        <div style={{ padding: '10px', display: 'flex', alignItems: 'center' }} className='epic-footer'>
+                                            <i className="fa fa-plus mr-2"></i>
+                                            <NavLink style={{ width: '100%', textDecoration: 'none', display: 'block', color: 'black' }} to='#' onClick={() => {
+                                                dispatch(drawer_edit_form_action(<CreateEpic currentEpic={{ project_id: id, creator: userInfo.id, summary: '', epic_name: '' }} />, 'Create', '760px'))
+                                            }}>Create issue in epic</NavLink>
+                                        </div>
+                                        <div style={{ padding: '10px', display: 'flex', alignItems: 'center' }} className='epic-footer'>
+                                            <i className="fa fa-link mr-2"></i>
+                                            <NavLink to={`/projectDetail/${id}/epics`} style={{ color: 'black', textDecoration: 'none' }}>Viewed linked pages</NavLink>
+                                        </div>
+                                    </div>
+                                </div> : <div>
+                                    <div style={{ height: 'fit-content' }}>
+                                        <div className="card-body d-flex flex-column justify-content-center align-items-center">
+                                            <img style={{ width: 100 }} src="https://jira-frontend-bifrost.prod-east.frontend.public.atl-paas.net/assets/empty-state-growth-sprout.36bafc1e.svg" />
+                                            <p className='text-center'>Plan and prioritize large chunks of work.</p>
+                                            <p className='text-center'>Create your first epic to start capturing and breaking down work for your team.</p>
+                                        </div>
+                                        <div style={{ padding: '10px 20px' }} className='backlog-creating-sprint'>
+                                            <NavLink onClick={() => {
+                                                dispatch(drawer_edit_form_action(<CreateEpic currentEpic={
+                                                    {
+                                                        id: null,
+                                                        project_id: id,
+                                                        summary: '',
+                                                        epic_name: '',
+                                                        name_project: projectInfo.name_project
+                                                    }} />, 'Create', '500px'))
+                                            }} style={{ textDecoration: 'none', color: 'black' }}><i className="fa fa-plus mr-2"></i>Create Epic</NavLink>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div style={{ padding: '10px', display: 'flex', alignItems: 'center' }} className='epic-footer'>
-                                    <i className="fa fa-link mr-2"></i>
-                                    <NavLink to={`/projectDetail/${id}/epics`} style={{ color: 'black', textDecoration: 'none' }}>Viewed linked pages</NavLink>
-                                </div>
-                            </div>
+                            }
                         </div>
 
                         <div className='d-flex flex-column mt-2 mb-2 ' style={{ width: '100%', overflowY: 'auto', height: '75vh' }}>
                             {renderSprintList()}
-                            <div className='issues-info-backlog mt-2' style={{ backgroundColor: '#f7f8f9' }}>
+                            <div className='issues-info-backlog mt-1' style={{ backgroundColor: '#f7f8f9' }}>
                                 <div
                                     className="d-flex justify-content-between align-items-center mb-2"
                                     data-toggle="collapse" data-target="#issueBacklogCollapse"
@@ -1015,7 +1099,7 @@ export default function Backlog() {
                                     }}>
                                         <i className="fa-regular fa-plus mr-2"></i>
                                         Create issue
-                                    </button> : <div className='d-flex'>
+                                    </button> : <div className='d-flex' style={{ border: '2px solid #2684FF' }}>
                                         <Select style={{ border: 'none', borderRadius: 0 }}
                                             defaultValue={issueTypeWithoutOptions[0].value}
                                             onChange={(value, option) => {
@@ -1041,7 +1125,7 @@ export default function Backlog() {
                                                         creator: userInfo.id,
                                                         issue_type: defaultForIssueType(issueStatus),
                                                         current_sprint: null
-                                                    }, issuesBacklog, null, null, userInfo.id))
+                                                    }, id, userInfo.id, null))
                                                 }
                                             }
                                         }} onBlur={() => {

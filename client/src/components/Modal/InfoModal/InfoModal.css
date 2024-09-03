@@ -33,6 +33,10 @@
     font-weight: 500;
 }
 
+span.items-attribute:hover {
+    background-color: #dddd !important;
+}
+
 .modal-info .modal-body .description p:first-child {
     margin-bottom: 5px;
 }
@@ -132,3 +136,27 @@
 .modal {
     scrollbar-width: none;
 }
+
+div>i.icon-options:hover {
+    background-color: rgba(9, 30, 66, 0.08) !important;
+}
+
+.infomodal-edit-select-ant-add-issue div.ant-select-selector {
+    border-radius: 0 !important;
+}
+
+.infomodal-edit-select-ant div.ant-select-selector {
+    border: none !important;
+    border-radius: 0 !important;
+}
+
+input.infomodal-edit-input-ant.ant-input:focus {
+    box-shadow: none !important;
+    border: 1px solid #388bff !important;
+}
+
+/* input.infomodal-edit-input-ant.ant-input:focus > .infomodal-edit-select-ant.ant-select {
+    border: 2px solid #dddd !important;
+    height: max-content !important;
+    background-color: red;
+} */

@@ -87,8 +87,6 @@ export const GetSprintListAction = (project_id, props) => {
     return async dispatch => {
         try {
             const res = await Axios.post(`${domainName}/api/sprint/${project_id}`, props)
-            console.log("GetSprintListAction ", res);
-
             dispatch({
                 type: GET_SPRINT_PROJECT,
                 sprintList: res.data.data

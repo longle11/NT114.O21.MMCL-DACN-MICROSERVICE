@@ -2,22 +2,43 @@ import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { getEpicById } from '../../../../redux/actions/CategoryAction'
 import { useParams } from 'react-router-dom'
-import { Avatar, Table, Tag } from 'antd'
-import { GetProcessListAction } from '../../../../redux/actions/ListProjectAction'
+import { Avatar, Breadcrumb, Button, Table, Tag } from 'antd'
+import { GetProcessListAction, GetProjectAction } from '../../../../redux/actions/ListProjectAction'
 import { getIssuesBacklog } from '../../../../redux/actions/IssueAction'
 import { iTagForIssueTypes, iTagForPriorities } from '../../../../util/CommonFeatures'
 import { UserOutlined } from '@ant-design/icons';
+import { displayComponentInModal } from '../../../../redux/actions/ModalAction'
+import { drawer_edit_form_action } from '../../../../redux/actions/DrawerAction'
+import CreateEpic from '../../../Forms/CreateEpic/CreateEpic'
 export default function EpicDetail() {
   const epicInfo = useSelector(state => state.categories.epicInfo)
   const { epicId, id } = useParams()
   const processList = useSelector(state => state.listProject.processList)
   const issuesBacklog = useSelector(state => state.issue.issuesBacklog)
+  const projectInfo = useSelector(state => state.listProject.projectInfo)
+
   const dispatch = useDispatch()
   useEffect(() => {
     dispatch(getEpicById(epicId))
     dispatch(GetProcessListAction(id))
     dispatch(getIssuesBacklog(id))
+    dispatch(GetProjectAction(id, null, null))
   }, [])
+
+  useEffect(() => {
+    setDataSource(issuesBacklog?.filter(issue => issue.epic_link?._id?.toString() === epicInfo?._id?.toString()))
+    console.log("loop infinity in EpicDetail");
+
+  }, [issuesBacklog])
+  const renderAddIssue = () => {
+    return <div style={{ height: 250, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      <h6>Nothing to see here</h6>
+      <p>No issues have been added yet.</p>
+      <Button onClick={() => {
+
+      }} type='primary'><i className="fa-solid fa-plus mr-2"></i>Add issues</Button>
+    </div>
+  }
   const [dataSource, setDataSource] = useState([])
   const columns = [
     {
@@ -38,7 +59,7 @@ export default function EpicDetail() {
       dataIndex: 'assignees',
       key: 'assignees',
       render: (text, record) => {
-        if(record.assignees.length === 0){
+        if (record.assignees.length === 0) {
           return <span><Avatar icon={<UserOutlined />} /> <span className='ml-2'>Unassignee</span></span>
         }
       }
@@ -55,14 +76,43 @@ export default function EpicDetail() {
   return (
     <div>
       <div className='epic-header'>
-        <p>Project / website development / Release</p>
+        <Breadcrumb
+          style={{ marginBottom: 10 }}
+          items={[
+            {
+              title: <a href="/manager">Projects</a>,
+            },
+            {
+              title: <a href={`/projectDetail/${id}/board`}>{projectInfo?.name_project}</a>,
+            },
+            {
+              title: <a href={`/projectDetail/${id}/epics`}>epics</a>,
+            }
+          ]}
+        />
       </div>
-      <div className='epic-title'>
-        <div className='epic-title-header'>
-          <h4>{epicInfo?.epic_name}</h4>
+      <div className='epic-title d-flex align-items-center justify-content-between'>
+        <div>
+          <div className='epic-title-header'>
+            <h4>{epicInfo?.epic_name}</h4>
+          </div>
+          <div className='epic-title-summary'>
+            <p>Summary: {epicInfo?.summary}</p>
+          </div>
         </div>
-        <div className='epic-title-summary'>
-          <p>Summary: {epicInfo?.summary}</p>
+        <div>
+          <Button className="mr-2"><i className="fa-solid fa-comment mr-2"></i> Give feedback</Button>
+          <Button onClick={() => {
+            dispatch(drawer_edit_form_action(<CreateEpic currentEpic={
+              {
+                id: epicInfo._id,
+                project_id: id,
+                summary: epicInfo.summary,
+                epic_name: epicInfo.epic_name,
+                name_project: projectInfo.name_project
+              }
+            } />, 'Save', '760px'))
+          }}>Edit version</Button>
         </div>
       </div>
       <div className='epic-info'>
@@ -106,11 +156,11 @@ export default function EpicDetail() {
           </nav>
           <div className="tab-content" id="nav-tabContent">
             <div className="tab-pane fade show active" id="nav-epic" role="tabpanel" aria-labelledby="nav-epic-tab">
-              <Table dataSource={dataSource} columns={columns} />;
+              <Table dataSource={dataSource} columns={columns} locale={{ emptyText: (renderAddIssue()) }} />
             </div>
             {processList?.map(process => {
               return <div className="tab-pane fade" id={`nav-epic-${process._id.toString()}`} role="tabpanel" aria-labelledby={`nav-epic-${process._id.toString()}-tab`}>
-                <Table dataSource={dataSource} columns={columns} />;
+                <Table dataSource={dataSource} columns={columns} locale={{ emptyText: (renderAddIssue()) }} />
               </div>
             })}
           </div>

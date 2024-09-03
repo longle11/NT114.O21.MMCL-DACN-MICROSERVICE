@@ -15,9 +15,9 @@ div.epic-footer:hover {
     background-color: #dddd;
 }
 
-div.issues:last-child {
+/* div.issues:last-child {
     border-bottom: 1px solid #dddd;
-}
+} */
 
 /* when hover in tag of issue -> all hide attributes will display */
 div.issue-info:hover button.setting-issue {
@@ -25,6 +25,10 @@ div.issue-info:hover button.setting-issue {
 }
 div.issue-info:hover button.btn-edit-summary {
     display: inline !important;
+}
+
+div.backlog-creating-sprint:hover {
+    background-color: #dddd !important;
 }
 
 .dropdown-menu li {

@@ -3,15 +3,15 @@ import DrawerHOC from '../../HOC/DrawerHOC'
 import { NavLink, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Avatar, Breadcrumb, Button, Input, Modal, Select, Tooltip } from 'antd';
-import { getInfoIssue, updateInfoIssue } from '../../redux/actions/IssueAction';
+import { createIssue, getInfoIssue, updateInfoIssue } from '../../redux/actions/IssueAction';
 import { CreateProcessACtion, GetProcessListAction, GetProjectAction, GetSprintAction, GetSprintListAction } from '../../redux/actions/ListProjectAction';
-import { updateProjectAction } from '../../redux/actions/CreateProjectAction';
-import { iTagForIssueTypes, iTagForPriorities } from '../../util/CommonFeatures';
+import { updateProjectAction, updateSprintAction } from '../../redux/actions/CreateProjectAction';
+import { issueTypeWithoutOptions, iTagForIssueTypes, iTagForPriorities } from '../../util/CommonFeatures';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
 import dayjs from 'dayjs';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { delay } from '../../util/Delay';
-import './Dashboard.css'
+import './Dashboard'
 import { DISPLAY_LOADING, HIDE_LOADING } from '../../redux/constants/constant';
 import { displayComponentInModal } from '../../redux/actions/ModalAction';
 import CompleteSprintModal from '../Modal/CompleteSprintModal/CompleteSprintModal';
@@ -24,7 +24,6 @@ export default function Dashboard() {
     const { id, sprintId } = useParams()
 
     const projectInfo = useSelector(state => state.listProject.projectInfo)
-    const listUser = useSelector(state => state.user.list)
     const userInfo = useSelector(state => state.user.userInfo)
     const processList = useSelector(state => state.listProject.processList)
     const sprintList = useSelector(state => state.listProject.sprintList)
@@ -45,10 +44,9 @@ export default function Dashboard() {
 
     const [open, setOpen] = useState(false);
     const [openAddProcess, setOpenAddProcess] = useState(false)
-
-  
-    
-
+    const [openCreatingIssue, setOpenCreatingIssue] = useState('')
+    const [summary, setSummary] = useState('')
+    const [issueStatus, setIssueStatus] = useState(0)
     const [lockDroppable, setLockDroppable] = useState(true)
 
 
@@ -66,10 +64,10 @@ export default function Dashboard() {
     };
 
 
-    
+
 
     //su dung cho truong hien thi member
-    
+
 
 
     const renderProcessListOptions = (currentProcessId) => {
@@ -88,7 +86,7 @@ export default function Dashboard() {
         return processListOptions
     }
 
-    
+
 
     const renderTooltipForRemainingDay = (sprintInfo) => {
         if (Object.keys(sprintInfo).length !== 0) {
@@ -154,10 +152,10 @@ export default function Dashboard() {
     const renderIssue = (processId) => {
         if (sprintInfo === null) return <></>
         const listIssues = sprintInfo?.issue_list
-        return listIssues?.filter((issue, index) => processId === issue.issue_type._id).map((issue, index) => {
+        const issueTags = listIssues?.filter((issue, index) => processId === issue.issue_type._id).map((issue, index) => {
             return <Draggable draggableId={issue._id} index={index} key={issue._id}>
                 {(provided) => {
-                    return <li
+                    return <div
                         key={issue._id}
                         className="list-group-item"
                         data-toggle="modal"
@@ -197,10 +195,40 @@ export default function Dashboard() {
                                 </div>
                             </div>
                         </div>
-                    </li>
+                    </div>
                 }}
             </Draggable>
         })
+        return <div>
+            {issueTags}
+            {openCreatingIssue !== processId ? <NavLink onClick={() => {
+                setOpenCreatingIssue(processId)
+                setSummary('')
+                setIssueStatus(0)
+            }} className={`dashboard-creating-issue ${issueTags?.length === 0 || issueTags?.length <= 3 ? 'd-none' : 'd-block'}`} style={{ padding: '10px 20px', display: 'block', width: '100%', color: 'black', textDecoration: 'none' }}><i className="fa fa-plus mr-2"></i>Create issue</NavLink> :
+                <div
+                    style={{ height: 100, backgroundColor: '#ffff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', margin: 5, border: '2px solid #2684FF' }}>
+                    <Input className='dashboard-edit-input-ant' onChange={(e) => {
+                        setSummary(e.target.value)
+                    }} style={{ border: 'none', borderRadius: 0 }} placeholder='What need to be done?' />
+                    <div className='d-flex justify-content-between' style={{ padding: '0 10px 10px 10px' }}>
+                        <Select className='dashboard-edit-select-ant' style={{ border: 'none !important', borderRadius: 0 }}
+                            defaultValue={issueTypeWithoutOptions[0].value}
+                            onChange={(value, option) => {
+                                setIssueStatus(value)
+                            }}
+                            options={issueTypeWithoutOptions} />
+                        {summary.trim() === "" ? <Button disabled style={{ border: 'none', borderRadius: 0 }}>Create</Button> : <Button onClick={(e) => {
+                            e.stopPropagation()
+                            e.preventDefault()
+                            dispatch(createIssue({ summary: summary, issue_status: issueStatus, issue_type: processId, current_sprint: sprintId, project_id: id, creator: userInfo.id }, id, userInfo.id, sprintId))
+                            setOpenCreatingIssue('')
+                            setIssueStatus(0)
+                            setSummary('')
+                        }} type='primary' style={{ border: 'none', borderRadius: 0 }}>Create</Button>}
+                    </div>
+                </div>}
+        </div>
         // return listIssues?.filter(issue => {
         //     return issue.issueStatus === position
         // })
@@ -303,9 +331,13 @@ export default function Dashboard() {
                             sprint_id: projectInfo.sprint_id
                         }, navigate))
                     }} style={{ fontSize: '12px' }}>{projectInfo.marked === true ? <i className="fa-solid fa-star" style={{ color: '#ff8b00', fontSize: 15 }}></i> : <i className="fa-solid fa-star" style={{ fontSize: 15 }}></i>}</button>
-                    {sprintId && sprintInfo !== null && Object.keys(sprintInfo).length !== 0 ? <Tooltip placement='bottom' title={renderTooltipForRemainingDay(sprintInfo)}><span className='m-0 mr-2 align-items-center d-flex bg-light' style={{ padding: '10px 20px' }}><i className="fa fa-clock mr-2"></i>{calculateTaskRemainingTime(dayjs(new Date()), dayjs(sprintInfo.end_date))}</span></Tooltip> : <></>}
+                    {sprintId && sprintInfo !== null && Object.keys(sprintInfo).length !== 0 ? (dayjs(new Date()).isAfter(dayjs(sprintInfo?.start_date)) || dayjs(new Date()).isSame(dayjs(sprintInfo?.start_date)) ? <Tooltip placement='bottom' title={renderTooltipForRemainingDay(sprintInfo)}>
+                        <span className='m-0 mr-2 align-items-center d-flex bg-light' style={{ padding: '10px 20px' }}>
+                            <i className="fa fa-clock mr-2"></i>{calculateTaskRemainingTime(dayjs(sprintInfo.start_date), dayjs(sprintInfo.end_date))}
+                        </span>
+                    </Tooltip> : <span className='m-0 mr-2 align-items-center d-flex bg-light font-weight-bold' style={{ padding: '10px 20px' }}>Project start date not yet</span>) : <></>}
                     {sprintId && sprintInfo !== null && Object.keys(sprintInfo).length !== 0 ? <Button className='m-0 mr-2' type='primary' onClick={() => {
-                        dispatch(displayComponentInModal(<CompleteSprintModal sprintInfo={sprintInfo} processList={processList} id={id} userInfo={userInfo} sprintList={sprintList}  projectInfo={projectInfo}/>))
+                        dispatch(displayComponentInModal(<CompleteSprintModal sprintInfo={sprintInfo} processList={processList} id={id} userInfo={userInfo} sprintList={sprintList} projectInfo={projectInfo} />))
                     }}>Complete Sprint</Button> : <></>}
 
                     <NavLink to="https://github.com/longle11/NT114.O21.MMCL-DACN-MICROSERVICE" target="_blank" style={{ textDecoration: 'none' }}>
@@ -319,7 +351,7 @@ export default function Dashboard() {
                 </div>
             </div>
             <p>{sprintInfo === null || sprintInfo === undefined || Object?.keys(sprintInfo).length === 0 ? "" : sprintInfo.sprint_goal}</p>
-            <MemberProject projectInfo={projectInfo} id={id} userInfo={userInfo}/>
+            <MemberProject projectInfo={projectInfo} id={id} userInfo={userInfo} allIssues={sprintInfo.issue_list} />
             <DragDropContext onDragStart={(e) => {
                 if (e.draggableId.includes('process')) {
                     setLockDroppable(false)
@@ -367,7 +399,7 @@ export default function Dashboard() {
                                                 </div>
                                                 <Droppable droppableId={process._id}>
                                                     {(provided) => {
-                                                        return <ul className="list-group list-group-flush" style={{overflowY: 'auto', height: '24rem', scrollbarWidth: 'none'}} ref={provided.innerRef} {...provided.droppableProps}>
+                                                        return <div className="list-group list-group-flush" style={{ overflowY: 'auto', height: '24rem', scrollbarWidth: 'none' }} ref={provided.innerRef} {...provided.droppableProps}>
                                                             {index === 0 && sprintId === null ? <div className='d-flex flex-column align-items-center ml-2 mr-2 mt-5'>
                                                                 <img src="https://jira-frontend-bifrost.prod-east.frontend.public.atl-paas.net/assets/agile.52407441.svg" style={{ height: 150, width: 150 }} alt="img-backlog" />
                                                                 <p style={{ fontWeight: 'bold', marginBottom: 5 }}>Get started in the backlog</p>
@@ -377,7 +409,7 @@ export default function Dashboard() {
                                                                 }}>Go to Backlog</Button>
                                                             </div> : renderIssue(process._id)}
                                                             {provided.placeholder}
-                                                        </ul>
+                                                        </div>
                                                     }}
                                                 </Droppable>
                                             </div>
@@ -446,7 +478,7 @@ export default function Dashboard() {
                         </div>
                     </div>
                 </Modal>
-                
+
             </DragDropContext>
         </div>
     )

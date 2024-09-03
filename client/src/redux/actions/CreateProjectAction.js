@@ -1,9 +1,9 @@
 import Axios from "axios"
-import { DISPLAY_LOADING, GET_PROCESSES_PROJECT, GET_SPRINT_PROJECT, HIDE_LOADING, USER_LOGGED_IN } from "../constants/constant"
+import { DISPLAY_LOADING, GET_PROCESSES_PROJECT, GET_SPRINT_PROJECT, HIDE_LOADING } from "../constants/constant"
 import { delay } from "../../util/Delay"
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
 import domainName from '../../util/Config'
-import { GetWorkflowListAction, ListProjectAction } from "./ListProjectAction"
+import { GetSprintListAction, GetWorkflowListAction, ListProjectAction } from "./ListProjectAction"
 import { updateUserInfo } from "./UserAction"
 export const createProjectAction = (data) => {
     return async dispatch => {
@@ -126,16 +126,12 @@ export const deleteSprintAction = (sprintId, projectId) => {
 export const updateSprintAction = (sprintId, props) => {
     return async dispatch => {
         try {
-            console.log("props truyen vao ben trong updateSprintAction", props);
-            
             const res = await Axios.put(`${domainName}/api/sprint/update/${sprintId}`, props)
 
             if (res.status === 200) {
-                showNotificationWithIcon('success', 'cap nhat', res.data.message)
-                dispatch({
-                    type: GET_SPRINT_PROJECT,
-                    sprintList: res.data.data
-                })
+                if (res.data.data.project_id) {
+                    dispatch(GetSprintListAction(res.data.data.project_id, null))
+                }
             }
         } catch (error) {
             console.log(error);

@@ -1,7 +1,9 @@
 import Axios from "axios";
-import { GET_VERSION, GET_CATEGORY_API, GET_EPICS, GET_EPICS_BY_ID, GET_VERSION_BY_ID } from "../constants/constant";
+import { GET_VERSION, GET_CATEGORY_API, GET_EPICS, GET_EPICS_BY_ID, GET_VERSION_BY_ID, DISPLAY_LOADING, HIDE_LOADING } from "../constants/constant";
 import domainName from '../../util/Config'
 import { showNotificationWithIcon } from "../../util/NotificationUtil";
+import { updateInfoIssue } from "./IssueAction";
+import { delay } from "../../util/Delay";
 export const getListCategories = () => {
     return async dispatch => {
         try {
@@ -36,6 +38,54 @@ export const createEpic = (props) => {
         } catch (error) {
             showNotificationWithIcon("error", "Notification", "Failed to create a new epic")
         }
+    }
+}
+export const deleteEpic = (epic_id, issue_list, epic_name, user) => {
+    return async dispatch => {
+        try {
+            dispatch({
+                type: DISPLAY_LOADING
+            })
+            const res = await Axios.delete(`${domainName}/api/category/epic/${epic_id}`)
+            if (res.status === 200) {
+                //proceed to delete epic in all issues
+                for(let index = 0; index < issue_list.length; index++) {
+                    dispatch(updateInfoIssue(issue_list[index]._id, issue_list[index].project_id, { epic_link: null }, epic_name, "None", user.id, "updated", "epic"))
+                    await delay(300)
+                }
+                showNotificationWithIcon('success', '', res.data.message)
+            }
+        } catch (error) {
+            showNotificationWithIcon("error", "Notification", "Failed to create a new epic")
+        }
+        dispatch({
+            type: HIDE_LOADING
+        })
+    }
+}
+
+export const deleteVersion = (version_id, issue_list, version_name, user) => {
+    return async dispatch => {
+        try {
+            dispatch({
+                type: DISPLAY_LOADING
+            })
+            const res = await Axios.delete(`${domainName}/api/category/version/${version_id}`)
+            if (res.status === 200) {
+                //proceed to delete version in all issues
+                for(let index = 0; index < issue_list.length; index++) {
+                    dispatch(updateInfoIssue(issue_list[index]._id, issue_list[index].project_id, { fix_version: null }, version_name, "None", user.id, "updated", "version"))
+                    await delay(300)
+                }
+
+                showNotificationWithIcon('success', '', res.data.message)
+            }
+        } catch (error) {
+            showNotificationWithIcon("error", "Notification", "Failed to create a new epic")
+        }
+        dispatch({
+            type: HIDE_LOADING
+        })
     }
 }
 export const createVersion = (props) => {
