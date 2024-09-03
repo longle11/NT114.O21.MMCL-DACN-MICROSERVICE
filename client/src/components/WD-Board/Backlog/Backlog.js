@@ -327,7 +327,7 @@ export default function Backlog() {
         }
     };
     const renderIssuesBacklog = () => {
-        const issuesInBacklog = issuesBacklog?.filter(issue => issue?.current_sprint === null && !issue.isCompleted).map((issue, index) => {
+        const issuesInBacklog = issuesBacklog?.filter(issue => issue?.current_sprint === null && !issue.isCompleted && issue.issue_status !== 4).map((issue, index) => {
             return <Draggable draggableId={`${issue._id.toString()}`} key={`${issue._id.toString()}`} index={index}>
                 {(provided) => {
                     return <IssueTag
@@ -402,7 +402,7 @@ export default function Backlog() {
             return {
                 ...sprint, issue_list: [...sprint.issue_list.filter(issue => {
                     //find the issue belongs to issues in backlog
-                    if (issuesBacklog?.map(currentIssue => currentIssue?._id).includes(issue?._id)) {
+                    if (issuesBacklog?.map(currentIssue => currentIssue?._id).includes(issue?._id) && issue.issue_status !== 4) {
                         return true
                     }
                     return false

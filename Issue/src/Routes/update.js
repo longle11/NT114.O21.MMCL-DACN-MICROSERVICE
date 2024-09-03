@@ -8,6 +8,9 @@ const router = express.Router()
 
 router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
     try {
+
+        console.log("Du lieu duoc cap nhat ", req.body);
+        
         if (req.currentUser) {
             console.log("body ", req.body);
             
@@ -20,7 +23,7 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                 let currentIssue = await issueModel.findById(id)
                 //kiem tra xem assignees co duoc them vao hay khong
                 let listAssignees = currentIssue.assignees
-                if (req.body.assignees != null) {
+                if (req.body?.assignees != null) {
                     //check whether this user is already in this issue
                     if(listAssignees.includes(req.body.assignees)) {
                         throw new BadRequestError('User is already belonged to this project')
@@ -32,7 +35,7 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                 //kiem xem timeSpent da ton tai hay chua, neu roi thi tien hanh cap nhat len
                 var timeSpent = currentIssue.timeSpent
 
-                if (req.body.timeSpent) {
+                if (req.body?.timeSpent) {
                     timeSpent += req.body.timeSpent
                     req.body.timeSpent = timeSpent
                 }
@@ -42,9 +45,20 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                     currentIssue.old_sprint.push(req.body.old_sprint)
 
                     req.body.old_sprint = [...currentIssue.old_sprint]
+                }
 
-                    console.log("thang ", currentIssue.summary, "co gia tri ", req.body.old_sprint);
-                    
+                if(req.body?.sub_issue_id !== null) {
+                    if(!currentIssue.sub_issue_list.map(issue => issue.toString()).includes(req.body.sub_issue_id)) {    //if sub issue does not exist, add it into list
+                        currentIssue.sub_issue_list.push(req.body.sub_issue_id)
+                        req.body.sub_issue_list = [...currentIssue.sub_issue_list]
+                    } else {
+                        const index = currentIssue.sub_issue_list.findIndex(issue => issue.toString() === req.body.sub_issue_id)
+                        if(index !== -1) {
+                            currentIssue.sub_issue_list.splice(index, 1)
+                            req.body.sub_issue_list = [...currentIssue.sub_issue_list]
+                        }
+                    }
+                    req.body.sub_issue_id = null
                 }
 
                 await issueModel.updateOne({ _id: id }, { $set: { ...req.body } })
@@ -59,6 +73,7 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                     fix_version: currentIssue.fix_version,
                     story_point: currentIssue.story_point,
                     issue_type: currentIssue.issue_type,
+                    sub_issue_list: currentIssue.sub_issue_list,
                     ...req.body
                 }
 

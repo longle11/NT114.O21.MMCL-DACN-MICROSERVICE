@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux'
 import { getInfoIssue, updateInfoIssue } from '../../redux/actions/IssueAction'
 import { updateUserInfo } from '../../redux/actions/UserAction'
 import { iTagForIssueTypes, iTagForPriorities, priorityTypeOptions } from '../../util/CommonFeatures'
-import { Avatar, Button, Divider, Input, InputNumber, Select, Space, Tag } from 'antd'
+import { Avatar, Button, Divider, Input, InputNumber, Select, Space, Tag, Tooltip } from 'antd'
 import Search from 'antd/es/input/Search'
 import { UserOutlined } from '@ant-design/icons';
 import { NavLink, useParams } from 'react-router-dom'
@@ -412,7 +412,7 @@ export default function IssueTag(props) {
                     ...editFixVersion,
                     open: issue._id
                 })
-            }} color={LightenDarkenColor(issue.fix_version.tag_color, 50)}><span style={{color: LightenDarkenColor(issue.fix_version.tag_color, -100)}}>{issue.fix_version.version_name}</span></Tag> : <div style={{ position: 'relative' }}>
+            }} color={LightenDarkenColor(issue.fix_version.tag_color, 50)}><span style={{ color: LightenDarkenColor(issue.fix_version.tag_color, -100) }}>{issue.fix_version.version_name}</span></Tag> : <div style={{ position: 'relative' }}>
                 <Select
                     style={{
                         minWidth: 150,
@@ -533,6 +533,7 @@ export default function IssueTag(props) {
                     {renderSummary()}
                 </div>
                 <div className='attach-issue d-flex align-items-center'>
+                    {issue?.sub_issue_list?.length > 0 ? <Tooltip title={`${issue?.sub_issue_list?.filter(issue => issue?.issue_type?._id === processList[processList.length - 1]).length} of ${issue?.sub_issue_list?.length} child issues completed`}><i style={{ padding: 5 }} className='fa-solid fa-sitemap icon-options mr-3'></i></Tooltip> : <></>}
                     {/* specify which components does issue belong to? */}
                     {renderFixVersion()}
                     {/* specify which epics does issue belong to? */}

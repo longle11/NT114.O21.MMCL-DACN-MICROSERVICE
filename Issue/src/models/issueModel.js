@@ -85,9 +85,29 @@ const issueSchema = new mongoose.Schema({
     isCompleted: {
         type: Boolean,
         default: false
+    },
+    sub_issue_list: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'issues'
+        }
+    ],
+    parent: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'issues'
     }
 })
-
+issueSchema.virtual('issuesRefSubIssueList', {
+    ref: 'issues',
+    foreignField: '_id',
+    localField: 'sub_issue_list'
+})
+issueSchema.virtual('issuesRefParent', {
+    ref: 'issues',
+    foreignField: '_id',
+    localField: 'parent'
+})
 const issueModel = mongoose.model('issues', issueSchema)
+
 
 module.exports = issueModel

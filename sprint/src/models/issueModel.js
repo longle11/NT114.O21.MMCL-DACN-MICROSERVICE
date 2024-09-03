@@ -33,6 +33,10 @@ const issueSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'issueProcesses'
     },
+    parent: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'issues'
+    },
     assignees: [
         {
             type: mongoose.Schema.Types.ObjectId,
@@ -42,7 +46,13 @@ const issueSchema = new mongoose.Schema({
     story_point: {
         type: Number,
         default: null
-    }
+    },
+    sub_issue_list: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'issues'
+        }
+    ]
 })
 issueSchema.virtual('sprintsRefIssueList', {
     ref: 'sprints',
@@ -53,6 +63,17 @@ issueSchema.virtual('sprintsRefCompletedIssueList', {
     ref: 'sprints',
     foreignField: '_id',
     localField: 'completed_issue_list'
+})
+
+issueSchema.virtual('issuesRefSubIssueList', {
+    ref: 'issues',
+    foreignField: '_id',
+    localField: 'sub_issue_list'
+})
+issueSchema.virtual('issuesRefParent', {
+    ref: 'issues',
+    foreignField: '_id',
+    localField: 'parent'
 })
 
 const issueModel = mongoose.model('issues', issueSchema)

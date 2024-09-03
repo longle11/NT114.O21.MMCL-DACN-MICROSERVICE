@@ -241,7 +241,6 @@ export default function IssuesList() {
       }} />
     } else if (dataIndex === 'epic_link') {
       const renderOptions = renderEpicList(epicList, id)
-      console.log("renderOptions ", renderOptions);
       return <Select ref={ref} onPressEnter={() => {
         save(record)
       }} onBlur={() => {
@@ -274,7 +273,7 @@ export default function IssuesList() {
       return <span className='d-flex align-items-center'><Avatar icon={<UserOutlined />} size={30} /> <span className='ml-2'>Unassignee</span></span>
     }
     else if (key === 'creator') {
-      return <span><Avatar src={record.creator.avatar} className='mr-2' />{record.creator.username}</span>
+      return <span><Avatar src={record.creator?.avatar} className='mr-2' />{record.creator?.username}</span>
     }
     else if (key === 'createAt') {
       return <Tag color="#87d068">{dayjs(record.createAt).format("DD/MM/YYYY")}</Tag>
@@ -286,6 +285,13 @@ export default function IssuesList() {
       return record.epic_link !== null ? <Tag color={record.epic_link?.tag_color}>{record.epic_link?.epic_name}</Tag> : null
     }
     else if (key === 'parent') {
+      if (record.parent) {
+        return <div className='d-flex align-items-center'>
+          <span className='mr-1'>{iTagForIssueTypes(record.parent?.issue_status, null, null)}</span>
+          <span className='mr-1'>WD-{record.parent?.ordinal_number}</span>
+          <span>{record.parent?.summary}</span>
+        </div>
+      }
       return null
     }
     else if (key === 'fix_version') {
@@ -414,6 +420,23 @@ export default function IssuesList() {
     });
   };
 
+  const renderDataSource = () => {
+    return issuesBacklog?.filter(issue => issue.issue_status !== 4).map(issue => {
+      if (issue.sub_issue_list.length === 0) {
+        return {
+          key: issue._id,
+          ...issue
+        }
+      } else {
+        return {
+          key: issue._id,
+          children: issue.sub_issue_list.map(subIssue => ({ ...subIssue })),
+          ...issue
+        }
+      }
+    })
+  }
+
   return (
     <div style={{ margin: '0 20px' }}>
       <Breadcrumb
@@ -447,7 +470,7 @@ export default function IssuesList() {
               <DragIndexContext.Provider value={dragIndex}>
                 <Table
                   columns={renderColumns()}
-                  dataSource={issuesBacklog}
+                  dataSource={renderDataSource()}
                   bordered
                   size='middle'
                   style={{ width: '100%' }}

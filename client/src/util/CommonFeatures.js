@@ -162,3 +162,16 @@ export const renderAssignees = (listProject, project_id, userInfo) => {
     }
     return []
 }
+
+export const renderSubIssueOptions = (issuesBacklog) => {
+    return issuesBacklog?.filter(issue => issue.issue_status === 4 && issue.parent === null).map(subIssue => {
+        return {
+            label: <div className='d-flex align-items-center'>
+                <span className='mr-1'>{iTagForIssueTypes(subIssue.issue_status, null, 15)}</span>
+                <span className='mr-2'>WD-{subIssue.ordinal_number}</span>
+                <span>{subIssue.summary}</span>
+            </div>,
+            value: subIssue._id
+        }
+    })
+}

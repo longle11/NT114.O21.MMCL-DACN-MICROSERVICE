@@ -3,11 +3,11 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { Editor } from '@tinymce/tinymce-react';
 import Parser from 'html-react-parser';
-import { createWorklogHistory, deleteAssignee, deleteIssue, getIssueHistoriesList, getWorklogHistoriesList, updateInfoIssue } from '../../../redux/actions/IssueAction';
+import { createIssue, createWorklogHistory, deleteAssignee, deleteIssue, getIssueHistoriesList, getWorklogHistoriesList, updateInfoIssue } from '../../../redux/actions/IssueAction';
 import { createCommentAction } from '../../../redux/actions/CommentAction';
 import { showNotificationWithIcon } from '../../../util/NotificationUtil';
 import { GetProjectAction, GetWorkflowListAction } from '../../../redux/actions/ListProjectAction';
-import { priorityTypeOptions, issueTypeOptions, iTagForPriorities, iTagForIssueTypes, renderSprintList, renderEpicList, renderVersionList } from '../../../util/CommonFeatures';
+import { priorityTypeOptions, issueTypeOptions, iTagForPriorities, iTagForIssueTypes, renderSprintList, renderEpicList, renderVersionList, renderSubIssueOptions } from '../../../util/CommonFeatures';
 import { getEpicList, getVersionList, updateEpic } from '../../../redux/actions/CategoryAction';
 import { NavLink, useNavigate, useParams } from 'react-router-dom';
 import { UserOutlined } from '@ant-design/icons'
@@ -29,8 +29,12 @@ export default function InfoModal() {
     const worklogList = useSelector(state => state.issue.worklogList)
     const epicList = useSelector(state => state.categories.epicList)
     const versionList = useSelector(state => state.categories.versionList)
+    const issuesBacklog = useSelector(state => state.issue.issuesBacklog)
+
+    const [subIssueSummary, setSubIssueSummary] = useState('')
 
     const [editAttributeTag, setEditAttributeTag] = useState('')
+    const [showAddSubIssue, setShowAddSubIssue] = useState(false)
 
     const [timeTable, setTimeTable] = useState(false)
     const [openDatePicker, setOpenDatePicker] = useState(false)
@@ -40,6 +44,16 @@ export default function InfoModal() {
     const [addAssignee, setAddAssignee] = useState(true)
     const [description, setDescription] = useState('')
     const [summary, setSummary] = useState('')
+    const [editSubIssueSummary, setEditSubIssueSummary] = useState('')
+    const [openEditSubIssueSummary, setOpenSetEditSubIssueSummary] = useState('')
+    const [editSubIssueIssuePriority, setEditSubIssueIssuePriority] = useState(2)
+    const [openEditSubIssuePriority, setOpenSetEditSubIssuePriority] = useState('')
+    const [editSubIssueIssueStoryPoint, setEditSubIssueIssueStoryPoint] = useState(0)
+    const [openEditSubIssueStoryPoint, setOpenSetEditSubIssueStoryPoint] = useState('')
+    const [editSubIssueIssueAssignees, setEditSubIssueIssueAssignees] = useState([])
+    const [openEditSubIssueAssignees, setOpenSetEditSubIssueAssignees] = useState('')
+    const [editSubIssueIssueIssueType, setEditSubIssueIssueIssueType] = useState('')
+    const [openEditSubIssueIssueType, setOpenSetEditSubIssueIssueType] = useState('')
     //sử dụng cho phần bình luận
     //tham số isSubmit thì để khi bấm send thì mới thực hiện duyệt mảng comments
     const [comment, setComment] = useState({
@@ -59,6 +73,8 @@ export default function InfoModal() {
             content: '',
             isSubmit: true,
         })
+        setShowAddSubIssue(false)
+        setSubIssueSummary(false)
         setEditAttributeTag('')
         setAddAssignee(true)
         setDescription('')
@@ -66,6 +82,16 @@ export default function InfoModal() {
         setEditDescription(true)
         setOpenDatePicker(false)
         setTimeTable(false)
+        setEditSubIssueSummary('')
+        setOpenSetEditSubIssueSummary('')
+        setEditSubIssueIssuePriority(2)
+        setOpenSetEditSubIssuePriority('')
+        setEditSubIssueIssueStoryPoint(0)
+        setOpenSetEditSubIssueStoryPoint('')
+        setEditSubIssueIssueAssignees([])
+        setOpenSetEditSubIssueAssignees('')
+        setEditSubIssueIssueIssueType('')
+        setOpenSetEditSubIssueIssueType('')
         setFormData({
             timeSpent: 0,
             dateWorking: '',
@@ -520,7 +546,10 @@ export default function InfoModal() {
                             <div className="col-8" style={{ overflowY: 'auto', height: '90%', scrollbarWidth: 'none' }}>
                                 <div>
                                     <i style={{ fontSize: 20, marginRight: 10, backgroundColor: 'rgba(9, 30, 66, 0.04)', padding: '8px' }} className="fa-solid fa-paperclip icon-options"></i>
-                                    <i style={{ fontSize: 20, marginRight: 10, backgroundColor: 'rgba(9, 30, 66, 0.04)', padding: '8px' }} className="fa-solid fa-sitemap icon-options"></i>
+                                    <i onClick={() => {
+                                        setShowAddSubIssue(true)
+                                        setSubIssueSummary('')
+                                    }} style={{ fontSize: 20, marginRight: 10, backgroundColor: 'rgba(9, 30, 66, 0.04)', padding: '8px' }} className="fa-solid fa-sitemap icon-options"></i>
                                 </div>
                                 {editAttributeTag === 'summary' ? <Input onChange={(e) => {
                                     setSummary(e.target.value)
@@ -604,7 +633,7 @@ export default function InfoModal() {
                                 <div>
                                     <div>
                                         <div className='d-flex justify-content-between align-items-center'>
-                                            <h5 className='p-0 m-0' style={{ color: '#42526e' }}>Child issues</h5>
+                                            <h5 className='p-0 m-0' style={{ color: '#42526e', fontSize: 18 }}>Child issues</h5>
                                             <div>
                                                 <Select
                                                     className='mr-2'
@@ -627,81 +656,175 @@ export default function InfoModal() {
                                                         },
                                                     ]} defaultValue={"Order by"} />
                                                 <i className="fa fa-ellipsis-h mr-2"></i>
-                                                <i className="fa-solid fa-plus"></i>
+                                                <i onClick={() => {
+                                                    setShowAddSubIssue(true)
+                                                    setSubIssueSummary('')
+                                                }} className="fa-solid fa-plus"></i>
                                             </div>
                                         </div>
                                         <div className='d-flex'>
                                             <Progress
-                                                percent={50}
+                                                percent={((issueInfo?.sub_issue_list?.filter(subIssue => subIssue.issue_type?._id === processList[processList.length - 1])?.length) / (issueInfo?.sub_issue_list?.length)) * 100}
                                                 percentPosition={{
                                                     align: 'center',
                                                     type: 'inner',
                                                 }}
-                                                size={['95%', 7]}
+                                                size={['95%', 5]}
                                             />
                                         </div>
                                     </div>
                                     <div>
                                         <div style={{ marginTop: 10 }}>
-                                            <div className='d-flex justify-content-between align-items-center' style={{ padding: '5px 3px', border: '1px solid #dddd' }}>
-                                                <div className='d-flex align-items-center'>
-                                                    <span className='mr-1'>{iTagForIssueTypes(4, null, 13)}</span>
-                                                    <NavLink style={{ fontSize: 12 }} className='mr-1'>WD-12</NavLink>
-                                                    <span style={{ fontSize: 12 }} className='mr-1'>Day al noi d....</span>
+                                            {issueInfo?.sub_issue_list.map(subIssue => {
+                                                return <div key={subIssue?._id} className='d-flex justify-content-between align-items-center subIssue' style={{ padding: '5px 3px', border: '1px solid #dddd' }}>
+                                                    <div className='d-flex align-items-center'>
+                                                        <span className='mr-1'>{iTagForIssueTypes(subIssue.issue_status, 'mr-0', 13)}</span>
+                                                        <NavLink style={{ fontSize: 12 }} className='mr-1'>WD-{subIssue.ordinal_number}</NavLink>
+                                                        {openEditSubIssueSummary === subIssue._id ? <div style={{ position: 'relative' }}>
+                                                            <Input style={{ borderRadius: 0 }} defaultValue={subIssue?.summary} onChange={(e) => {
+                                                                setEditSubIssueSummary(e.target.value)
+                                                            }} />
+                                                            <div className='d-flex' style={{ position: 'absolute', right: 0 }}>
+                                                                <Button onClick={() => {
+                                                                    setEditSubIssueSummary('')
+                                                                    setOpenSetEditSubIssueSummary('')
+                                                                }} className='mr-1 d-flex justify-content-center align-items-center' type="primary" style={{ width: 20, height: 30, zIndex: 9999999 }}><i style={{ fontSize: 13 }} className="fa fa-check"></i></Button>
+                                                                <Button onClick={() => {
+                                                                    setEditSubIssueSummary('')
+                                                                    setOpenSetEditSubIssueSummary('')
+                                                                }} className='mr-1 d-flex justify-content-center align-items-center' style={{ width: 20, height: 30, zIndex: 9999999 }}><i className="fa-solid fa-xmark"></i></Button>
+                                                            </div>
+                                                        </div> : <span className='d-flex justify-content-between align-items-center sub-issue-summary'>
+                                                            {subIssue?.summary?.length > 10 ? <span style={{ fontSize: 12 }} className='mr-1'>{subIssue.summary.substring(0, 10)}...</span> : <span style={{ fontSize: 12 }} className='mr-1'>{subIssue.summary}</span>}
+                                                            <NavLink onClick={() => {
+                                                                setOpenSetEditSubIssueSummary(subIssue._id)
+                                                            }} className="sub-issue-edit-summary" style={{ padding: 5, color: 'black', marginLeft: 5, display: 'none' }}><i className="fa fa-pen"></i></NavLink>
+                                                        </span>}
+                                                    </div>
+                                                    <div className='d-flex align-items-center' style={{ position: 'relative' }}>
+                                                        {openEditSubIssuePriority === subIssue._id ? <div style={{ position: 'absolute' }}>
+                                                            <div style={{ position: 'relative', right: '100%' }}>
+                                                                <Select options={priorityTypeOptions} defaultValue={editSubIssueIssuePriority} onSelect={(value) => {
+                                                                    setEditSubIssueIssuePriority(value)
+                                                                }} />
+                                                                <div className='d-flex' style={{ position: 'absolute', right: 0 }}>
+                                                                    <Button onClick={() => {
+                                                                        setEditSubIssueIssuePriority(2)
+                                                                        setOpenSetEditSubIssuePriority('')
+                                                                    }} className='mr-1 d-flex justify-content-center align-items-center' type="primary" style={{ width: 20, height: 30, zIndex: 9999999 }}><i style={{ fontSize: 13 }} className="fa fa-check"></i></Button>
+                                                                    <Button onClick={() => {
+                                                                        setEditSubIssueIssuePriority(2)
+                                                                        setOpenSetEditSubIssuePriority('')
+                                                                    }} className='mr-1 d-flex justify-content-center align-items-center' style={{ width: 20, height: 30, zIndex: 9999999 }}><i className="fa-solid fa-xmark"></i></Button>
+                                                                </div>
+                                                            </div>
+                                                        </div> : <span onClick={() => {
+                                                            setOpenSetEditSubIssuePriority(subIssue._id)
+                                                        }} className='mr-1'>{iTagForPriorities(subIssue.issue_priority, null, 13)}</span>}
+                                                        {openEditSubIssueStoryPoint === subIssue._id ? <div style={{ position: 'absolute' }}>
+                                                            <div style={{ position: 'relative', right: '100%' }}>
+                                                                <InputNumber min={1} max={1000} onChange={(value) => {
+                                                                    setEditSubIssueIssueStoryPoint(value)
+                                                                }} />
+                                                                <div className='d-flex' style={{ position: 'absolute', right: 0 }}>
+                                                                    <Button onClick={() => {
+                                                                        setEditSubIssueIssueStoryPoint(0)
+                                                                        setOpenSetEditSubIssueStoryPoint('')
+                                                                    }} className='mr-1 d-flex justify-content-center align-items-center' type="primary" style={{ width: 20, height: 30, zIndex: 9999999 }}><i style={{ fontSize: 13 }} className="fa fa-check"></i></Button>
+                                                                    <Button onClick={() => {
+                                                                        setEditSubIssueIssueStoryPoint(0)
+                                                                        setOpenSetEditSubIssueStoryPoint('')
+                                                                    }} className='mr-1 d-flex justify-content-center align-items-center' style={{ width: 20, height: 30, zIndex: 9999999 }}><i className="fa-solid fa-xmark"></i></Button>
+                                                                </div>
+                                                            </div>
+                                                        </div> : <Avatar style={{cursor: 'pointer'}} onClick={() => {
+                                                            setOpenSetEditSubIssueStoryPoint(subIssue._id)
+                                                        }} className='mr-1' size={'small'}><span className='d-flex'>-</span></Avatar>}
+                                                        {openEditSubIssueAssignees === subIssue._id ? <div style={{ position: 'absolute' }}>
+                                                            <div style={{ position: 'relative',  right: '10px' }}>
+                                                                <Select />
+                                                                <div className='d-flex' style={{ position: 'absolute', right: 0 }}>
+                                                                    <Button onClick={() => {
+                                                                        setEditSubIssueIssueAssignees([])
+                                                                        setOpenSetEditSubIssueAssignees('')
+                                                                    }} className='mr-1 d-flex justify-content-center align-items-center' type="primary" style={{ width: 20, height: 30, zIndex: 9999999 }}><i style={{ fontSize: 13 }} className="fa fa-check"></i></Button>
+                                                                    <Button onClick={() => {
+                                                                        setEditSubIssueIssueAssignees([])
+                                                                        setOpenSetEditSubIssueAssignees('')
+                                                                    }} className='mr-1 d-flex justify-content-center align-items-center' style={{ width: 20, height: 30, zIndex: 9999999 }}><i className="fa-solid fa-xmark"></i></Button>
+                                                                </div>
+                                                            </div>
+                                                        </div> : <Avatar style={{cursor: 'pointer'}} onClick={() => {
+                                                            setOpenSetEditSubIssueAssignees(subIssue._id)
+                                                        }} className='mr-1' size={'small'} icon={<UserOutlined />} />}
+                                                        {openEditSubIssueIssueType === subIssue._id ? <div style={{ position: 'absolute' }}>
+                                                            <div style={{ position: 'relative', right: '10px' }}>
+                                                                <Select style={{width: '100%'}} options={renderIssueType()} value={subIssue.issue_type._id} onChange={(value) => {
+                                                                    setEditSubIssueIssueIssueType(value)
+                                                                }}/>
+                                                                <div className='d-flex' style={{ position: 'absolute', right: 0 }}>
+                                                                    <Button onClick={() => {
+                                                                        setEditSubIssueIssueAssignees([])
+                                                                        setOpenSetEditSubIssueIssueType('')
+                                                                    }} className='mr-1 d-flex justify-content-center align-items-center' type="primary" style={{ width: 20, height: 30, zIndex: 9999999 }}><i style={{ fontSize: 13 }} className="fa fa-check"></i></Button>
+                                                                    <Button onClick={() => {
+                                                                        setEditSubIssueIssueAssignees([])
+                                                                        setOpenSetEditSubIssueIssueType('')
+                                                                    }} className='mr-1 d-flex justify-content-center align-items-center' style={{ width: 20, height: 30, zIndex: 9999999 }}><i className="fa-solid fa-xmark"></i></Button>
+                                                                </div>
+                                                            </div>
+                                                        </div> : <Tag onClick={() => {
+                                                            setOpenSetEditSubIssueIssueType(subIssue._id)
+                                                        }} className='mr-1' color={subIssue.issue_type.tag_color}>{subIssue.issue_type.name_process}</Tag>}
+                                                    </div>
                                                 </div>
-                                                <div className='d-flex align-items-center'>
-                                                    <span className='mr-1'>{iTagForPriorities(2, null, 13)}</span>
-                                                    <Avatar className='mr-1' size={'small'}><span className='d-flex'>-</span></Avatar>
-                                                    <Avatar className='mr-1' size={'small'} icon={<UserOutlined />} />
-                                                    <Tag className='mr-1' color='blue'>abcd</Tag>
-                                                </div>
-                                            </div>
-                                            <div className='d-flex justify-content-between align-items-center' style={{ padding: '5px 3px', border: '1px solid #dddd' }}>
-                                                <div className='d-flex align-items-center'>
-                                                    <span className='mr-1'>{iTagForIssueTypes(4, null, 13)}</span>
-                                                    <NavLink style={{ fontSize: 12 }} className='mr-1'>WD-12</NavLink>
-                                                    <span style={{ fontSize: 12 }} className='mr-1'>Day al noi d....</span>
-                                                </div>
-                                                <div className='d-flex align-items-center'>
-                                                    <span className='mr-1'>{iTagForPriorities(2, null, 13)}</span>
-                                                    <Avatar className='mr-1' size={'small'}><span className='d-flex'>-</span></Avatar>
-                                                    <Avatar className='mr-1' size={'small'} icon={<UserOutlined />} />
-                                                    <Tag className='mr-1' color='blue'>abcd</Tag>
-                                                </div>
-                                            </div>
+                                            })}
                                         </div>
                                     </div>
-                                    <div className='mt-2'>
+                                    {showAddSubIssue === true ? <div className='mt-2'>
                                         <div className='d-flex align-items-center justify-content-between mt-1'>
                                             {chooseExistingSubIssue === false ? <div className='d-flex flex-column'>
                                                 <div className='d-flex add-sub-isses'>
                                                     <Select style={{ border: 0, borderRadius: 0, backgroundColor: '#dddd' }} className='infomodal-edit-select-ant' defaultValue={issueTypeOptions[4]} disabled />
-                                                    <Input style={{ border: '1px solid #7A869A', borderRadius: 0, backgroundColor: 'transparent' }} className='infomodal-edit-input-ant' placeholder='What needs to be done?' />
+                                                    <Input onChange={(e) => {
+                                                        setSubIssueSummary(e.target.value)
+                                                    }} style={{ border: '1px solid #7A869A', borderRadius: 0, backgroundColor: 'transparent' }} className='infomodal-edit-input-ant' placeholder='What needs to be done?' />
                                                 </div>
                                                 <div className='d-flex mt-2 align-items-center'>
                                                     <NavLink onClick={() => {
                                                         setChooseExistingSubIssue(true)
+                                                        setSubIssueSummary('')
                                                     }} style={{ fontSize: 12 }}><i className="fa-solid fa-magnifying-glass mr-2" style={{ fontSize: 16 }}></i> Choose an existing issue</NavLink>
                                                     <div className='d-flex'>
-                                                        <Button className='mr-1' type='primary' style={{ borderRadius: 0 }}>Create</Button>
-                                                        <Button style={{ borderRadius: 0 }}>Cancel</Button>
+                                                        <Button onClick={() => {
+                                                            //proceed to create an sub-issue 
+                                                            dispatch(createIssue({ summary: subIssueSummary, creator: userInfo.id, issue_status: 4, issue_priority: 2, issue_type: issueInfo?.issue_type._id, parent: issueInfo?._id, project_id: id }, id, userInfo.id, issueInfo?.current_sprint?._id, issueInfo?._id))
+                                                            setShowAddSubIssue(false)
+                                                            setSubIssueSummary('')
+                                                        }} className='mr-1' type='primary' style={{ borderRadius: 0 }}>Create</Button>
+                                                        <Button onClick={() => {
+                                                            setShowAddSubIssue(false)
+                                                            setSubIssueSummary('')
+                                                        }} style={{ borderRadius: 0 }}>Cancel</Button>
                                                     </div>
                                                 </div>
 
 
                                             </div> : <div className='d-flex flex-column' style={{ width: '100%' }}>
-                                                <Select className='infomodal-edit-select-ant-add-issue' style={{ width: '100%', height: 35 }} />
+                                                <Select className='infomodal-edit-select-ant-add-issue' style={{ width: '100%', height: 35 }} options={renderSubIssueOptions(issuesBacklog)} />
                                                 <div className='d-flex justify-content-end mt-2'>
                                                     <Button className='mr-1' onClick={() => {
                                                         setChooseExistingSubIssue(false)
+                                                        setShowAddSubIssue(false)
                                                     }} type='primary' style={{ borderRadius: 0 }}>Add</Button>
                                                     <Button onClick={() => {
                                                         setChooseExistingSubIssue(false)
+                                                        setShowAddSubIssue(false)
                                                     }} style={{ borderRadius: 0 }}>Cancel</Button>
                                                 </div>
                                             </div>}
                                         </div>
-                                    </div>
+                                    </div> : <></>}
                                 </div>
                                 <div className="assignees mt-3">
                                     <span style={{ color: '#42526e', fontWeight: '500' }}>Assignees</span>

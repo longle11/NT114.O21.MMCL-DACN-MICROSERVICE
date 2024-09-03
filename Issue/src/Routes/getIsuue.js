@@ -36,7 +36,21 @@ router.get("/:issueId", currentUserMiddleware, async (req, res, next) => {
                     path: 'fix_version',
                     select: '-__v'
                 })
-
+                .populate({
+                    path: 'sub_issue_list',
+                    populate: {
+                        path: 'issue_type'
+                    }
+                })
+                .populate({
+                    path: 'sub_issue_list',
+                    populate: {
+                        path: 'parent'
+                    }
+                })
+                
+            console.log("issue lay ra ", issue);
+            
             return res.status(200).json({
                 message: "Successfully retrieve the issue",
                 data: issue
@@ -71,6 +85,12 @@ router.get("/issues/all", async (req, res) => {
             })
             .populate({
                 path: 'project_id'
+            })
+            .populate({
+                path: 'sub_issue_list',
+                populate: {
+                    path: 'issue_type'
+                }
             })
 
         return res.status(200).json({
@@ -165,6 +185,25 @@ router.post("/backlog/:projectId", async (req, res) => {
             .populate({
                 path: 'old_sprint'
             })
+            .populate({
+                path: 'sub_issue_list',
+                populate: {
+                    path: 'issue_type'
+                }
+            })
+            .populate({
+                path: 'sub_issue_list',
+                populate: {
+                    path: 'parent'
+                }
+            })
+            .populate({
+                path: 'sub_issue_list',
+                populate: {
+                    path: 'creator'
+                }
+            })
+
         // console.log("get all issue in this project", getAllIssuesInProject);
         
         if (getAllIssuesInProject.length !== 0) {

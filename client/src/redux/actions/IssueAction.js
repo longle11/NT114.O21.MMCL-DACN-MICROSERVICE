@@ -6,7 +6,7 @@ import domainName from '../../util/Config'
 import { delay } from "../../util/Delay"
 import { updateUserInfo } from "./UserAction"
 import { updateSprintAction } from "./CreateProjectAction"
-export const createIssue = (props, project_id, creator_history, sprintId) => {
+export const createIssue = (props, project_id, creator_history, sprintId, issueParentId) => {
     return async dispatch => {
         try {
             const res = await Axios.post(`${domainName}/api/issue/create`, props)
@@ -25,6 +25,9 @@ export const createIssue = (props, project_id, creator_history, sprintId) => {
                     old_status: null,
                     new_status: null
                 }))
+                if(issueParentId !== null) {    //this case to insert sub-issue into sub_issue_list of issue parent
+                    dispatch(updateInfoIssue(issueParentId, project_id, { sub_issue_id: res.data.data._id }, null, `WD-${res.data.data.ordinal_number}`, creator_history, "added", "sub issue"))
+                }   
 
                 if (sprintId !== null) {
                     //add this new issue to sprint

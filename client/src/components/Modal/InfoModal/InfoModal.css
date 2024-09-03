@@ -155,6 +155,16 @@ input.infomodal-edit-input-ant.ant-input:focus {
     border: 1px solid #388bff !important;
 }
 
+div.subIssue:hover {
+    background-color: #091e420f !important;
+}
+span.sub-issue-summary:hover > a {
+    display: block !important;
+}
+
+span.sub-issue-summary:hover > a:hover {
+    background-color: gray !important;
+}
 /* input.infomodal-edit-input-ant.ant-input:focus > .infomodal-edit-select-ant.ant-select {
     border: 2px solid #dddd !important;
     height: max-content !important;
