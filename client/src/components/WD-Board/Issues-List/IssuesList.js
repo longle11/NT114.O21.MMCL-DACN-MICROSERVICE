@@ -258,7 +258,7 @@ export default function IssuesList() {
   }
   const renderValueColumns = (text, record, index, key) => {
     if (key === 'issue_status') {
-      return iTagForIssueTypes(record?.issue_status)
+      return <div>{iTagForIssueTypes(record?.issue_status)}</div>
     }
     else if (key === 'summary') {
       return <span>{record?.summary}</span>
@@ -306,13 +306,16 @@ export default function IssuesList() {
       }
     }
     else if (key === 'timeSpent') {
-      return <span>{record.timeSpent}</span>
+      return <span>{record.timeSpent ? convertMinuteToFormat(record.timeSpent) : "None"}</span>
     }
     else if (key === 'timeRemaining') {
-      return <span>{record.timeRemaining}</span>
+      return <span>{Number.isInteger(record?.timeSpent) && Number.isInteger(record.timeOriginalEstimate) ? convertMinuteToFormat(record.timeOriginalEstimate - record?.timeSpent) : "None"}</span>
     }
     else if (key === 'current_sprint') {
-      return <Tag>{record.current_sprint?.sprint_name}</Tag>
+      if (record?.current_sprint) {
+        return <Tag>{record.current_sprint?.sprint_name}</Tag>
+      }
+      return null
     }
     else if (key === 'old_sprint') {
       return <div className='d-flex'>
@@ -328,9 +331,22 @@ export default function IssuesList() {
 
   const renderColumns = () => {
     const data = projectInfo?.table_issues_list?.filter(col => col.isShowed).map(col => {
+      var align = "left"
       var allowEdit = false
       if (["issue_type", "issue_priority", "summary", "issue_status", "assignees", "current_sprint", "epic_link", "fix_version", "story_point", "timeOriginalEstimate", "timeRemaining"].includes(col.key)) {
         allowEdit = true
+      }
+
+      var setWidth = 150
+      if (["summary", "assignees", "issue_type"].includes(col.key)) {
+        setWidth = 'max-content'
+      }
+      if (["issue_status", "issue_priority", "story_point"].includes(col.key)) {
+        setWidth = 80
+      }
+
+      if(["issue_status", "issue_priority", "story_point", "fix_version", "epic_link", "createAt", "updateAt"].includes(col.key)) {
+        align = "center"
       }
       return {
         title: col.title,
@@ -338,7 +354,8 @@ export default function IssuesList() {
         key: col.key,
         editable: allowEdit,
         index: col.til_index,
-        width: 150,
+        width: setWidth,
+        align: align,
         filters: [
           {
             text: 'Sort A -> Z',

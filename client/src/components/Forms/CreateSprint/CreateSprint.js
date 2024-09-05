@@ -8,6 +8,8 @@ import { submit_edit_form_action } from '../../../redux/actions/DrawerAction';
 import { updateSprintAction } from '../../../redux/actions/CreateProjectAction';
 const { TextArea } = Input;
 function CreateSprint(props) {
+    console.log("props ", props);
+    
     const durationOptions = [
         {
             label: '1 week',
@@ -33,7 +35,7 @@ function CreateSprint(props) {
     const dispatch = useDispatch()
     useEffect(() => {
         dispatch(submit_edit_form_action(handleSubmit))
-    })
+    }, [])
 
     const { handleChange, handleSubmit, setFieldValue } = props
     const [startDate, setStartDate] = useState(props.currentSprint.start_date)
@@ -87,11 +89,10 @@ function CreateSprint(props) {
                 <DatePicker
                     showTime
                     name="start_date"
-                    value={dayjs(startDate)}
-                    defaultValue={dayjs(startDate ? startDate : dayjs(new Date()).format("YYYY-MM-DD hh:mm:ss"))}
+                    defaultValue={startDate ? dayjs(startDate) : dayjs(new Date())}
                     onChange={(value, dateString) => {
                         setStartDate(dateString)
-                        setFieldValue('start_date', dateString)
+                        setFieldValue('start_date', dayjs(dateString).format("YYYY-MM-DD hh:mm:ss"))
                         handleDateCustom(dateString, duration)
                     }}
                 />
@@ -101,8 +102,7 @@ function CreateSprint(props) {
                 {duration === 5 ? <DatePicker
                     showTime
                     name="end_date"
-                    defaultValue={dayjs(endDate !== null ? endDate : dayjs(new Date()).format("YYYY-MM-DD hh:mm:ss"))}
-                    value={dayjs(endDate)}
+                    defaultValue={endDate !== null ? dayjs(endDate) : dayjs(new Date())}
                     onChange={(value, dateString) => {
                         setEndDate(dateString)
                         setFieldValue('end_date', dateString)
@@ -124,8 +124,8 @@ const handleSubmitUpdateSprint = withFormik({
         return {
             project_id: templateSprint.project_id,
             sprint_name: templateSprint.sprint_name,
-            start_date: templateSprint.start_date ? templateSprint.start_date : dayjs(new Date()).format("YYYY-MM-DD hh:mm:ss"),
-            end_date: templateSprint.end_date !== null ? templateSprint.end_date : dayjs(new Date()).format("YYYY-MM-DD hh:mm:ss"),
+            start_date: templateSprint.start_date ? templateSprint.start_date : dayjs(new Date()),
+            end_date: templateSprint.end_date !== null ? templateSprint.end_date : dayjs(new Date()),
             sprint_goal: templateSprint.sprint_goal,
         }
     },

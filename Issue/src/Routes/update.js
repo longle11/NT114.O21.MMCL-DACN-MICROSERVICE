@@ -10,10 +10,7 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
     try {
 
         console.log("Du lieu duoc cap nhat ", req.body);
-        
         if (req.currentUser) {
-            console.log("body ", req.body);
-            
             const { id } = req.params
             const issueIds = await issueModel.find({})
             const ids = issueIds.map(issue => issue._id.toString());
@@ -21,11 +18,13 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                 throw new BadRequestError("Issue not found")
             } else {
                 let currentIssue = await issueModel.findById(id)
+                console.log("issue luc dau ", currentIssue);
+                
                 //kiem tra xem assignees co duoc them vao hay khong
                 let listAssignees = currentIssue.assignees
                 if (req.body?.assignees != null) {
                     //check whether this user is already in this issue
-                    if(listAssignees.includes(req.body.assignees)) {
+                    if (listAssignees.includes(req.body.assignees)) {
                         throw new BadRequestError('User is already belonged to this project')
                     }
                     listAssignees = listAssignees.concat(req.body.assignees)
@@ -36,24 +35,29 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                 var timeSpent = currentIssue.timeSpent
 
                 if (req.body?.timeSpent) {
+                    console.log("vao ham cong nhe ", req.body?.timeSpent);
+                    console.log("Thời gian hiện tại đã ghi nhận ", timeSpent)
                     timeSpent += req.body.timeSpent
+
+                    console.log("gia tri sau khi cong ", timeSpent);
+                    
                     req.body.timeSpent = timeSpent
                 }
 
                 //add sprint has been compeleted into the old sprint
-                if(req.body?.old_sprint) {
+                if (req.body?.old_sprint) {
                     currentIssue.old_sprint.push(req.body.old_sprint)
 
                     req.body.old_sprint = [...currentIssue.old_sprint]
                 }
 
-                if(req.body?.sub_issue_id !== null) {
-                    if(!currentIssue.sub_issue_list.map(issue => issue.toString()).includes(req.body.sub_issue_id)) {    //if sub issue does not exist, add it into list
+                if (req.body?.sub_issue_id) {
+                    if (!currentIssue.sub_issue_list.map(issue => issue?.toString()).includes(req.body.sub_issue_id)) {    //if sub issue does not exist, add it into list
                         currentIssue.sub_issue_list.push(req.body.sub_issue_id)
                         req.body.sub_issue_list = [...currentIssue.sub_issue_list]
                     } else {
                         const index = currentIssue.sub_issue_list.findIndex(issue => issue.toString() === req.body.sub_issue_id)
-                        if(index !== -1) {
+                        if (index !== -1) {
                             currentIssue.sub_issue_list.splice(index, 1)
                             req.body.sub_issue_list = [...currentIssue.sub_issue_list]
                         }
@@ -77,10 +81,12 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                     ...req.body
                 }
 
+                console.log("Issue sau khi cap nhat ", copyIssue);
+                
+
                 // public su kien toi projectmanagement service
                 await issuePublisher(copyIssue, 'issue:updated')
-                console.log("vao duoc tan ben trong nay roi", currentIssue);
-                
+
                 return res.status(200).json({
                     message: "Successfully updated this issue",
                     data: currentIssue

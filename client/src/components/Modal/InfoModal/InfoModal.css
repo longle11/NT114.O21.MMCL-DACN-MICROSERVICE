@@ -2,10 +2,6 @@
     max-width: 1000px !important;
 }
 
-.modal-info .modal-content {
-    padding: 20px 24px;
-}
-
 .modal-info .modal-content .modal-header {
     padding: 1rem 2rem;
     border-bottom: none;

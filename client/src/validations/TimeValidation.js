@@ -1,4 +1,4 @@
-import dayjs from "dayjs"
+import { DateTime } from "luxon"
 
 const regexs = [
     /^(\d+)w([1-6])d([1-9]|1\d|2[0-4])h([1-9]|[1-5]\d|)m$/, //_w_d_h_m
@@ -181,8 +181,6 @@ export const convertMinuteToFormat = (time) => {
 }
 
 export const calculateTaskRemainingTime = (currentDate, endDate) => {
-    console.log("currentDate ", currentDate, " endDate ", endDate);
-    
     if (endDate !== null) {
         const diff = endDate.diff(currentDate, 'day', true);
         const days = Math.floor(diff);
@@ -191,4 +189,23 @@ export const calculateTaskRemainingTime = (currentDate, endDate) => {
         return `${days} days ${hours} hours`
     }
     return null
+}
+
+export const convertTime = (commentTime) => {
+    const diff = DateTime.now().diff(DateTime.fromISO(commentTime), ['minutes', 'hours', 'days', 'months']).toObject();
+
+    if (diff.hours >= 1) {
+        return `${Math.round(diff.hours)} hour ago`
+    }
+    if (diff.minutes >= 1) {
+        return `${Math.round(diff.minutes)} minutes ago`
+    }
+    if (diff.days >= 1) {
+        return `${Math.round(diff.days)} days ago`
+    }
+    if (diff.months >= 1) {
+        return `${Math.round(diff.months)} months ago`
+    } else {
+        return 'a few second ago'
+    }
 }

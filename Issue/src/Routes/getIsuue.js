@@ -2,7 +2,6 @@ const express = require("express")
 const currentUserMiddleware = require("../Middlewares/currentUser-Middleware")
 const issueModel = require('../models/issueModel')
 const BadRequestError = require("../Errors/Bad-Request-Error")
-const userModel = require("../models/userModel")
 const router = express.Router()
 
 router.get("/:issueId", currentUserMiddleware, async (req, res, next) => {
@@ -84,6 +83,10 @@ router.get("/issues/all", async (req, res) => {
                 path: 'issue_type'
             })
             .populate({
+                path: 'fix_version',
+                select: '-__v'
+            })
+            .populate({
                 path: 'project_id'
             })
             .populate({
@@ -92,7 +95,6 @@ router.get("/issues/all", async (req, res) => {
                     path: 'issue_type'
                 }
             })
-
         return res.status(200).json({
             message: "Successfully retrieve the issue list",
             data: issueList
@@ -203,6 +205,7 @@ router.post("/backlog/:projectId", async (req, res) => {
                     path: 'creator'
                 }
             })
+        
 
         // console.log("get all issue in this project", getAllIssuesInProject);
         

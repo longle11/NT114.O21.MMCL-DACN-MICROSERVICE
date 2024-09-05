@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useDispatch } from 'react-redux'
-import { getInfoIssue, updateInfoIssue } from '../../redux/actions/IssueAction'
+import { updateInfoIssue } from '../../redux/actions/IssueAction'
 import { updateUserInfo } from '../../redux/actions/UserAction'
 import { iTagForIssueTypes, iTagForPriorities, priorityTypeOptions } from '../../util/CommonFeatures'
 import { Avatar, Button, Divider, Input, InputNumber, Select, Space, Tag, Tooltip } from 'antd'
@@ -9,6 +9,8 @@ import { UserOutlined } from '@ant-design/icons';
 import { NavLink, useParams } from 'react-router-dom'
 import './IssueTag.css'
 import { LightenDarkenColor } from '../../util/HandleColor'
+import { displayComponentInModalInfo } from '../../redux/actions/ModalAction'
+import InfoModal from '../../components/Modal/InfoModal/InfoModal'
 export default function IssueTag(props) {
     const dispatch = useDispatch()
     const [editSummary, setEditSummary] = useState({
@@ -514,15 +516,12 @@ export default function IssueTag(props) {
     }
     return (
         <div
-            data-toggle="modal"
-            data-target="#infoModal"
             ref={provided.innerRef}
             {...provided.dragHandleProps}
             {...provided.draggableProps}
             key={`${issue._id.toString()}`}
-            onClick={() => {
-                dispatch(getInfoIssue(issue._id.toString()))
-
+            onClick={() => { 
+                dispatch(displayComponentInModalInfo(<InfoModal issueInfo={issue} displayNumberCharacterInSummarySubIssue={10}/>))
                 //dispatch event to update viewed issue in auth service
                 dispatch(updateUserInfo(userInfo?.id, { viewed_issue: issue._id }))
             }}
@@ -533,7 +532,7 @@ export default function IssueTag(props) {
                     {renderSummary()}
                 </div>
                 <div className='attach-issue d-flex align-items-center'>
-                    {issue?.sub_issue_list?.length > 0 ? <Tooltip title={`${issue?.sub_issue_list?.filter(issue => issue?.issue_type?._id === processList[processList.length - 1]).length} of ${issue?.sub_issue_list?.length} child issues completed`}><i style={{ padding: 5 }} className='fa-solid fa-sitemap icon-options mr-3'></i></Tooltip> : <></>}
+                    {issue?.sub_issue_list?.length > 0 ? <Tooltip title={`${issue?.sub_issue_list?.filter(issue => issue?.issue_type?._id === processList[processList.length - 1]._id).length} of ${issue?.sub_issue_list?.length} child issues completed`}><i style={{ padding: 5 }} className='fa-solid fa-sitemap icon-options mr-3'></i></Tooltip> : <></>}
                     {/* specify which components does issue belong to? */}
                     {renderFixVersion()}
                     {/* specify which epics does issue belong to? */}

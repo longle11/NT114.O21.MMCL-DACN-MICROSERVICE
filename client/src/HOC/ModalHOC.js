@@ -1,5 +1,5 @@
 import { Modal } from 'antd'
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { displayComponentInModal, openModal } from '../redux/actions/ModalAction'
 
@@ -18,6 +18,7 @@ export default function ModalHOC() {
             open={visible}
             onOk={handleOk}
             onCancel={handleCancel}
+            centered
         >
             {component}
         </Modal>

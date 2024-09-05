@@ -1,6 +1,8 @@
 import { CLOSE_DRAWER, GET_CATEGORY_TO_EDIT_DRAWER, OPEN_DRAWER, OPEN_FORM_EDIT_DRAWER, SUBMIT_FORM_EDIT_DRAWER } from "../constants/constant"
 
 export const drawerAction = (status) => {
+    console.log("drawerAction ", status);
+    
     return dispatch => {
         if(status) {
             dispatch({

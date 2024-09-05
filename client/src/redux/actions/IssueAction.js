@@ -25,9 +25,11 @@ export const createIssue = (props, project_id, creator_history, sprintId, issueP
                     old_status: null,
                     new_status: null
                 }))
-                if(issueParentId !== null) {    //this case to insert sub-issue into sub_issue_list of issue parent
+
+
+                if (issueParentId !== null) {    //this case to insert sub-issue into sub_issue_list of issue parent
                     dispatch(updateInfoIssue(issueParentId, project_id, { sub_issue_id: res.data.data._id }, null, `WD-${res.data.data.ordinal_number}`, creator_history, "added", "sub issue"))
-                }   
+                }
 
                 if (sprintId !== null) {
                     //add this new issue to sprint
@@ -108,30 +110,34 @@ export const updateInfoIssue = (issueId, projectId, props, old_status, new_statu
     return async dispatch => {
         try {
             const res = await Axios.put(`${domainName}/api/issue/update/${issueId}`, { ...props, updateAt: Date.now() })
-            // //tien hanh tao history cho issue
-            dispatch(createIssueHistory({
-                issue_id: res.data.data._id.toString(),
-                createBy: creator_history,
-                type_history: type_history,
-                name_status: name_status,
-                old_status: old_status,
-                new_status: new_status
-            }))
+            if (res.status === 200) {
+                console.log("res tra ve tu updateInfoIssue " , res);
+                
+                // //tien hanh tao history cho issue
+                dispatch(createIssueHistory({
+                    issue_id: res.data.data._id.toString(),
+                    createBy: creator_history,
+                    type_history: type_history,
+                    name_status: name_status,
+                    old_status: old_status,
+                    new_status: new_status
+                }))
 
-            const backlogList = await Axios.post(`${domainName}/api/issue/backlog/${projectId}`)
+                const backlogList = await Axios.post(`${domainName}/api/issue/backlog/${projectId}`)
 
-            dispatch({
-                type: GET_ISSUES_BACKLOG,
-                issuesBacklog: backlogList.data.data
-            })
+                dispatch({
+                    type: GET_ISSUES_BACKLOG,
+                    issuesBacklog: backlogList.data.data
+                })
 
-            //lấy ra danh sách issue sau khi thay đổi
-            dispatch(getInfoIssue(issueId))
+                //lấy ra danh sách issue sau khi thay đổi
+                dispatch(getInfoIssue(issueId))
 
-            //cap nhat lai danh sach project
-            dispatch(GetProjectAction(projectId, ""))
+                //cap nhat lai danh sach project
+                dispatch(GetProjectAction(projectId, null, null))
 
-            showNotificationWithIcon("success", "Cập nhật", "Successfully updated issue")
+                showNotificationWithIcon("success", "Cập nhật", "Successfully updated issue")
+            }
         } catch (error) {
             console.log(error);
 

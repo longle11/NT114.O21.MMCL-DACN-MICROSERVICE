@@ -1,3 +1,7 @@
 td.ant-table-cell {
     padding: 0 15px
 }
+
+.editable-cell-value-wrap {
+    padding: 0 !important
+}

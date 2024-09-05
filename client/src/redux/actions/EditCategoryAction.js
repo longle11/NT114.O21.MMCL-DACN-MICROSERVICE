@@ -1,7 +1,6 @@
 import Axios from "axios"
 import { GET_CATEGORY_TO_EDIT_DRAWER, GET_ITEM_CATEGORY_DRAWER, USER_LOGGED_IN } from "../constants/constant"
 import { ListProjectAction } from "./ListProjectAction"
-import { drawerAction } from "./DrawerAction"
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
 import domainName from '../../util/Config'
 export const getCategory = (props) => {

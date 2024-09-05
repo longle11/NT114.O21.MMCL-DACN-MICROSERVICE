@@ -17,10 +17,8 @@ export default (state = initialState, action) => {
 
         case OPEN_DRAWER:
             return { ...state, visible: true }
-
         case CLOSE_DRAWER:
             return { ...state, visible: false }
-
         case OPEN_FORM_EDIT_DRAWER:
             return { ...state, visible: true, component: action.component, textButton: action.textButton, width: action.width, padding: action.padding }
         case SUBMIT_FORM_EDIT_DRAWER:

@@ -3,7 +3,7 @@ import DrawerHOC from '../../HOC/DrawerHOC'
 import { NavLink, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Avatar, Breadcrumb, Button, Input, Modal, Select, Tooltip } from 'antd';
-import { createIssue, getInfoIssue, updateInfoIssue } from '../../redux/actions/IssueAction';
+import { createIssue, updateInfoIssue } from '../../redux/actions/IssueAction';
 import { CreateProcessACtion, GetProcessListAction, GetProjectAction, GetSprintAction, GetSprintListAction } from '../../redux/actions/ListProjectAction';
 import { updateProjectAction, updateSprintAction } from '../../redux/actions/CreateProjectAction';
 import { issueTypeWithoutOptions, iTagForIssueTypes, iTagForPriorities } from '../../util/CommonFeatures';
@@ -13,10 +13,11 @@ import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { delay } from '../../util/Delay';
 import './Dashboard'
 import { DISPLAY_LOADING, HIDE_LOADING } from '../../redux/constants/constant';
-import { displayComponentInModal } from '../../redux/actions/ModalAction';
+import { displayComponentInModal, displayComponentInModalInfo } from '../../redux/actions/ModalAction';
 import CompleteSprintModal from '../Modal/CompleteSprintModal/CompleteSprintModal';
 import { calculateTaskRemainingTime } from '../../validations/TimeValidation';
 import MemberProject from '../../child-components/Member-Project/MemberProject';
+import InfoModal from '../Modal/InfoModal/InfoModal';
 export default function Dashboard() {
     const dispatch = useDispatch()
 
@@ -158,13 +159,11 @@ export default function Dashboard() {
                     return <div
                         key={issue._id}
                         className="list-group-item"
-                        data-toggle="modal"
-                        data-target="#infoModal"
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         onClick={() => {
-                            dispatch(getInfoIssue(issue._id))
+                            dispatch(displayComponentInModalInfo(<InfoModal issueInfo={issue} userInfo={userInfo}/>))
                         }}
                         onKeyDown={() => { }}>
                         <div style={{ cursor: 'pointer' }}>
@@ -173,8 +172,8 @@ export default function Dashboard() {
                             </p>
                             <div className="block" style={{ display: 'flex' }}>
                                 <div className="block-left">
-                                    {iTagForIssueTypes(issue.issue_status)}
-                                    {iTagForPriorities(issue.issue_priority)}
+                                    {iTagForIssueTypes(issue.issue_status, null, null)}
+                                    {iTagForPriorities(issue.issue_priority, null, null)}
                                 </div>
                                 <div className="block-right" style={{ display: 'flex', alignItems: 'center' }}>
                                     <div className="avatar-group">
@@ -221,7 +220,7 @@ export default function Dashboard() {
                         {summary.trim() === "" ? <Button disabled style={{ border: 'none', borderRadius: 0 }}>Create</Button> : <Button onClick={(e) => {
                             e.stopPropagation()
                             e.preventDefault()
-                            dispatch(createIssue({ summary: summary, issue_status: issueStatus, issue_type: processId, current_sprint: sprintId, project_id: id, creator: userInfo.id }, id, userInfo.id, sprintId))
+                            dispatch(createIssue({ summary: summary, issue_status: issueStatus, issue_type: processId, current_sprint: sprintId, project_id: id, creator: userInfo.id }, id, userInfo.id, sprintId, null))
                             setOpenCreatingIssue('')
                             setIssueStatus(0)
                             setSummary('')
@@ -438,7 +437,7 @@ export default function Dashboard() {
                                             } else {
                                                 showNotificationWithIcon('error', '', 'Created failed, please entering again')
                                             }
-                                        }} type="primary"><i class="fa fa-check"></i></Button>
+                                        }} type="primary"><i className="fa fa-check"></i></Button>
                                         <Button onClick={() => {
                                             setOpenAddProcess(false)
                                             setValueProcess('')

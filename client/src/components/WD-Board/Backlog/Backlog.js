@@ -1,4 +1,4 @@
-import { Button, Tag, Avatar, Col, Switch, Checkbox, Row, Input, Select, Tooltip, Modal, Breadcrumb, Progress } from 'antd'
+import { Button, Avatar, Col, Switch, Checkbox, Row, Input, Select, Tooltip, Modal, Breadcrumb } from 'antd'
 import Search from 'antd/es/input/Search'
 import React, { useEffect, useState } from 'react'
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
@@ -296,7 +296,7 @@ export default function Backlog() {
             const getIndexVersion = versionList.findIndex(version => version._id.toString() === getVersionId)
 
             if (getIndexVersion !== -1) {
-                const getCurrentIssue = issuesBacklog.filter(issue => issue.current_sprint === null)[source.index]
+                const getCurrentIssue = issuesBacklog.filter(issue => issue.current_sprint === null && !issue.isCompleted && issue.issue_status !== 4)[source.index]
 
                 const getVersionIdInIssue = getCurrentIssue.fix_version?._id.toString()
                 const getVersionNameInIssue = getCurrentIssue.fix_version !== null ? getCurrentIssue.fix_version.version_name : "None"
@@ -308,9 +308,11 @@ export default function Backlog() {
         } else if (dest.droppableId.includes("version") && source.droppableId.includes("sprint")) {
             const getSprintIdSource = source.droppableId.substring(source.droppableId.indexOf('-') + 1)
             const getVersionId = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
+
+
             const getIndexSprintSource = sprintList.findIndex(sprint => sprint._id.toString() === getSprintIdSource)
 
-            const getIndexVersion = sprintList.findIndex(sprint => sprint._id.toString() === getVersionId)
+            const getIndexVersion = versionList.findIndex(version => version._id.toString() === getVersionId)
 
             if (getIndexSprintSource !== -1 && getIndexVersion !== -1) {
                 const getCurrentIssue = sprintList[getIndexSprintSource].issue_list[source.index]
@@ -373,7 +375,6 @@ export default function Backlog() {
         const index = sprintList?.findIndex(sprint => sprint._id === showCollapseSprint.curentSprintClicked)
         if (index !== -1) {
             if (sprintList[index]?.issue_list?.length !== 0) {
-                console.log("vao trang nay voi sprint voi index khac -1", sprintList[index]);
                 return <span className='mr-2' style={{ fontSize: 13 }}>{showCollapseSprint.sprintArrs.includes(sprintList[index]._id) ? <i className="fa fa-angle-down"></i> : <i className="fa fa-angle-right"></i>}</span>
             } else {
                 return <span className='mr-2' style={{ fontSize: 13 }}>{!showCollapseSprint.sprintArrs.includes(sprintList[index]._id) ? <i className="fa fa-angle-down"></i> : <i className="fa fa-angle-right"></i>}</span>
@@ -513,20 +514,24 @@ export default function Backlog() {
                                         <span>Plan a sprint by dragging the sprint footer down below some issues, or by dragging issues here</span>
                                     </div> : <div className='issues-list-sprint' style={{ maxHeight: '197px', overflowY: 'auto', height: 'fit-content', scrollbarWidth: 'none' }}>
                                         {sprint.issue_list !== null ? sprint.issue_list?.map((issue, index) => {
-                                            return <Draggable draggableId={`${issue._id.toString()}`} key={`${issue._id.toString()}`} index={index}>
-                                                {(provided) => {
-                                                    return <IssueTag
-                                                        issue={issue}
-                                                        sprintList={sprintList}
-                                                        userInfo={userInfo}
-                                                        provided={provided}
-                                                        projectInfo={projectInfo}
-                                                        processList={processList}
-                                                        epicList={epicList}
-                                                        versionList={versionList}
-                                                    />
-                                                }}
-                                            </Draggable>
+                                            const getIndexIssueInBacklog = issuesBacklog?.map(issueBacklog => issueBacklog._id.toString())?.findIndex(issueBacklog => issueBacklog === issue._id)
+                                            if (index !== -1) {
+                                                return <Draggable draggableId={`${issue._id.toString()}`} key={`${issue._id.toString()}`} index={index}>
+                                                    {(provided) => {
+                                                        return <IssueTag
+                                                            issue={issuesBacklog[getIndexIssueInBacklog]}
+                                                            sprintList={sprintList}
+                                                            userInfo={userInfo}
+                                                            provided={provided}
+                                                            projectInfo={projectInfo}
+                                                            processList={processList}
+                                                            epicList={epicList}
+                                                            versionList={versionList}
+                                                        />
+                                                    }}
+                                                </Draggable>
+                                            }
+                                            return null
                                         }) : <></>}
                                     </div>}
                                 </div>}
@@ -574,8 +579,8 @@ export default function Backlog() {
                                                     summary: tempSummary,
                                                     creator: userInfo.id,
                                                     issue_type: defaultForIssueType(issueStatus),
-                                                    current_sprint: currentSprint._id.toString()
-                                                }, id, userInfo.id, null))
+                                                    current_sprint: currentSprint._id
+                                                }, id, userInfo.id, currentSprint._id, null))
                                             }
                                         }
                                     }}
@@ -1071,7 +1076,7 @@ export default function Backlog() {
                                     aria-expanded="false"
                                     aria-controls="issueBacklogCollapse"
                                     style={{ margin: '10px', padding: '5px 10px' }}>
-                                    <h6 className='m-0'><span className='mr-2' style={{ fontSize: 13 }}>{showCollapseBacklog ? <i className="fa fa-angle-down"></i> : <i className="fa fa-angle-right"></i>}</span>Backlog <span style={{ fontSize: 14, fontWeight: 500 }}>{issuesBacklog?.filter(issue => issue.current_sprint === null).length} issues</span></h6>
+                                    <h6 className='m-0'><span className='mr-2' style={{ fontSize: 13 }}>{showCollapseBacklog ? <i className="fa fa-angle-down"></i> : <i className="fa fa-angle-right"></i>}</span>Backlog <span style={{ fontSize: 14, fontWeight: 500 }}>{issuesBacklog?.filter(issue => issue.current_sprint === null && issue.issue_status !== 4 && !issue.isCompleted).length} issues</span></h6>
                                     <div className='d-flex align-items-center'>
                                         <div className='mr-2'>
                                             {processList?.map((process) => {
@@ -1091,6 +1096,7 @@ export default function Backlog() {
                                             }))
                                         }}>Create sprint</button>
                                     </div>
+
                                 </div>
                                 <div id="issueBacklogCollapse" className={`collapse ${showCollapseBacklog ? "show" : ""}`}>
                                     {renderIssuesBacklog()}
@@ -1125,7 +1131,7 @@ export default function Backlog() {
                                                         creator: userInfo.id,
                                                         issue_type: defaultForIssueType(issueStatus),
                                                         current_sprint: null
-                                                    }, id, userInfo.id, null))
+                                                    }, id, userInfo.id, null, null))
                                                 }
                                             }
                                         }} onBlur={() => {
