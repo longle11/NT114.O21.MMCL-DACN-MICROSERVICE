@@ -21,7 +21,8 @@ router.get('/epic-list/:projectId', async (req, res, next) => {
             .populate({
                 path: 'issue_list'
             })
-
+        console.log("gia tri lay ra duoc getEpics ", );
+        
         if (getEpics.length > 0) {
             return res.status(200).json({
                 message: "Successfully get epic list",
@@ -30,6 +31,8 @@ router.get('/epic-list/:projectId', async (req, res, next) => {
         }
         throw new BadRequestError('Error')
     } catch (error) {
+        console.log("error /epic-list/:projectId", error);
+        
         next(error)
     }
 })
@@ -52,6 +55,7 @@ router.get('/version-list/:projectId', async (req, res, next) => {
 
         throw new BadRequestError("Failed to get version list")
     } catch (error) {
+        console.log("error /version-list/:projectId", error);
         next(error)
     }
 })

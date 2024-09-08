@@ -15,22 +15,10 @@ const userSchema = new mongoose.Schema({
     }
 })
 
-userSchema.virtual('issueRefCreator', {
-    ref: 'issues',
+userSchema.virtual('commentsRefCreator', {
+    ref: 'comments',
     foreignField: '_id',
     localField: 'creator'
-})
-
-userSchema.virtual('issueRefAssignees', {
-    ref: 'issues',
-    foreignField: '_id',
-    localField: 'assignees'
-})
-
-userSchema.virtual('issueRefAssignees', {
-    ref: 'issues',
-    foreignField: '_id',
-    localField: 'voted'
 })
 
 const userModel = new mongoose.model('users', userSchema)

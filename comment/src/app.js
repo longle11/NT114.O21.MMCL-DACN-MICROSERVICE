@@ -24,7 +24,8 @@ app.use(cors({
 app.use('/api/comments', require("./Routes/create"))
 app.use('/api/comments', require("./Routes/update"))
 app.use('/api/comments', require("./Routes/delete"))
-app.use(errorHandler)
+app.use('/api/comments', require("./Routes/get"))
 
+app.use(errorHandler)
 
 module.exports = app

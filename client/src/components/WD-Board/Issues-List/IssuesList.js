@@ -1,7 +1,7 @@
 import { Avatar, Breadcrumb, Button, Form, Input, Select, Space, Table, Tag } from 'antd'
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { issueTypeWithoutOptions, iTagForIssueTypes, iTagForPriorities, renderAssignees, renderEpicList, renderIssueType, renderSprintList, renderVersionList } from '../../../util/CommonFeatures'
+import { issueTypeOptions, issueTypeWithoutOptions, iTagForIssueTypes, iTagForPriorities, renderAssignees, renderEpicList, renderIssueType, renderSprintList, renderVersionList } from '../../../util/CommonFeatures'
 import { createIssue, getIssuesBacklog, updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
@@ -28,9 +28,6 @@ import { showNotificationWithIcon } from '../../../util/NotificationUtil'
 import { calculateTimeAfterSplitted, convertMinuteToFormat, validateOriginalTime } from '../../../validations/TimeValidation'
 import MemberProject from '../../../child-components/Member-Project/MemberProject'
 
-
-
-
 export default function IssuesList() {
   const listProject = useSelector(state => state.listProject.listProject)
   const issuesBacklog = useSelector(state => state.issue.issuesBacklog)
@@ -44,15 +41,31 @@ export default function IssuesList() {
   const { id } = useParams()
   const [openCreatingBacklog, setOpenCreatingBacklog] = useState(false)
   const [issueStatus, setIssueStatus] = useState(0)
-  const [summaryValue, setSummaryValue] = useState('')
+  const summaryValue = useRef('')
+  const addSubSummaryIssue = useRef('')
+  const [searchIssue, setSearchIssue] = useState({
+    versions: [],
+    epics: []
+  })
+
+  const handleSearchIssue = (versions, epics) => {
+    setSearchIssue({ ...searchIssue, versions: versions, epics: epics })
+  }
   useEffect(() => {
-    dispatch(getIssuesBacklog(id))
+    dispatch(getIssuesBacklog(id, null))
     dispatch(GetProcessListAction(id))
     dispatch(GetProjectAction(id, null, null))
     dispatch(getEpicList(id))
     dispatch(getVersionList(id))
     dispatch(GetSprintListAction(id))
   }, [])
+
+  useEffect(() => {
+    dispatch(getIssuesBacklog(id, {
+      epics: searchIssue.epics,
+      versions: searchIssue.versions
+    }))
+  }, [searchIssue])
   const EditableContext = React.createContext(null);
   const EditableRow = ({ index, ...props }) => {
     const [form] = Form.useForm();
@@ -257,75 +270,75 @@ export default function IssuesList() {
     }
   }
   const renderValueColumns = (text, record, index, key) => {
+    const style = { marginLeft: record?.parent && record?.issue_status === 4 ? 30 : 0 }
     if (key === 'issue_status') {
-      return <div>{iTagForIssueTypes(record?.issue_status)}</div>
+      return <div style={style}>{iTagForIssueTypes(record?.issue_status)}</div>
     }
     else if (key === 'summary') {
-      return <span>{record?.summary}</span>
+      return <span style={style}>{record?.summary}</span>
     }
     else if (key === 'issue_type') {
-      return <Tag color={record.issue_type?.tag_color}>{record.issue_type?.name_process}</Tag>
+      return <Tag style={style} color={record.issue_type?.tag_color}>{record.issue_type?.name_process}</Tag>
     }
     else if (key === 'issue_priority') {
-      return iTagForPriorities(record.issue_priority)
+      return <span style={style}>{iTagForPriorities(record.issue_priority)}</span>
     }
     else if (key === 'assignees') {
-      return <span className='d-flex align-items-center'><Avatar icon={<UserOutlined />} size={30} /> <span className='ml-2'>Unassignee</span></span>
+      return <span style={style} className='d-flex align-items-center'><Avatar icon={<UserOutlined />} size={30} /> <span className='ml-2'>Unassignee</span></span>
     }
     else if (key === 'creator') {
-      return <span><Avatar src={record.creator?.avatar} className='mr-2' />{record.creator?.username}</span>
+      return <span style={style}><Avatar src={record.creator?.avatar} className='mr-2' />{record.creator?.username}</span>
     }
     else if (key === 'createAt') {
-      return <Tag color="#87d068">{dayjs(record.createAt).format("DD/MM/YYYY")}</Tag>
+      return <Tag style={style} color="#87d068">{dayjs(record.createAt).format("DD/MM/YYYY")}</Tag>
     }
     else if (key === 'updateAt') {
-      return <Tag color="#2db7f5">{dayjs(record.updateAt).format("DD/MM/YYYY")}</Tag>
+      return <Tag style={style} color="#2db7f5">{dayjs(record.updateAt).format("DD/MM/YYYY")}</Tag>
     }
     else if (key === 'epic_link') {
-      return record.epic_link !== null ? <Tag color={record.epic_link?.tag_color}>{record.epic_link?.epic_name}</Tag> : null
+      return record.epic_link !== null ? <Tag style={style} color={record.epic_link?.tag_color}>{record.epic_link?.epic_name}</Tag> : null
     }
     else if (key === 'parent') {
       if (record.parent) {
-        return <div className='d-flex align-items-center'>
+        return <div style={style} className='d-flex align-items-center'>
           <span className='mr-1'>{iTagForIssueTypes(record.parent?.issue_status, null, null)}</span>
           <span className='mr-1'>WD-{record.parent?.ordinal_number}</span>
-          <span>{record.parent?.summary}</span>
         </div>
       }
       return null
     }
     else if (key === 'fix_version') {
       if (record.fix_version === null) return <></>
-      return <Tag color={record.fix_version?.tag_color}>{record.fix_version?.version_name}</Tag>
+      return <Tag style={style} color={record.fix_version?.tag_color}>{record.fix_version?.version_name}</Tag>
     }
     else if (key === 'timeOriginalEstimate') {
       if (record.timeOriginalEstimate !== 0) {
-        return <span>{convertMinuteToFormat(record.timeOriginalEstimate)}</span>
+        return <span style={style}>{convertMinuteToFormat(record.timeOriginalEstimate)}</span>
       } else {
         return <span>None</span>
       }
     }
     else if (key === 'timeSpent') {
-      return <span>{record.timeSpent ? convertMinuteToFormat(record.timeSpent) : "None"}</span>
+      return <span style={style}>{record.timeSpent ? convertMinuteToFormat(record.timeSpent) : "None"}</span>
     }
     else if (key === 'timeRemaining') {
-      return <span>{Number.isInteger(record?.timeSpent) && Number.isInteger(record.timeOriginalEstimate) ? convertMinuteToFormat(record.timeOriginalEstimate - record?.timeSpent) : "None"}</span>
+      return <span style={style}>{Number.isInteger(record?.timeSpent) && Number.isInteger(record.timeOriginalEstimate) ? convertMinuteToFormat(record.timeOriginalEstimate - record?.timeSpent) : "None"}</span>
     }
     else if (key === 'current_sprint') {
       if (record?.current_sprint) {
-        return <Tag>{record.current_sprint?.sprint_name}</Tag>
+        return <Tag style={style}>{record.current_sprint?.sprint_name}</Tag>
       }
       return null
     }
     else if (key === 'old_sprint') {
       return <div className='d-flex'>
         {record.old_sprint?.filter((sprint, index) => record.old_sprint.map(sprint => sprint._id).indexOf(sprint._id) === index).map((sprint) => {
-          return <Tag key={sprint._id}>{sprint.sprint_name}</Tag>
+          return <Tag style={style} key={sprint._id}>{sprint.sprint_name}</Tag>
         })}
       </div>
     }
     else if (key === 'story_point') {
-      return <span>{record.story_point}</span>
+      return <span style={style}>{record.story_point}</span>
     }
   }
 
@@ -338,14 +351,14 @@ export default function IssuesList() {
       }
 
       var setWidth = 150
-      if (["summary", "assignees", "issue_type"].includes(col.key)) {
+      if (["summary", "assignees", "issue_type", "creator"].includes(col.key)) {
         setWidth = 'max-content'
       }
       if (["issue_status", "issue_priority", "story_point"].includes(col.key)) {
-        setWidth = 80
+        setWidth = 100
       }
 
-      if(["issue_status", "issue_priority", "story_point", "fix_version", "epic_link", "createAt", "updateAt"].includes(col.key)) {
+      if (["issue_status", "issue_priority", "story_point", "fix_version", "epic_link", "createAt", "updateAt"].includes(col.key)) {
         align = "center"
       }
       return {
@@ -378,7 +391,7 @@ export default function IssuesList() {
 
 
     if (data?.length !== 0) {
-      return data?.map((column) => ({
+      const newData = data?.map((column) => ({
         ...column,
         key: `${column.index}`,
         onHeaderCell: () => ({
@@ -392,6 +405,8 @@ export default function IssuesList() {
           record
         })
       }))
+      newData?.splice(0, 0, Table.EXPAND_COLUMN)
+      return newData
     }
     return null
   }
@@ -472,7 +487,7 @@ export default function IssuesList() {
         <span className='btn btn-light' style={{ fontSize: 13 }}><i className="fa-duotone fa-solid fa-comments"></i> Give feedback</span>
       </div>
       <div className='d-flex align-items-center mb-4'>
-        <MemberProject projectInfo={projectInfo} id={id} userInfo={userInfo} />
+        <MemberProject typeInterface="issue list" projectInfo={projectInfo} id={id} userInfo={userInfo} allIssues={issuesBacklog} epicList={epicList} versionList={versionList} handleSearchIssue={handleSearchIssue} searchIssue={searchIssue} />
       </div>
       <div className='issues-info' style={{ height: '70vh', overflowY: 'auto', scrollbarWidth: 'none' }}>
         {(renderColumns() !== null || renderColumns() !== undefined) && renderColumns()?.length > 0 ? <div className='d-flex'>
@@ -489,6 +504,7 @@ export default function IssuesList() {
                   columns={renderColumns()}
                   dataSource={renderDataSource()}
                   bordered
+                  className='table-issue-list'
                   size='middle'
                   style={{ width: '100%' }}
                   scroll={{
@@ -497,48 +513,75 @@ export default function IssuesList() {
                   }}
                   components={components}
                   rowKey="key"
+                  expandable={{
+                    expandedRowRender: (record) => (
+                      <div style={{ width: '80%', backgroundColor: '#ffff', padding: '5px 20px', border: '2px solid #4BADE8' }}>
+                        <div style={{ width: '100%' }} className='d-flex justify-content-between'>
+                          <div className='d-flex align-items-center' style={{ marginLeft: 100, width: '100%' }}>
+                            <span>{iTagForIssueTypes(0, 'ml-1w99999--', 16)}</span>
+                            <Input onChange={(e) => {
+                              addSubSummaryIssue.current = e.target.value
+                              console.log('addSubSummaryIssue.current ', addSubSummaryIssue.current);
+                            }} className='edit-input-issue-list' style={{ border: 'none', borderRadius: 0, width: '100%' }} placeholder='What needs to be done?' />
+                          </div>
+                          <div className='d-flex align-items-center'>
+                            <Select className='mr-2' defaultValue={issueTypeOptions[4]?.value} options={issueTypeOptions} disabled />
+                            <Button type='primary' onClick={() => {
+                              if (addSubSummaryIssue.current?.trim() !== "") {
+                                dispatch(createIssue({ summary: addSubSummaryIssue.current, creator: userInfo.id, issue_status: 4, issue_priority: 2, issue_type: processList[0]._id, parent: record?._id, project_id: id }, id, userInfo.id, record?.current_sprint?._id, record?._id))
+                              } else {
+                                showNotificationWithIcon('error', '', 'Summary can\'t not left blank')
+                              }
+                              addSubSummaryIssue.current = ""
+                            }}><span style={{ color: "#dddd", fontWeight: 600 }}>Create <i style={{ transform: 'rotate(180deg)' }} className="fa-solid fa-share-from-square"></i></span></Button>
+                          </div>
+                        </div>
+                      </div>
+                    ),
+                    rowExpandable: (record) => !record.parent && record.issue_status !== 4,
+                  }}
                   footer={() => {
                     return !openCreatingBacklog ? <button className='btn btn-transparent btn-create-issue' style={{ fontSize: '14px', color: '#ddd' }} onClick={() => {
                       setOpenCreatingBacklog(true)
                     }}>
                       <i className="fa-regular fa-plus mr-2"></i>
                       Create issue
-                    </button> : <div className='d-flex'>
+                    </button> : <div className='d-flex' style={{ border: '2px solid #4BADE8' }}>
                       <Select style={{ border: 'none', borderRadius: 0 }}
                         defaultValue={issueTypeWithoutOptions[0].value}
                         onChange={(value, option) => {
                           setIssueStatus(value)
                         }}
-                        options={issueTypeWithoutOptions}
+                        className='edit-select-issue-list'
+                        options={issueTypeWithoutOptions.filter(status => [0, 1, 2].includes(parseInt(status.value)))}
                       />
                       <Input
                         placeholder="What need to be done?"
                         onChange={(e) => {
-                          if (e.target.value.trim() !== "") {
-                            setSummaryValue(e.target.value)
-                          }
+                          summaryValue.current = e.target.value
                         }}
-                        value={summaryValue}
-                        defaultValue=""
+                        defaultValue={summaryValue.current}
                         onBlur={() => {
                           setOpenCreatingBacklog(false)
-                          setSummaryValue('')
+                          summaryValue.current = ""
                         }}
+                        className='edit-input-issue-list'
                         style={{ border: 'none', borderRadius: 0 }}
                         onKeyUp={((e) => {
                           if (e.key === "Enter") {
-                            const tempSummary = summaryValue
+                            if (summaryValue.current.trim() !== "") {
+                              dispatch(createIssue({
+                                project_id: id,
+                                issue_status: issueStatus,
+                                summary: summaryValue.current,
+                                creator: userInfo.id,
+                                issue_type: processList.length === 0 ? null : processList[0]._id,
+                                current_sprint: null
+                              }, id, userInfo.id, null))
+                              //set default is 0 which means story
+                            }
                             setIssueStatus(0)
-                            setSummaryValue('')
-                            dispatch(createIssue({
-                              project_id: id,
-                              issue_status: issueStatus,
-                              summary: tempSummary,
-                              creator: userInfo.id,
-                              issue_type: processList.length === 0 ? null : processList[0]._id,
-                              current_sprint: null
-                            }, id, userInfo.id, null))
-                            //set default is 0 which means story
+                            summaryValue.current = ""
                           }
                         })} />
                     </div>

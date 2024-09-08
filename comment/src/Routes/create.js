@@ -6,7 +6,6 @@ const UnauthorizedError = require('../Errors/UnAuthorized-Error')
 const router = express.Router()
 const { check, validationResult } = require('express-validator');
 
-
 router.post("/create", currentUserMiddleware, [
     check('issueId')
         .custom(id => id.toString().length > 5).withMessage('issueId is invalid ObjectId'),
@@ -23,9 +22,9 @@ router.post("/create", currentUserMiddleware, [
         const { issueId, creator, content } = req.body
         const comment = new commentModel({ issueId, creator, content });
         const result = await comment.save();
-        //public toi issue service
-        commentPublisher("comment:created", result)
-        res.status(201).json({
+        console.log("gia tri es ", result);
+        
+        return res.status(201).json({
             message: "Successfully created comment",
             data: result
         })

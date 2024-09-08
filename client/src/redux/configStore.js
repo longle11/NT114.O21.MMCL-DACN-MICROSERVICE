@@ -8,6 +8,7 @@ import UserReducer from './reducers/UserReducer'
 import IssueReducer from './reducers/IssueReducer'
 import LoadingReducer from './reducers/LoadingReducer'
 import ModalReducer from './reducers/ModalReducer'
+import CommentReducer from './reducers/CommentReducer'
 const rootReducer = combineReducers({
     //reducer khai báo ở đây
     categories: CategoryReducer,
@@ -17,7 +18,8 @@ const rootReducer = combineReducers({
     user: UserReducer,
     issue: IssueReducer,
     loading: LoadingReducer,
-    isOpenModal: ModalReducer
+    isOpenModal: ModalReducer,
+    comment: CommentReducer
 })
 
 const store = createStore(rootReducer, applyMiddleware(thunk))

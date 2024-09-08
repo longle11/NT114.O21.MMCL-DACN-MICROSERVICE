@@ -7,6 +7,7 @@ import { useParams } from 'react-router-dom'
 import { GetProjectAction } from '../../../redux/actions/ListProjectAction'
 import { showNotificationWithIcon } from '../../../util/NotificationUtil'
 import { addUserToProject, updateProjectAction } from '../../../redux/actions/CreateProjectAction'
+import { updateUserInfo } from '../../../redux/actions/UserAction'
 
 export default function AddUser() {
     const projectInfo = useSelector(state => state.listProject.projectInfo)
@@ -21,7 +22,7 @@ export default function AddUser() {
     const [userRole, setuserRole] = useState(0)
     const handleOk = () => {
         setIsModalOpen(false);
-        dispatch(addUserToProject(userEmail, userRole, id))
+        dispatch(updateUserInfo(id, {email: userEmail, user_role: userRole}, null))
         setUserEmail('')
         setuserRole(0)
     };

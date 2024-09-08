@@ -33,7 +33,7 @@ export default function MainPageTemplate({ Component }) {
             if (userInfo !== null) {
                 return <div>
                     <MenuBarHeader />
-                    <div style={{ display: 'flex', width: '100%' }}>
+                    <div style={{ display: 'flex', width: '100%', position: 'fixed' }}>
                         <Layout
                             style={{
                                 minHeight: '100vh',

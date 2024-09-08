@@ -24,6 +24,10 @@
     padding-bottom: 16px !important;
 }
 
+.hover-items:hover {
+    background-color: #091E420F !important;
+}
+
 .modal-info .modal-body .issue {
     font-size: 20px;
     font-weight: 500;
@@ -35,6 +39,11 @@ span.items-attribute:hover {
 
 .modal-info .modal-body .description p:first-child {
     margin-bottom: 5px;
+}
+
+
+.task-click div span {
+    padding: 0;
 }
 
 .input-comment {

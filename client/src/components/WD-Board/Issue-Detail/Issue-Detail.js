@@ -1,7 +1,7 @@
 import { Avatar, Breadcrumb, Button, Checkbox, Col, Row, Tag } from 'antd';
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { getIssuesBacklog} from '../../../redux/actions/IssueAction';
+import { getIssuesBacklog } from '../../../redux/actions/IssueAction';
 import { GetProcessListAction } from '../../../redux/actions/ListProjectAction';
 import { iTagForPriorities, iTagForIssueTypes } from '../../../util/CommonFeatures';
 import { getEpicList } from '../../../redux/actions/CategoryAction';
@@ -19,12 +19,11 @@ export default function IssueDetail() {
     const { id, issueId } = useParams()
 
     const navigate = useNavigate()
-
-
     useEffect(() => {
         dispatch(getIssuesBacklog(id))
         dispatch(GetProcessListAction(id))
         dispatch(getEpicList(id))
+        console.log("lap vo tan");
     }, [])
     const dispatch = useDispatch()
 
@@ -41,7 +40,11 @@ export default function IssueDetail() {
                 }
             } else {
                 const index = issuesBacklog?.findIndex(issue => issue._id === issueId)
+                console.log("gia tri index thu duco ", index);
+
                 if (index !== -1) {
+                    console.log("chay vao trong nay ne em");
+
                     setIssueInfo(issuesBacklog[index])
                     //proceed to move that issue into top of all issues
                     const issueSplitted = issuesBacklog?.splice(index, 1)
@@ -177,7 +180,7 @@ export default function IssueDetail() {
                     </div>
                     {/* col 10 row */}
                     {(issueInfo !== null || issueInfo !== undefined) && Object.keys(issueInfo).length === 0 ? <div className='col-10'>No issues</div> : <div className='col-10'>
-                        <InfoModal issueInfo={issueInfo} displayNumberCharacterInSummarySubIssue={25}/>
+                        <InfoModal issueInfo={issueInfo} displayNumberCharacterInSummarySubIssue={25} />
                     </div>}
                 </div>
             </div>

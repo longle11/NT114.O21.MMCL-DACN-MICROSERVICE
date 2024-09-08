@@ -140,19 +140,19 @@ export const updateSprintAction = (sprintId, props) => {
     }
 }
 
-export const addUserToProject = (email, role, project_id) => {
-    return async dispatch => {
-        try {
-            const res = await Axios.get(`${domainName}/api/users/findUser?keyword=${email}`)
+// export const addUserToProject = (email, role, project_id) => {
+//     return async dispatch => {
+//         try {
+//             const res = await Axios.get(`${domainName}/api/users/findUser?keyword=${email}`)
 
-            if (res.status === 200) {
-                dispatch(updateProjectAction(project_id, { user_info: res.data.data._id.toString(), user_role: role }, null))
+//             if (res.status === 200) {
+//                 dispatch(updateProjectAction(project_id, { user_info: res.data.data._id.toString(), user_role: role }, null))
 
-            } else {
-                showNotificationWithIcon('success', 'cap nhat', "Successfully added a new user into project")
-            }
-        } catch (error) {
+//             } else {
+//                 showNotificationWithIcon('success', 'cap nhat', "Successfully added a new user into project")
+//             }
+//         } catch (error) {
 
-        }
-    }
-}
+//         }
+//     }
+// }

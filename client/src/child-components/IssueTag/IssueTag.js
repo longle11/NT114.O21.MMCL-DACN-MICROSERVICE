@@ -4,7 +4,6 @@ import { updateInfoIssue } from '../../redux/actions/IssueAction'
 import { updateUserInfo } from '../../redux/actions/UserAction'
 import { iTagForIssueTypes, iTagForPriorities, priorityTypeOptions } from '../../util/CommonFeatures'
 import { Avatar, Button, Divider, Input, InputNumber, Select, Space, Tag, Tooltip } from 'antd'
-import Search from 'antd/es/input/Search'
 import { UserOutlined } from '@ant-design/icons';
 import { NavLink, useParams } from 'react-router-dom'
 import './IssueTag.css'
@@ -41,9 +40,19 @@ export default function IssueTag(props) {
         open: '',
         value: 0
     })
+    const onChangeAssignees = props.onChangeAssignees
+    const onChangeIssuePriority = props.onChangeIssuePriority
+    const onChangeStoryPoint = props.onChangeStoryPoint
+    const onChangeParent = props.onChangeParent
+    const onChangeIssueType = props.onChangeIssueType
+    const onChangeKey = props.onChangeKey
+    const onChangeIssueStatus = props.onChangeIssueStatus
+    const onChangeVersions = props.onChangeVersions
+    const onChangeEpics = props.onChangeEpics
     const [dropDownLeft, setDropDownLeft] = useState(false)
     const { id } = useParams()
     const issue = props.issue
+
     const userInfo = props.userInfo
     const projectInfo = props.projectInfo
     const sprintList = props.sprintList
@@ -51,6 +60,7 @@ export default function IssueTag(props) {
     const processList = props.processList
     const epicList = props.epicList
     const versionList = props.versionList
+    const type = props.type
     const renderAssigneeOptions = () => {
         return projectInfo?.members.filter(user => {
             if (!(user.user_info._id === issue.creator._id || issue.assignees.map(assignee => assignee._id).includes(user.user_info._id))) {
@@ -73,7 +83,7 @@ export default function IssueTag(props) {
 
     const renderAssignees = () => {
         return <div>
-            {editAssignees.open !== issue._id ? (issue.assignees?.length === 0 ? <Avatar onClick={(e) => {
+            {editAssignees.open !== issue._id ? (issue.assignees?.length === 0 ? <Avatar size="small" onClick={(e) => {
                 e.stopPropagation()
                 setEditAssignees({
                     ...editAssignees,
@@ -81,7 +91,7 @@ export default function IssueTag(props) {
                 })
             }} icon={<UserOutlined />} /> : <div>
                 {issue.assignees.map((user) => {
-                    return <Avatar onClick={(e) => {
+                    return <Avatar size={"small"} onClick={(e) => {
                         e.stopPropagation()
                         setEditAssignees({
                             ...editAssignees,
@@ -520,55 +530,59 @@ export default function IssueTag(props) {
             {...provided.dragHandleProps}
             {...provided.draggableProps}
             key={`${issue._id.toString()}`}
-            onClick={() => { 
-                dispatch(displayComponentInModalInfo(<InfoModal issueInfo={issue} displayNumberCharacterInSummarySubIssue={10}/>))
+            onClick={() => {
+                dispatch(displayComponentInModalInfo(<InfoModal issueInfo={issue} displayNumberCharacterInSummarySubIssue={10} />))
                 //dispatch event to update viewed issue in auth service
                 dispatch(updateUserInfo(userInfo?.id, { viewed_issue: issue._id }))
             }}
             className="issues-detail issue-info p-0 issue-info-items">
-            <div style={{ cursor: 'pointer', backgroundColor: '#ffff', padding: '5px 5px 5px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className={`${issue?.isFlagged ? "isFlagged" : ""}`} style={{ cursor: 'pointer', backgroundColor: issue?.isFlagged ? "#F1CA45" : "#ffff", padding: '5px 5px 5px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div className='content-issue d-flex align-items-center'>
-                    <span>{iTagForIssueTypes(issue.issue_status)} <span className='mr-3' style={{ color: '#5e6c84', fontWeight: 'bold' }}>WD-{issue.ordinal_number?.toString()}</span></span>
+                    {onChangeIssueStatus ? <span>{iTagForIssueTypes(issue.issue_status, null, null)}</span> : <></>}
+                    {onChangeKey ? <span className='mr-3' style={{ color: '#5e6c84', fontWeight: 'bold' }}>WD-{issue.ordinal_number?.toString()}</span> : <></>}
                     {renderSummary()}
                 </div>
                 <div className='attach-issue d-flex align-items-center'>
-                    {issue?.sub_issue_list?.length > 0 ? <Tooltip title={`${issue?.sub_issue_list?.filter(issue => issue?.issue_type?._id === processList[processList.length - 1]._id).length} of ${issue?.sub_issue_list?.length} child issues completed`}><i style={{ padding: 5 }} className='fa-solid fa-sitemap icon-options mr-3'></i></Tooltip> : <></>}
+                    {issue?.isFlagged ? <i style={{ fontSize: 15, color: '#FF5630' }} className="fa fa-flag mr-2"></i> : <></>}
+                    {issue?.issue_type._id === processList[processList?.length - 1]?._id ? <i style={{ fontSize: 15, color: 'green' }} className="fa fa-check mr-2"></i> : <></>}
+                    {onChangeParent ? (issue?.sub_issue_list?.length > 0 ? <Tooltip title={`${issue?.sub_issue_list?.filter(issue => issue?.issue_type?._id === processList[processList.length - 1]._id).length} of ${issue?.sub_issue_list?.length} child issues completed`}><i style={{ padding: 5 }} className='fa-solid fa-sitemap icon-options mr-3'></i></Tooltip> : <></>) : <></>}
                     {/* specify which components does issue belong to? */}
-                    {renderFixVersion()}
+                    {onChangeVersions ? renderFixVersion() : <></>}
                     {/* specify which epics does issue belong to? */}
-                    {renderEpicLink()}
+                    {onChangeEpics ? renderEpicLink() : <></>}
                     {/* issue type */}
-                    {renderIssueType()}
+                    {onChangeIssueType ? renderIssueType() : <></>}
                     {/* Assigness */}
-                    <div className='ml-2'>
+                    {onChangeAssignees ? <div className='ml-2'>
                         {renderAssignees()}
-                    </div>
+                    </div> : <></>}
                     {/* priority */}
-                    {renderIssuePriority()}
+                    {onChangeIssuePriority ? <span>{renderIssuePriority()}</span> : <></>}
                     {/* Story points for issue */}
-                    {renderStoryPoint()}
+                    {onChangeStoryPoint ? renderStoryPoint() : <></>}
                     <button
                         className='ml-1 setting-issue btn btn-light'
+                        style={{ visibility: 'hidden' }}
                         id="dropdownMenuButton"
                         data-toggle="dropdown"
                         aria-haspopup="true"
                         aria-expanded="false"
-                        style={{ visibility: 'hidden' }}
                         onClick={() => {
-                            setDropDownLeft(false)
+                            setDropDownLeft(!dropDownLeft)
                         }}>
                         <i className="fa fa-bars"></i>
                     </button >
                     <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                        <li style={{ padding: '5px 15px' }}>
+                        <li className='dropdown-items-setting' style={{ padding: '5px 15px' }}>
                             <div className='d-flex justify-content-between align-items-center'>
                                 <span style={{ marginRight: 20 }}>Move to</span>
                                 <i className="fa fa-angle-right" style={{ fontSize: 13 }}></i>
                             </div>
-                            <ul className="dropdown-menu dropdown-submenu">
-                                {sprintList?.map(sprint => {
+                            <ul className="dropdown-menu dropdown-submenu" style={{ left: 'unset', right: '100%', width: 'max-content' }}>
+                                {sprintList?.filter(sprint => sprint._id !== type).map(sprint => {
                                     return <li style={{ padding: '5px 15px' }}>{sprint.sprint_name}</li>
                                 })}
+                                {type !== "0" ? <li style={{ padding: '5px 15px' }}>Backlog</li> : <></>}
                                 <hr style={{ margin: '2px 0' }} />
                                 <li style={{ padding: '5px 15px' }}>Top of Backlog</li>
                                 <li style={{ padding: '5px 15px' }}>Move up</li>
@@ -576,40 +590,8 @@ export default function IssueTag(props) {
                                 <li style={{ padding: '5px 15px' }}>Bottom of Backlog</li>
                             </ul>
                         </li>
-                        <hr style={{ margin: '2px 0' }} />
-                        <li style={{ padding: '5px 15px' }}>Copy issue link</li>
-                        <hr style={{ margin: '2px 0' }} />
-                        <li style={{ padding: '5px 15px' }}>
-                            <div className='d-flex justify-content-between align-items-center'>
-                                <span style={{ marginRight: 20 }}>Assignee</span>
-                                <i className="fa fa-angle-right" style={{ fontSize: 13 }}></i>
-                            </div>
-                            <ul className="dropdown-menu dropdown-submenu">
-                                <li style={{ padding: '5px 15px' }}>
-                                    <Search
-                                        placeholder="Search"
-                                        style={{
-                                            width: 200
-                                        }}
-                                    />
-                                </li>
-                                <hr style={{ margin: '2px 0' }} />
-                                {/* dispay info members in project */}
-                            </ul>
-                        </li>
-                        <li style={{ padding: '5px 15px' }}>
-                            <div className='d-flex justify-content-between align-items-center'>
-                                <span style={{ marginRight: 20 }}>Story point estimate</span>
-                                <i className="fa fa-angle-right" style={{ fontSize: 13 }}></i>
-                            </div>
-                            <ul className="dropdown-menu dropdown-submenu">
-                                <li style={{ padding: '5px 15px' }}>
-                                    <InputNumber min={1} max={100} />
-                                </li>
-                            </ul>
-                        </li>
-                        <hr style={{ margin: '2px 0' }} />
-                        <li style={{ padding: '5px 15px' }}>Delete</li>
+                        <li className='dropdown-items-setting' style={{ padding: '5px 15px' }}>Copy issue link</li>
+                        <li className='dropdown-items-setting' style={{ padding: '5px 15px' }}>Delete</li>
                     </ul>
                 </div>
             </div>

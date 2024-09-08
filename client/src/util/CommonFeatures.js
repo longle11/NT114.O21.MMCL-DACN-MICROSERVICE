@@ -1,4 +1,5 @@
 import { Avatar } from "antd"
+import { showNotificationWithIcon } from "./NotificationUtil"
 
 
 export const iTagForIssueTypes = (type, marginRight, fontSize) => {
@@ -144,8 +145,6 @@ export const renderAssignees = (listProject, project_id, userInfo) => {
     if (!listProject) return []
     const index = listProject.findIndex(project => project._id === project_id)
     if (index !== -1) {
-        console.log("thang lay ra duoc listProject[index] ", listProject[index].members);
-
         return listProject[index].members.filter(user => user.user_info._id !== userInfo.id).map(user => {
             return {
                 desc: <div className='d-flex align-items-center' style={{ width: 'fit-content' }}>
@@ -175,3 +174,14 @@ export const renderSubIssueOptions = (issuesBacklog) => {
         }
     })
 }
+
+export const CopyLinkButton = (url) => {
+    const linkToCopy = url
+    navigator.clipboard.writeText(linkToCopy)
+        .then(() => {
+            showNotificationWithIcon('success', '', 'Copy Successfully')
+        })
+        .catch(err => {
+            console.error('Lỗi khi sao chép: ', err);
+        });
+};

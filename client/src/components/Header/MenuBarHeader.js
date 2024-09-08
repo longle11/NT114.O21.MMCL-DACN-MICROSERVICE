@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Avatar, Input, Modal, Tag } from 'antd'
+import { Avatar, Input, Modal } from 'antd'
 import { useDispatch, useSelector } from 'react-redux'
 import Search from 'antd/es/input/Search'
 import { SHOW_MODAL_INPUT_TOKEN } from '../../redux/constants/constant'
@@ -69,10 +69,8 @@ export default function MenuBarHeader() {
                                 {renderProjectInfo()}
                             </div>
                             <div className="dropdown-divider" />
-                            <a className="dropdown-item" style={{ cursor: "pointer", padding: '5px 10px', fontSize: '13px' }} href="##">View all projects</a>
-                            <a className="dropdown-item" onClick={() => {
-                                dispatch(drawer_edit_form_action(<FormEdit />, "Create", '750px', 0))
-                            }} style={{ cursor: "pointer", padding: '5px 10px', fontSize: '13px' }} href="##">Create your project</a>
+                            <a className="dropdown-item" style={{ cursor: "pointer", padding: '5px 10px', fontSize: '13px' }} href="/manager">View all projects</a>
+                            <a className="dropdown-item" href="/create" style={{ cursor: "pointer", padding: '5px 10px', fontSize: '13px' }}>Create your project</a>
                         </div>
                     </li>
                     <li className={`nav-item mr-2`} style={{ position: 'relative' }}>
@@ -101,7 +99,7 @@ export default function MenuBarHeader() {
                                                 setIsDisplayWorkingOn(false)
                                             }} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center pt-2 pb-2 pl-2 pr-4 ml-0" style={{ border: 'none' }}>
                                                 <div className='d-flex align-items-center'>
-                                                    <span>{iTagForIssueTypes(1)}</span>
+                                                    <span>{iTagForIssueTypes(1, null, null)}</span>
                                                     <div className='d-flex flex-column' style={{ width: '100%' }}>
                                                         <span>{issue?.summary}</span>
                                                         <div className='d-flex align-items-center'>
@@ -133,7 +131,7 @@ export default function MenuBarHeader() {
                                                             return <a href={`/projectDetail/${issue.project_id}/issues/issue-detail/${issue.issue_id}`} onClick={() => {
                                                                 setIsDisplayWorkingOn(false)
                                                             }} className="list-group-item list-group-item-action d-flex align-items-center pt-2 pb-2 pl-2 pr-4 ml-0" style={{ border: 'none' }}>
-                                                                <span>{iTagForIssueTypes(1)}</span>
+                                                                <span>{iTagForIssueTypes(1, null, null)}</span>
                                                                 <div className='d-flex flex-column' style={{ width: '100%' }}>
                                                                     <span>{issue.summary}</span>
                                                                     <div className='d-flex align-items-center'>
@@ -154,7 +152,7 @@ export default function MenuBarHeader() {
                                                             return <a href={`/projectDetail/${issue.project_id}/issues/issue-detail/${issue.issue_id}`} onClick={() => {
                                                                 setIsDisplayWorkingOn(false)
                                                             }} className="list-group-item list-group-item-action d-flex align-items-center pt-2 pb-2 pl-2 pr-4 ml-0" style={{ border: 'none' }}>
-                                                                <span>{iTagForIssueTypes(1)}</span>
+                                                                <span>{iTagForIssueTypes(1, null, null)}</span>
                                                                 <div className='d-flex flex-column' style={{ width: '100%' }}>
                                                                     <span>{issue.summary}</span>
                                                                     <div className='d-flex align-items-center'>
@@ -171,7 +169,7 @@ export default function MenuBarHeader() {
 
                                         </div>
                                         <hr className='mb-0' />
-                                        <div className='tab-content-move' style={{ padding: '10px 20px', margin: '10px 0' }}>
+                                        <div className='tab-content-move' style={{ padding: '10px 20px' }}>
                                             <NavLink to={"/your-work"} onClick={() => {
                                                 setIsDisplayWorkingOn(false)
                                             }} style={{ textDecoration: 'none' }}>Go to your Work Page</NavLink>

@@ -1,0 +1,12 @@
+a.edit-comment-time {
+    color: #626f86;
+}
+
+a.edit-comment-time:hover {
+    text-decoration: none;
+    color: black;
+}
+
+.flag-icon-comment {
+    color: #FF5630 !important;
+}

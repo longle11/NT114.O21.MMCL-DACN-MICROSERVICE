@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { drawer_edit_form_action } from '../../../redux/actions/DrawerAction';
 import { NavLink, useNavigate, useParams } from 'react-router-dom';
 import './Backlog.css'
-import { issueTypeWithoutOptions } from '../../../util/CommonFeatures';
+import { issueTypeWithoutOptions, iTagForIssueTypes } from '../../../util/CommonFeatures';
 import { createIssue, getIssuesBacklog, updateInfoIssue } from '../../../redux/actions/IssueAction';
 import CreateEpic from '../../Forms/CreateEpic/CreateEpic';
 import { getEpicList, getVersionList, updateEpic, updateVersion } from '../../../redux/actions/CategoryAction';
@@ -24,8 +24,7 @@ import { displayComponentInModal } from '../../../redux/actions/ModalAction';
 import CompleteSprintModal from '../../Modal/CompleteSprintModal/CompleteSprintModal';
 import IssueTag from '../../../child-components/IssueTag/IssueTag';
 export default function Backlog() {
-    const [onChangeVersion, setOnChangeVersion] = useState(false)
-    const [onChangeEpic, setOnChangeEpic] = useState(false)
+
     const issuesBacklog = useSelector(state => state.issue.issuesBacklog)
     const processList = useSelector(state => state.listProject.processList)
     const sprintList = useSelector(state => state.listProject.sprintList)
@@ -33,11 +32,32 @@ export default function Backlog() {
     const projectInfo = useSelector(state => state.listProject.projectInfo)
     const workflowList = useSelector(state => state.listProject.workflowList)
     const epicList = useSelector(state => state.categories.epicList)
+
     const [searchIssue, setSearchIssue] = useState({
         epics: [],
         versions: []
     })
+
     const [showCollapseBacklog, setShowCollapseBacklog] = useState(true)
+    const [onChangeSettings, setOnChangeSettings] = useState(false)
+    // distinguish with choose open epic and version panel
+    const [onChangeVersion, setOnChangeVersion] = useState(true)
+    const [onChangeEpic, setOnChangeEpic] = useState(true)
+
+    //set display epic and version fields
+    const [onChangeEpics, setOnChangeEpics] = useState(true)
+    const [onChangeVersions, setOnChangeVersions] = useState(true)
+
+    const [onChangeIssuePriority, setOnChangeIssuePriority] = useState(true)
+    const [onChangeIssueStatus, setOnChangeIssueStatus] = useState(true)
+    const [onChangeKey, setOnChangeKey] = useState(true)
+
+    const [onChangeIssueType, setOnChangeIssueType] = useState(true)
+    const [onChangeAssignees, setOnChangeAssignees] = useState(true)
+    const [onChangeStoryPoint, setOnChangeStoryPoint] = useState(true)
+    const [onChangeParent, setOnChangeParent] = useState(true)
+
+
     const [showCollapseSprint, setShowCollapseSprint] = useState({
         sprintArrs: [],
         curentSprintClicked: ''
@@ -67,6 +87,24 @@ export default function Backlog() {
         })?.length / record.issue_list?.length) * 100)
     }
 
+    const updateIssueConfig = (epic_panel, version_panel, issue_status_field, key_field, issue_type_field, epic_field, version_field, issue_priority_field, assignees_field, story_point_field, parent_field) => {
+        dispatch(updateProjectAction(id, {
+            issue_config: {
+                epic_panel: epic_panel,
+                version_panel: version_panel,
+                issue_status_field: issue_status_field,
+                key_field: key_field,
+                issue_type_field: issue_type_field,
+                epic_field: epic_field,
+                version_field: version_field,
+                issue_priority_field: issue_priority_field,
+                assignees_field: assignees_field,
+                story_point_field: story_point_field,
+                parent_field: parent_field,
+            }
+        }, null))
+    }
+
     const dispatch = useDispatch()
     useEffect(() => {
         if (id) {
@@ -82,6 +120,21 @@ export default function Backlog() {
             }))
         }
     }, [searchIssue, searchMyIssue])
+
+    useEffect(() => {
+        setOnChangeEpic(projectInfo?.issue_config?.epic_panel)
+        setOnChangeVersion(projectInfo?.issue_config?.version_panel)
+
+        setOnChangeEpics(projectInfo?.issue_config?.epic_field)
+        setOnChangeVersions(projectInfo?.issue_config?.version_field)
+        setOnChangeKey(projectInfo?.issue_config?.key_field)
+        setOnChangeIssueStatus(projectInfo?.issue_config?.issue_status_field)
+        setOnChangeIssuePriority(projectInfo?.issue_config?.issue_priority_field)
+        setOnChangeIssueType(projectInfo?.issue_config?.issue_type_field)
+        setOnChangeStoryPoint(projectInfo?.issue_config?.story_point_field)
+        setOnChangeParent(projectInfo?.issue_config?.parent_field)
+        setOnChangeAssignees(projectInfo?.issue_config?.assignees_field)
+    }, [projectInfo])
     const [chooseEpic, setChooseEpic] = useState([])
     const [chooseVersion, setChooseVersion] = useState([])
     const [currentSprint, setCurrentSprint] = useState({})
@@ -93,6 +146,16 @@ export default function Backlog() {
         old_stored_place: null,
         new_stored_place: 0 //mac dinh se luu tru vao backlog
     })
+
+    const renderIssuesInCurrentSprint = (issue_list) => {
+        return issue_list?.filter(issue => {
+            //find the issue belongs to issues in backlog
+            if (issuesBacklog?.map(currentIssue => currentIssue?._id).includes(issue?._id) && issue.issue_status !== 4 && !issue.isCompleted) {
+                return true
+            }
+            return false
+        })
+    }
 
     //create default type for issue base on workflow's status
     const defaultForIssueType = (current_status) => {
@@ -280,16 +343,15 @@ export default function Backlog() {
             const getIndexEpic = epicList.findIndex(epic => epic._id.toString() === getEpicID)
 
             if (getIndexSprintSource !== -1 && getIndexEpic !== -1) {
-                const getCurrentIssue = sprintList[getIndexSprintSource].issue_list[source.index]
+                const getCurrentIssue = renderIssuesInCurrentSprint(sprintList[getIndexSprintSource].issue_list)[source.index]
                 const getEpicIdInIssue = getCurrentIssue.epic_link?._id.toString()
 
                 const getEpicNameInIssue = getCurrentIssue.epic_link !== null ? getCurrentIssue.epic_link.epic_name : "None"
 
-
                 //tien hanh them issue vao epic
-                dispatch(updateEpic(epicList[getIndexSprintSource]._id.toString(), { issue_id: getCurrentIssue._id.toString(), epic_id: getEpicIdInIssue ? getEpicIdInIssue : null }, id))
+                dispatch(updateEpic(epicList[getIndexSprintSource]._id.toString(), { issue_id: getCurrentIssue?._id?.toString(), epic_id: getEpicIdInIssue ? getEpicIdInIssue : null }, id))
                 //tien hanh them id cua epic vao epic link trong issue
-                dispatch(updateInfoIssue(getCurrentIssue._id.toString(), id, { epic_link: epicList[getIndexEpic]._id.toString() }, getEpicNameInIssue, epicList[getIndexEpic].epic_name, userInfo.id, "updated", "epic link"))
+                dispatch(updateInfoIssue(getCurrentIssue._id.toString(), id, { epic_link: epicList[getIndexEpic]?._id?.toString() }, getEpicNameInIssue, epicList[getIndexEpic].epic_name, userInfo.id, "updated", "epic link"))
             }
         } else if (dest.droppableId.includes("version") && source.droppableId.includes("backlog")) {
             const getVersionId = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
@@ -308,23 +370,17 @@ export default function Backlog() {
         } else if (dest.droppableId.includes("version") && source.droppableId.includes("sprint")) {
             const getSprintIdSource = source.droppableId.substring(source.droppableId.indexOf('-') + 1)
             const getVersionId = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
-
-
             const getIndexSprintSource = sprintList.findIndex(sprint => sprint._id.toString() === getSprintIdSource)
-
             const getIndexVersion = versionList.findIndex(version => version._id.toString() === getVersionId)
 
             if (getIndexSprintSource !== -1 && getIndexVersion !== -1) {
-                const getCurrentIssue = sprintList[getIndexSprintSource].issue_list[source.index]
-                const getVersionIdInIssue = getCurrentIssue.fix_version?._id.toString()
-
+                const getAllIssuesInBacklogFromCurrentSprint = renderIssuesInCurrentSprint(sprintList[getIndexSprintSource].issue_list)
+                const getCurrentIssue = getAllIssuesInBacklogFromCurrentSprint[source.index]
+                const getVersionIdInIssue = getCurrentIssue.fix_version?._id.toString() //get current version in issue to send to backend for updating new fix version
                 const getVersionNameInIssue = getCurrentIssue.fix_version !== null ? getCurrentIssue.fix_version.version_name : "None"
-
-
-                //tien hanh them issue vao version
-                dispatch(updateVersion(versionList[getIndexSprintSource]._id.toString(), { issue_id: getCurrentIssue._id.toString(), version_id: getVersionIdInIssue ? getVersionIdInIssue : null }, id))
+                dispatch(updateVersion(versionList[getIndexVersion]?._id.toString(), { issue_id: getCurrentIssue?._id.toString(), version_id: getVersionIdInIssue ? getVersionIdInIssue : null }, id))
                 //tien hanh them id cua version vao version link trong issue
-                dispatch(updateInfoIssue(getCurrentIssue._id.toString(), id, { fix_version: versionList[getIndexVersion]._id.toString() }, getVersionNameInIssue, versionList[getIndexVersion].version_name, userInfo.id, "updated", "epic"))
+                dispatch(updateInfoIssue(getCurrentIssue?._id.toString(), id, { fix_version: versionList[getIndexVersion]?._id.toString() }, getVersionNameInIssue, versionList[getIndexVersion].version_name, userInfo.id, "updated", "epic"))
             }
         }
     };
@@ -333,7 +389,17 @@ export default function Backlog() {
             return <Draggable draggableId={`${issue._id.toString()}`} key={`${issue._id.toString()}`} index={index}>
                 {(provided) => {
                     return <IssueTag
+                        onChangeAssignees={onChangeAssignees}
+                        onChangeStoryPoint={onChangeStoryPoint}
+                        onChangeParent={onChangeParent}
+                        onChangeIssueType={onChangeIssueType}
+                        onChangeKey={onChangeKey}
+                        onChangeIssuePriority={onChangeIssuePriority}
+                        onChangeIssueStatus={onChangeIssueStatus}
+                        onChangeVersions={onChangeVersions}
+                        onChangeEpics={onChangeEpics}
                         issue={issue}
+                        type="0"
                         sprintList={sprintList}
                         userInfo={userInfo}
                         provided={provided}
@@ -357,8 +423,7 @@ export default function Backlog() {
                     </div>
                 }}
             </Droppable>
-        }
-        else {
+        } else {
             return <Droppable droppableId="issues_backlog">
                 {(provided) => {
                     return <div ref={provided.innerRef}
@@ -401,13 +466,7 @@ export default function Backlog() {
         }
         const newSprintList = sprintList?.filter(sprint => sprint.sprint_status === 'pending' || sprint.sprint_status === 'processing').map(sprint => {
             return {
-                ...sprint, issue_list: [...sprint.issue_list.filter(issue => {
-                    //find the issue belongs to issues in backlog
-                    if (issuesBacklog?.map(currentIssue => currentIssue?._id).includes(issue?._id) && issue.issue_status !== 4) {
-                        return true
-                    }
-                    return false
-                })]
+                ...sprint, issue_list: renderIssuesInCurrentSprint(sprint.issue_list)
             }
         })
         return newSprintList?.map(sprint => {
@@ -519,6 +578,16 @@ export default function Backlog() {
                                                 return <Draggable draggableId={`${issue._id.toString()}`} key={`${issue._id.toString()}`} index={index}>
                                                     {(provided) => {
                                                         return <IssueTag
+                                                            onChangeAssignees={onChangeAssignees}
+                                                            onChangeStoryPoint={onChangeStoryPoint}
+                                                            onChangeParent={onChangeParent}
+                                                            onChangeIssuePriority={onChangeIssuePriority}
+                                                            onChangeIssueType={onChangeIssueType}
+                                                            onChangeKey={onChangeKey}
+                                                            type={sprint?._id}
+                                                            onChangeIssueStatus={onChangeIssueStatus}
+                                                            onChangeVersions={onChangeVersions}
+                                                            onChangeEpics={onChangeEpics}
                                                             issue={issuesBacklog[getIndexIssueInBacklog]}
                                                             sprintList={sprintList}
                                                             userInfo={userInfo}
@@ -552,14 +621,14 @@ export default function Backlog() {
                     {sprintList?.map(currentSprint => {
                         if (currentSprint._id.toString() === openCreatingSprint.id && openCreatingSprint.open && currentSprint._id.toString() === sprint._id.toString()) {
                             return <div className='d-flex' style={{ display: openCreatingSprint ? 'block' : 'none', border: '2px solid #2684FF' }}>
-                                <Select style={{ border: 'none', borderRadius: 0 }}
+                                <Select className='edit-select-issue-backlog' style={{ border: 'none', borderRadius: 0 }}
                                     defaultValue={issueTypeWithoutOptions[0].value}
                                     onChange={(value, option) => {
                                         setIssueStatus(value)
                                     }}
 
                                     options={issueTypeWithoutOptions} />
-                                <Input value={summary} defaultValue={summary} placeholder="What need to be done?"
+                                <Input className='edit-input-issue-backlog' value={summary} defaultValue={summary} placeholder="What needs to be done?"
                                     onChange={(e) => {
                                         if (e.target.value.trim() !== "") {
                                             setSummary(e.target.value)
@@ -739,6 +808,7 @@ export default function Backlog() {
                                     setChooseEpic([...chooseEpic])
                                 }
                             }}>
+
                             <a data-toggle="collapse"
                                 href={epicID}
                                 role="button"
@@ -753,7 +823,7 @@ export default function Backlog() {
                                 }}
                                 aria-expanded="false" >
                                 <i className="fa-solid fa-caret-down mr-3"></i>
-                            </a>{epic.epic_name}
+                            </a><span>{iTagForIssueTypes(3, null, null)}</span> {epic.epic_name}
                         </button>
                         <div className={`collapse card-body ${showEpic === epic._id ? "show" : ""}`} id={epicTag} style={{ padding: '5px 10px' }}>
                             <div className='d-flex flex-column'>
@@ -802,10 +872,10 @@ export default function Backlog() {
                 style={{ marginBottom: 10 }}
                 items={[
                     {
-                        title: <a href="">Projects</a>,
+                        title: <a href="/manager">Projects</a>,
                     },
                     {
-                        title: <a href="">{projectInfo?.name_project}</a>,
+                        title: <a href={`/projectDetail/${id}/board`}>{projectInfo?.name_project}</a>,
                     }
                 ]}
             />
@@ -815,8 +885,10 @@ export default function Backlog() {
                     <Button onClick={() => {
                         console.log("projectInfo ", projectInfo);
 
-                    }} type='primary' className='mr-2'>Share</Button>
-                    <Button >Setting</Button>
+                    }} type='primary' className='mr-2'><i className="fa fa-share mr-2"></i> Share</Button>
+                    <Button onClick={() => {
+                        setOnChangeSettings(!onChangeSettings)
+                    }}><span><i className="fa-solid fa-sliders mr-2"></i> View Settings</span></Button>
                 </div>
             </div>
             <div className="search-info-backlogs d-flex">
@@ -839,7 +911,7 @@ export default function Backlog() {
                     if (searchMyIssue !== null) {
                         setSearchMyIssue(null)
                     }
-                }} className=' ml-2 mr-2 d-flex justify-content-center'>All issues {searchMyIssue === null ? <span>({issuesBacklog?.length})</span> : <></>}</Button>
+                }} className=' ml-2 mr-2 d-flex justify-content-center'>All issues {searchMyIssue === null ? <span>({issuesBacklog.filter(issue => !issue.isCompleted && issue.issue_status !== 4)?.length})</span> : <></>}</Button>
                 <Button type={`${searchMyIssue !== null ? "primary" : "default"}`} onClick={() => {
                     if (searchMyIssue === null) {
                         setSearchMyIssue(userInfo.id)
@@ -862,6 +934,9 @@ export default function Backlog() {
                             setCountVersion(value.length)
                         }}>
                             <Row>
+                                <Col span={16} style={{ padding: '5px 10px' }}>
+                                    <Checkbox value={null}>Issue without epics</Checkbox>
+                                </Col>
                                 {versionList?.map(version => {
                                     return <Col span={16} style={{ padding: '5px 10px' }}>
                                         <Checkbox value={version._id}>{version.version_name}</Checkbox>
@@ -892,6 +967,9 @@ export default function Backlog() {
                                 setCountEpic(value.length)
                             }}>
                                 <Row>
+                                    <Col span={16} style={{ padding: '5px 10px' }}>
+                                        <Checkbox value={null}>Issue without versions</Checkbox>
+                                    </Col>
                                     {epicList?.map(epic => {
                                         return <Col span={16} style={{ padding: '5px 10px' }}>
                                             <Checkbox style={{ width: 'max-content' }} value={epic._id}>{epic.epic_name}</Checkbox>
@@ -905,7 +983,7 @@ export default function Backlog() {
                             <Switch onChange={() => {
                                 setOnChangeEpic(!onChangeEpic)
                             }} value={onChangeEpic} />
-                            <span className='mr-3'>Show epic panel</span>
+                            <span className='ml-3'>Show epic panel</span>
                         </div>
                     </div>
                 </div>
@@ -924,10 +1002,11 @@ export default function Backlog() {
                 </div>
             </div>
             <div>
-                <div className='main-info-backlog' style={{ minHeight: '200px', display: onChangeEpic || onChangeVersion ? 'flex' : 'block' }}>
+                <div className='main-info-backlog' style={{ minHeight: '200px', display: onChangeEpic || onChangeVersion || onChangeSettings ? 'flex' : 'block' }}>
                     <DragDropContext onDragEnd={(result) => {
                         handleDragEnd(result)
                     }}>
+                        {/* Card for versions */}
                         <div className={`card version-info-backlog mr-1`} style={{ width: '25rem', display: onChangeVersion ? 'block' : 'none', margin: '10px 0', height: 'fit-content' }}>
                             <div className='d-flex justify-content-between mt-2' style={{ padding: '5px 10px' }}>
                                 <h6 className='m-0'>Versions</h6>
@@ -956,7 +1035,7 @@ export default function Backlog() {
                                 <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
                                     <div style={{ padding: '10px', display: 'flex', alignItems: 'center' }} className='version-footer'>
                                         <i className="fa fa-plus mr-2"></i>
-                                        <NavLink style={{ width: '100%', textDecoration: 'none', display: 'block', color: 'black' }} to='#' onClick={() => {
+                                        <NavLink style={{ width: '100%', textDecoration: 'none', display: 'block', color: 'black' }} className="version-footer" to='#' onClick={() => {
                                             dispatch(drawer_edit_form_action(<CreateVersion currentVersion={
                                                 {
                                                     id: null,
@@ -972,7 +1051,7 @@ export default function Backlog() {
                                     </div>
                                     <div style={{ padding: '10px', display: 'flex', alignItems: 'center' }} className='version-footer'>
                                         <i className="fa fa-link mr-2"></i>
-                                        <NavLink to={`/projectDetail/${id}/releases`} style={{ color: 'black', textDecoration: 'none' }}>Viewed linked pages</NavLink>
+                                        <NavLink to={`/projectDetail/${id}/releases`} className="version-footer" style={{ color: 'black', textDecoration: 'none' }}>Viewed linked pages</NavLink>
                                     </div>
                                 </div>
                             </div> : <div style={{ height: 'fit-content' }}>
@@ -999,9 +1078,10 @@ export default function Backlog() {
                             </div>}
                         </div>
 
+                        {/* Card for epics */}
                         <div
                             className="card epic-info-backlog"
-                            style={{ width: '25rem', display: onChangeEpic ? 'block' : 'none', margin: '10px 5px', height: 'fit-content', maxHeight: 500, overflowY: 'auto' }}>
+                            style={{ width: '25rem', display: onChangeEpic ? 'block' : 'none', margin: '10px 5px', height: 'fit-content', maxHeight: 500, overflowY: 'auto', scrollbarWidth: 'thin' }}>
                             <div className='d-flex justify-content-between mt-2' style={{ padding: '5px 10px' }}>
                                 <h6>Epic</h6>
                                 <i className="fa-solid fa-xmark" onClick={() => {
@@ -1064,6 +1144,7 @@ export default function Backlog() {
                             }
                         </div>
 
+                        {/* Card for backlog and sprint */}
                         <div className='d-flex flex-column mt-2 mb-2 ' style={{ width: '100%', overflowY: 'auto', height: '75vh' }}>
                             {renderSprintList()}
                             <div className='issues-info-backlog mt-1' style={{ backgroundColor: '#f7f8f9' }}>
@@ -1081,7 +1162,7 @@ export default function Backlog() {
                                         <div className='mr-2'>
                                             {processList?.map((process) => {
                                                 const countIssueProcess = issuesBacklog?.filter(issue => issue.current_sprint === null).filter(issue => {
-                                                    return issue?.issue_type?._id?.toString() === process?._id?.toString()
+                                                    return issue?.issue_type?._id?.toString() === process?._id?.toString() && issue.issue_status !== 4 && !issue.isCompleted
                                                 }).length
                                                 return <Tooltip placement="bottom" title={`${process.name_process[0] + process.name_process.toLowerCase().substring(1)} ${countIssueProcess} of ${issuesBacklog.length} (issue count)`}>
                                                     <Avatar size={'small'} style={{ backgroundColor: process.tag_color }}>{countIssueProcess}</Avatar>
@@ -1106,14 +1187,14 @@ export default function Backlog() {
                                         <i className="fa-regular fa-plus mr-2"></i>
                                         Create issue
                                     </button> : <div className='d-flex' style={{ border: '2px solid #2684FF' }}>
-                                        <Select style={{ border: 'none', borderRadius: 0 }}
+                                        <Select className='edit-select-issue-backlog' style={{ border: 'none', borderRadius: 0 }}
                                             defaultValue={issueTypeWithoutOptions[0].value}
                                             onChange={(value, option) => {
                                                 setIssueStatus(value)
                                             }}
                                             options={issueTypeWithoutOptions}
                                         />
-                                        <Input value={summary} defaultValue={summary} placeholder="What need to be done?" onChange={(e) => {
+                                        <Input className='edit-input-issue-backlog' value={summary} defaultValue={summary} placeholder="What needs to be done?" onChange={(e) => {
                                             if (e.target.value.trim() !== "") {
                                                 setSummary(e.target.value)
                                             }
@@ -1124,14 +1205,16 @@ export default function Backlog() {
                                                     setIssueStatus(0)
                                                     setSummary('')
                                                     const tempSummary = summary
-                                                    dispatch(createIssue({
-                                                        project_id: id,
-                                                        issue_status: issueStatus,
-                                                        summary: tempSummary,
-                                                        creator: userInfo.id,
-                                                        issue_type: defaultForIssueType(issueStatus),
-                                                        current_sprint: null
-                                                    }, id, userInfo.id, null, null))
+                                                    if (tempSummary.trim() !== "") {
+                                                        dispatch(createIssue({
+                                                            project_id: id,
+                                                            issue_status: issueStatus,
+                                                            summary: tempSummary,
+                                                            creator: userInfo.id,
+                                                            issue_type: defaultForIssueType(issueStatus),
+                                                            current_sprint: null
+                                                        }, id, userInfo.id, null, null))
+                                                    }
                                                 }
                                             }
                                         }} onBlur={() => {
@@ -1139,6 +1222,103 @@ export default function Backlog() {
                                             setSummary('')
                                         }} style={{ border: 'none', borderRadius: 0 }} />
                                     </div>}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className={`card info-settings mr-1`} style={{ width: '25rem', display: onChangeSettings ? 'block' : 'none', margin: '0px 10px', height: 'fit-content', marginTop: 7 }}>
+                            <div className='d-flex justify-content-between' style={{ padding: '15px 10px' }}>
+                                <h6 className='m-0'>View Settings</h6>
+                                <i className="fa-solid fa-xmark" onClick={() => {
+                                    setOnChangeSettings(!onChangeSettings)
+                                }}></i>
+                            </div>
+                            <div className='row ml-2 mb-2'>
+                                <span className='col-8'>Versions</span>
+                                <Switch style={{ width: '10%' }} className='col-1' onChange={() => {
+                                    console.log("vai lon ", onChangeEpic, !onChangeVersion, onChangeIssueStatus, onChangeKey, onChangeIssueType, onChangeEpics, onChangeVersions, onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, onChangeParent);
+
+                                    updateIssueConfig(onChangeEpic, !onChangeVersion, onChangeIssueStatus, onChangeKey, onChangeIssueType, onChangeEpics, onChangeVersions, onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, onChangeParent)
+                                    setOnChangeVersion(!onChangeVersion)
+                                }} value={onChangeVersion} />
+                            </div>
+                            <div className='row ml-2 mb-2'>
+                                <span className='col-8'>Epics</span>
+                                <Switch className='col-1' onChange={() => {
+                                    updateIssueConfig(!onChangeEpic, onChangeVersion, onChangeIssueStatus, onChangeKey, onChangeIssueType, onChangeEpics, onChangeVersions, onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, onChangeParent)
+                                    setOnChangeEpic(!onChangeEpic)
+                                }} value={onChangeEpic} />
+                            </div>
+                            <hr />
+                            <div>
+                                <h6 style={{ padding: '0 10px' }}>Fields</h6>
+                                <div className='row ml-2 mb-2'>
+                                    <span className='col-8'>Issue Status</span>
+                                    <Switch className='col-1' onChange={() => {
+                                        updateIssueConfig(onChangeEpic, onChangeVersion, !onChangeIssueStatus, onChangeKey, onChangeIssueType, onChangeEpics, onChangeVersions, onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, onChangeParent)
+                                        setOnChangeIssueStatus(!onChangeIssueStatus)
+                                    }} value={onChangeIssueStatus} />
+                                </div>
+
+                                <div className='row ml-2 mb-2'>
+                                    <span className='col-8'>Issue Key</span>
+                                    <Switch className='col-1' onChange={() => {
+                                        updateIssueConfig(onChangeEpic, onChangeVersion, onChangeIssueStatus, !onChangeKey, onChangeIssueType, onChangeEpics, onChangeVersions, onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, onChangeParent)
+
+                                        setOnChangeKey(!onChangeKey)
+                                    }} value={onChangeKey} />
+                                </div>
+                                <div className='row ml-2 mb-2'>
+                                    <span className='col-8'>Issue Type</span>
+                                    <Switch className='col-1' onChange={() => {
+                                        updateIssueConfig(onChangeEpic, onChangeVersion, onChangeIssueStatus, onChangeKey, !onChangeIssueType, onChangeEpics, onChangeVersions, onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, onChangeParent)
+
+                                        setOnChangeIssueType(!onChangeIssueType)
+                                    }} value={onChangeIssueType} />
+                                </div>
+                                <div className='row ml-2 mb-2'>
+                                    <span className='col-8'>Epic</span>
+                                    <Switch className='col-1' onChange={() => {
+                                        updateIssueConfig(onChangeEpic, onChangeVersion, !onChangeIssueStatus, onChangeKey, onChangeIssueType, !onChangeEpics, onChangeVersions, onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, onChangeParent)
+
+                                        setOnChangeEpics(!onChangeEpics)
+                                    }} value={onChangeEpics} />
+                                </div>
+                                <div className='row ml-2 mb-2'>
+                                    <span className='col-8'>Priority</span>
+                                    <Switch className='col-1' onChange={() => {
+                                        updateIssueConfig(onChangeEpic, onChangeVersion, onChangeIssueStatus, onChangeKey, onChangeIssueType, onChangeEpics, onChangeVersions, !onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, onChangeParent)
+
+                                        setOnChangeIssuePriority(!onChangeIssuePriority)
+                                    }} value={onChangeIssuePriority} />
+                                </div>
+                                <div className='row ml-2 mb-2'>
+                                    <span className='col-8'>Version</span>
+                                    <Switch className='col-1' onChange={() => {
+                                        updateIssueConfig(onChangeEpic, onChangeVersion, onChangeIssueStatus, onChangeKey, onChangeIssueType, onChangeEpics, !onChangeVersions, onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, onChangeParent)
+                                        setOnChangeVersions(!onChangeVersions)
+                                    }} value={onChangeVersions} />
+                                </div>
+                                <div className='row ml-2 mb-2'>
+                                    <span className='col-8'>Assignees</span>
+                                    <Switch className='col-1' onChange={() => {
+                                        updateIssueConfig(onChangeEpic, onChangeVersion, onChangeIssueStatus, onChangeKey, onChangeIssueType, onChangeEpics, onChangeVersions, onChangeIssuePriority, !onChangeAssignees, onChangeStoryPoint, onChangeParent)
+                                        setOnChangeAssignees(!onChangeAssignees)
+                                    }} value={onChangeAssignees} />
+                                </div>
+                                <div className='row ml-2 mb-2'>
+                                    <span className='col-8'>Story Point</span>
+                                    <Switch className='col-1' onChange={() => {
+                                        updateIssueConfig(onChangeEpic, onChangeVersion, onChangeIssueStatus, onChangeKey, onChangeIssueType, onChangeEpics, onChangeVersions, onChangeIssuePriority, onChangeAssignees, !onChangeStoryPoint, onChangeParent)
+                                        setOnChangeStoryPoint(!onChangeStoryPoint)
+                                    }} value={onChangeStoryPoint} />
+                                </div>
+                                <div className='row ml-2 mb-2'>
+                                    <span className='col-8'>Parent</span>
+                                    <Switch className='col-1' onChange={() => {
+                                        updateIssueConfig(onChangeEpic, onChangeVersion, onChangeIssueStatus, onChangeKey, onChangeIssueType, onChangeEpics, onChangeVersions, onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, !onChangeParent)
+                                        setOnChangeParent(!onChangeParent)
+                                    }} value={onChangeParent} />
                                 </div>
                             </div>
                         </div>

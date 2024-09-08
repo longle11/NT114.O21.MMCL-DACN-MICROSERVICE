@@ -11,7 +11,7 @@
     opacity: 0;
 }
 
-div.epic-footer:hover {
+div.epic-footer:hover, div.version-footer:hover  {
     background-color: #dddd;
 }
 
@@ -57,4 +57,13 @@ div.backlog-creating-sprint:hover {
 }
 .unselected_version {
     background-color: #ffff;
+}
+
+.edit-select-issue-backlog div.ant-select-selector {
+    border: none !important;
+    border-radius: 0 !important;
+}
+
+input.edit-input-issue-backlog:focus {
+    box-shadow: none !important;
 }

@@ -23,6 +23,10 @@ const issueProcessSchema = new mongoose.Schema({
             ref: 'issues'
         }
     ],
+    limited_number_issues: {
+        type: Number,
+        default: null
+    },
     createAt: {
         type: Date,
         default: Date.now

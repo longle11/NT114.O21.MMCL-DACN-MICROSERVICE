@@ -18,8 +18,9 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                 throw new BadRequestError("Issue not found")
             } else {
                 let currentIssue = await issueModel.findById(id)
-                console.log("issue luc dau ", currentIssue);
+                console.log("gia tri body ", req.body);
                 
+
                 //kiem tra xem assignees co duoc them vao hay khong
                 let listAssignees = currentIssue.assignees
                 if (req.body?.assignees != null) {
@@ -35,12 +36,7 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                 var timeSpent = currentIssue.timeSpent
 
                 if (req.body?.timeSpent) {
-                    console.log("vao ham cong nhe ", req.body?.timeSpent);
-                    console.log("Thời gian hiện tại đã ghi nhận ", timeSpent)
                     timeSpent += req.body.timeSpent
-
-                    console.log("gia tri sau khi cong ", timeSpent);
-                    
                     req.body.timeSpent = timeSpent
                 }
 
@@ -65,6 +61,19 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                     req.body.sub_issue_id = null
                 }
 
+                if (req.body?.voted_user_id) {
+                    const votedUserList = [...currentIssue.voted]
+                    const getIndexUser = votedUserList.findIndex(user => user.toString() === req.body.voted_user_id.toString())
+                    if (getIndexUser !== -1) {
+                        votedUserList.splice(getIndexUser, 1)
+                    } else {
+                        votedUserList.push(req.body.voted_user_id)
+                    }
+
+                    req.body.voted = [...votedUserList]
+                    req.body.voted_user_id = null
+                }
+
                 await issueModel.updateOne({ _id: id }, { $set: { ...req.body } })
                 const copyIssue = {
                     _id: currentIssue._id,
@@ -78,11 +87,12 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                     story_point: currentIssue.story_point,
                     issue_type: currentIssue.issue_type,
                     sub_issue_list: currentIssue.sub_issue_list,
+                    isFlagged: currentIssue.isFlagged,
                     ...req.body
                 }
 
                 console.log("Issue sau khi cap nhat ", copyIssue);
-                
+
 
                 // public su kien toi projectmanagement service
                 await issuePublisher(copyIssue, 'issue:updated')

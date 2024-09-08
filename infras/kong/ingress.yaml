@@ -19,7 +19,7 @@ spec:
               name: auth-srv
               port: 
                 number: 4000
-        - path: /api/comment/
+        - path: /api/comments/
           pathType: Prefix
           backend: 
             service:  

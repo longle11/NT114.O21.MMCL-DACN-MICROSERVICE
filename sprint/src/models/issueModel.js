@@ -52,7 +52,11 @@ const issueSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'issues'
         }
-    ]
+    ],
+    isFlagged: {
+        type: Boolean,
+        default: false
+    }
 })
 issueSchema.virtual('sprintsRefIssueList', {
     ref: 'sprints',

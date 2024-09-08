@@ -31,6 +31,29 @@
     color: #67748b;
 }
 
+div.isFlagged:hover {
+    background-color: #FFF7D6 !important;
+}
+
+div.hover-name_process-dashboard:hover {
+    background-color: #FFFFF7 !important;
+}
+
+div.list-group-item:hover .hide-items {
+    display: inline-block !important;
+}
+
+div.tox.tox-tinymce {
+    border-radius: 0;
+}
+.tox-statusbar {
+    display: none !important;
+}
+
+.issues-summary-dashboard-hover:hover {
+    background-color: #dddd !important;
+}
+
 .main .info .avatar-group {
     margin-left: 20px;
 }

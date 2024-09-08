@@ -1,3 +1,4 @@
+import dayjs from "dayjs"
 import { DateTime } from "luxon"
 
 const regexs = [
@@ -191,21 +192,25 @@ export const calculateTaskRemainingTime = (currentDate, endDate) => {
     return null
 }
 
-export const convertTime = (commentTime) => {
-    const diff = DateTime.now().diff(DateTime.fromISO(commentTime), ['minutes', 'hours', 'days', 'months']).toObject();
+export const convertTime = (commentTime, type) => {
+    if (type === false) {
+        const diff = DateTime.now().diff(DateTime.fromISO(commentTime), ['minutes', 'hours', 'days', 'months']).toObject();
 
-    if (diff.hours >= 1) {
-        return `${Math.round(diff.hours)} hour ago`
-    }
-    if (diff.minutes >= 1) {
-        return `${Math.round(diff.minutes)} minutes ago`
-    }
-    if (diff.days >= 1) {
-        return `${Math.round(diff.days)} days ago`
-    }
-    if (diff.months >= 1) {
-        return `${Math.round(diff.months)} months ago`
-    } else {
-        return 'a few second ago'
+        if (diff.hours >= 1) {
+            return `${Math.round(diff.hours)} hour ago`
+        }
+        if (diff.minutes >= 1) {
+            return `${Math.round(diff.minutes)} minutes ago`
+        }
+        if (diff.days >= 1) {
+            return `${Math.round(diff.days)} days ago`
+        }
+        if (diff.months >= 1) {
+            return `${Math.round(diff.months)} months ago`
+        } else {
+            return 'a few second ago'
+        }
+    }else {
+        return dayjs(commentTime).format('MMMM D, YYYY [at] h:mm A')
     }
 }

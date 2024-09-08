@@ -10,6 +10,7 @@ const issueCreatedListener = require('./nats/listener/issue-listener/issue-creat
 const issueUpdatedListener = require('./nats/listener/issue-listener/issue-updated-listener')
 const issueInsertToSprintCreated = require('./nats/listener/issue-listener/issueInsertToSprint-created-listeners copy')
 const issueProcessCreatedListener = require('./nats/listener/issueprocess-listener/issueprocess-created-listener')
+const issueProcessUpdatedListener = require('./nats/listener/issueprocess-listener/issueprocess-updated-listener')
 const app = express()
 app.use(cors())
 app.use(bodyParser.json())
@@ -42,6 +43,7 @@ async function connectToNats() {
         issueUpdatedListener()
         issueInsertToSprintCreated()
         issueProcessCreatedListener()
+        issueProcessUpdatedListener()
 
         console.log("Connected successfully to nats");
     }catch(err) {

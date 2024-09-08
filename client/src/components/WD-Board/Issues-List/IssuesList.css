@@ -5,3 +5,30 @@ td.ant-table-cell {
 .editable-cell-value-wrap {
     padding: 0 !important
 }
+.ant-table-cell {
+    padding: 5px 20px !important;
+}
+
+.ant-table-expanded-row > td.ant-table-cell {
+    padding: 0px !important;
+    background-color: #ffff !important;
+}
+
+input.edit-input-issue-list:focus {
+    box-shadow: none !important;
+}
+
+th.ant-table-cell.ant-table-row-expand-icon-cell {
+    border-right: none !important;
+    z-index: 1 !important;
+}
+
+td.ant-table-cell.ant-table-row-expand-icon-cell {
+    border-right: none !important;
+    padding-right: 0 !important;
+}
+
+.edit-select-issue-list div.ant-select-selector {
+    border: none !important;
+    border-radius: 0 !important;
+}

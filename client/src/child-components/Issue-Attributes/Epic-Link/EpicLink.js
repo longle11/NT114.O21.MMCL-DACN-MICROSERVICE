@@ -35,7 +35,7 @@ export default function EpicLink(props) {
             /> :
                 <span onDoubleClick={() => {
                     props.handleEditAttributeTag('epic_link')
-                }} className='items-attribute col-7' style={{ padding: '10px 10px', width: '100%', color: '#7A869A' }}>{getCurrentEpic() !== null ? renderEpicList()[getCurrentEpic()]?.label : "None"}</span>}
+                }} className='items-attribute col-7' style={{ padding: '10px 10px', width: '100%', color: '#7A869A' }}>{getCurrentEpic() !== null ? renderEpicList(epicList, id)[getCurrentEpic()]?.label : "None"}</span>}
         </div>
     )
 }

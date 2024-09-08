@@ -38,11 +38,8 @@ router.post("/create", async (req, res, next) => {
             fix_version: newIssue.fix_version,
             issue_type: newIssue.issue_type,
             ordinal_number: newIssue.ordinal_number,
-            parent: newIssue.parent, 
+            parent: newIssue.parent
         }
-
-        console.log("du lieu moi duoc tao");
-        
 
         await issuePublisher(issueCopy, 'issue:created')
         // if (req.currentUser) {

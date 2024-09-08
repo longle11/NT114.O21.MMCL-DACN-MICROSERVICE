@@ -3,15 +3,16 @@ import React, { useState } from 'react'
 import { updateUserInfo } from '../../../redux/actions/UserAction'
 import { updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { useDispatch } from 'react-redux'
-import { renderAssignees } from '../../../util/CommonFeatures'
 import { UserOutlined } from '@ant-design/icons'
 
 export default function Assignees(props) {
     const issueInfo = props.issueInfo
     const userInfo = props.userInfo
     const projectInfo = props.projectInfo
-    const [addAssignee, setAddAssignee] = useState(true)
+    
 
+    //tham số truyền vào sẽ là id của comment khi click vào chỉnh sửa
+    const [addAssignee, setAddAssignee] = useState(true)
     const renderOptionAssignee = () => {
         return projectInfo?.members?.filter((value, index) => {
             const isExisted = issueInfo?.assignees?.findIndex((user) => {
@@ -27,10 +28,16 @@ export default function Assignees(props) {
     }
     const dispatch = useDispatch()
     return (
-        <div className="assignees mt-1">
-            <span style={{ color: '#42526e', fontWeight: '500' }}>Assignees</span>
+        <div className="assignees mt-3">
+            <span style={{ color: '#42526e', fontWeight: '500', marginBottom: 5, display: 'inline-block' }}>Assignees</span>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)' }}>
-                {issueInfo?.assignees?.length > 0 ? renderAssignees() : <span style={{ backgroundColor: '#e9eaf0', padding: '5px 10px', borderRadius: 5, width: 'fit-content', fontSize: 12 }} className='d-flex align-items-center font-weight-bold'><Avatar icon={<UserOutlined />} size='small' className='mr-2' /> Unassignee</span>}
+                {issueInfo?.assignees?.length > 0 ? <div className='d-flex'>
+                    {issueInfo?.assignees.map(user => {
+                        return <span style={{ backgroundColor: '#e9eaf0', padding: '5px 10px', borderRadius: 5, width: 'fit-content', fontSize: 12, marginRight: 5 }} className='d-flex align-items-center font-weight-bold'><Avatar src={user?.avatar} size='small' className='mr-2' />
+                            {user?.username}
+                        </span>
+                    })}
+                </div> : <span style={{ backgroundColor: '#e9eaf0', padding: '5px 10px', borderRadius: 5, width: 'fit-content', fontSize: 12 }} className='d-flex align-items-center font-weight-bold'><Avatar icon={<UserOutlined />} size='small' className='mr-2' /> Unassignee</span>}
                 {
                     issueInfo?.creator._id === userInfo?.id ? (
                         <div style={{ width: '100%', marginTop: 5 }}>

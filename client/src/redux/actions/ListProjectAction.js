@@ -83,6 +83,23 @@ export const CreateProcessACtion = (props) => {
     }
 }
 
+
+export const UpdateProcessAction = (process_id, project_id, props) => {
+    return async dispatch => {
+        try {
+            const res = await Axios.put(`${domainName}/api/issueprocess/process/${process_id}`, props)
+            console.log("res trong UpdateProcessAction", res);
+            
+            if (res.status === 200) {
+                dispatch(GetProcessListAction(project_id))
+                showNotificationWithIcon('success', '', res.data.message)
+            }
+        } catch (errors) {
+            console.log("error UpdateWorkflowAction", errors);
+        }
+    }
+}
+
 export const GetSprintListAction = (project_id, props) => {
     return async dispatch => {
         try {

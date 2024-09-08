@@ -39,7 +39,7 @@ export default function TimeOriginalEstimate(props) {
             </div> :
                 <span onDoubleClick={() => {
                     props.handleEditAttributeTag('originalTimeEstimate')
-                }} className='items-attribute' style={{ padding: '10px 10px', width: '100%', color: '#7A869A' }}>{Number.isInteger(issueInfo?.timeOriginalEstimate) ? convertMinuteToFormat(issueInfo?.timeOriginalEstimate) : "None"}</span>}
+                }} className='items-attribute ml-2' style={{ padding: '10px 10px', width: '100%', color: '#7A869A' }}>{Number.isInteger(issueInfo?.timeOriginalEstimate) ? convertMinuteToFormat(issueInfo?.timeOriginalEstimate) : "None"}</span>}
         </div>
     )
 }

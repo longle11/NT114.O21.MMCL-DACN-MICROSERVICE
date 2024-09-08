@@ -3,6 +3,7 @@ const app = require('./app')
 const natsWrapper = require("./nats-wrapper")
 const commentDeletedListener = require("./nats/comment-deleted-listeners")
 const mongoose = require("mongoose")
+const authCreatedListener = require('./nats/listener/auth-listener/auth-created-listener')
 
 async function connectToNats() {
     try {
@@ -12,8 +13,7 @@ async function connectToNats() {
             process.exit()
         })
 
-        commentDeletedListener()
-
+        authCreatedListener()
         process.on('SIGINT', () => { natsWrapper.client.close() })
         process.on('SIGTERM', () => { natsWrapper.client.close() })
         console.log("Kế nối thành công tới nats");
@@ -26,7 +26,7 @@ async function connectToMongoDb() {
     try {
         await mongoose.connect(process.env.MONGO_URL) 
 
-        console.log("Kế nối thành công tớiabase");
+        console.log("Kết nối thành công tới dabase");
     } catch (error) {
         console.log("Kết nối thất bại tới database");
     }

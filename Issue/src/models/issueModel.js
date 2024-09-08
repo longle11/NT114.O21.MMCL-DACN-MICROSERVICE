@@ -95,6 +95,20 @@ const issueSchema = new mongoose.Schema({
     parent: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'issues'
+    },
+    permissions: {
+        type: Boolean,
+        default: false
+    },
+    voted: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'users'
+        }
+    ],
+    isFlagged: {
+        type: Boolean,
+        default: false
     }
 })
 issueSchema.virtual('issuesRefSubIssueList', {

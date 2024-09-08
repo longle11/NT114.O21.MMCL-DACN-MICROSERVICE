@@ -64,6 +64,22 @@ const projectSchema = new mongoose.Schema({
             { title: 'Time Spent', key: 'timeSpent', til_index: 18, isShowed: false },
             { title: 'Time Remaining', key: 'timeRemaining', til_index: 19, isShowed: false },
         ]
+    },
+    issue_config: {
+        type: Object,
+        default: {
+            epic_panel: false,
+            version_panel: false,
+            issue_type_field: true,
+            issue_status_field: true,
+            issue_priority_field: true,
+            key_field: true,
+            epic_field: true,
+            version_field: true,
+            assignees_field: true,
+            story_point_field: true,
+            parent_field: true,
+        }
     }
 })
 

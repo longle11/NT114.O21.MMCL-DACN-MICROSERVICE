@@ -47,9 +47,16 @@ router.get("/:issueId", currentUserMiddleware, async (req, res, next) => {
                         path: 'parent'
                     }
                 })
-                
+                .populate({
+                    path: 'parent',
+                    select: '-__v'
+                })
+                .populate({
+                    path: 'voted'
+                })
+
             console.log("issue lay ra ", issue);
-            
+
             return res.status(200).json({
                 message: "Successfully retrieve the issue",
                 data: issue
@@ -58,6 +65,8 @@ router.get("/:issueId", currentUserMiddleware, async (req, res, next) => {
             throw new BadRequestError("Issue not found")
         }
     } catch (error) {
+        console.log("error ", error);
+
         next(error)
     }
 })
@@ -94,6 +103,13 @@ router.get("/issues/all", async (req, res) => {
                 populate: {
                     path: 'issue_type'
                 }
+            })
+            .populate({
+                path: 'parent',
+                select: '-__v'
+            })
+            .populate({
+                path: 'voted'
             })
         return res.status(200).json({
             message: "Successfully retrieve the issue list",
@@ -205,10 +221,16 @@ router.post("/backlog/:projectId", async (req, res) => {
                     path: 'creator'
                 }
             })
-        
+            .populate({
+                path: 'parent',
+                select: '-__v'
+            })
+            .populate({
+                path: 'voted'
+            })
 
         // console.log("get all issue in this project", getAllIssuesInProject);
-        
+
         if (getAllIssuesInProject.length !== 0) {
             return res.status(200).json({
                 message: "successfully get all issues belonging to backlog",

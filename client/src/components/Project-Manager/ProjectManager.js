@@ -6,10 +6,11 @@ import { GetProjectAction, ListProjectAction } from '../../redux/actions/ListPro
 import { drawer_edit_form_action } from '../../redux/actions/DrawerAction';
 import FormEdit from '../Forms/FormEdit';
 import { deleteItemCategory, getItemCategory } from '../../redux/actions/EditCategoryAction';
-import { getUserKeyword, insertUserIntoProject } from '../../redux/actions/UserAction';
+import { getUserKeyword, insertUserIntoProject, updateUserInfo } from '../../redux/actions/UserAction';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
 import { deleteUserInProject } from '../../redux/actions/CreateProjectAction';
+import Parser from 'html-react-parser'
 import Search from 'antd/es/input/Search';
 export default function ProjectManager() {
     const dispatch = useDispatch()
@@ -117,7 +118,7 @@ export default function ProjectManager() {
             width: '3%',
             render: (text, record, index) => {
                 if (record?.creator?._id === userInfo?.id) {
-                    return <button className='btn btn-transparent'>{record.marked === true ? <i className="fa-solid fa-star" style={{ color: '#ff8b00' }}></i> : <i className="fa-regular fa-star"></i>}</button>
+                    return <button className='btn btn-transparent'>{record?.marked === true ? <i className="fa-solid fa-star" style={{ color: '#ff8b00', fontSize: 15 }}></i> : <i className="fa-solid fa-star" style={{ fontSize: 15 }}></i>}</button>
                 }
                 return null
             }
@@ -126,10 +127,12 @@ export default function ProjectManager() {
             title: 'Name',
             dataIndex: 'name_project',
             key: 'name_project',
+            width: 'max-content',
             render: (text, record, index) => {
                 if (record?.creator?._id === userInfo?.id || record.members.findIndex(user => user.user_info._id === userInfo?.id) !== -1) {
                     return <NavLink to={`/projectDetail/${record._id}/board`} onClick={() => {
                         dispatch(GetProjectAction(record._id, ""))
+                        dispatch(updateUserInfo(userInfo?.id, { project_working: record._id }))
                     }} style={{ textDecoration: 'none' }}>
                         <span>{record.name_project}</span>
                     </NavLink>
@@ -140,12 +143,22 @@ export default function ProjectManager() {
                 }
             }
         },
+        // {
+        //     title: 'Category',
+        //     dataIndex: 'category',
+        //     key: 'category',
+        //     render: (text, record, index) => {
+        //         return <Tag key={index} color="magenta">{record.category?.name}</Tag>
+        //     }
+        // },
         {
-            title: 'Category',
-            dataIndex: 'category',
-            key: 'category',
+            title: 'Description',
+            dataIndex: 'description',
+            key: 'description',
+            width: 'max-content',
+
             render: (text, record, index) => {
-                return <Tag key={index} color="magenta">{record.category?.name}</Tag>
+                return <span>{Parser(record?.description)}</span>
             }
         },
         {

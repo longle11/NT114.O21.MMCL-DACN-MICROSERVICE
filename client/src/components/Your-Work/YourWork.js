@@ -25,7 +25,7 @@ export default function YourWork() {
         return issues.map((issue, index) => {
             return <a key={index} href={`/projectDetail/${issue?.project_id}/issues/issue-detail/${issue?.issue_id}`} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center" style={{ padding: '5px 20px' }}>
                 <div className='d-flex align-items-center'>
-                    <span>{iTagForIssueTypes(issue?.issue_status)}</span>
+                    <span>{iTagForIssueTypes(issue?.issue_status, null, null)}</span>
                     <div className='d-flex flex-column' style={{ width: '100%' }}>
                         <span>{issue?.summary}</span>
                         <div className='d-flex align-items-center'>
@@ -48,7 +48,7 @@ export default function YourWork() {
         return issues.map((issue, index) => {
             return <a key={index} href={`/projectDetail/${issue?.project_id}/issues/issue-detail/${issue?.issue_id}`} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center" style={{ padding: '5px 20px' }}>
                 <div className='d-flex align-items-center'>
-                    <span>{iTagForIssueTypes(issue?.issue_status)}</span>
+                    <span>{iTagForIssueTypes(issue?.issue_status, null, null)}</span>
                     <div className='d-flex flex-column' style={{ width: '100%' }}>
                         <span>{issue?.summary}</span>
                         <div className='d-flex align-items-center'>
@@ -191,7 +191,7 @@ export default function YourWork() {
         return assigned_issues.map((issue, index) => {
             return <a key={index} href={`/projectDetail/${issue?.project_id}/issues/issue-detail/${issue?.issue_id}`} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center" style={{ padding: '5px 20px' }}>
                 <div className='d-flex justify-content-between align-items-center'>
-                    <span>{iTagForIssueTypes(issue?.issue_status)}</span>
+                    <span>{iTagForIssueTypes(issue?.issue_status, null, null)}</span>
                     <div className='d-flex flex-column' style={{ width: '100%' }}>
                         <span>{issue?.summary}</span>
                         <div className='d-flex align-items-center'>

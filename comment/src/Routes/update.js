@@ -12,6 +12,8 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
         if(!req.currentUser) {
             throw new UnauthorizedError("Failed authentication")
         }
+        console.log("vao ben trong nay ne");
+        
 
         const commentIds = await commentModel.find({})
         const ids = commentIds.map(comment => comment._id.toString());

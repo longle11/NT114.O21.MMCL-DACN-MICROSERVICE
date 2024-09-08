@@ -28,7 +28,9 @@ export const createIssue = (props, project_id, creator_history, sprintId, issueP
 
 
                 if (issueParentId !== null) {    //this case to insert sub-issue into sub_issue_list of issue parent
-                    dispatch(updateInfoIssue(issueParentId, project_id, { sub_issue_id: res.data.data._id }, null, `WD-${res.data.data.ordinal_number}`, creator_history, "added", "sub issue"))
+                    dispatch(updateInfoIssue(issueParentId, project_id, {
+                        sub_issue_id: res.data.data._id
+                    }, null, `WD-${res.data.data.ordinal_number}`, creator_history, "added", "sub issue"))
                 }
 
                 if (sprintId !== null) {
@@ -36,6 +38,8 @@ export const createIssue = (props, project_id, creator_history, sprintId, issueP
                     dispatch(updateSprintAction(sprintId, { issue_id: res.data.data._id }))
                 }
 
+
+                
                 // //sau khi tao thanh cong issue thi tien hanh cap nhat lai danh sach project
                 // await Axios.put(`${domainName}/api/projectmanagement/insert/issue`, { project_id: props.projectId, issue_id: res.data?.data._id })
 
@@ -111,8 +115,8 @@ export const updateInfoIssue = (issueId, projectId, props, old_status, new_statu
         try {
             const res = await Axios.put(`${domainName}/api/issue/update/${issueId}`, { ...props, updateAt: Date.now() })
             if (res.status === 200) {
-                console.log("res tra ve tu updateInfoIssue " , res);
-                
+                console.log("res tra ve tu updateInfoIssue ", res);
+
                 // //tien hanh tao history cho issue
                 dispatch(createIssueHistory({
                     issue_id: res.data.data._id.toString(),
@@ -215,25 +219,27 @@ export const deleteIssue = (issueId) => {
     }
 }
 
-export const getIssueHistoriesList = (issueId) => {
+export const getIssueHistoriesList = (issueId, sort) => {
     return async dispatch => {
         try {
-            const res = await Axios.get(`${domainName}/api/issuehistory/issuehistory-list/${issueId}`)
-            //lấy ra danh sách issue sau khi thay đổi
-            dispatch({
-                type: GET_ISSUE_HISTORIES_LIST,
-                historyList: res.data.data[0].histories
-            })
+            const res = await Axios.get(`${domainName}/api/issuehistory/issuehistory-list/${issueId}/${sort}`)
+            if (res.status === 200) {
+                //lấy ra danh sách issue sau khi thay đổi
+                dispatch({
+                    type: GET_ISSUE_HISTORIES_LIST,
+                    historyList: res.data.data.histories
+                })
+            }
         } catch (error) {
             showNotificationWithIcon("error", "", "loi")
         }
     }
 }
 
-export const getWorklogHistoriesList = (issueId) => {
+export const getWorklogHistoriesList = (issueId, sort) => {
     return async dispatch => {
         try {
-            const res = await Axios.get(`${domainName}/api/issuehistory/worklog-list/${issueId}`)
+            const res = await Axios.get(`${domainName}/api/issuehistory/worklog-list/${issueId}/${sort}`)
             //lấy ra danh sách issue sau khi thay đổi
             dispatch({
                 type: GET_WORKLOG_HISTORIES_LIST,
