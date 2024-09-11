@@ -2,11 +2,11 @@ import React, { useEffect, useRef, useState } from 'react'
 import DrawerHOC from '../../HOC/DrawerHOC'
 import { NavLink, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Avatar, Breadcrumb, Button, Input, InputNumber, Modal, Select, Tag, Tooltip } from 'antd';
+import { Avatar, Breadcrumb, Button, Input, InputNumber, Modal, Select, Switch, Tag, Tooltip } from 'antd';
 import { createIssue, getIssuesBacklog, updateInfoIssue } from '../../redux/actions/IssueAction';
 import { CreateProcessACtion, GetProcessListAction, GetProjectAction, GetSprintAction, GetSprintListAction, UpdateProcessAction } from '../../redux/actions/ListProjectAction';
 import { updateProjectAction } from '../../redux/actions/CreateProjectAction';
-import { CopyLinkButton, issueTypeWithoutOptions, iTagForIssueTypes, iTagForPriorities, renderAssignees } from '../../util/CommonFeatures';
+import { CopyLinkButton, issueTypeWithoutOptions, iTagForIssueTypes, iTagForPriorities } from '../../util/CommonFeatures';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
 import dayjs from 'dayjs';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
@@ -23,8 +23,22 @@ import domainName from '../../util/Config';
 import { Editor } from '@tinymce/tinymce-react';
 import { createCommentAction } from '../../redux/actions/CommentAction';
 import { getEpicList } from '../../redux/actions/CategoryAction';
+import { drawer_edit_form_action } from '../../redux/actions/DrawerAction';
+import CreateSprint from '../Forms/CreateSprint/CreateSprint';
 export default function Dashboard() {
     const dispatch = useDispatch()
+    //set display epic and version fields
+    const [onChangeEpics, setOnChangeEpics] = useState(true)
+
+
+    const [onChangeIssuePriority, setOnChangeIssuePriority] = useState(true)
+    const [onChangeIssueStatus, setOnChangeIssueStatus] = useState(true)
+    const [onChangeKey, setOnChangeKey] = useState(true)
+
+    const [onChangeIssueType, setOnChangeIssueType] = useState(true)
+    const [onChangeAssignees, setOnChangeAssignees] = useState(true)
+    const [onChangeStoryPoint, setOnChangeStoryPoint] = useState(true)
+    const [onChangeParent, setOnChangeParent] = useState(true)
 
     //sử dụng hiển thị tất cả issue hoặc chỉ các issue liên quan tới user
     const { id, sprintId } = useParams()
@@ -41,6 +55,9 @@ export default function Dashboard() {
     const [onEditNameProcess, setOnEditNameProcess] = useState('')
     const [editNameProcess, setEditNameProcess] = useState('')
     const [editLimitColumnProcess, setEditLimitColumnProcess] = useState(null)
+
+    const [onChangeSettings, setOnChangeSettings] = useState(false)
+
 
     const [searchIssue, setSearchIssue] = useState({
         versions: [],
@@ -245,7 +262,7 @@ export default function Dashboard() {
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         onClick={() => {
-                            dispatch(displayComponentInModalInfo(<InfoModal issueInfo={issue} userInfo={userInfo} displayNumberCharacterInSummarySubIssue={10} />))
+                            dispatch(displayComponentInModalInfo(<InfoModal issueIdForIssueDetail={null} issueInfo={issue} userInfo={userInfo} displayNumberCharacterInSummarySubIssue={10} />))
                         }}
                         onKeyDown={() => { }}>
                         <div className={`${issue?.isFlagged ? "isFlagged" : ""}`} style={{ cursor: 'pointer', backgroundColor: issue?.isFlagged ? "#F1CA45" : "#ffff", height: '100%', width: '100%', padding: '10px' }}>
@@ -494,6 +511,23 @@ export default function Dashboard() {
     //     console.log("listProcesses ", newListProcesses);
     //     setListProcesses(newListProcesses);
     // }
+
+    const updateIssueConfig = (issue_status_field, key_field, issue_type_field, epic_field, version_field, issue_priority_field, assignees_field, story_point_field, parent_field) => {
+        dispatch(updateProjectAction(id, {
+            issue_config: {
+                issue_status_field: issue_status_field,
+                key_field: key_field,
+                issue_type_field: issue_type_field,
+                epic_field: epic_field,
+                version_field: version_field,
+                issue_priority_field: issue_priority_field,
+                assignees_field: assignees_field,
+                story_point_field: story_point_field,
+                parent_field: parent_field,
+            }
+        }, null))
+    }
+
     return (
         <div style={{ margin: '0 20px' }}>
             <DrawerHOC />
@@ -536,12 +570,45 @@ export default function Dashboard() {
                             <div>Github Repo</div>
                         </Button>
                     </NavLink>
-                    <Button className='m-0 mr-2' type='primary'><i className="fa fa-share"></i></Button>
-                    <Button className='m-0 mr-2' type='primary'><i className="fa fa-bars"></i></Button>
+                    <Button className='m-0 mr-2' type='primary'><i className="fa fa-share mr-2"></i> Share</Button>
+                    <div className="dropdown">
+                        <Button className='m-0 mr-2' id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i style={{ fontSize: 20 }} className="fa fa-ellipsis-h"></i>
+                        </Button>
+                        <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a className="dropdown-item" href="##" onClick={() => {
+                                dispatch(drawer_edit_form_action(<CreateSprint currentSprint={sprintInfo} />, 'Save', '700px'))
+                            }}>Edit Sprint</a>
+                            <a className="dropdown-item" href={`/projectDetail/${id}/workflows`}>Manage Workflow</a>
+                        </div>
+                    </div>
+
                 </div>
             </div>
             <p>{sprintInfo === null || sprintInfo === undefined || Object?.keys(sprintInfo).length === 0 ? "" : sprintInfo.sprint_goal}</p>
-            <MemberProject projectInfo={projectInfo} id={id} userInfo={userInfo} allIssues={sprintInfo.issue_list} epicList={epicList} typeInterface="dashboard" handleSearchIssue={handleSearchIssue} searchIssue={searchIssue} />
+            <div className='d-flex justify-content-between'>
+                <MemberProject projectInfo={projectInfo} id={id} userInfo={userInfo} allIssues={sprintInfo.issue_list} epicList={epicList} typeInterface="dashboard" handleSearchIssue={handleSearchIssue} searchIssue={searchIssue} />
+                <div className='d-flex'>
+                    <div className='mr-1 d-flex align-items-center'>
+                        <span style={{ color: '#626F86', fontSize: 11, padding: '0 5px' }}>GROUP BY</span>
+                        <div className="dropdown">
+                            <Button className="dropdown-toggle" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                None
+                            </Button>
+                            <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                <a className="dropdown-item" href="#">None</a>
+                                <a className="dropdown-item" href="#">Assignee</a>
+                                <a className="dropdown-item" href="#">Epic</a>
+                                <a className="dropdown-item" href="#">Subtask</a>
+                            </div>
+                        </div>
+                    </div>
+                    <Button className='mr-1'><i className="fa fa-chart-line mr-2"></i> Insights</Button>
+                    <Button onClick={() => {
+                        setOnChangeSettings(!onChangeSettings)
+                    }}><span><i className="fa-solid fa-sliders mr-2"></i> View Settings</span></Button>
+                </div>
+            </div>
             <DragDropContext onDragStart={(e) => {
                 if (e.draggableId.includes('process')) {
                     setLockDroppable(false)
@@ -551,124 +618,211 @@ export default function Dashboard() {
             }} onDragEnd={(result) => {
                 handleDragEnd(result)
             }}>
-                <Droppable direction='horizontal' droppableId='process' isDropDisabled={lockDroppable}>
-                    {(provided) => {
-                        return <div
-                            ref={provided.innerRef}
-                            {...provided.droppableProps}
-                            className="content"
-                            style={{ overflowX: 'scroll', overflowY: 'hidden', height: 'fit-content', width: '100%', display: '-webkit-box', padding: '15px 0', scrollbarWidth: 'none', backgroundColor: 'white' }}
-                        >
-                            {processList?.map((process, index) => {
-                                return <Draggable draggableId={`process-${process._id}`} key={`process-${process._id}`} index={index}>
-                                    {(provided) => {
-                                        return <div
-                                            ref={provided.innerRef}
-                                            {...provided.dragHandleProps}
-                                            {...provided.draggableProps}
-                                            className="card">
-                                            <div style={{ width: 'max-content', minWidth: '16rem', height: '28rem', fontWeight: 'bold', scrollbarWidth: 'none', overflowY: 'none' }}>
-                                                <div className='d-flex justify-content-between align-items-center process-header' style={{ backgroundColor: process.tag_color, color: 'white', padding: '3px 10px' }}>
-                                                    {
-                                                        onEditNameProcess === process?._id ? <div style={{ position: 'relative' }}>
-                                                            <Input onChange={(e) => { setEditNameProcess(e.target.value) }} defaultValue={process?.name_process} style={{ borderRadius: 0 }} />
-                                                            <div className='d-flex' style={{ position: 'absolute', right: 0, zIndex: 9999 }}>
-                                                                <Button onClick={() => {
-                                                                    if (editNameProcess.trim() !== "") {
-                                                                        dispatch(UpdateProcessAction(process._id, id, { name_process: editNameProcess.toUpperCase() }))
-                                                                    }
-                                                                    setOnEditNameProcess('')
-                                                                    setEditNameProcess('')
-                                                                }} className='mr-1'><i className="fa fa-check"></i></Button>
-                                                                <Button onClick={() => {
-                                                                    setOnEditNameProcess('')
-                                                                    setEditNameProcess('')
-                                                                }}><i className="fa fa-times"></i></Button>
+                <div className='d-flex'>
+                    <Droppable direction='horizontal' droppableId='process' isDropDisabled={lockDroppable}>
+                        {(provided) => {
+                            return <div
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                                className="content"
+                                style={{ overflowX: 'scroll', overflowY: 'hidden', height: 'fit-content', width: '100%', display: '-webkit-box', padding: 0, margin: '8px 0', scrollbarWidth: 'none', backgroundColor: 'white' }}
+                            >
+                                {processList?.map((process, index) => {
+                                    return <Draggable draggableId={`process-${process._id}`} key={`process-${process._id}`} index={index}>
+                                        {(provided) => {
+                                            return <div
+                                                ref={provided.innerRef}
+                                                {...provided.dragHandleProps}
+                                                {...provided.draggableProps}
+                                                className="card">
+                                                <div style={{ width: 'max-content', minWidth: '16rem', height: '35rem', fontWeight: 'bold', scrollbarWidth: 'none', overflowY: 'none' }}>
+                                                    <div className='d-flex justify-content-between align-items-center process-header' style={{ backgroundColor: process.tag_color, color: 'white', padding: '3px 10px' }}>
+                                                        {
+                                                            onEditNameProcess === process?._id ? <div style={{ position: 'relative' }}>
+                                                                <Input onChange={(e) => { setEditNameProcess(e.target.value) }} defaultValue={process?.name_process} style={{ borderRadius: 0 }} />
+                                                                <div className='d-flex' style={{ position: 'absolute', right: 0, zIndex: 9999 }}>
+                                                                    <Button onClick={() => {
+                                                                        if (editNameProcess.trim() !== "") {
+                                                                            dispatch(UpdateProcessAction(process._id, id, { name_process: editNameProcess.toUpperCase() }))
+                                                                        }
+                                                                        setOnEditNameProcess('')
+                                                                        setEditNameProcess('')
+                                                                    }} className='mr-1'><i className="fa fa-check"></i></Button>
+                                                                    <Button onClick={() => {
+                                                                        setOnEditNameProcess('')
+                                                                        setEditNameProcess('')
+                                                                    }}><i className="fa fa-times"></i></Button>
+                                                                </div>
+                                                            </div> : <div className="card-header d-flex align-items-center hover-name_process-dashboard" style={{ color: 'black', padding: '5px 10px', borderRadius: 0 }}>
+                                                                <div>
+                                                                    <NavLink onClick={() => {
+                                                                        setOnEditNameProcess(process._id)
+                                                                    }} style={{ textDecoration: 'none', color: '#454545' }}>{process?.name_process}</NavLink>
+                                                                    <Avatar className='ml-2' size={25}><span style={{ fontSize: 12, display: 'flex' }}>{sprintInfo !== null && Object.keys(sprintInfo).length !== 0 ? sprintInfo?.issue_list?.filter(issue => {
+                                                                        return issue.issue_type._id === process._id && issue.issue_status !== 4
+                                                                    }).length : '0'}</span></Avatar>
+                                                                    {process?._id === processList[processList.length - 1]?._id ? <span className='ml-2 font-weight-bold'><i style={{ color: 'green' }} className="fa fa-check"></i></span> : <></>}
+                                                                </div>
+                                                                <div>
+                                                                    {Number.parseInt(process?.limited_number_issues) ? <span style={{ marginLeft: 10, fontSize: 12, backgroundColor: '#fbf7f7', padding: '2px 5px' }}>MAX: {process?.limited_number_issues?.toString()}</span> : <></>}
+                                                                </div>
                                                             </div>
-                                                        </div> : <div className="card-header d-flex align-items-center hover-name_process-dashboard" style={{ color: 'black', padding: '5px 10px', borderRadius: 0 }}>
-                                                            <div>
-                                                                <NavLink onClick={() => {
-                                                                    setOnEditNameProcess(process._id)
-                                                                }} style={{ textDecoration: 'none', color: '#454545' }}>{process?.name_process}</NavLink>
-                                                                <Avatar className='ml-2' size={25}><span style={{ fontSize: 12, display: 'flex' }}>{sprintInfo !== null && Object.keys(sprintInfo).length !== 0 ? sprintInfo?.issue_list?.filter(issue => {
-                                                                    return issue.issue_type._id === process._id && issue.issue_status !== 4
-                                                                }).length : '0'}</span></Avatar>
-                                                                {process?._id === processList[processList.length - 1]?._id ? <span className='ml-2 font-weight-bold'><i style={{ color: 'green' }} className="fa fa-check"></i></span> : <></>}
+                                                        }
+                                                        <div className='dropdown'>
+                                                            <button style={{ height: '30px', display: 'none' }} className='btn btn-light p-0 pl-3 pr-3 btn-dashboard-setting' type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                                <i className="fa-sharp fa-solid fa-bars"></i>
+                                                            </button>
+                                                            <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                                                <button onClick={() => {
+                                                                    setEditLimitColumnProcess(process)
+                                                                    setIsOpenModalSetColumn(true)
+                                                                }} className="dropdown-item">Set column limit</button>
+                                                                <button className="dropdown-item" onClick={() => {
+                                                                    setCurrentProcess(process)
+                                                                    showModal()
+                                                                }}>Delete</button>
                                                             </div>
-                                                            <div>
-                                                                {Number.parseInt(process?.limited_number_issues) ? <span style={{ marginLeft: 10, fontSize: 12, backgroundColor: '#fbf7f7', padding: '2px 5px' }}>MAX: {process?.limited_number_issues?.toString()}</span> : <></>}
-                                                            </div>
-                                                        </div>
-                                                    }
-                                                    <div className='dropdown'>
-                                                        <button style={{ height: '30px', display: 'none' }} className='btn btn-light p-0 pl-3 pr-3 btn-dashboard-setting' type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                            <i className="fa-sharp fa-solid fa-bars"></i>
-                                                        </button>
-                                                        <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                                            <button onClick={() => {
-                                                                setEditLimitColumnProcess(process)
-                                                                setIsOpenModalSetColumn(true)
-                                                            }} className="dropdown-item">Set column limit</button>
-                                                            <button className="dropdown-item" onClick={() => {
-                                                                setCurrentProcess(process)
-                                                                showModal()
-                                                            }}>Delete</button>
                                                         </div>
                                                     </div>
+                                                    <Droppable droppableId={process._id}>
+                                                        {(provided) => {
+                                                            return <div className="list-group list-group-flush" style={{ overflowY: 'auto', height: '33rem', scrollbarWidth: 'none' }} ref={provided.innerRef} {...provided.droppableProps}>
+                                                                {index === 0 && sprintId === null ? <div className='d-flex flex-column align-items-center ml-2 mr-2 mt-5'>
+                                                                    <img src="https://jira-frontend-bifrost.prod-east.frontend.public.atl-paas.net/assets/agile.52407441.svg" style={{ height: 150, width: 150 }} alt="img-backlog" />
+                                                                    <p style={{ fontWeight: 'bold', marginBottom: 5 }}>Get started in the backlog</p>
+                                                                    <span style={{ fontWeight: 'normal', textAlign: 'center' }}>Plan and start a sprint to see issues here.</span>
+                                                                    <Button className='mt-2' danger onClick={() => {
+                                                                        navigate(`/projectDetail/${id}/backlog`)
+                                                                    }}>Go to Backlog</Button>
+                                                                </div> : renderIssue(process._id, process?.limited_number_issues)}
+                                                                {provided.placeholder}
+                                                            </div>
+                                                        }}
+                                                    </Droppable>
                                                 </div>
-                                                <Droppable droppableId={process._id}>
-                                                    {(provided) => {
-                                                        return <div className="list-group list-group-flush" style={{ overflowY: 'auto', height: '24rem', scrollbarWidth: 'none' }} ref={provided.innerRef} {...provided.droppableProps}>
-                                                            {index === 0 && sprintId === null ? <div className='d-flex flex-column align-items-center ml-2 mr-2 mt-5'>
-                                                                <img src="https://jira-frontend-bifrost.prod-east.frontend.public.atl-paas.net/assets/agile.52407441.svg" style={{ height: 150, width: 150 }} alt="img-backlog" />
-                                                                <p style={{ fontWeight: 'bold', marginBottom: 5 }}>Get started in the backlog</p>
-                                                                <span style={{ fontWeight: 'normal', textAlign: 'center' }}>Plan and start a sprint to see issues here.</span>
-                                                                <Button className='mt-2' danger onClick={() => {
-                                                                    navigate(`/projectDetail/${id}/backlog`)
-                                                                }}>Go to Backlog</Button>
-                                                            </div> : renderIssue(process._id, process?.limited_number_issues)}
-                                                            {provided.placeholder}
-                                                        </div>
-                                                    }}
-                                                </Droppable>
+                                                {provided.placeholder}
                                             </div>
-                                            {provided.placeholder}
-                                        </div>
-                                    }}
-                                </Draggable>
-                            })}
-                            <div className='add-process'>
-                                <Button style={{ display: !openAddProcess ? "block" : "none" }} onClick={() => {
-                                    setOpenAddProcess(true)
-                                }} type="primary"><i className="fa fa-plus"></i></Button>
-                                <div style={{ display: openAddProcess ? "block" : "none" }}>
-                                    <Input defaultValue='' value={valueProcess} style={{ width: '100%' }} onChange={(e) => {
-                                        setValueProcess(e.target.value)
-                                    }} />
-                                    <div className='d-flex justify-content-end'>
-                                        <Button onClick={() => {
-                                            if (valueProcess.trim() !== "") {
-                                                dispatch(CreateProcessACtion({
-                                                    project_id: id,
-                                                    name_process: valueProcess.toUpperCase()
-                                                }))
+                                        }}
+                                    </Draggable>
+                                })}
+                                <div className='add-process'>
+                                    <Button style={{ display: !openAddProcess ? "block" : "none" }} onClick={() => {
+                                        setOpenAddProcess(true)
+                                    }} type="primary"><i className="fa fa-plus"></i></Button>
+                                    <div style={{ display: openAddProcess ? "block" : "none" }}>
+                                        <Input defaultValue='' value={valueProcess} style={{ width: '100%' }} onChange={(e) => {
+                                            setValueProcess(e.target.value)
+                                        }} />
+                                        <div className='d-flex justify-content-end'>
+                                            <Button onClick={() => {
+                                                if (valueProcess.trim() !== "") {
+                                                    dispatch(CreateProcessACtion({
+                                                        project_id: id,
+                                                        name_process: valueProcess.toUpperCase()
+                                                    }))
+                                                    setOpenAddProcess(false)
+                                                    setValueProcess('')
+                                                } else {
+                                                    showNotificationWithIcon('error', '', 'Created failed, please entering again')
+                                                }
+                                            }} type="primary"><i className="fa fa-check"></i></Button>
+                                            <Button onClick={() => {
                                                 setOpenAddProcess(false)
                                                 setValueProcess('')
-                                            } else {
-                                                showNotificationWithIcon('error', '', 'Created failed, please entering again')
-                                            }
-                                        }} type="primary"><i className="fa fa-check"></i></Button>
-                                        <Button onClick={() => {
-                                            setOpenAddProcess(false)
-                                            setValueProcess('')
-                                        }}><i className="fa-solid fa-xmark"></i></Button>
+                                            }}><i className="fa-solid fa-xmark"></i></Button>
+                                        </div>
                                     </div>
                                 </div>
+                                {provided.placeholder}
                             </div>
-                            {provided.placeholder}
+                        }}
+                    </Droppable>
+                    <div className={`card info-settings mr-1`} style={{ width: '25rem', display: onChangeSettings ? 'block' : 'none', margin: '0px 10px', height: 'fit-content', marginTop: 7 }}>
+                        <div className='d-flex justify-content-between' style={{ padding: '15px 10px' }}>
+                            <h6 className='m-0'>View Settings</h6>
+                            <i className="fa-solid fa-xmark" onClick={() => {
+                                setOnChangeSettings(!onChangeSettings)
+                            }}></i>
                         </div>
-                    }}
-                </Droppable>
+                        <div className='row ml-2 mb-2'>
+                            <span className='col-8'>Versions</span>
+                            <Switch style={{ width: '10%' }} className='col-1' onChange={() => {
+                                updateIssueConfig(onChangeIssueStatus, onChangeKey, onChangeIssueType, onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, onChangeParent)
+                            }} />
+                        </div>
+                        <div className='row ml-2 mb-2'>
+                            <span className='col-8'>Epics</span>
+                            <Switch className='col-1' onChange={() => {
+                                updateIssueConfig(!onChangeIssueStatus, onChangeKey, onChangeIssueType, onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, onChangeParent)
+                            }} />
+                        </div>
+                        <hr />
+                        <div>
+                            <h6 style={{ padding: '0 10px' }}>Fields</h6>
+                            <div className='row ml-2 mb-2'>
+                                <span className='col-8'>Issue Status</span>
+                                <Switch className='col-1' onChange={() => {
+                                    updateIssueConfig(!onChangeIssueStatus, onChangeKey, onChangeIssueType, onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, onChangeParent)
+                                    setOnChangeIssueStatus(!onChangeIssueStatus)
+                                }} value={onChangeIssueStatus} />
+                            </div>
+
+                            <div className='row ml-2 mb-2'>
+                                <span className='col-8'>Issue Key</span>
+                                <Switch className='col-1' onChange={() => {
+                                    updateIssueConfig(onChangeIssueStatus, !onChangeKey, onChangeIssueType, onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, onChangeParent)
+
+                                    setOnChangeKey(!onChangeKey)
+                                }} value={onChangeKey} />
+                            </div>
+                            <div className='row ml-2 mb-2'>
+                                <span className='col-8'>Issue Type</span>
+                                <Switch className='col-1' onChange={() => {
+                                    updateIssueConfig(onChangeIssueStatus, onChangeKey, !onChangeIssueType, onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, onChangeParent)
+
+                                    setOnChangeIssueType(!onChangeIssueType)
+                                }} value={onChangeIssueType} />
+                            </div>
+                            <div className='row ml-2 mb-2'>
+                                <span className='col-8'>Epic</span>
+                                <Switch className='col-1' onChange={() => {
+                                    updateIssueConfig(!onChangeIssueStatus, onChangeKey, onChangeIssueType, onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, onChangeParent)
+
+                                    setOnChangeEpics(!onChangeEpics)
+                                }} value={onChangeEpics} />
+                            </div>
+                            <div className='row ml-2 mb-2'>
+                                <span className='col-8'>Priority</span>
+                                <Switch className='col-1' onChange={() => {
+                                    updateIssueConfig(onChangeIssueStatus, onChangeKey, onChangeIssueType, !onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, onChangeParent)
+
+                                    setOnChangeIssuePriority(!onChangeIssuePriority)
+                                }} value={onChangeIssuePriority} />
+                            </div>
+                            <div className='row ml-2 mb-2'>
+                                <span className='col-8'>Assignees</span>
+                                <Switch className='col-1' onChange={() => {
+                                    updateIssueConfig(onChangeIssueStatus, onChangeKey, onChangeIssueType, onChangeIssuePriority, !onChangeAssignees, onChangeStoryPoint, onChangeParent)
+                                    setOnChangeAssignees(!onChangeAssignees)
+                                }} value={onChangeAssignees} />
+                            </div>
+                            <div className='row ml-2 mb-2'>
+                                <span className='col-8'>Story Point</span>
+                                <Switch className='col-1' onChange={() => {
+                                    updateIssueConfig(onChangeIssueStatus, onChangeKey, onChangeIssueType, onChangeIssuePriority, onChangeAssignees, !onChangeStoryPoint, onChangeParent)
+                                    setOnChangeStoryPoint(!onChangeStoryPoint)
+                                }} value={onChangeStoryPoint} />
+                            </div>
+                            <div className='row ml-2 mb-2'>
+                                <span className='col-8'>Parent</span>
+                                <Switch className='col-1' onChange={() => {
+                                    updateIssueConfig(onChangeIssueStatus, onChangeKey, onChangeIssueType, onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, !onChangeParent)
+                                    setOnChangeParent(!onChangeParent)
+                                }} value={onChangeParent} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <Modal
                     open={open}

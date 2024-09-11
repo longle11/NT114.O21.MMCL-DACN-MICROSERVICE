@@ -4,6 +4,7 @@ const issueModel = require('../models/issueModel')
 const issuePublisher = require("../nats/publisher/issue-publisher")
 const BadRequestError = require("../Errors/Bad-Request-Error")
 const UnauthorizedError = require("../Errors/UnAuthorized-Error")
+const { default: mongoose } = require("mongoose")
 const router = express.Router()
 
 router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
@@ -18,9 +19,6 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                 throw new BadRequestError("Issue not found")
             } else {
                 let currentIssue = await issueModel.findById(id)
-                console.log("gia tri body ", req.body);
-                
-
                 //kiem tra xem assignees co duoc them vao hay khong
                 let listAssignees = currentIssue.assignees
                 if (req.body?.assignees != null) {
@@ -45,6 +43,18 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                     currentIssue.old_sprint.push(req.body.old_sprint)
 
                     req.body.old_sprint = [...currentIssue.old_sprint]
+                }
+
+                //upload file in file uploaded
+                if(req.body?.uploaded_file_id) {
+                    const fileIndex = currentIssue.file_uploaded.findIndex(file => file.toString() === req.body.uploaded_file_id.toString())
+                    if(fileIndex === -1) {
+                        currentIssue.file_uploaded.push(new mongoose.Types.ObjectId(req.body.uploaded_file_id.toString()))
+                    }else {
+                        currentIssue.file_uploaded.splice(fileIndex, 1)
+                    }
+                    req.body.file_uploaded = [...currentIssue.file_uploaded]
+                    req.body.uploaded_file_id = null
                 }
 
                 if (req.body?.sub_issue_id) {
@@ -90,8 +100,6 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                     isFlagged: currentIssue.isFlagged,
                     ...req.body
                 }
-
-                console.log("Issue sau khi cap nhat ", copyIssue);
 
 
                 // public su kien toi projectmanagement service

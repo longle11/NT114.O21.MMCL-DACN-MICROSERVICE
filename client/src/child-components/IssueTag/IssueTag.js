@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useDispatch } from 'react-redux'
-import { updateInfoIssue } from '../../redux/actions/IssueAction'
+import { getInfoIssue, updateInfoIssue } from '../../redux/actions/IssueAction'
 import { updateUserInfo } from '../../redux/actions/UserAction'
 import { iTagForIssueTypes, iTagForPriorities, priorityTypeOptions } from '../../util/CommonFeatures'
 import { Avatar, Button, Divider, Input, InputNumber, Select, Space, Tag, Tooltip } from 'antd'
@@ -10,6 +10,8 @@ import './IssueTag.css'
 import { LightenDarkenColor } from '../../util/HandleColor'
 import { displayComponentInModalInfo } from '../../redux/actions/ModalAction'
 import InfoModal from '../../components/Modal/InfoModal/InfoModal'
+import { delay } from '../../util/Delay'
+import { DISPLAY_LOADING, HIDE_LOADING } from '../../redux/constants/constant'
 export default function IssueTag(props) {
     const dispatch = useDispatch()
     const [editSummary, setEditSummary] = useState({
@@ -530,8 +532,16 @@ export default function IssueTag(props) {
             {...provided.dragHandleProps}
             {...provided.draggableProps}
             key={`${issue._id.toString()}`}
-            onClick={() => {
-                dispatch(displayComponentInModalInfo(<InfoModal issueInfo={issue} displayNumberCharacterInSummarySubIssue={10} />))
+            onClick={async () => {
+                // dispatch({
+                //     type: DISPLAY_LOADING
+                // })
+                // dispatch(getInfoIssue(issue._id.toString()))
+                // await delay(200)
+                // dispatch({
+                //     type: HIDE_LOADING
+                // })
+                dispatch(displayComponentInModalInfo(<InfoModal issueIdForIssueDetail={null} issueInfo={issue} displayNumberCharacterInSummarySubIssue={10} />))
                 //dispatch event to update viewed issue in auth service
                 dispatch(updateUserInfo(userInfo?.id, { viewed_issue: issue._id }))
             }}

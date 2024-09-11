@@ -109,7 +109,12 @@ const issueSchema = new mongoose.Schema({
     isFlagged: {
         type: Boolean,
         default: false
-    }
+    },
+    file_uploaded: [
+        {
+            type: mongoose.Schema.Types.ObjectId
+        }
+    ]
 })
 issueSchema.virtual('issuesRefSubIssueList', {
     ref: 'issues',

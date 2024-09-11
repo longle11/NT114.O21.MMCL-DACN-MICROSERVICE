@@ -1,11 +1,12 @@
-import { GET_VERSION, GET_CATEGORY_API, GET_EPICS, GET_EPICS_BY_ID, GET_VERSION_BY_ID } from "../constants/constant"
+import { GET_VERSION, GET_CATEGORY_API, GET_EPICS, GET_EPICS_BY_ID, GET_VERSION_BY_ID, GET_ALL_FILE } from "../constants/constant"
 
 const initialState = {
     categoryList: [],
     epicList: [],
     epicInfo: {},
     versionList: [],
-    versionInfo: {}
+    versionInfo: {},
+    fileList: []
 }
 /* eslint-disable import/no-anonymous-default-export */
 export default (state = initialState, action) => {
@@ -23,6 +24,9 @@ export default (state = initialState, action) => {
     }
     else if(action.type === GET_VERSION_BY_ID) {
         state.versionInfo = action.versionInfo
+    }
+    else if(action.type === GET_ALL_FILE) {
+        state.fileList = action.fileList
     }
     return { ...state }
 

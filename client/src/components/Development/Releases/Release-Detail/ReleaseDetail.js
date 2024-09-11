@@ -32,22 +32,21 @@ export default function ReleaseDetail() {
     }, [])
 
     useEffect(() => {
-        console.log("lap vo tan");
-        
-        setDataSource(issuesBacklog?.filter(issue => issue.fix_version?._id?.toString() === versionInfo?._id?.toString()))
+        setDataSource(issuesBacklog?.filter(issue => issue.fix_version?._id?.toString() === versionInfo?._id?.toString() && issue.issue_status !== 4 && issue.issue_status !== 4))
     }, [issuesBacklog])
     const [dataSource, setDataSource] = useState([])
     const columns = [
         {
             title: 'Issue',
             dataIndex: 'issue',
+            width: 'fit-content',
             key: 'issue',
             render: (text, record) => {
                 return <div className='d-flex align-items-center'>
                     <span>{iTagForPriorities(record.issue_priority)}</span>
                     <span className='ml-2'>{iTagForIssueTypes(record.issue_status)}</span>
                     {/* <span>WD-{record._id.toString()}</span> */}
-                    <span className='ml-2'>{record.summary}</span>
+                    <span className='ml-2' style={{width: 'fit-content'}}>{record.summary}</span>
                 </div>
             }
         },
@@ -55,6 +54,7 @@ export default function ReleaseDetail() {
             title: 'Assignees',
             dataIndex: 'assignees',
             key: 'assignees',
+            width: 'fit-content',
             render: (text, record) => {
                 if (record.assignees.length === 0) {
                     return <span><Avatar icon={<UserOutlined />} /> <span className='ml-2'>Unassignee</span></span>
@@ -65,6 +65,7 @@ export default function ReleaseDetail() {
             title: 'Status',
             dataIndex: 'issue_status',
             key: 'issue_status',
+            width: 'fit-content',
             render: (text, record) => {
                 return <Tag color={record.issue_type.tag_color}>{record.issue_type.name_process}</Tag>
             }
@@ -73,13 +74,14 @@ export default function ReleaseDetail() {
             title: '',
             dataIndex: 'action',
             key: 'action',
+            width: '100px',
             render: (text, record) => {
                 return <div className="btn-group">
                     <Button data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i className="fa fa-ellipsis-h"></i></Button>
                     <div className="dropdown-menu" style={{ width: 'max-content' }}>
                         <a href='##' onClick={() => {
-                            dispatch(updateInfoIssue(versionInfo._id, versionInfo.project_id, { fix_version: null }, versionInfo.name_version, "None", userInfo.id, "updated", "version"))
-                        }} style={{ padding: '10px', backgroundColor: '#ddd' }}>Remove from version</a>
+                            dispatch(updateInfoIssue(record._id, record.project_id._id, { fix_version: null }, versionInfo.name_version, "None", userInfo.id, "updated", "version"))
+                        }} style={{ padding: '10px', backgroundColor: '#ddd', color: '#000', textDecoration: 'none' }}>Remove from version</a>
                     </div>
                 </div>
 
@@ -90,7 +92,7 @@ export default function ReleaseDetail() {
     const calculatePercentageForProgress = () => {
         return Math.round((versionInfo.issue_list?.filter(issue => {
             return issue.issue_type === processList[processList.length - 1]?._id
-        })?.length / versionInfo.issue_list?.length)* 100) 
+        })?.length / versionInfo.issue_list?.length) * 100)
     }
 
     const renderButtonRelease = (versionInfo) => {
@@ -104,12 +106,12 @@ export default function ReleaseDetail() {
             }} className="mr-2">Unrelease</Button>
         }
     }
-    const renderAddIssue = () => {
+    const renderAddIssue = (processInfo) => {
         return <div style={{ height: 250, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             <h6>Nothing to see here</h6>
             <p>No issues have been added yet.</p>
             <Button onClick={() => {
-                dispatch(displayComponentInModal(<SelectIssuesModal issuesBacklog={issuesBacklog} versionInfo={versionInfo} userInfo={userInfo} />))
+                dispatch(displayComponentInModal(<SelectIssuesModal processList={processList} issuesBacklog={issuesBacklog.filter(issue => issue.issue_status !== 4)} versionInfo={versionInfo} userInfo={userInfo} processInfo={processInfo} />))
             }} type='primary'><i className="fa-solid fa-plus mr-2"></i>Add issues</Button>
         </div>
     }
@@ -192,9 +194,9 @@ export default function ReleaseDetail() {
                                 aria-controls="nav-version"
                                 aria-selected="true"
                                 onClick={() => {
-                                    setDataSource(issuesBacklog?.filter(issue => issue.fix_version?._id?.toString() === versionInfo?._id?.toString()))
+                                    setDataSource(issuesBacklog?.filter(issue => issue.fix_version?._id?.toString() === versionInfo?._id?.toString() && issue.issue_status !== 4))
                                 }}>
-                                <Avatar className='mr-2' size={20} style={{ justifyContent: 'center' }}><span style={{ fontSize: 13, display: 'flex', marginLeft: 5 }}>{issuesBacklog?.filter(issue => issue.fix_version?._id?.toString() === versionInfo?._id?.toString()).length}</span></Avatar> issues in version
+                                <Avatar className='mr-2' size="small" style={{ justifyContent: 'center' }}><span style={{ fontSize: 13 }}>{issuesBacklog?.filter(issue => issue.fix_version?._id?.toString() === versionInfo?._id?.toString() && issue.issue_status !== 4 && issue.issue_status !== 4).length}</span></Avatar> issues in version
                             </Button>
                             {processList?.map(process => {
                                 return <Button
@@ -206,11 +208,11 @@ export default function ReleaseDetail() {
                                     aria-controls={`nav-version-${process._id.toString()}`}
                                     aria-selected="false"
                                     onClick={() => {
-                                        setDataSource(issuesBacklog?.filter(issue => issue.fix_version?._id?.toString() === versionInfo?._id?.toString() && issue.issue_type?._id?.toString() === process?._id?.toString()))
+                                        setDataSource(issuesBacklog?.filter(issue => issue.fix_version?._id?.toString() === versionInfo?._id?.toString() && issue.issue_status !== 4 && issue.issue_type?._id?.toString() === process?._id?.toString()))
                                     }}>
-                                    <Avatar className='mr-2' size={20} style={{ backgroundColor: process.tag_color, justifyContent: 'center' }}>
-                                        <span style={{ fontSize: 13, display: 'flex', marginLeft: 5 }}>
-                                            {issuesBacklog?.filter(issue => issue.fix_version?._id?.toString() === versionInfo?._id?.toString() && issue.issue_type?._id?.toString() === process?._id?.toString()).length}
+                                    <Avatar className='mr-2' size="small" style={{ backgroundColor: process.tag_color, justifyContent: 'center' }}>
+                                        <span style={{ fontSize: 13 }}>
+                                            {issuesBacklog?.filter(issue => issue.fix_version?._id?.toString() === versionInfo?._id?.toString() && issue.issue_status !== 4 && issue.issue_type?._id?.toString() === process?._id?.toString()).length}
                                         </span>
                                     </Avatar> issues in {process.name_process.toLowerCase()}
                                 </Button>
@@ -219,29 +221,42 @@ export default function ReleaseDetail() {
                     </nav>
                     <div className="tab-content" id="nav-tabContent">
                         <div className="tab-pane fade show active" id="nav-version" role="tabpanel" aria-labelledby="nav-version-tab">
-                            <Table dataSource={dataSource} columns={columns} locale={{
-                                emptyText: (renderAddIssue())
-                            }} footer={() => {
-                                if (dataSource.length !== 0) {
-                                    return <Button onClick={() => {
-                                        dispatch(displayComponentInModal(<SelectIssuesModal issuesBacklog={issuesBacklog} versionInfo={versionInfo} userInfo={userInfo} />))
-                                    }} type='primary'><i className="fa-solid fa-plus mr-2"></i>Add issues</Button>
-                                }
-                                return null
-                            }} />
-                        </div>
-                        {processList?.map(process => {
-                            return <div className="tab-pane fade" id={`nav-version-${process._id.toString()}`} role="tabpanel" aria-labelledby={`nav-version-${process._id.toString()}-tab`}>
-                                <Table dataSource={dataSource} footer={() => {
+                            <Table
+                                dataSource={dataSource}
+                                columns={columns}
+                                scroll={{
+                                    y: 400
+                                }}
+                                locale={{
+                                    emptyText: (renderAddIssue({}))
+                                }} footer={() => {
                                     if (dataSource.length !== 0) {
                                         return <Button onClick={() => {
-                                            dispatch(displayComponentInModal(<SelectIssuesModal issuesBacklog={issuesBacklog} versionInfo={versionInfo} userInfo={userInfo} />))
+                                            dispatch(displayComponentInModal(<SelectIssuesModal processList={processList} issuesBacklog={issuesBacklog.filter(issue => issue.issue_status !== 4)} versionInfo={versionInfo} userInfo={userInfo} processInfo={{}} />))
                                         }} type='primary'><i className="fa-solid fa-plus mr-2"></i>Add issues</Button>
                                     }
                                     return null
-                                }} columns={columns} locale={{
-                                    emptyText: (renderAddIssue())
                                 }} />
+                        </div>
+                        {processList?.map(process => {
+                            return <div className="tab-pane fade" id={`nav-version-${process._id.toString()}`} role="tabpanel" aria-labelledby={`nav-version-${process._id.toString()}-tab`}>
+                                <Table
+                                    scroll={{
+                                        y: 400
+                                    }}
+                                    dataSource={dataSource}
+                                    footer={() => {
+                                        if (dataSource.length !== 0) {
+                                            return <Button onClick={() => {
+                                                dispatch(displayComponentInModal(<SelectIssuesModal processList={processList} issuesBacklog={issuesBacklog.filter(issue => issue.issue_status !== 4)} versionInfo={versionInfo} userInfo={userInfo} processInfo={process} />))
+                                            }} type='primary'><i className="fa-solid fa-plus mr-2"></i>Add issues</Button>
+                                        }
+                                        return null
+                                    }}
+                                    columns={columns}
+                                    locale={{
+                                        emptyText: (renderAddIssue(process))
+                                    }} />
                             </div>
                         })}
                     </div>

@@ -11,6 +11,16 @@ export default function ModalInfoHOC() {
         dispatch(displayComponentInModalInfo(<div />))   //create default component for modal
         dispatch(openModalInfo(false))  //default it will close modal
     }
+    const [loading, setLoading] = React.useState(true);
+    // const showLoading = () => {
+    //     setOpen(true);
+    //     setLoading(true);
+    
+    //     // Simple loading mock. You should add cleanup logic in real world.
+    //     setTimeout(() => {
+    //       setLoading(false);
+    //     }, 2000);
+    //   };
     return (
         <Modal
             destroyOnClose="true"
@@ -19,6 +29,7 @@ export default function ModalInfoHOC() {
             width={1024}
             onCancel={handleCancel}
             centered
+            // loading={loading}
             closable={false}
         >
             {componentModalInfo}

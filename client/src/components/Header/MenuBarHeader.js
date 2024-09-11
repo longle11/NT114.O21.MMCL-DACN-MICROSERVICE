@@ -6,7 +6,6 @@ import Search from 'antd/es/input/Search'
 import { SHOW_MODAL_INPUT_TOKEN } from '../../redux/constants/constant'
 import './MenuBarHeader.css'
 import { drawer_edit_form_action } from '../../redux/actions/DrawerAction'
-import FormEdit from '../Forms/FormEdit'
 import { iTagForIssueTypes } from '../../util/CommonFeatures'
 import { updateProjectAction } from '../../redux/actions/CreateProjectAction'
 import TaskForm from '../Forms/TaskForm'
@@ -181,7 +180,7 @@ export default function MenuBarHeader() {
                     </li>
                     <li className='nav-item mr-5'>
                         <button onClick={() => {
-                            dispatch(drawer_edit_form_action(<TaskForm />, 'Create', 800))
+                            dispatch(drawer_edit_form_action(<TaskForm/>, 'Create', 800))
                         }} className="btn btn-primary">Create</button>
                     </li>
                 </ul>

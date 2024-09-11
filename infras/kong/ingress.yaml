@@ -68,6 +68,13 @@ spec:
               name: sprint-srv
               port: 
                 number: 4007
+        - path: /api/files/
+          pathType: Prefix
+          backend:
+            service:
+              name: file-srv
+              port: 
+                number: 4008     
         - path: /
           pathType: Prefix
           backend:

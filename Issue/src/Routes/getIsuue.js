@@ -55,8 +55,6 @@ router.get("/:issueId", currentUserMiddleware, async (req, res, next) => {
                     path: 'voted'
                 })
 
-            console.log("issue lay ra ", issue);
-
             return res.status(200).json({
                 message: "Successfully retrieve the issue",
                 data: issue

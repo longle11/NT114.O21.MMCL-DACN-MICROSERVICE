@@ -1,5 +1,5 @@
 import Axios from "axios";
-import { GET_VERSION, GET_CATEGORY_API, GET_EPICS, GET_EPICS_BY_ID, GET_VERSION_BY_ID, DISPLAY_LOADING, HIDE_LOADING } from "../constants/constant";
+import { GET_VERSION, GET_CATEGORY_API, GET_EPICS, GET_EPICS_BY_ID, GET_VERSION_BY_ID, DISPLAY_LOADING, HIDE_LOADING, GET_ALL_FILE } from "../constants/constant";
 import domainName from '../../util/Config'
 import { showNotificationWithIcon } from "../../util/NotificationUtil";
 import { updateInfoIssue } from "./IssueAction";
@@ -217,6 +217,41 @@ export const updateVersion = (version_id, props, project_id) => {
             }
         } catch (error) {
             console.log("updateEpic error", error);
+        }
+    }
+}
+
+
+
+export const getAllFilesAction = () => {
+    return async dispatch => {
+        try {
+            const res = await Axios.get(`${domainName}/api/files/all`)
+            if (res.status === 200) {
+                console.log("res tu getAllFilesAction", res);
+                
+                dispatch({
+                    type: GET_ALL_FILE,
+                    fileList: res.data.data
+                })
+            }
+        } catch (error) {
+            console.log("getAllFiles error", error);
+        }
+    }
+}
+
+export const deleteFileAction = (file_id) => {
+    return async dispatch => {
+        try {
+            const res = await Axios.delete(`${domainName}/api/files/delete/${file_id}`)
+            if (res.status === 200) {
+                console.log("res tu deleteFileAction", res);
+                
+                showNotificationWithIcon('success', '', res.data.message)
+            }
+        } catch (error) {
+            console.log("getAllFiles error", error);
         }
     }
 }

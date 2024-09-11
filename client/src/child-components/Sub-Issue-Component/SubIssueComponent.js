@@ -65,7 +65,7 @@ export default function SubIssueComponent(props) {
                 </div>
                 <div className='d-flex'>
                     <Progress
-                        percent={Math.round(((issueInfo?.sub_issue_list?.filter(subIssue => subIssue.issue_type?._id === processList[processList?.length - 1]._id)?.length) / (issueInfo?.sub_issue_list?.length)) * 100)}
+                        percent={Math.round(((issueInfo?.sub_issue_list?.filter(subIssue => subIssue?.issue_type?._id === processList[processList?.length - 1]?._id)?.length) / (issueInfo?.sub_issue_list?.length)) * 100)}
                         percentPosition={{
                             align: 'center',
                             type: 'inner',

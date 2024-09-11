@@ -1,7 +1,7 @@
 import { Avatar, Breadcrumb, Button, Form, Input, Select, Space, Table, Tag } from 'antd'
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { issueTypeOptions, issueTypeWithoutOptions, iTagForIssueTypes, iTagForPriorities, renderAssignees, renderEpicList, renderIssueType, renderSprintList, renderVersionList } from '../../../util/CommonFeatures'
+import { issueTypeOptions, issueTypeWithoutOptions, iTagForIssueTypes, priorityTypeOptions, renderAssignees, renderEpicList, renderIssueType, renderSprintList, renderVersionList } from '../../../util/CommonFeatures'
 import { createIssue, getIssuesBacklog, updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
@@ -281,7 +281,7 @@ export default function IssuesList() {
       return <Tag style={style} color={record.issue_type?.tag_color}>{record.issue_type?.name_process}</Tag>
     }
     else if (key === 'issue_priority') {
-      return <span style={style}>{iTagForPriorities(record.issue_priority)}</span>
+      return <span style={style}>{priorityTypeOptions[record.issue_priority]?.label}</span>
     }
     else if (key === 'assignees') {
       return <span style={style} className='d-flex align-items-center'><Avatar icon={<UserOutlined />} size={30} /> <span className='ml-2'>Unassignee</span></span>
@@ -350,7 +350,7 @@ export default function IssuesList() {
         allowEdit = true
       }
 
-      var setWidth = 150
+      var setWidth = 200
       if (["summary", "assignees", "issue_type", "creator"].includes(col.key)) {
         setWidth = 'max-content'
       }
@@ -509,7 +509,7 @@ export default function IssuesList() {
                   style={{ width: '100%' }}
                   scroll={{
                     x: 'max-content',
-                    y: 380
+                    y: 450
                   }}
                   components={components}
                   rowKey="key"

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { getIssuesBacklog } from '../../../redux/actions/IssueAction';
 import { GetProcessListAction } from '../../../redux/actions/ListProjectAction';
-import { iTagForPriorities, iTagForIssueTypes } from '../../../util/CommonFeatures';
+import { iTagForPriorities, iTagForIssueTypes, issueTypeOptions } from '../../../util/CommonFeatures';
 import { getEpicList } from '../../../redux/actions/CategoryAction';
 import { useNavigate, useParams } from 'react-router-dom';
 import { UserOutlined } from '@ant-design/icons';
@@ -40,10 +40,8 @@ export default function IssueDetail() {
                 }
             } else {
                 const index = issuesBacklog?.findIndex(issue => issue._id === issueId)
-                console.log("gia tri index thu duco ", index);
 
                 if (index !== -1) {
-                    console.log("chay vao trong nay ne em");
 
                     setIssueInfo(issuesBacklog[index])
                     //proceed to move that issue into top of all issues
@@ -107,18 +105,18 @@ export default function IssueDetail() {
                                 <Checkbox.Group className='mb-3'>
                                     <Row>
                                         <Col span="16">
-                                            <Checkbox value="0">{iTagForIssueTypes(0)}</Checkbox>
+                                            <Checkbox value="0">{issueTypeOptions[0].label}</Checkbox>
                                         </Col>
                                         <Col span="16">
-                                            <Checkbox value="1">{iTagForIssueTypes(1)}</Checkbox>
+                                            <Checkbox value="1">{issueTypeOptions[1].label}</Checkbox>
                                         </Col>
                                         <Col span="16">
-                                            <Checkbox value="2">{iTagForIssueTypes(2)}</Checkbox>
+                                            <Checkbox value="2">{issueTypeOptions[2].label}</Checkbox>
                                         </Col>
                                     </Row>
                                 </Checkbox.Group>
                                 <p style={{ fontSize: 13, marginBottom: 5 }}>SUB-TASK ISSUE TYPE</p>
-                                <Checkbox value="3">Sub task</Checkbox>
+                                <Checkbox value="4">{issueTypeOptions[4].label}</Checkbox>
                             </div>
                         </div>
 
@@ -128,7 +126,7 @@ export default function IssueDetail() {
                             </Button>
                             <div className="dropdown-menu" aria-labelledby="dropdownStatusMenu">
                                 <Checkbox.Group style={{ width: '100%', margin: '10px' }}>
-                                    <Row>
+                                    <Row className='mb-1'>
                                         {processList.map((process) => {
                                             return <Col span="16">
                                                 <Checkbox value={process._id}><Tag color={process.tag_color}>{process.name_process}</Tag></Checkbox>
@@ -143,7 +141,28 @@ export default function IssueDetail() {
                                 Assignee <i className="fa fa-angle-down ml-2" style={{ fontSize: 13, fontWeight: 'bold' }}></i>
                             </Button>
                             <div className="dropdown-menu" aria-labelledby="dropdownAssigneeMenu">
-
+                                <Checkbox.Group style={{ width: '100%', margin: '10px' }}>
+                                    <Row className='mb-1'>
+                                        {projectInfo?.members?.map((user) => {
+                                            return <Col span="16 mb-1">
+                                                <Checkbox value={user.user_info._id}>
+                                                    <div className='d-flex align-items-center'>
+                                                        <Avatar className='mr-1' size="small" src={user.user_info.avatar} />
+                                                        <span>{user.user_info.username}</span>
+                                                    </div>
+                                                </Checkbox>
+                                            </Col>
+                                        })}
+                                        <Col span="16">
+                                            <Checkbox value={0}>
+                                                <div className='d-flex align-items-center'>
+                                                    <Avatar className='mr-1' icon={<UserOutlined style={{ fontSize: 13 }} />} style={{ width: 22, height: 22 }} />
+                                                    <span>Unassignee</span>
+                                                </div>
+                                            </Checkbox>
+                                        </Col>
+                                    </Row>
+                                </Checkbox.Group>
                             </div>
                         </div>
                         <div className='dropdown'>
@@ -180,7 +199,7 @@ export default function IssueDetail() {
                     </div>
                     {/* col 10 row */}
                     {(issueInfo !== null || issueInfo !== undefined) && Object.keys(issueInfo).length === 0 ? <div className='col-10'>No issues</div> : <div className='col-10'>
-                        <InfoModal issueInfo={issueInfo} displayNumberCharacterInSummarySubIssue={25} />
+                        <InfoModal issueIdForIssueDetail={issueId} issueInfo={issueInfo} displayNumberCharacterInSummarySubIssue={25} />
                     </div>}
                 </div>
             </div>

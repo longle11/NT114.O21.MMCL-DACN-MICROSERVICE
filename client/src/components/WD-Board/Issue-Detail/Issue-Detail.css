@@ -11,3 +11,8 @@ button#btn-option4:active {
     background-color: #091e4224;
     color: #172b4d;
 } */
+
+.ant-checkbox-wrapper {
+    display: flex !important;
+    align-items: center !important;
+}

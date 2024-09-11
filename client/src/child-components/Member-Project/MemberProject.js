@@ -1,4 +1,4 @@
-import { Avatar, Button, Checkbox, Col, Input, Modal, Popover, Row, Select, Switch, Table } from 'antd'
+import { Avatar, Button, Checkbox, Col, Input, Modal, Popover, Row, Select, Table } from 'antd'
 import Search from 'antd/es/input/Search'
 import React, { useState } from 'react'
 import { GetProjectAction } from '../../redux/actions/ListProjectAction'
@@ -7,7 +7,8 @@ import { DeleteOutlined } from '@ant-design/icons';
 import { userPermissions } from '../../util/CommonFeatures'
 import { deleteUserInProject, updateProjectAction } from '../../redux/actions/CreateProjectAction'
 import { showNotificationWithIcon } from '../../util/NotificationUtil'
-
+import { UserAddOutlined } from '@ant-design/icons';
+import './MemberProject.css'
 export default function MemberProject(props) {
     const projectInfo = props.projectInfo
     const userInfo = props.userInfo
@@ -105,8 +106,9 @@ export default function MemberProject(props) {
             <div className="info" style={{ display: 'flex' }}>
                 <div className="search-block">
                     <Search
+                    
                         placeholder="Search"
-                        style={{ width: 200 }}
+                        style={{ width: 200, borderRadius: 0 }}
                         onSearch={value => {
                             dispatch(GetProjectAction(projectInfo?._id, value))
                         }}
@@ -119,7 +121,7 @@ export default function MemberProject(props) {
                             return renderAvatarMembers(value, table)
                         })}
                     </Avatar.Group>
-                    <Avatar style={{ backgroundColor: '#87d068' }} onClick={() => {
+                    <Avatar icon={<UserAddOutlined />} style={{ backgroundColor: '#87d068' }} onClick={() => {
                         setIsModalOpen(true)
                     }}>
                         <i className="fa fa-plus"></i>
@@ -143,7 +145,7 @@ export default function MemberProject(props) {
                 </div>
 
                 {
-                    typeInterface !== "dashboard" ? <div className='ml-2 mr-2'>
+                    typeInterface !== "dashboard" ? <div className='ml-1 mr-1'>
                     <Button className="mr-2 ml-2" id="dropdownVersionButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Versions {countVersion !== 0 ? <span className='ml-1 mr-2' style={{ color: 'blue' }}>({countVersion})</span> : <></>} <i className="fa fa-angle-down ml-2"></i>
                     </Button>
@@ -166,7 +168,7 @@ export default function MemberProject(props) {
                     </div>
                 </div> : <></>
                 }
-                <div className='ml-2'>
+                <div className='ml-1'>
                     <Button id="dropdownEpicButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Epics {countEpic !== 0 ? <span className='ml-1 mr-2' style={{ color: 'blue' }}>({countEpic})</span> : <></>} <i className="fa fa-angle-down ml-2"></i>
                     </Button>

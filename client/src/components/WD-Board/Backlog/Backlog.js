@@ -738,27 +738,27 @@ export default function Backlog() {
                                         <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
                                             <span>Issues </span>
                                             <div style={{ width: 100 }}>
-                                                <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{version?.issue_list?.length}</span></Avatar>
+                                                <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{version?.issue_list?.filter(issue => issue.issue_status !== 4).length}</span></Avatar>
                                             </div>
                                         </div>
                                         <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
                                             <span>Completed </span>
                                             <div style={{ width: 100 }}>
                                                 <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{version?.issue_list?.filter(issue => {
-                                                    return issue?.issue_type === processList[processList.length - 1]?._id
+                                                    return issue?.issue_type === processList[processList.length - 1]?._id && issue.issue_status !== 4
                                                 }).length}</span></Avatar>
                                             </div>
                                         </div>
                                         <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
                                             <span>Unestimated</span>
                                             <div style={{ width: 100 }}>
-                                                <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{version?.issue_list?.filter(issue => issue.story_point === null).length}</span></Avatar>
+                                                <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{version?.issue_list?.filter(issue => issue.story_point === null && issue.issue_status !== 4).length}</span></Avatar>
                                             </div>
                                         </div>
                                         <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 10 }}>
                                             <span>Estimate</span>
                                             <div style={{ width: 100 }}>
-                                                <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{version?.issue_list?.filter(issue => issue.story_point !== null).length}</span></Avatar>
+                                                <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{version?.issue_list?.filter(issue => issue.story_point !== null && issue.issue_status !== 4).length}</span></Avatar>
                                             </div>
                                         </div>
                                     </div>

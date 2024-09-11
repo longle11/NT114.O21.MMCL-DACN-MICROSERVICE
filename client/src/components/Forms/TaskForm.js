@@ -1,5 +1,5 @@
 import { Editor } from '@tinymce/tinymce-react'
-import { Input, InputNumber, Select, Space } from 'antd'
+import { Button, Input, InputNumber, message, Select, Space, Upload } from 'antd'
 import React, { useEffect } from 'react'
 import { connect, useDispatch, useSelector } from 'react-redux';
 import { withFormik } from 'formik';
@@ -10,16 +10,39 @@ import { priorityTypeOptions, issueTypeOptions, renderListProject, renderEpicLis
 import PropTypes from 'prop-types';
 import { getEpicList, getVersionList } from '../../redux/actions/CategoryAction';
 import { GetProcessListAction, GetSprintListAction } from '../../redux/actions/ListProjectAction';
-
+import { UploadOutlined } from '@ant-design/icons';
+import { InboxOutlined } from '@ant-design/icons';
+import mongoose from 'mongoose';
+import Dragger from 'antd/es/upload/Dragger';
 function TaskForm(props) {
-    const { handleChange, handleSubmit, setFieldValue } = props
-
     const userInfo = useSelector(state => state.user.userInfo)
     const listProject = useSelector(state => state.listProject.listProject)
     const epicList = useSelector(state => state.categories.epicList)
     const versionList = useSelector(state => state.categories.versionList)
     const sprintList = useSelector(state => state.listProject.sprintList)
     const processList = useSelector(state => state.listProject.processList)
+    const { handleSubmit, setFieldValue } = props
+    const uploadFileProps = {
+        name: 'file',
+        action: 'http://localhost/api/files/upload',
+        headers: {
+            authorization: 'authorization-text',
+        },
+        data: {
+            creator_id: userInfo.id
+        },
+        onChange(info) {
+            if (info.file.status !== 'uploading') {
+                console.log("du lieu dang duoc uploading ", info.file);
+            }
+            if (info.file.status === 'done') {
+                props.values.file_uploaded.push(info.file.response.data._id)
+                message.success(`${info.file.name} file uploaded successfully`);
+            } else if (info.file.status === 'error') {
+                message.error(`${info.file.name} file upload failed.`);
+            }
+        },
+    };
 
     const handlEditorChange = (content, editor) => {
         setFieldValue('description', content)
@@ -234,43 +257,39 @@ function TaskForm(props) {
                         onEditorChange={handlEditorChange}
                     />
                 </div>
-                {/* <div className='row mt-2 d-flex flex-column w-50'>
-                    <label htmlFor='fileAttachment'>File Attachment</label>
-                    <Upload
-                        name='file'
-                        accept='.pdf, .txt'
-                        beforeUpload={async (info) => {
-                            console.log("info", info);
-                            message.success('File uploaded successfully')
-                            const formData = new FormData()
-                            formData.append('updatedfile', info)
-                            await Axios.post(`${domainName}/api/files/upload`, formData)
-                        }}>
-                        <Button icon={<UploadOutlined />}>Select File</Button>
-                    </Upload>
+                <div className='row mt-2 d-flex flex-column'>
+                    <label htmlFor='fileAttachment' className='font-weight-bold'>File Attachment</label>
+                    <div className='col-12'>
+                        <Dragger {...uploadFileProps} style={{ width: '100%' }}>
+                            <p className="ant-upload-drag-icon">
+                                <InboxOutlined />
+                            </p>
+                            <p className="ant-upload-text">Click or drag file to this area to upload</p>
+                            <p className="ant-upload-hint">
+                                Support for a single upload. Strictly prohibited from uploading company data or other
+                                banned files.
+                            </p>
+                        </Dragger>
+                    </div>
                 </div>
-                <form action="/api/files/upload" method="post" enctype="multipart/form-data">
-                    <input type="file" name="file" />
-                    <input type="submit" value="Upload File" />
-                </form>
-                 */}
             </form>
         </div>
     )
 }
-TaskForm.propTypes = {
-    handleSubmit: PropTypes.func.isRequired,
-    handleChange: PropTypes.func.isRequired,
-    setFieldValue: PropTypes.func.isRequired,
-    projectInfo: PropTypes.shape({
-        name_project: PropTypes.string,
-        members: PropTypes.array
-    })
-};
+// TaskForm.propTypes = {
+//     handleSubmit: PropTypes.func.isRequired,
+//     handleChange: PropTypes.func.isRequired,
+//     setFieldValue: PropTypes.func.isRequired,
+//     projectInfo: PropTypes.shape({
+//         name_project: PropTypes.string,
+//         members: PropTypes.array
+//     })
+// };
 const handleSubmitTaskForm = withFormik({
     enableReinitialize: true,
     mapPropsToValues: (props) => {
         return {
+            _id: new mongoose.Types.ObjectId().toString(),
             project_id: props.userInfo.projec_working,
             creator: props.userInfo.id,
             issue_status: 0,   //khoi tao mac dinh se vao todo
@@ -283,7 +302,8 @@ const handleSubmitTaskForm = withFormik({
             story_point: null,
             epic_link: null,
             fix_version: null,
-            current_sprint: null
+            current_sprint: null,
+            file_uploaded: []
         }
     },
     handleSubmit: (values, { props, setSubmitting }) => {

@@ -22,6 +22,7 @@
     "jwt-decode": "^4.0.0",
     "luxon": "^3.4.4",
     "mongoose": "^8.5.3",
+    "pdfjs-dist": "^4.6.82",
     "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",

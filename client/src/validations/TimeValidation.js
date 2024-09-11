@@ -211,6 +211,6 @@ export const convertTime = (commentTime, type) => {
             return 'a few second ago'
         }
     }else {
-        return dayjs(commentTime).format('MMMM D, YYYY [at] h:mm A')
+        return dayjs(commentTime).format('D MMM, YYYY [at] h:mm A')
     }
 }

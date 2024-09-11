@@ -30,7 +30,7 @@ export default function Release() {
         {
             title: 'Version',
             dataIndex: 'version',
-            width: '10%',
+            width: 'max-content',
             render: (text, record) => {
                 return <NavLink to={`/projectDetail/${id}/versions/version-detail/${record._id.toString()}`}>{record.version_name}</NavLink>
             }

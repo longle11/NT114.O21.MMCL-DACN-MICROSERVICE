@@ -6,5 +6,5 @@ COPY package.json ./
 RUN npm install --only=prod
 COPY ./ ./
 
-CMD ["npm", "run", "prod"]
-EXPOSE 4005
+CMD ["npm", "run", "start"]
+EXPOSE 4008

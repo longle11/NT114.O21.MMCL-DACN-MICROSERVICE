@@ -32,3 +32,15 @@ td.ant-table-cell.ant-table-row-expand-icon-cell {
     border: none !important;
     border-radius: 0 !important;
 }
+
+.ant-table-footer {
+    padding: 0 !important;
+}
+
+.ant-table-body {
+    scrollbar-width: thin !important;
+}
+
+.ant-breadcrumb {
+    background-color: #ffff !important;
+}

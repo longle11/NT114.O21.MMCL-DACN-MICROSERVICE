@@ -1,7 +1,7 @@
 import { Avatar, Button, Divider, Popconfirm, Select, Tag } from 'antd';
 import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { deleteIssue, updateInfoIssue } from '../../../redux/actions/IssueAction';
+import { deleteIssue, getInfoIssue, updateInfoIssue } from '../../../redux/actions/IssueAction';
 import { GetProjectAction, GetWorkflowListAction } from '../../../redux/actions/ListProjectAction';
 import { issueTypeOptions, iTagForIssueTypes } from '../../../util/CommonFeatures';
 import { getEpicList, getVersionList } from '../../../redux/actions/CategoryAction';
@@ -14,7 +14,7 @@ import { getCommentAction } from '../../../redux/actions/CommentAction';
 
 export default function InfoModal(props) {
     const { id } = useParams()
-    const issueInfo = props.issueInfo
+    // const issueInfo = useSelector(state => state.issue.issueInfo)
     const sprintList = useSelector(state => state.listProject.sprintList)
     const projectInfo = useSelector(state => state.listProject.projectInfo)
     const processList = useSelector(state => state.listProject.processList)
@@ -29,6 +29,7 @@ export default function InfoModal(props) {
     const [subIssueSummary, setSubIssueSummary] = useState('')
     const [showAddSubIssue, setShowAddSubIssue] = useState(false)
     const displayNumberCharacterInSummarySubIssue = props.displayNumberCharacterInSummarySubIssue
+    const issueIdForIssueDetail = props.issueIdForIssueDetail   //used to compare for displaying file uploading in issue detail page
 
     const [onClickedItems, setOnClickedItems] = useState(false)
 
@@ -38,6 +39,7 @@ export default function InfoModal(props) {
     const hanleClickEditSummaryInSubIssue = (valueForIssueSummary) => {
         setSubIssueSummary(valueForIssueSummary)
     }
+    const issueInfo = props.issueInfo
 
     const [editAttributeTag, setEditAttributeTag] = useState('')
 
@@ -49,9 +51,10 @@ export default function InfoModal(props) {
             dispatch(GetProjectAction(id, null, null))
             if (issueInfo?._id) {
                 dispatch(getCommentAction(issueInfo._id, -1))
+                dispatch(getInfoIssue(issueInfo?._id))
             }
         }
-    }, [issueInfo])
+    }, [])
     const navigate = useNavigate()
     //su dung cho debounce time original
     const inputTimeOriginal = useRef(null)
@@ -269,7 +272,6 @@ export default function InfoModal(props) {
                                         onConfirm={() => {
                                             //dispatch su kien xoa nguoi dung khoi du an
                                             dispatch(deleteIssue(issueInfo?._id))
-
                                             //dispatch lại sự kiện load lại project
                                             dispatch(GetProjectAction(issueInfo?.project_id?._id, ""))
                                         }} okText="Yes" cancelText="No">
@@ -287,6 +289,7 @@ export default function InfoModal(props) {
                                 issueInfo={issueInfo}
                                 userInfo={userInfo}
                                 historyList={historyList}
+                                issueIdForIssueDetail={issueIdForIssueDetail}
                                 worklogList={worklogList}
                                 projectInfo={projectInfo}
                                 commentList={commentList}

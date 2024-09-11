@@ -12,6 +12,8 @@ export default function SelectIssuesModal(props) {
     const issuesBacklog = props.issuesBacklog
     const versionInfo = props.versionInfo
     const userInfo = props.userInfo
+    const processInfo = props.processInfo
+    const processList = props.processList
     const dispatch = useDispatch()
     const [issues, setIssues] = useState([])
     useEffect(() => {
@@ -27,14 +29,14 @@ export default function SelectIssuesModal(props) {
             const getIssueListInBacklog = issuesBacklog.filter(issue => issues.includes(issue._id))
 
             for (let index = 0; index < getIssueListInBacklog.length; index++) {
-                dispatch(updateInfoIssue(getIssueListInBacklog[index]._id, getIssueListInBacklog[index].project_id._id, { fix_version: versionInfo._id }, getIssueListInBacklog[index].fix_version ? getIssueListInBacklog[index].fix_version.version_name : "None", versionInfo.version_name, userInfo.id, "updated", "version"))
+                dispatch(updateInfoIssue(getIssueListInBacklog[index]._id, getIssueListInBacklog[index].project_id._id, { fix_version: versionInfo._id, issue_type: Object.keys(processInfo).length === 0 ? processList[0]?._id : processInfo._id }, getIssueListInBacklog[index].fix_version ? getIssueListInBacklog[index].fix_version.version_name : "None", versionInfo.version_name, userInfo.id, "updated", "version"))
                 await delay(200)
             }
             dispatch(openModal(false))
             setIssues([])
-        }else {
+        } else {
             console.log("issues ", issues);
-            
+
             showNotificationWithIcon('error', '', 'da co loi xay ra')
         }
     }
