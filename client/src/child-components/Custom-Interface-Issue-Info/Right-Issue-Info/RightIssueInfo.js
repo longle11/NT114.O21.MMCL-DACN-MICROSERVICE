@@ -15,6 +15,7 @@ import TimeOriginalEstimate from '../../Issue-Attributes/Time-Original-Estimate/
 import Assignees from '../../Issue-Attributes/Assignees/Assignees'
 import SubIssueComponent from '../../Sub-Issue-Component/SubIssueComponent'
 import Parent from '../../Issue-Attributes/Parent/Parent'
+import { checkConstraintPermissions } from '../../../util/CheckConstraintFields'
 
 export default function RightIssueInfo(props) {
     const userInfo = props.userInfo
@@ -61,8 +62,6 @@ export default function RightIssueInfo(props) {
                 hanleClickDisplayAddSubIssue={hanleClickDisplayAddSubIssue}
                 hanleClickEditSummaryInSubIssue={hanleClickEditSummaryInSubIssue}
                 displayNumberCharacterInSummarySubIssue={displayNumberCharacterInSummarySubIssue} /> : <></>}
-
-
             {/* For assignees */}
             <Assignees
                 projectInfo={projectInfo}
@@ -75,29 +74,36 @@ export default function RightIssueInfo(props) {
                 </Button>
                 <div className="collapse pt-2" id="collapseInfoModal" style={{ border: '1px solid #DFE1E6', borderTop: 'none', borderRadius: '0 0 3px 3px', padding: '0 10px' }}>
                     <Reporter issueInfo={issueInfo} />
+
                     {issueInfo?.issue_status !== 4 ? <CurrentSprint
                         handleEditAttributeTag={handleEditAttributeTag}
                         editAttributeTag={editAttributeTag}
                         issueInfo={issueInfo}
+                        projectInfo={projectInfo}
                         id={id}
                         userInfo={userInfo}
                         sprintList={sprintList} /> : <></>}
-                        
-                    {issueInfo?.issue_status !== 4 ? <EpicLink handleEditAttributeTag={handleEditAttributeTag}
+
+                    {issueInfo?.issue_status !== 4 ? <EpicLink
+                        handleEditAttributeTag={handleEditAttributeTag}
                         editAttributeTag={editAttributeTag}
                         issueInfo={issueInfo}
+                        projectInfo={projectInfo}
                         id={id}
                         userInfo={userInfo}
                         epicList={epicList} /> : <></>}
 
-                    {issueInfo?.issue_status !== 4 ? <FixVersion handleEditAttributeTag={handleEditAttributeTag}
+                    {issueInfo?.issue_status !== 4 ? <FixVersion
+                        handleEditAttributeTag={handleEditAttributeTag}
                         editAttributeTag={editAttributeTag}
                         issueInfo={issueInfo}
+                        projectInfo={projectInfo}
                         id={id}
                         userInfo={userInfo}
                         versionList={versionList} /> : <></>}
 
-                    {issueInfo?.issue_status !== 4 ? <Component handleEditAttributeTag={handleEditAttributeTag}
+                    {issueInfo?.issue_status !== 4 ? <Component
+                        handleEditAttributeTag={handleEditAttributeTag}
                         editAttributeTag={editAttributeTag} /> : <></>}
 
                     {issueInfo?.issue_status === 4 ? <Parent issueParentInfo={issueInfo?.parent} /> : <></>}
@@ -105,10 +111,12 @@ export default function RightIssueInfo(props) {
                     <StoryPoint handleEditAttributeTag={handleEditAttributeTag}
                         editAttributeTag={editAttributeTag}
                         issueInfo={issueInfo}
+                        projectInfo={projectInfo}
                         userInfo={userInfo} />
                     <IssuePriority handleEditAttributeTag={handleEditAttributeTag}
                         editAttributeTag={editAttributeTag}
                         issueInfo={issueInfo}
+                        projectInfo={projectInfo}
                         userInfo={userInfo} />
                     <TimeOriginalEstimate handleEditAttributeTag={handleEditAttributeTag}
                         editAttributeTag={editAttributeTag}
@@ -125,7 +133,9 @@ export default function RightIssueInfo(props) {
                         <div className='d-flex align-items-center' style={{ width: '100%' }}>
                             <i className="fa fa-clock" />
                             <Progress style={{ width: '100%' }} onClick={() => {
-                                dispatch(displayComponentInModal(<TrackingTimeModal userInfo={userInfo} issueInfo={issueInfo} />))
+                                if (checkConstraintPermissions(projectInfo, issueInfo, userInfo, 15)) {
+                                    dispatch(displayComponentInModal(<TrackingTimeModal userInfo={userInfo} issueInfo={issueInfo} />))
+                                }
                             }} percent={Math.floor(calculateProgress())} size="small" status="active" />
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>

@@ -96,10 +96,6 @@ const issueSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'issues'
     },
-    permissions: {
-        type: Boolean,
-        default: false
-    },
     voted: [
         {
             type: mongoose.Schema.Types.ObjectId,
@@ -114,7 +110,59 @@ const issueSchema = new mongoose.Schema({
         {
             type: mongoose.Schema.Types.ObjectId
         }
-    ]
+    ],
+    is_permissions: {
+        type: Boolean,
+        default: false
+    },
+    start_date: {
+        type: Date,
+        default: null
+    },
+    end_date: {
+        type: Date,
+        default: null
+    },
+    permissions: {
+        users_belongto_issue: {
+            assignees: {
+                type: Array,
+                default: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+            }
+        },
+        users_not_belongto_issue: {
+            administrators: {
+                user_role: {
+                    type: Number,
+                    default: 0
+                },
+                actions: {
+                    type: Array,
+                    default: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+                }
+            },
+            members: {
+                user_role: {
+                    type: Number,
+                    default: 1
+                },
+                actions: {
+                    type: Array,
+                    default: [14, 19, 20, 21, 22]
+                }
+            },
+            viewers: {
+                user_role: {
+                    type: Number,
+                    default: 2
+                },
+                actions: {
+                    type: Array,
+                    default: [14, 20]
+                }
+            }
+        }
+    }
 })
 issueSchema.virtual('issuesRefSubIssueList', {
     ref: 'issues',

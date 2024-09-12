@@ -38,6 +38,11 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                     req.body.timeSpent = timeSpent
                 }
 
+                if(req.body?.start_date && req.body?.end_date) {
+                    req.body.start_date = new Date(req.body.start_date)
+                    req.body.end_date = new Date(req.body.end_date)
+                }
+
                 //add sprint has been compeleted into the old sprint
                 if (req.body?.old_sprint) {
                     currentIssue.old_sprint.push(req.body.old_sprint)
@@ -85,6 +90,12 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                 }
 
                 await issueModel.updateOne({ _id: id }, { $set: { ...req.body } })
+
+                const issuelayra = await issueModel.findById(req.params.id)
+
+                console.log("issuelayra ", issuelayra);
+                
+
                 const copyIssue = {
                     _id: currentIssue._id,
                     summary: currentIssue.summary,

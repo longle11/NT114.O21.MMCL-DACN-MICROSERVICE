@@ -59,6 +59,9 @@ export default function MenuBar() {
         else if (key === 'sub17') {
             return navigate(`${absolutePath}/workflows`)
         }
+        else if (key === 'sub18') {
+            return navigate(`${absolutePath}/calendar`)
+        }
         else if (key === 'sub2') {
             return navigate(`${absolutePath}/reports`)
         }
@@ -77,6 +80,9 @@ export default function MenuBar() {
         else if (key === 'sub31') {
             return navigate(`${absolutePath}/settings/access`)
         }
+        else if (key === 'sub32') {
+            return navigate(`${absolutePath}/settings/issue-permissions`)
+        }
     }
     const items = [
         getItem('PLANNING', '1', <i className="fa fa-tasks" aria-hidden="true"></i>, [
@@ -88,6 +94,7 @@ export default function MenuBar() {
                 getItem('List', 'sub15'),
                 getItem('Issues', 'sub16'),
                 getItem('Workflows', 'sub17'),
+                getItem('Calendar', 'sub18'),
             ]),
             getItem('Issues', 'sub2', <i className="fa-solid fa-circle-exclamation"></i>),
             getItem('Components', 'sub3', <AppstoreOutlined />)
@@ -98,8 +105,8 @@ export default function MenuBar() {
             getItem('Epics', 'sub23')
         ]),
         getItem('Settings', '3', <SettingOutlined />, [
-            getItem('Add user', 'sub31')
-
+            getItem('Add user', 'sub31'),
+            getItem('Issue permissions', 'sub32')
         ]),
     ];
     return (

@@ -26,11 +26,14 @@ export const openModalInfo = (status) => {
         }
     }
 }
-export const displayComponentInModal = (component) => {
+
+export const displayComponentInModal = (component, setWidth, setTitle) => {
     return dispatch => {
         dispatch({
             type: DISPLAY_MODAL_WITH_COMPONENT,
-            component: component
+            component: component,
+            setWidth: setWidth,
+            setTitle: setTitle
         })
     }
 }

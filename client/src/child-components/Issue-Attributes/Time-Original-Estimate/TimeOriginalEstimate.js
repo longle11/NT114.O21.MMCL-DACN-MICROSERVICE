@@ -3,6 +3,7 @@ import { calculateTimeAfterSplitted, convertMinuteToFormat, validateOriginalTime
 import { showNotificationWithIcon } from '../../../util/NotificationUtil'
 import { updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { useDispatch } from 'react-redux'
+import { checkConstraintPermissions } from '../../../util/CheckConstraintFields'
 
 export default function TimeOriginalEstimate(props) {
     const issueInfo = props.issueInfo
@@ -38,7 +39,9 @@ export default function TimeOriginalEstimate(props) {
                 <small>Format: <span className='text-danger'>2w3d4h5m</span></small>
             </div> :
                 <span onDoubleClick={() => {
-                    props.handleEditAttributeTag('originalTimeEstimate')
+                    if(checkConstraintPermissions(projectInfo, issueInfo, userInfo, 9)) {
+                        props.handleEditAttributeTag('originalTimeEstimate')
+                    }
                 }} className='items-attribute ml-2' style={{ padding: '10px 10px', width: '100%', color: '#7A869A' }}>{Number.isInteger(issueInfo?.timeOriginalEstimate) ? convertMinuteToFormat(issueInfo?.timeOriginalEstimate) : "None"}</span>}
         </div>
     )

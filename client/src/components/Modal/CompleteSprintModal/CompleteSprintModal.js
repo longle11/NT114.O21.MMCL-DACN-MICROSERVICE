@@ -147,8 +147,6 @@ export default function CompleteSprintModal(props) {
                 <Select
                     options={optionsMoveUncompletedIssues()}
                     onSelect={(value) => {
-                        console.log("gia tri duoc lua chon ", sprintInfo);
-
                         setGetIssueToOtherPlaces({
                             old_stored_place: { ...sprintInfo },
                             new_stored_place: value

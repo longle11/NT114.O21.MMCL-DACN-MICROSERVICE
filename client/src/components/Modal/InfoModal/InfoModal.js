@@ -10,6 +10,12 @@ import './InfoModal.css'
 import LeftIssueInfo from '../../../child-components/Custom-Interface-Issue-Info/Left-Issue-Info/LeftIssueInfo';
 import RightIssueInfo from '../../../child-components/Custom-Interface-Issue-Info/Right-Issue-Info/RightIssueInfo';
 import { getCommentAction } from '../../../redux/actions/CommentAction';
+import { checkConstraintPermissions } from '../../../util/CheckConstraintFields';
+import domainName from '../../../util/Config';
+import { displayComponentInModal, openModalInfo } from '../../../redux/actions/ModalAction';
+import AddFlagModal from '../AddFlagModal/AddFlagModal';
+import AddParentModal from '../AddParentModal/AddParentModal';
+import CloneIssueModal from '../CloneIssueModal/CloneIssueModal';
 
 
 export default function InfoModal(props) {
@@ -61,24 +67,9 @@ export default function InfoModal(props) {
 
     const dispatch = useDispatch()
     const renderIssueTypeWithPermissions = () => {
-        var enableEditting = false
-        if (userInfo?.id === issueInfo?.creator?._id) {
-            enableEditting = true
-        } else {
-            if (issueInfo?.permissions === true) {
-                const getUserRoleIndex = projectInfo?.members?.findIndex(user => user.user_info._id === userInfo?.id)
-                if (getUserRoleIndex !== -1) {  //user has admin role which can edit in this issue
-                    const userRole = projectInfo?.members[getUserRoleIndex].user_role
-                    if (userRole === 0) {
-                        enableEditting = true
-                    }
-                }
-            } else {
-                enableEditting = false
-            }
-        }
+
         return <Tag className='mr-3' style={{ borderRadius: 5, padding: '5px 25px' }} onDoubleClick={() => {
-            if (enableEditting === true) {
+            if (checkConstraintPermissions(projectInfo, issueInfo, userInfo, 2) === true) {
                 setEditAttributeTag('issue_type')
             }
         }} color={issueInfo?.issue_type?.tag_color}>{issueInfo?.issue_type?.name_process}</Tag>
@@ -130,7 +121,6 @@ export default function InfoModal(props) {
                             defaultValue={issueTypeOptions[issueInfo?.issue_status]?.value}
                             style={{ width: '100%' }}
                             options={issueTypeOptions}
-                            disabled={issueInfo?.creator?._id !== userInfo?.id}
                             onBlur={() => {
                                 setEditAttributeTag('')
                             }}
@@ -144,7 +134,9 @@ export default function InfoModal(props) {
                             }}
                             name="issue_status"
                         /> : <span onDoubleClick={() => {
-                            setEditAttributeTag('issue_status')
+                            if (checkConstraintPermissions(projectInfo, issueInfo, userInfo, 3)) {
+                                setEditAttributeTag('issue_status')
+                            }
                         }} className='items-attribute m-0' style={{ padding: '10px 5px 5px 10px', width: 'max-content' }}>{iTagForIssueTypes(issueInfo?.issue_status, null, null)}</span>}
                         <div className="issue_type">
                             <div className='d-flex flex-column'>
@@ -186,21 +178,28 @@ export default function InfoModal(props) {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center' }} className="task-click">
                         <div style={{ display: 'flex' }}>
-                            {issueInfo?.permissions === true ? <i onClick={() => {
-                                dispatch(updateInfoIssue(issueInfo._id, id, { permissions: !issueInfo?.permissions }, issueInfo?.permissions === true ? "blocked" : "unblocked", !issueInfo?.permissions === true ? "unblocked" : "blocked", userInfo.id, "apply", "restriction"))
-                            }} style={{ fontSize: 20, marginRight: 15 }} className="fa fa-lock"></i> :
+                            {issueInfo?.is_permissions === true ? <i onClick={() => {
+                                dispatch(updateInfoIssue(issueInfo._id, id, { is_permissions: !issueInfo?.is_permissions }, issueInfo?.is_permissions === true ? "blocked" : "unblocked", !issueInfo?.is_permissions === true ? "unblocked" : "blocked", userInfo.id, "apply", "restriction"))
+                            }} style={{ fontSize: 20, padding: 10 }} className="fa fa-lock"></i> :
                                 <div className='dropdown'>
-                                    <i style={{ fontSize: 20, padding: 10 }} className="fa fa-unlock" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></i>
-                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style={{ width: 'max-content', padding: '5px 10px' }}>
-                                        <h6 style={{ fontSize: 14 }}>Do you want to apply this restriction?</h6>
+                                    <i onClick={() => {
+
+                                    }} style={{ fontSize: 20, padding: 10 }} className="fa fa-unlock" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></i>
+                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style={{ width: 300, padding: '5px 10px' }}>
+                                        <h6 style={{ fontSize: 14 }}>Do you want to apply this restrictions to the following objects?</h6>
                                         <ul style={{ fontSize: 13 }}>
-                                            <li>Administrator (full this issue access)</li>
-                                            <li>Member (can do most things except edit)</li>
-                                            <li>Viewer (view and comment only)</li>
+                                            <li>Members</li>
+                                            <li>Viewers</li>
+                                            <li>Assignees</li>
                                         </ul>
-                                        <Button onClick={() => {
-                                            dispatch(updateInfoIssue(issueInfo._id, id, { permissions: !issueInfo?.permissions }, issueInfo?.permissions === true ? "blocked" : "unblocked", !issueInfo?.permissions === true ? "unblocked" : "blocked", userInfo.id, "apply", "restriction"))
-                                        }} type='primary'>Apply</Button>
+                                        <div className='d-flex justify-content-between align-items-center'>
+                                            <Button onClick={() => {
+                                                dispatch(updateInfoIssue(issueInfo._id, id, { is_permissions: !issueInfo?.is_permissions }, issueInfo?.is_permissions === true ? "blocked" : "unblocked", !issueInfo?.is_permissions === true ? "unblocked" : "blocked", userInfo.id, "apply", "restriction"))
+                                            }} type='primary'>Apply</Button>
+                                            <NavLink onClick={() => {
+                                                dispatch(openModalInfo(false))
+                                            }} style={{ fontSize: 12 }} to={`${domainName}/projectDetail/${id}/settings/issue-permissions/${issueInfo._id}`}>Go to settings</NavLink>
+                                        </div>
                                     </div>
                                 </div>}
 
@@ -261,7 +260,30 @@ export default function InfoModal(props) {
                             </NavLink>
                             <i style={{ fontSize: 20, padding: 10 }} className="fa fa-share-alt"></i>
                             <i style={{ fontSize: 20, padding: 10 }} className="fa-solid fa-link"></i>
-                            <i style={{ fontSize: 20, padding: 10 }} className="fa fa-ellipsis-h"></i>
+                            <div className="dropdown">
+                                <i type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style={{ fontSize: 20, padding: 10 }} className="fa fa-ellipsis-h"></i>
+                                <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                    {
+                                        !issueInfo?.isFlagged ? <a className="dropdown-item" href="##" onClick={(e) => {
+                                            dispatch(displayComponentInModal(<AddFlagModal editCurrentIssue={issueInfo} userInfo={userInfo} />, 1024, <h4><i style={{ fontSize: 25, color: '#FF5630' }} className="fa fa-flag mr-3"></i> Add Flag</h4>))
+                                        }}>Add flag</a> : <a className="dropdown-item" href="##" onClick={(e) => {
+                                            dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { isFlagged: false }, null, null, userInfo.id, "canceled", "flag"))
+                                        }}>Remove flag</a>
+                                    }
+                                    {issueInfo?.issue_status !== 4 ? <a onClick={() => {
+                                        dispatch(displayComponentInModal(<AddParentModal issue={issueInfo} userInfo={userInfo} epicList={epicList}/>, 600, "Add Epic"))
+                                    }} className="dropdown-item" href="##">Add Parent</a> : <></>}
+                                    <hr className='mt-1 mb-1' />
+                                    <a onClick={() => {
+                                        dispatch(displayComponentInModal(<CloneIssueModal issue={issueInfo} userInfo={userInfo}/>, 600, `Clone issue: WD-${issueInfo?.ordinal_number}`))
+                                    }} className="dropdown-item" href="##">Clone issue</a>
+                                    <a className="dropdown-item" href="##">Move other projects</a>
+                                    <a className="dropdown-item" href="##">Delete</a>
+                                    <hr className='mt-1 mb-1' />
+                                    <a className="dropdown-item" href="##">Configuration</a>
+                                </div>
+                            </div>
+
                         </div>
                         {
                             issueInfo?.creator?._id.toString() === userInfo?.id ? (

@@ -74,6 +74,9 @@ const SideBar = () => {
         else if (key === 'sub31') {
             return navigate(`${absolutePath}/settings/access`)
         }
+        else if (key === 'sub32') {
+            return navigate(`${absolutePath}/settings/issue-permissions`)
+        }
     }
     const items = [
         getItem('PLANNING', '1', <i className="fa fa-tasks" aria-hidden="true"></i>, [
@@ -95,8 +98,8 @@ const SideBar = () => {
             getItem('Epics', 'sub23')
         ]),
         getItem('Settings', '3', <DesktopOutlined />, [
-            getItem('Add user', 'sub31')
-         
+            getItem('Add user', 'sub31'),
+            getItem('Issue permissions', 'sub32')
         ]),
     ];
     return (

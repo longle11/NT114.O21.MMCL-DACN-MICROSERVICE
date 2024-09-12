@@ -3,10 +3,12 @@ import React from 'react'
 import { updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { showNotificationWithIcon } from '../../../util/NotificationUtil'
 import { useDispatch } from 'react-redux'
+import { checkConstraintPermissions } from '../../../util/CheckConstraintFields'
 
 export default function StoryPoint(props) {
     const issueInfo = props.issueInfo
     const userInfo = props.userInfo
+    const projectInfo = props.projectInfo
     const dispatch = useDispatch()
     return (
         <div className='row d-flex align-items-center mt-2'>
@@ -20,7 +22,9 @@ export default function StoryPoint(props) {
                 }
             }} /> :
                 <span onDoubleClick={() => {
-                    props.handleEditAttributeTag('story_point')
+                    if(checkConstraintPermissions(projectInfo, issueInfo, userInfo, 7)) {
+                        props.handleEditAttributeTag('story_point')
+                    }
                 }} className='items-attribute col-7' style={{ padding: '10px 10px', width: '100%', color: '#7A869A' }}>{Number.isInteger(issueInfo?.story_point) ? issueInfo?.story_point : "None"}</span>}
         </div>
     )

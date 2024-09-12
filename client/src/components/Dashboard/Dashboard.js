@@ -20,11 +20,10 @@ import { calculateTaskRemainingTime } from '../../validations/TimeValidation';
 import MemberProject from '../../child-components/Member-Project/MemberProject';
 import InfoModal from '../Modal/InfoModal/InfoModal';
 import domainName from '../../util/Config';
-import { Editor } from '@tinymce/tinymce-react';
-import { createCommentAction } from '../../redux/actions/CommentAction';
 import { getEpicList } from '../../redux/actions/CategoryAction';
 import { drawer_edit_form_action } from '../../redux/actions/DrawerAction';
 import CreateSprint from '../Forms/CreateSprint/CreateSprint';
+import AddFlagModal from '../Modal/AddFlagModal/AddFlagModal';
 export default function Dashboard() {
     const dispatch = useDispatch()
     //set display epic and version fields
@@ -100,23 +99,8 @@ export default function Dashboard() {
         setEditLimitColumnProcess(null)
     };
 
-    const [editCurrentIssue, setEditCurrentIssue] = useState(null)
     const [isOpenModalFlagged, setIsOpenModalFlagged] = useState(false)
-    const [editDescriptionFlagged, setEditDescriptionFlagged] = useState('')
-    const handleOpenModalFlaggedOk = () => {
-        dispatch(updateInfoIssue(editCurrentIssue._id, editCurrentIssue.project_id._id, { isFlagged: true }, null, null, userInfo.id, "added", "flag"))
 
-        if (editDescriptionFlagged.trim() !== '') {
-            //create comment to emphasize that is the flag added into the issue
-            dispatch(createCommentAction({ content: `<span><i style={{ fontSize: 23 }} className="fa fa-flag mr-1 flag-icon-comment"></i><span className="font-weight-bold"}>Flag added</span><span><br/>${editDescriptionFlagged}`, issueId: editCurrentIssue._id, creator: userInfo?.id }))
-        }
-        setEditDescriptionFlagged('')
-        setIsOpenModalFlagged(false);
-    };
-    const handleOpenModalFlaggedCancel = () => {
-        setEditDescriptionFlagged('')
-        setIsOpenModalFlagged(false);
-    };
 
     useEffect(() => {
         dispatch(GetProcessListAction(id))
@@ -241,7 +225,6 @@ export default function Dashboard() {
     //type là loại được chọn để hiển thị (tất cả vấn đề / các vấn đề thuộc user)
     const renderIssue = (processId, limitcol) => {
         if (sprintInfo === null) return <></>
-        console.log("searchIssue.epicsv ", searchIssue.epics);
         var issuesBacklogAfterSearching = []
         if (searchIssue.epics.length > 0) {
             issuesBacklogAfterSearching = [...issuesBacklog?.filter(issue => searchIssue.epics.includes(issue.epic_link ? issue.epic_link?._id : null))]
@@ -293,8 +276,9 @@ export default function Dashboard() {
                                 }} className='issues-summary-dashboard-hover' style={{ padding: '5px 5px 5px 0', color: '#000', fontWeight: 'normal', width: 'fit-content' }}>
                                     {issue?.summary?.length > 15 ? `${issue?.summary?.substring(0, 15)}...` : issue?.summary} <i className="fa fa-pen ml-2 hide-items d-none" style={{ fontSize: 12 }}></i>
                                 </NavLink>}
-                                <div className="btn-group">
+                                <div className="dropdown">
                                     <Button className='hide-items d-none' data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        {/* Setting button for this issue */}
                                         <i style={{ fontSize: 20 }} className="fa fa-ellipsis-h"></i>
                                     </Button>
                                     <div className="dropdown-menu">
@@ -310,8 +294,7 @@ export default function Dashboard() {
                                         {
                                             !issue?.isFlagged ? <a className="dropdown-item" href="##" onClick={(e) => {
                                                 e.stopPropagation()
-                                                setEditCurrentIssue(issue)
-                                                setIsOpenModalFlagged(true)
+                                                dispatch(displayComponentInModal(<AddFlagModal editCurrentIssue={issue} userInfo={userInfo} />, 1024, <h4><i style={{ fontSize: 25, color: '#FF5630' }} className="fa fa-flag mr-3"></i> Add Flag</h4>))
                                             }}>Add flag</a> : <a className="dropdown-item" href="##" onClick={(e) => {
                                                 e.stopPropagation()
                                                 dispatch(updateInfoIssue(issue._id, issue.project_id._id, { isFlagged: false }, null, null, userInfo.id, "canceled", "flag"))
@@ -434,83 +417,7 @@ export default function Dashboard() {
                     </div>
                 </div>}
         </div>
-        // return listIssues?.filter(issue => {
-        //     return issue.issueStatus === position
-        // })
-        //     .sort((issue1, issue2) => issue1.priority - issue2.priority)
-        //     .map((value, index) => {
-        //         return (<li key={value._id} className="list-group-item" data-toggle="modal" data-target="#infoModal" style={{ cursor: 'pointer' }} onClick={() => {
-        //             dispatch(getInfoIssue(value._id))
-        //         }} onKeyDown={() => { }}>
-        //             <p>
-        //                 {value.shortSummary}
-        //             </p>
-        //             <div className="block" style={{ display: 'flex' }}>
-        //                 <div className="block-left">
-        //                     {iTagForIssueTypes(value.issueType)}
-        //                     {iTagForPriorities(value.priority)}
-        //                 </div>
-        //                 <div className="block-right" style={{ display: 'flex', alignItems: 'center' }}>
-        //                     <div className="avatar-group">
-        //                         {/* them avatar cua cac assignees */}
-        //                         {
-        //                             value?.assignees?.map((user, index) => {
-        //                                 if (index === 3) {
-        //                                     return <Avatar key={value._id} size={40}>...</Avatar>
-        //                                 } else if (index <= 2) {
-        //                                     return <Avatar size={30} key={value._id} src={user.avatar} />
-        //                                 }
-        //                                 return null
-        //                             })
-        //                         }
-        //                     </div>
-        //                 </div>
-        //             </div>
-        //         </li>)
-        //     })
     }
-
-    // const renderMembersAndFeatureAdd = () => {
-    //     return <AutoComplete
-    //         style={{ width: '100%' }}
-    //         onSearch={(value) => {
-    //             //kiem tra gia tri co khac null khong, khac thi xoa
-    //             if (search.current) {
-    //                 clearTimeout(search.current)
-    //             }
-    //             search.current = setTimeout(() => {
-    //                 dispatch(getUserKeyword(value))
-    //             }, 500)
-    //         }}
-    //         value={valueDashboard}
-    //         onChange={(value) => {
-    //             setValueDashboard(value)
-    //         }}
-    //         defaultValue=''
-    //         options={listUser?.reduce((newListUser, user) => {
-    //             if (user._id !== userInfo.id) {
-    //                 return [...newListUser, { label: user.username, value: user._id }]
-    //             }
-    //             return newListUser
-    //         }, [])}
-    //         onSelect={(value, option) => {
-    //             setValueDashboard(option.label)
-    //             dispatch(insertUserIntoProject({
-    //                 project_id: projectInfo?._id,  //id cua project
-    //                 user_id: value   //id cua username
-    //             }))
-
-    //             dispatch(GetProjectAction(projectInfo?._id, ""))
-    //         }}
-    //         placeholder="input here"
-    //     />
-    // }
-
-    // const addNewProcess = () => {
-    //     const newListProcesses = [...listProcesses, { nameProcess: "hihi" }];
-    //     console.log("listProcesses ", newListProcesses);
-    //     setListProcesses(newListProcesses);
-    // }
 
     const updateIssueConfig = (issue_status_field, key_field, issue_type_field, epic_field, version_field, issue_priority_field, assignees_field, story_point_field, parent_field) => {
         dispatch(updateProjectAction(id, {
@@ -555,7 +462,7 @@ export default function Dashboard() {
                     }} style={{ fontSize: '12px' }}>{projectInfo.marked === true ? <i className="fa-solid fa-star" style={{ color: '#ff8b00', fontSize: 15 }}></i> : <i className="fa-solid fa-star" style={{ fontSize: 15 }}></i>}</button>
                     {sprintId && sprintInfo !== null && Object.keys(sprintInfo).length !== 0 ? (dayjs(new Date()).isAfter(dayjs(sprintInfo?.start_date)) || dayjs(new Date()).isSame(dayjs(sprintInfo?.start_date)) ? <Tooltip placement='bottom' title={renderTooltipForRemainingDay(sprintInfo)}>
                         <span className='m-0 mr-2 align-items-center d-flex bg-light' style={{ padding: '10px 20px' }}>
-                            <i className="fa fa-clock mr-2"></i>{calculateTaskRemainingTime(dayjs(sprintInfo.start_date), dayjs(sprintInfo.end_date))}
+                            <i className="fa fa-clock mr-2"></i>{calculateTaskRemainingTime(dayjs(new Date()), dayjs(sprintInfo.end_date))}
                         </span>
                     </Tooltip> : <Tooltip placement='bottom' title={renderTooltipForStartingDateYet(sprintInfo)}>
                         <span className='m-0 mr-2 align-items-center d-flex bg-light font-weight-bold' style={{ padding: '10px 20px' }}>Project start date not yet</span>
@@ -563,7 +470,6 @@ export default function Dashboard() {
                     {sprintId && sprintInfo !== null && Object.keys(sprintInfo).length !== 0 ? <Button className='m-0 mr-2' type='primary' onClick={() => {
                         dispatch(displayComponentInModal(<CompleteSprintModal sprintInfo={sprintInfo} processList={processList} id={id} userInfo={userInfo} sprintList={sprintList} projectInfo={projectInfo} />))
                     }}>Complete Sprint</Button> : <></>}
-
                     <NavLink to="https://github.com/longle11/NT114.O21.MMCL-DACN-MICROSERVICE" target="_blank" style={{ textDecoration: 'none' }}>
                         <Button className='m-0 mr-2' type='primary'>
                             <i className="fab fa-github mr-2"></i>
@@ -867,27 +773,6 @@ export default function Dashboard() {
                     </div>
                 </Modal>
 
-                <Modal width={1024} destroyOnClose={true} title={<h4><i style={{ fontSize: 25, color: '#FF5630' }} className="fa fa-flag mr-3"></i> Add Flag</h4>} open={isOpenModalFlagged} onOk={handleOpenModalFlaggedOk} onCancel={handleOpenModalFlaggedCancel}>
-                    <span className='mb-2 d-flex align-items-center'><span className='font-weight-bold mr-2'>Issue</span> {iTagForIssueTypes(editCurrentIssue?.issue_status, 'mr-1', null)} <span style={{ color: '#626F86' }}>WD-{editCurrentIssue?.ordinal_number} {editCurrentIssue?.summary}</span></span>
-                    <Editor name='description'
-                        apiKey='golyll15gk3kpiy6p2fkqowoismjya59a44ly52bt1pf82oe'
-                        init={{
-                            plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount linkchecker',
-                            toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
-                            tinycomments_mode: 'embedded',
-                            tinycomments_author: 'Author name',
-                            mergetags_list: [
-                                { value: 'First.Name', title: 'First Name' },
-                                { value: 'Email', title: 'Email' },
-                            ],
-                            placeholder: 'Optional: Let your team know why this issue has been flagged',
-                            height: 350,
-                        }}
-                        onEditorChange={(value) => {
-                            setEditDescriptionFlagged(value)
-                        }}
-                    />
-                </Modal>
             </DragDropContext>
         </div>
     )

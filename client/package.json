@@ -7,6 +7,8 @@
     "@dnd-kit/modifiers": "^7.0.0",
     "@dnd-kit/sortable": "^8.0.0",
     "@react-oauth/google": "^0.12.1",
+    "@syncfusion/ej2-react-navigations": "^26.2.12",
+    "@syncfusion/ej2-react-schedule": "^26.2.14",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",

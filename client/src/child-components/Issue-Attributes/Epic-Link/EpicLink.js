@@ -4,12 +4,14 @@ import { useDispatch } from 'react-redux'
 import { updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { updateEpic } from '../../../redux/actions/CategoryAction'
 import { renderEpicList } from '../../../util/CommonFeatures'
+import { checkConstraintPermissions } from '../../../util/CheckConstraintFields'
 
 export default function EpicLink(props) {
     const issueInfo = props.issueInfo
     const userInfo = props.userInfo
     const id = props.id
     const epicList = props.epicList
+    const projectInfo = props.projectInfo
     const dispatch = useDispatch()
     const getCurrentEpic = () => {
         if (issueInfo?.epic_link === null) {
@@ -34,7 +36,9 @@ export default function EpicLink(props) {
                 value={issueInfo?.epic_link?.epic_name}
             /> :
                 <span onDoubleClick={() => {
-                    props.handleEditAttributeTag('epic_link')
+                    if(checkConstraintPermissions(projectInfo, issueInfo, userInfo, 5)) {
+                        props.handleEditAttributeTag('epic_link')
+                    }
                 }} className='items-attribute col-7' style={{ padding: '10px 10px', width: '100%', color: '#7A869A' }}>{getCurrentEpic() !== null ? renderEpicList(epicList, id)[getCurrentEpic()]?.label : "None"}</span>}
         </div>
     )

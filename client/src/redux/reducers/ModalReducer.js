@@ -6,6 +6,8 @@ const initialState = {
     visibleModalInfo: false,
     component: <p>hello world</p>,
     componentModalInfo: <p>hello world</p>,
+    setWidth: 1024,
+    setTitle: null,
     handleOk: (props) => {
         alert("display successfully")
     }
@@ -22,7 +24,7 @@ export default (state = initialState, action) => {
         case CLOSE_MODAL_INFO:
             return { ...state, visibleModalInfo: false }
         case DISPLAY_MODAL_WITH_COMPONENT:
-            return { ...state, visible: true, component: action.component }
+            return { ...state, visible: true, component: action.component, setWidth: action.setWidth, setTitle: action.setTitle }
         case DISPLAY_MODAL_INFO_WITH_COMPONENT:
             return { ...state, visibleModalInfo: true, componentModalInfo: action.componentModalInfo }
         case HANDLE_CLICK_OK_MODAL:

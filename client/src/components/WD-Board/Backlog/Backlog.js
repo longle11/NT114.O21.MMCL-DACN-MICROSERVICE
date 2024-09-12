@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { drawer_edit_form_action } from '../../../redux/actions/DrawerAction';
 import { NavLink, useNavigate, useParams } from 'react-router-dom';
 import './Backlog.css'
-import { issueTypeWithoutOptions, iTagForIssueTypes } from '../../../util/CommonFeatures';
+import { defaultForIssueType, issueTypeWithoutOptions, iTagForIssueTypes } from '../../../util/CommonFeatures';
 import { createIssue, getIssuesBacklog, updateInfoIssue } from '../../../redux/actions/IssueAction';
 import CreateEpic from '../../Forms/CreateEpic/CreateEpic';
 import { getEpicList, getVersionList, updateEpic, updateVersion } from '../../../redux/actions/CategoryAction';
@@ -155,28 +155,6 @@ export default function Backlog() {
             }
             return false
         })
-    }
-
-    //create default type for issue base on workflow's status
-    const defaultForIssueType = (current_status) => {
-        const getCurrentWorkflowsActive = workflowList.filter(workflow => workflow.isActivated)
-        if (getCurrentWorkflowsActive !== null && getCurrentWorkflowsActive.length === 0) {
-            //it means that doesn't have any workflow is applied so we will get the first value in process
-            return processList[0]._id
-        } else {
-            //proceed to get workflow contains current_status
-            const getWorkflow = getCurrentWorkflowsActive.filter(workflow => workflow.issue_statuses.includes(current_status))
-            if (getWorkflow !== null && getWorkflow.length === 0) {  //although existing workflows, it doesn't contains this status
-                return processList[0]._id
-            } else {
-                const edges = getWorkflow[0].edges
-                //get the edge has souce id equal 0
-                const getEdge = edges.filter(edge => edge.source === '0')
-                //proceed link that destination of edges to default issue type
-
-                return getEdge[0].target
-            }
-        }
     }
 
 
@@ -647,7 +625,7 @@ export default function Backlog() {
                                                     issue_status: issueStatus,
                                                     summary: tempSummary,
                                                     creator: userInfo.id,
-                                                    issue_type: defaultForIssueType(issueStatus),
+                                                    issue_type: defaultForIssueType(issueStatus, workflowList, processList),
                                                     current_sprint: currentSprint._id
                                                 }, id, userInfo.id, currentSprint._id, null))
                                             }
@@ -1211,7 +1189,7 @@ export default function Backlog() {
                                                             issue_status: issueStatus,
                                                             summary: tempSummary,
                                                             creator: userInfo.id,
-                                                            issue_type: defaultForIssueType(issueStatus),
+                                                            issue_type: defaultForIssueType(issueStatus, workflowList, processList),
                                                             current_sprint: null
                                                         }, id, userInfo.id, null, null))
                                                     }

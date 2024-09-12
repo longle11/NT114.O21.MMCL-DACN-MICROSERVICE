@@ -23,6 +23,8 @@ import WorkflowList from './components/WD-Board/Workflow/Workflow-List/WorkflowL
 import WorkflowEdit from './components/WD-Board/Workflow/Workflow-Edit/WorkflowEdit';
 import AddUser from './components/Project-Setiing/Add-User/AddUser';
 import YourWork from './components/Your-Work/YourWork';
+import IssuePermissions from './components/Project-Setiing/Issue-Permissions/IssuePermissions';
+import Calendar from './components/WD-Board/Calendar/Calendar';
 function App() {
   const dispatch = useDispatch()
   useEffect(() => {
@@ -44,11 +46,13 @@ function App() {
           <Route path='/projectDetail/:id/versions/version-detail/:versionId' element={<MainPageTemplate Component={ReleaseDetail} />} />
           <Route path='/projectDetail/:id/issues' element={<MainPageTemplate Component={Create} />} />
           <Route path='/projectDetail/:id/list' element={<MainPageTemplate Component={IssuesList} />} />
+          <Route path='/projectDetail/:id/calendar' element={<MainPageTemplate Component={Calendar} />} />
           <Route path='/projectDetail/:id/workflows/create-workflow' Component={WorkflowEdit} />
           <Route path='/projectDetail/:id/workflows' element={<MainPageTemplate Component={WorkflowList} />} />
           <Route path='/projectDetail/:id/workflows/edit/:workflowId' Component={WorkflowEdit} />
           <Route path='/projectDetail/:id/issues/issue-detail?/:issueId' element={<MainPageTemplate Component={IssueDetail} />} />
           <Route path='/projectDetail/:id/settings/access' element={<MainPageTemplate Component={AddUser} />} />
+          <Route path='/projectDetail/:id/settings/issue-permissions?/:issueId' element={<MainPageTemplate Component={IssuePermissions} />} />
           <Route path='/your-work' element={<MainPageTemplate Component={YourWork} />} />
 
           <Route path='/' element={<MainPageTemplate Component={ProjectManager} />} />

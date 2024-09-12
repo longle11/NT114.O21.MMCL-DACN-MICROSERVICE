@@ -4,10 +4,12 @@ import { useDispatch } from 'react-redux'
 import { updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { updateVersion } from '../../../redux/actions/CategoryAction'
 import { renderVersionList } from '../../../util/CommonFeatures'
+import { checkConstraintPermissions } from '../../../util/CheckConstraintFields'
 
 export default function FixVersion(props) {
     const issueInfo = props.issueInfo
     const userInfo = props.userInfo
+    const projectInfo = props.projectInfo
     const id = props.id
     const versionList = props.versionList
     const dispatch = useDispatch()
@@ -26,7 +28,9 @@ export default function FixVersion(props) {
                 }}
             /> :
                 <span onDoubleClick={() => {
-                    props.handleEditAttributeTag('fix_version')
+                    if(checkConstraintPermissions(projectInfo, issueInfo, userInfo, 6)) {
+                        props.handleEditAttributeTag('fix_version')
+                    }
                 }} className='items-attribute col-7' style={{ padding: '10px 10px', width: '100%', color: '#7A869A' }}>{issueInfo?.fix_version ? issueInfo?.fix_version?.version_name : "None"}</span>}
         </div>
     )

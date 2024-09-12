@@ -1,16 +1,14 @@
 import { Editor } from '@tinymce/tinymce-react'
-import { Button, Input, InputNumber, message, Select, Space, Upload } from 'antd'
+import { Input, InputNumber, message, Select, Space } from 'antd'
 import React, { useEffect } from 'react'
 import { connect, useDispatch, useSelector } from 'react-redux';
 import { withFormik } from 'formik';
 import { createIssue } from '../../redux/actions/IssueAction';
-import { submit_edit_form_action } from '../../redux/actions/DrawerAction';
+import { submit_edit_form_action, updateTempFileDataTaskForm } from '../../redux/actions/DrawerAction';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
 import { priorityTypeOptions, issueTypeOptions, renderListProject, renderEpicList, renderSprintList, renderIssueType, renderAssignees, renderVersionList } from '../../util/CommonFeatures';
-import PropTypes from 'prop-types';
 import { getEpicList, getVersionList } from '../../redux/actions/CategoryAction';
 import { GetProcessListAction, GetSprintListAction } from '../../redux/actions/ListProjectAction';
-import { UploadOutlined } from '@ant-design/icons';
 import { InboxOutlined } from '@ant-design/icons';
 import mongoose from 'mongoose';
 import Dragger from 'antd/es/upload/Dragger';
@@ -37,6 +35,9 @@ function TaskForm(props) {
             }
             if (info.file.status === 'done') {
                 props.values.file_uploaded.push(info.file.response.data._id)
+                console.log("props.values.file_uploaded ",props.values.file_uploaded);
+                
+                dispatch(updateTempFileDataTaskForm(props.values.file_uploaded))
                 message.success(`${info.file.name} file uploaded successfully`);
             } else if (info.file.status === 'error') {
                 message.error(`${info.file.name} file upload failed.`);

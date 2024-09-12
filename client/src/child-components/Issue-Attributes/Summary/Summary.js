@@ -1,17 +1,21 @@
 import { Input } from 'antd'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { showNotificationWithIcon } from '../../../util/NotificationUtil'
 import { useDispatch } from 'react-redux'
+import { checkConstraintPermissions } from '../../../util/CheckConstraintFields'
 
 export default function Summary(props) {
     const issueInfo = props.issueInfo
     const userInfo = props.userInfo
+    const projectInfo = props.projectInfo
     const dispatch = useDispatch()
+    const [editAttributeTag, setEditAttributeTag] = useState("")
     const [summary, setSummary] = useState('')
+    useEffect(() => {}, [summary]) 
     return (
         <div>
-            {props.editAttributeTag === 'summary' ? <Input onChange={(e) => {
+            {editAttributeTag === 'summary' ? <Input onChange={(e) => {
                 setSummary(e.target.value)
             }}
                 className="issue_summary"
@@ -21,7 +25,7 @@ export default function Summary(props) {
                             showNotificationWithIcon('error', '', "Summary can't be left blank")
                         } else {
                             dispatch(updateInfoIssue(issueInfo?._id, issueInfo.project_id, { summary: summary }, null, null, userInfo.id, "updated", "summary"))
-                            props.handleEditAttributeTag('')
+                            setEditAttributeTag('')
                         }
                     }
                 }}
@@ -30,14 +34,16 @@ export default function Summary(props) {
                         showNotificationWithIcon('error', '', "Summary can't be left blank")
                     } else {
                         dispatch(updateInfoIssue(issueInfo?._id, issueInfo.project_id, { summary: summary }, null, null, userInfo.id, "updated", "summary"))
-                        props.handleEditAttributeTag('')
+                        setEditAttributeTag('')
                     }
                 }}
                 defaultValue={issueInfo?.summary} /> :
-            <span onDoubleClick={() => {
-                props.handleEditAttributeTag('summary')
-                setSummary(issueInfo?.summary)
-            }} className='items-attribute m-0' style={{ padding: '10px 20px 10px 5px', width: '100%', display: 'block', fontSize: '24px', fontWeight: 'bold' }}>{issueInfo?.summary}</span>}
+                <span onDoubleClick={() => {
+                    if (checkConstraintPermissions(projectInfo, issueInfo, userInfo, 0)) {
+                        setEditAttributeTag('summary')
+                        setSummary(issueInfo?.summary)
+                    }
+                }} className='items-attribute m-0' style={{ padding: '10px 20px 10px 5px', width: '100%', display: 'block', fontSize: '24px', fontWeight: 'bold' }}>{issueInfo?.summary}</span>}
         </div>
     )
 }

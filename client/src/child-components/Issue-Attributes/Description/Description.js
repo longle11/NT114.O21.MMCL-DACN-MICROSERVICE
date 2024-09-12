@@ -4,10 +4,12 @@ import { useDispatch } from 'react-redux'
 import Parser from 'html-react-parser';
 import { Editor } from '@tinymce/tinymce-react';
 import { Button } from 'antd';
+import { checkConstraintPermissions } from '../../../util/CheckConstraintFields';
 
 export default function Description(props) {
     const userInfo = props.userInfo
     const issueInfo = props.issueInfo
+    const projectInfo = props.projectInfo
     const dispatch = useDispatch()
     const [editDescription, setEditDescription] = useState(true)
     const [description, setDescription] = useState('')
@@ -16,19 +18,19 @@ export default function Description(props) {
     }
     const renderContentModal = () => {
         if (issueInfo?.description !== null && issueInfo?.description?.trim() !== '') {
-            return Parser(`${issueInfo?.description}`)
+            if (checkConstraintPermissions(projectInfo, issueInfo, userInfo, 19)) {
+                return Parser(`${issueInfo?.description}`)
+            } else {
+                return <p className='text-danger'>You don't have permissions enough to see description</p>
+            }
         }
-
-        if (issueInfo?.creator._id === userInfo?.id) {
-            return <p style={{ color: 'blue' }}>Add Your Description</p>
-        }
-        return <p>There is no description yet</p>
+        return <p style={{ color: 'blue' }}>There is no description yet. Add Your Description</p>
     }
     return (
         <div className="description">
             <p style={{ fontWeight: 'bold', fontSize: '15px' }}>Description</p>
             {editDescription ? (<p onKeyDown={() => { }} onDoubleClick={() => {
-                if (issueInfo?.creator?._id === userInfo?.id) {
+                if (checkConstraintPermissions(projectInfo, issueInfo, userInfo, 1)) {
                     setEditDescription(false)
                 }
             }}>

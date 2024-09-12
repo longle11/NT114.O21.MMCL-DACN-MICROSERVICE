@@ -56,6 +56,15 @@ export const priorityTypeOptions = [
     { label: <span className="align-items-center d-flex">{iTagForPriorities(3, null, null)} Low</span>, value: 3 },
     { label: <span className="align-items-center d-flex">{iTagForPriorities(4, null, null)} Lowest</span>, value: 4 }
 ]
+
+export const priorityTypeWithouOptions = [
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(0, null, 20)}</span>, value: 0 },
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(1, null, 20)}</span>, value: 1 },
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(2, null, 20)}</span>, value: 2 },
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(3, null, 20)}</span>, value: 3 },
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(4, null, 20)}</span>, value: 4 }
+]
+
 export const issueTypeOptions = [
     { label: <span className="align-items-center d-flex">{iTagForIssueTypes(0, null, null)} Story</span>, value: 0 },
     { label: <span className="align-items-center d-flex">{iTagForIssueTypes(1, null, null)} Task</span>, value: 1 },
@@ -166,7 +175,7 @@ export const renderSubIssueOptions = (issuesBacklog) => {
     return issuesBacklog?.filter(issue => issue.issue_status === 4 && issue.parent === null).map(subIssue => {
         return {
             label: <div className='d-flex align-items-center'>
-                <span className='mr-1'>{iTagForIssueTypes(subIssue.issue_status, null, 15)}</span>
+                <span className='mr-1'>{iTagForIssueTypes(subIssue.issue_status, null, 20)}</span>
                 <span className='mr-2'>WD-{subIssue.ordinal_number}</span>
                 <span>{subIssue.summary}</span>
             </div>,
@@ -185,3 +194,26 @@ export const CopyLinkButton = (url) => {
             console.error('Lỗi khi sao chép: ', err);
         });
 };
+
+
+//create default type for issue base on workflow's status
+export const defaultForIssueType = (current_status, workflowList, processList) => {
+    const getCurrentWorkflowsActive = workflowList?.filter(workflow => workflow.isActivated)
+    if (getCurrentWorkflowsActive !== null && getCurrentWorkflowsActive.length === 0) {
+        //it means that doesn't have any workflow is applied so we will get the first value in process
+        return processList[0]._id
+    } else {
+        //proceed to get workflow contains current_status
+        const getWorkflow = getCurrentWorkflowsActive?.filter(workflow => workflow.issue_statuses.includes(current_status))
+        if (getWorkflow !== null && getWorkflow.length === 0) {  //although existing workflows, it doesn't contains this status
+            return processList[0]._id
+        } else {
+            const edges = getWorkflow[0].edges
+            //get the edge has souce id equal 0
+            const getEdge = edges.filter(edge => edge.source === '0')
+            //proceed link that destination of edges to default issue type
+
+            return getEdge[0].target
+        }
+    }
+}

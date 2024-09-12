@@ -3,11 +3,13 @@ import { priorityTypeOptions } from '../../../util/CommonFeatures'
 import { Select } from 'antd'
 import { updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { useDispatch } from 'react-redux'
+import { checkConstraintPermissions } from '../../../util/CheckConstraintFields'
 
 export default function IssuePriority(props) {
     const dispatch = useDispatch()
     const issueInfo = props.issueInfo
     const userInfo = props.userInfo
+    const projectInfo = props.projectInfo
     return (
         <div className="row priority d-flex align-items-center mt-2" style={{ marginBottom: 20 }}>
             <span className='col-4' style={{ fontSize: 14, color: '#42526e', fontWeight: '500' }}>Priority</span>
@@ -29,7 +31,10 @@ export default function IssuePriority(props) {
                 name="priority"
             /> :
                 <span onDoubleClick={() => {
-                    props.handleEditAttributeTag('issue_priority')
+                    if(checkConstraintPermissions(projectInfo, issueInfo, userInfo, 4)) {
+                        props.handleEditAttributeTag('issue_priority')
+                    }
+                    
                 }} className='items-attribute col-7' style={{ padding: '10px 10px', width: '100%', color: '#7A869A' }}>{priorityTypeOptions[issueInfo?.issue_priority]?.label}</span>}
         </div>
     )

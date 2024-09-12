@@ -22,7 +22,6 @@ export default function TrackingTimeModal(props) {
 
     const handleClickOK = () => {
         dispatch(openModal(false))
-        console.log("gia tri time spent ", formData.timeSpent);
         
         dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id._id.toString(), { timeSpent: formData.timeSpent }, issueInfo.timeSpent.toString(), formData.timeSpent.toString(), userInfo.id, "updated", "time spent"))
         dispatch(createWorklogHistory({

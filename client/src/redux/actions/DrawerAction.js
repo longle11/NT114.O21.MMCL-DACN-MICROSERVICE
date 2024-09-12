@@ -1,28 +1,37 @@
-import { CLOSE_DRAWER, GET_CATEGORY_TO_EDIT_DRAWER, OPEN_DRAWER, OPEN_FORM_EDIT_DRAWER, SUBMIT_FORM_EDIT_DRAWER } from "../constants/constant"
+import { CLOSE_DRAWER, GET_CATEGORY_TO_EDIT_DRAWER, OPEN_DRAWER, OPEN_FORM_EDIT_DRAWER, SUBMIT_FORM_EDIT_DRAWER, UPDATE_TEMP_FILE_DATA } from "../constants/constant"
 
 export const drawerAction = (status) => {
-    console.log("drawerAction ", status);
-    
     return dispatch => {
-        if(status) {
+        if (status) {
             dispatch({
                 type: CLOSE_DRAWER
             })
-        }else {
+        } else {
             dispatch({
                 type: OPEN_DRAWER
             })
         }
     }
 }
+
+
 export const drawer_edit_form_action = (component, textButton, width, padding) => {
     return dispatch => {
         dispatch({
             type: OPEN_FORM_EDIT_DRAWER,
             component: component,
-            textButton, 
+            textButton,
             width,
             padding
+        })
+    }
+}
+
+export const updateTempFileDataTaskForm = (files) => {
+    return dispatch => {
+        dispatch({
+            type: UPDATE_TEMP_FILE_DATA,
+            tempFileData: [...files]
         })
     }
 }

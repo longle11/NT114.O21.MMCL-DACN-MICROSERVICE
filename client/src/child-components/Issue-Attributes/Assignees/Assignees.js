@@ -4,12 +4,13 @@ import { updateUserInfo } from '../../../redux/actions/UserAction'
 import { updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { useDispatch } from 'react-redux'
 import { UserOutlined } from '@ant-design/icons'
+import { checkConstraintPermissions } from '../../../util/CheckConstraintFields'
 
 export default function Assignees(props) {
     const issueInfo = props.issueInfo
     const userInfo = props.userInfo
     const projectInfo = props.projectInfo
-    
+
 
     //tham số truyền vào sẽ là id của comment khi click vào chỉnh sửa
     const [addAssignee, setAddAssignee] = useState(true)
@@ -39,16 +40,13 @@ export default function Assignees(props) {
                     })}
                 </div> : <span style={{ backgroundColor: '#e9eaf0', padding: '5px 10px', borderRadius: 5, width: 'fit-content', fontSize: 12 }} className='d-flex align-items-center font-weight-bold'><Avatar icon={<UserOutlined />} size='small' className='mr-2' /> Unassignee</span>}
                 {
-                    issueInfo?.creator._id === userInfo?.id ? (
-                        <div style={{ width: '100%', marginTop: 5 }}>
-                            <button onKeyDown={() => { }} className='text-primary mt-2 mb-2 btn bg-transparent ml-2' style={{ width: 'max-content', fontSize: '12px', margin: '0px', cursor: 'pointer', display: addAssignee === false ? 'none' : 'block', padding: 0, textAlign: 'left' }} onClick={() => {
-                                setAddAssignee(false)
-                            }} >
-                                <i className="fa fa-plus" style={{ marginRight: 5 }} />Add more
-                            </button>
-                        </div>
-
-                    ) : <></>
+                    checkConstraintPermissions(projectInfo, issueInfo, userInfo, 12) ? <div style={{ width: '100%', marginTop: 5 }}>
+                    <button onKeyDown={() => { }} className='text-primary mt-2 mb-2 btn bg-transparent ml-2' style={{ width: 'max-content', fontSize: '12px', margin: '0px', cursor: 'pointer', display: addAssignee === false ? 'none' : 'block', padding: 0, textAlign: 'left' }} onClick={() => {
+                        setAddAssignee(false)
+                    }} >
+                        <i className="fa fa-plus" style={{ marginRight: 5 }} />Add more
+                    </button>
+                </div> : <></>
                 }
 
             </div>
@@ -60,7 +58,6 @@ export default function Assignees(props) {
                         }}
                         style={{ width: '200px', marginTop: 10 }}
                         placeholder="Select a person"
-                        disabled={issueInfo?.creator._id !== userInfo?.id}
                         onSelect={(value, option) => {
                             setAddAssignee(true)
                             const getUserIndex = projectInfo?.members.findIndex(user => user.user_info._id.toString() === value)
