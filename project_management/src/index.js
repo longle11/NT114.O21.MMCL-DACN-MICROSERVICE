@@ -5,6 +5,7 @@ const mongoose = require("mongoose")
 
 const authCreatedListener = require("./nats/listener/auth-created-listener")
 const categoryCreatedListener = require("./nats/listener/category-created-listener")
+const projectManagementUserAdded = require("./nats/listener/notification_listener/notification_added_user_listener")
 async function connectToMongoDb() {
     try {
         await mongoose.connect("mongodb://projectmanagement-mongo-srv:27017/db")
@@ -38,6 +39,7 @@ async function connectToNats() {
         authCreatedListener()
         //lang nghe su kien created tu category service
         categoryCreatedListener()
+        projectManagementUserAdded()
     } catch (error) {
         console.log("Connected failed to nats server", error);
         process.exit(1)

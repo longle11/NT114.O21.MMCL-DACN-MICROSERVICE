@@ -38,11 +38,12 @@ export const displayComponentInModal = (component, setWidth, setTitle) => {
     }
 }
 
-export const displayComponentInModalInfo = (component) => {
+export const displayComponentInModalInfo = (component, setWidthInfo) => {
     return dispatch => {
         dispatch({
             type: DISPLAY_MODAL_INFO_WITH_COMPONENT,
-            componentModalInfo: component
+            componentModalInfo: component,
+            setWidthInfo: setWidthInfo
         })
     }
 }

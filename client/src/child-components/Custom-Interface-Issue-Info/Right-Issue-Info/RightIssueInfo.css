@@ -1,0 +1,4 @@
+.info-item-field > .ant-select-selector,
+.info-item-field {
+    border-radius: 0 !important;
+}

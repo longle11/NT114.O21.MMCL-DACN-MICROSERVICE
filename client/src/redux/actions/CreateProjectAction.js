@@ -1,10 +1,11 @@
 import Axios from "axios"
-import { DISPLAY_LOADING, GET_PROCESSES_PROJECT, GET_SPRINT_PROJECT, HIDE_LOADING } from "../constants/constant"
+import { CLOSE_DRAWER, DISPLAY_LOADING, GET_PROCESSES_PROJECT, GET_SPRINT_PROJECT, HIDE_LOADING } from "../constants/constant"
 import { delay } from "../../util/Delay"
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
 import domainName from '../../util/Config'
-import { GetSprintListAction, GetWorkflowListAction, ListProjectAction } from "./ListProjectAction"
+import { GetProjectAction, GetWorkflowListAction, ListProjectAction } from "./ListProjectAction"
 import { updateUserInfo } from "./UserAction"
+import { createNotificationAction } from "./NotificationAction"
 export const createProjectAction = (data) => {
     return async dispatch => {
         try {
@@ -35,16 +36,49 @@ export const createProjectAction = (data) => {
     }
 }
 //cập nhật lại thông tin của project
-export const updateProjectAction = (project_id, props, navigate) => {
+export const updateProjectAction = (project_id, props, navigate, send_from) => {
     return async dispatch => {
         try {
             const res = await Axios.put(`${domainName}/api/projectmanagement/update/${project_id}`, props)
+            console.log("gia tri res la ", res);
+            
             if (res.status === 200) {
-                dispatch(ListProjectAction())
-                showNotificationWithIcon('success', '', res.data.message)
-                if (props.sprint_id !== null) {
-                    navigate(`/projectDetail/${project_id}/board/${props.sprint_id}`)
+                dispatch(GetProjectAction(project_id, null, null))
+                //proceed to create notification to add user into the project
+                if(typeof props?.email === "string" && typeof parseInt(props?.user_role) === "number") {
+                    const getUserInfo = await Axios.get(`${domainName}/api/users/findUser?keyword=${props?.email}`)
+                    if(getUserInfo.status === 200) {
+                        dispatch(createNotificationAction({
+                            project_id: res.data.data._id,
+                            send_from: send_from,
+                            send_to: getUserInfo.data.data._id,
+                            link_url: `/projectDetail/${project_id}/board`,
+                            content: `Added you into ${res.data.data.name_project} project`,
+                            action_type: "projectmanagement-user:added"
+                        }))
+                    }
                 }
+
+
+                //this case is delete user out project
+                if(props?.user_info && !Object.keys(props).includes("user_role")) {
+                    dispatch(createNotificationAction({
+                        project_id: res.data.data._id,
+                        send_from: send_from,
+                        send_to: props.user_info,
+                        link_url: `projectDetail/${project_id}/board`,
+                        content: `Deleted you from ${res.data.data.name_project} project`,
+                        action_type: "projectmanagement-user:deleted"
+                    }))
+                }
+
+
+                if (props.sprint_id !== null) {
+                    if(navigate) {
+                        navigate(`/projectDetail/${project_id}/board/${props.sprint_id}`)
+                    }
+                }
+                showNotificationWithIcon('success', '', res.data.message)
                 window.location.reload()
             }
         } catch (error) {
@@ -72,10 +106,14 @@ export const createSprintAction = (props) => {
             const res = await Axios.post(`${domainName}/api/sprint/create`, props)
 
             if (res.status === 201) {
-                showNotificationWithIcon('success', 'Tao moi sprint', 'Tao moi thanh cong 1 sprint')
+                showNotificationWithIcon('success', '', res.data.message)
                 dispatch({
                     type: GET_SPRINT_PROJECT,
                     sprintList: res.data.data
+                })
+                //close modal if success
+                dispatch({
+                    type: CLOSE_DRAWER
                 })
             }
         } catch (error) {
@@ -129,10 +167,13 @@ export const updateSprintAction = (sprintId, props) => {
             const res = await Axios.put(`${domainName}/api/sprint/update/${sprintId}`, props)
 
             if (res.status === 200) {
-                if (res.data.data.project_id) {
-                    dispatch(GetSprintListAction(res.data.data.project_id, null))
-                }
+                showNotificationWithIcon('success', '', res.data.message)
+                //close modal if success
+                dispatch({
+                    type: CLOSE_DRAWER
+                })
             }
+
         } catch (error) {
             console.log(error);
 

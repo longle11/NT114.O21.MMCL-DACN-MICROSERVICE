@@ -5,15 +5,15 @@ const issuePublisher = require("../nats/publisher/issue-publisher")
 const BadRequestError = require("../Errors/Bad-Request-Error")
 const UnauthorizedError = require("../Errors/UnAuthorized-Error")
 const { default: mongoose } = require("mongoose")
+const issueBacklogModel = require("../models/issueBacklogModel")
 const router = express.Router()
 
 router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
     try {
-
-        console.log("Du lieu duoc cap nhat ", req.body);
         if (req.currentUser) {
             const { id } = req.params
             const issueIds = await issueModel.find({})
+            var updateDirectly = false
             const ids = issueIds.map(issue => issue._id.toString());
             if (!ids.includes(id)) {
                 throw new BadRequestError("Issue not found")
@@ -38,8 +38,16 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                     req.body.timeSpent = timeSpent
                 }
 
-                if(req.body?.start_date && req.body?.end_date) {
+                if (req.body?.start_date && req.body?.end_date) {
                     req.body.start_date = new Date(req.body.start_date)
+                    req.body.end_date = new Date(req.body.end_date)
+                }
+
+                if (req.body?.start_date) {
+                    req.body.start_date = new Date(req.body.start_date)
+                }
+
+                if (req.body?.end_date) {
                     req.body.end_date = new Date(req.body.end_date)
                 }
 
@@ -51,11 +59,11 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                 }
 
                 //upload file in file uploaded
-                if(req.body?.uploaded_file_id) {
+                if (req.body?.uploaded_file_id) {
                     const fileIndex = currentIssue.file_uploaded.findIndex(file => file.toString() === req.body.uploaded_file_id.toString())
-                    if(fileIndex === -1) {
+                    if (fileIndex === -1) {
                         currentIssue.file_uploaded.push(new mongoose.Types.ObjectId(req.body.uploaded_file_id.toString()))
-                    }else {
+                    } else {
                         currentIssue.file_uploaded.splice(fileIndex, 1)
                     }
                     req.body.file_uploaded = [...currentIssue.file_uploaded]
@@ -89,26 +97,26 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
                     req.body.voted_user_id = null
                 }
 
-                await issueModel.updateOne({ _id: id }, { $set: { ...req.body } })
+                if (!updateDirectly) {
+                    await issueModel.updateOne({ _id: id }, { $set: { ...req.body } })
+                }
 
-                const issuelayra = await issueModel.findById(req.params.id)
-
-                console.log("issuelayra ", issuelayra);
-                
+                const getUpdatedIssue = await issueModel.findById(req.params.id)
 
                 const copyIssue = {
-                    _id: currentIssue._id,
-                    summary: currentIssue.summary,
-                    issue_status: currentIssue.issue_status,
-                    issue_priority: currentIssue.issue_priority,
-                    assignees: currentIssue.assignees,
-                    epic_link: currentIssue.epic_link,
-                    creator: currentIssue.creator,
-                    fix_version: currentIssue.fix_version,
-                    story_point: currentIssue.story_point,
-                    issue_type: currentIssue.issue_type,
-                    sub_issue_list: currentIssue.sub_issue_list,
-                    isFlagged: currentIssue.isFlagged,
+                    _id: getUpdatedIssue._id,
+                    summary: getUpdatedIssue.summary,
+                    issue_status: getUpdatedIssue.issue_status,
+                    issue_priority: getUpdatedIssue.issue_priority,
+                    assignees: getUpdatedIssue.assignees,
+                    epic_link: getUpdatedIssue.epic_link,
+                    creator: getUpdatedIssue.creator,
+                    fix_version: getUpdatedIssue.fix_version,
+                    story_point: getUpdatedIssue.story_point,
+                    issue_type: getUpdatedIssue.issue_type,
+                    sub_issue_list: getUpdatedIssue.sub_issue_list,
+                    isFlagged: getUpdatedIssue.isFlagged,
+                    current_sprint: getUpdatedIssue.current_sprint,
                     ...req.body
                 }
 
@@ -118,7 +126,7 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
 
                 return res.status(200).json({
                     message: "Successfully updated this issue",
-                    data: currentIssue
+                    data: getUpdatedIssue
                 })
             }
         } else {
@@ -130,6 +138,50 @@ router.put("/update/:id", currentUserMiddleware, async (req, res, next) => {
         next(error)
     }
 })
+
+
+router.post("/issue-backlog/:projectId", currentUserMiddleware, async (req, res, next) => {
+    try {
+        if (req.currentUser) {
+            const { projectId } = req.params
+            const currentIssuesBacklog = await issueBacklogModel.find({ project_id: projectId })
+            if (currentIssuesBacklog.length > 0) {
+                if (req.body?.issue_id) {
+                    const index = currentIssuesBacklog[0].issue_list.findIndex(issue => issue.toString() === req.body?.issue_id?.toString())
+                    if (index !== -1) {
+                        if (req.body?.inserted_index === -1) {  //this case for delete issue from backlog
+                            currentIssuesBacklog[0].issue_list.splice(index, 1)
+                        } else {
+                            currentIssuesBacklog[0].issue_list.splice(index, 1)
+                            //delete issue from current position
+                            currentIssuesBacklog[0].issue_list.splice(req.body.inserted_index, 0, req.body?.issue_id?.toString())
+                        }
+                    } else {
+                        currentIssuesBacklog[0].issue_list.splice(req.body.inserted_index, 0, req.body?.issue_id?.toString())
+                    }
+                }
+                if (typeof req.body?.issue_source_index === "number" && typeof req.body?.issue_dest_index === "number") {
+                    [currentIssuesBacklog[0].issue_list[req.body?.issue_source_index], currentIssuesBacklog[0].issue_list[req.body?.issue_dest_index]] = [currentIssuesBacklog[0].issue_list[req.body?.issue_dest_index], currentIssuesBacklog[0].issue_list[req.body?.issue_source_index]]
+                }
+
+                const updatedIssue = await issueBacklogModel.findOneAndUpdate({ project_id: projectId }, { $set: { issue_list: currentIssuesBacklog[0].issue_list } })
+                return res.status(200).json({
+                    message: "Successfully updated this issue in backlog",
+                    data: updatedIssue
+                })
+
+            } else {
+                throw new BadRequestError("IDs is invalid")
+            }
+
+        } else {
+            throw new UnauthorizedError("Authentication failed")
+        }
+    } catch (error) {
+        next(error)
+    }
+})
+
 
 
 module.exports = router;

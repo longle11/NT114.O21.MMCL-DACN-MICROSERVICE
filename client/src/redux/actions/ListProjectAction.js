@@ -1,5 +1,5 @@
 import Axios from "axios"
-import { GET_A_SPRINT, GET_LIST_PROJECT_API, GET_PROCESSES_PROJECT, GET_PROJECT_API, GET_SPRINT_PROJECT, GET_WORKFLOW_LIST, HIDE_LOADING } from "../constants/constant"
+import { GET_A_SPRINT, GET_LIST_PROJECT_API, GET_PROCESSES_PROJECT, GET_PROJECT_API, GET_SPRINT_PROJECT, GET_WORKFLOW_LIST } from "../constants/constant"
 import domainName from '../../util/Config'
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
 export const ListProjectAction = () => {
@@ -24,8 +24,6 @@ export const GetProjectAction = (id, keyword, navigate) => {
         try {
             const res = await Axios.get(`${domainName}/api/projectmanagement/${id.toString()}?keyword=${keyword}`)
             if (res.status === 200) {
-                console.log("thang res tra ve trong GetProjectAction", res);
-                
                 if (res.data.data?.sprint_id) {
                     dispatch(GetSprintAction(res.data.data.sprint_id))
                     if(navigate !== null) {
@@ -39,7 +37,7 @@ export const GetProjectAction = (id, keyword, navigate) => {
                 
                 dispatch({
                     type: GET_PROJECT_API,
-                    data: res.data.data
+                    projectInfo: res.data.data
                 })
             }
 
@@ -69,8 +67,6 @@ export const CreateProcessACtion = (props) => {
     return async dispatch => {
         try {
             const res = await Axios.post(`${domainName}/api/issueprocess/create`, props)
-            console.log('CreateProcessACtion ', res);
-
             if (res.status === 201) {
                 dispatch(GetProcessListAction(res.data.data.project_id.toString()))
                 showNotificationWithIcon('success', '', res.data.message)

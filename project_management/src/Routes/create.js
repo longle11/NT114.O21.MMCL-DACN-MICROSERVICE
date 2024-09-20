@@ -18,7 +18,6 @@ router.post('/create', currentUserMiddleware, async (req, res, next) => {
             } else {
                 const newProject = await new projectModel(req.body).save()
                 servicePublisher({ _id: newProject._id, name_project: newProject.name_project }, "projectmanagement:created")
-
                 res.status(201).json({
                     message: "Initial success project",
                     data: newProject

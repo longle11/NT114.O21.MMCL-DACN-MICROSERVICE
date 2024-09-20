@@ -23,22 +23,22 @@ export default function YourWork() {
     const navigate = useNavigate()
     const renderIssueItemForWorkedOn = (issues) => {
         return issues.map((issue, index) => {
-            return <a key={index} href={`/projectDetail/${issue?.project_id}/issues/issue-detail/${issue?.issue_id}`} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center" style={{ padding: '5px 20px' }}>
+            return <a key={index} href={`/projectDetail/${issue?.issue_id?.project_id}/issues/issue-detail/${issue?.issue_id?.issue_id}`} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center" style={{ padding: '5px 20px' }}>
                 <div className='d-flex align-items-center'>
-                    <span>{iTagForIssueTypes(issue?.issue_status, null, null)}</span>
+                    <span>{iTagForIssueTypes(issue?.issue_id?.issue_status, null, null)}</span>
                     <div className='d-flex flex-column' style={{ width: '100%' }}>
-                        <span>{issue?.summary}</span>
+                        <span>{issue?.issue_id?.summary}</span>
                         <div className='d-flex align-items-center'>
-                            <span className='mr-2'>WD-{issue?.ordinal_number}</span>
+                            <span className='mr-2'>WD-{issue?.issue_id?.ordinal_number}</span>
                             <i className="fa-solid fa-circle mr-2" style={{ fontSize: 5 }} />
-                            <span>{issue?.name_project}</span>
+                            <span>{issue?.issue_id?.project_id?.name_project}</span>
                         </div>
                     </div>
                 </div>
                 <div>
-                    <span className='mr-3'>Last visited: <span style={{ fontWeight: 'bold' }}>{dayjs(issue?.time).format('DD/MM/YYYY - hh:mm')}</span></span>
+                    <span className='mr-3'>Last visited: <span style={{ fontWeight: 'bold' }}>{dayjs(issue?.createAt).format('DD/MM/YYYY - hh:mm')}</span></span>
                     <span className='mr-2 ml-2' style={{ fontSize: 15 }}>{issue?.action}</span>
-                    <span style={{ fontWeight: 'bold', fontSize: 15 }}><Avatar src={issue?.avatar} /> {issue?.username}</span>
+                    <span style={{ fontWeight: 'bold', fontSize: 15 }}><Avatar src={issue?.issue_id?.creator?.avatar} /> {issue?.issue_id?.creator?.username}</span>
                 </div>
             </a>
         })
@@ -46,20 +46,20 @@ export default function YourWork() {
 
     const renderIssueItemForViewed = (issues) => {
         return issues.map((issue, index) => {
-            return <a key={index} href={`/projectDetail/${issue?.project_id}/issues/issue-detail/${issue?.issue_id}`} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center" style={{ padding: '5px 20px' }}>
+            return <a key={index} href={`/projectDetail/${issue?.issue_id?.project_id}/issues/issue-detail/${issue?.issue_id?.issue_id}`} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center" style={{ padding: '5px 20px' }}>
                 <div className='d-flex align-items-center'>
-                    <span>{iTagForIssueTypes(issue?.issue_status, null, null)}</span>
+                    <span>{iTagForIssueTypes(issue?.issue_id?.issue_status, null, null)}</span>
                     <div className='d-flex flex-column' style={{ width: '100%' }}>
-                        <span>{issue?.summary}</span>
+                        <span>{issue?.issue_id?.summary}</span>
                         <div className='d-flex align-items-center'>
-                            <span className='mr-2'>WD-{issue?.ordinal_number}</span>
+                            <span className='mr-2'>WD-{issue?.issue_id?.ordinal_number}</span>
                             <i className="fa-solid fa-circle mr-2" style={{ fontSize: 5 }} />
-                            <span>{issue?.name_project}</span>
+                            <span>{issue?.issue_id?.project_id?.name_project}</span>
                         </div>
                     </div>
                 </div>
                 <div>
-                    <span className='mr-3'>Last visited: <span style={{ fontWeight: 'bold' }}>{dayjs(issue?.time).format('DD/MM/YYYY - hh:mm')}</span></span>
+                    <span className='mr-3'>Last visited: <span style={{ fontWeight: 'bold' }}>{dayjs(issue?.createAt).format('DD/MM/YYYY - hh:mm')}</span></span>
                 </div>
             </a>
         })
@@ -73,16 +73,16 @@ export default function YourWork() {
             const getAllIssuesInTheLastMonth = []
 
             working_issues.forEach(issue => {
-                if (dayjs(issue?.time).isSame(dayjs(), 'day')) {
+                if (dayjs(issue?.createAt).isSame(dayjs(), 'day')) {
                     getAllIssuesInThisDay.push(issue)
                 }
-                else if (dayjs(issue?.time).isSame(dayjs(new Date()).subtract(1, 'day'), 'day')) {
+                else if (dayjs(issue?.createAt).isSame(dayjs(new Date()).subtract(1, 'day'), 'day')) {
                     getAllIssuesInYesterday.push(issue)
                 }
-                else if (dayjs(issue?.time).isSame(dayjs(), 'week')) {
+                else if (dayjs(issue?.createAt).isSame(dayjs(), 'week')) {
                     getAllIssuesInTheLastWeek.push(issue)
                 }
-                else if (dayjs(issue?.time).isSame(dayjs(), 'month')) {
+                else if (dayjs(issue?.createAt).isSame(dayjs(), 'month')) {
                     getAllIssuesInTheLastMonth.push(issue)
                 }
             })
@@ -134,16 +134,16 @@ export default function YourWork() {
             const getAllIssuesInTheLastMonth = []
 
             viewed_issues.forEach(issue => {
-                if (dayjs(issue?.time).isSame(dayjs(), 'day')) {
+                if (dayjs(issue?.createAt).isSame(dayjs(), 'day')) {
                     getAllIssuesInThisDay.push(issue)
                 }
-                else if (dayjs(issue?.time).isSame(dayjs(new Date()).subtract(1, 'day'), 'day')) {
+                else if (dayjs(issue?.createAt).isSame(dayjs(new Date()).subtract(1, 'day'), 'day')) {
                     getAllIssuesInYesterday.push(issue)
                 }
-                else if (dayjs(issue?.time).isSame(dayjs(), 'week')) {
+                else if (dayjs(issue?.createAt).isSame(dayjs(), 'week')) {
                     getAllIssuesInTheLastWeek.push(issue)
                 }
-                else if (dayjs(issue?.time).isSame(dayjs(), 'month')) {
+                else if (dayjs(issue?.createAt).isSame(dayjs(), 'month')) {
                     getAllIssuesInTheLastMonth.push(issue)
                 }
             })

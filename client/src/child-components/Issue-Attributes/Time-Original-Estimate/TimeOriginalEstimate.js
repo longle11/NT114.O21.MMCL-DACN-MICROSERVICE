@@ -29,7 +29,7 @@ export default function TimeOriginalEstimate(props) {
                         if (validateOriginalTime(e.target.value)) {
                             const oldValue = calculateTimeAfterSplitted(issueInfo.timeOriginalEstimate ? issueInfo.timeOriginalEstimate : 0)
                             const newValue = calculateTimeAfterSplitted(e.target.value)
-                            dispatch(updateInfoIssue(issueInfo?._id, projectInfo?._id, { timeOriginalEstimate: newValue }, oldValue, newValue, userInfo.id, "updated", "time original estimate"))
+                            dispatch(updateInfoIssue(issueInfo?._id, projectInfo?._id, { timeOriginalEstimate: newValue }, oldValue, newValue, userInfo.id, "updated", "time original estimate", projectInfo, userInfo))
                             showNotificationWithIcon('success', '', "Truong du lieu hop le")
                         } else {
                             showNotificationWithIcon('error', '', "Truong du lieu nhap vao khong hop le")

@@ -210,7 +210,41 @@ export const convertTime = (commentTime, type) => {
         } else {
             return 'a few second ago'
         }
-    }else {
+    } else {
         return dayjs(commentTime).format('D MMM, YYYY [at] h:mm A')
+    }
+}
+
+
+// used for display color tag on issue list => start date, end date if red => late deadline, gray => deadline is not yet reached, blue => deadline in progress
+export const checkDeadlineIsComing = (start_time, end_time) => {
+
+    if (!start_time || !end_time) {
+        return {
+            tag_color: "#ddd",
+            text_color: "#000"
+        }
+    }
+
+    if (dayjs().isBefore(dayjs(start_time)) && dayjs().isBefore(dayjs(end_time))) {
+        return {
+            tag_color: "#F1F2F4",
+            text_color: "#44546F"
+        }
+    } else if ((dayjs().isSame(dayjs(start_time)) || dayjs().isAfter(dayjs(start_time))) && (dayjs().isBefore(end_time) || dayjs().isSame(end_time))) {
+        return {
+            tag_color: "#E9F2FF",
+            text_color: "#0055CC"
+        }
+    } else if (dayjs().isAfter(dayjs(end_time))) {
+        return {
+            tag_color: "#FFECEA",
+            text_color: "#AE2E24"
+        }
+    }
+
+    return {
+        tag_color: "#ddd",
+        text_color: "#000"
     }
 }

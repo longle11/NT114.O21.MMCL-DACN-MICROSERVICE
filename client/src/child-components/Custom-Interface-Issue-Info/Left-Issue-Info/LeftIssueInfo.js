@@ -1,5 +1,5 @@
-import { Avatar, Button, Input, message, Progress, Spin, Table, Tooltip, Upload } from 'antd'
-import React, { useEffect, useRef, useState } from 'react'
+import { Avatar, Button, Input, message, Progress, Table, Tooltip, Upload } from 'antd'
+import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { showNotificationWithIcon } from '../../../util/NotificationUtil'
 import { getInfoIssue, getIssueHistoriesList, getWorklogHistoriesList, updateInfoIssue } from '../../../redux/actions/IssueAction'
@@ -76,7 +76,7 @@ export default function LeftIssueInfo(props) {
                                 <Button onClick={() => {
                                     setEditComment('')
                                     //gửi lên sự kiện cập nhật comment
-                                    dispatch(updateCommentAction({ commentId: value._id.toString(), content: editContentComment, issueId: issueInfo?._id.toString(), timeStamp: new Date() }))
+                                    dispatch(updateCommentAction({ commentId: value._id.toString(), content: editContentComment, issueId: issueInfo?._id.toString(), timeStamp: new Date() }, projectInfo, userInfo, issueInfo))
                                 }} type="primary" className='mt-2 mr-2'>Save</Button>
                                 <Button onClick={() => {
                                     setEditComment('')
@@ -95,7 +95,7 @@ export default function LeftIssueInfo(props) {
                                         setEditComment(value._id.toString());
                                     }} style={{ color: '#929398', fontWeight: 'bold', fontSize: 13, cursor: 'pointer' }}>Edit</button>
                                         <button className="btn bg-transparent p-0" onKeyDown={() => { }} onClick={() => {
-                                            dispatch(deleteCommentAction({ commentId: value._id.toString(), issueId: issueInfo?._id.toString() }));
+                                            dispatch(deleteCommentAction({ commentId: value._id.toString(), issueId: issueInfo?._id.toString() }, projectInfo, userInfo, issueInfo));
                                         }} style={{ color: '#929398', fontWeight: 'bold', fontSize: 13, cursor: 'pointer' }}>Delete</button></div>) :
                                         <div className='mt-3'>
 
@@ -116,7 +116,7 @@ export default function LeftIssueInfo(props) {
     }
 
     function capitalizeFirstLetter(str) {
-        return str.charAt(0).toUpperCase() + str.slice(1);
+        return str?.charAt(0)?.toUpperCase() + str?.slice(1);
     }
 
     const renderImageForFileType = (fileType, filePath) => {
@@ -152,7 +152,7 @@ export default function LeftIssueInfo(props) {
                 {!isUploading && checkConstraintPermissions(projectInfo, issueInfo, userInfo, 17) ? <Button onClick={() => {
                     setFileInfo({})
                     dispatch(deleteFileAction(file_id))
-                    dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { uploaded_file_id: file_id }, null, null, userInfo.id, "remove", "file"))
+                    dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { uploaded_file_id: file_id }, null, null, userInfo.id, "remove", "file", projectInfo, userInfo))
                     dispatch(getAllFilesAction())
                 }} style={{ padding: '0 8px' }}><i className="fa fa-trash-alt"></i></Button> : <></>}
             </div>
@@ -211,18 +211,23 @@ export default function LeftIssueInfo(props) {
     }
 
     const renderTypeHistory = (name_status, old_status, new_status) => {
-        if (name_status.toLowerCase() === "priority") {
+        if (name_status?.toLowerCase() === "priority") {
             return <div>{iTagForPriorities(old_status, null, null)} <i className="fa-solid fa-arrow-right-long ml-3 mr-3"></i> {iTagForPriorities(new_status, null, null)}</div>
-        } else if (name_status.toLowerCase() === "status") {
+        } else if (name_status?.toLowerCase() === "status") {
             return <div>{iTagForIssueTypes(old_status, null, null)} <i className="fa-solid fa-arrow-right-long ml-3 mr-3"></i>  {iTagForIssueTypes(new_status, null, null)}</div>
-        } else if (name_status.toLowerCase() === "assignees") {
+        } else if (name_status?.toLowerCase() === "assignees") {
             const getAvatar = new_status?.indexOf("=")
             return <div><span style={{ fontWeight: 'bold' }}>Assignees</span> <i className="fa-solid fa-arrow-left-long ml-3 mr-3"></i>  <Avatar src={new_status} /> {new_status?.substring(getAvatar + 1)}</div>
-        } else if (name_status.toLowerCase() === "time original estimate" || name_status.toLowerCase() === "time spent") {
+        } else if (name_status?.toLowerCase() === "time original estimate" || name_status?.toLowerCase() === "time spent") {
             return <div>{convertMinuteToFormat(parseInt(old_status))} <i className="fa-solid fa-arrow-right-long ml-3 mr-3"></i> {convertMinuteToFormat(parseInt(new_status))}</div>
-        } else if (name_status.toLowerCase() === "sprint" || name_status.toLowerCase().includes("epic") || name_status.toLowerCase().includes("version") || name_status.toLowerCase().includes("point") || name_status.toLowerCase().includes("type")) {
+        } else if (name_status?.toLowerCase() === "sprint" ||
+            name_status?.toLowerCase()?.includes("epic") ||
+            name_status?.toLowerCase()?.includes("version") ||
+            name_status?.toLowerCase()?.includes("point") ||
+            name_status?.toLowerCase()?.includes("type") ||
+            name_status?.toLowerCase()?.includes("date")) {
             return <div>{old_status} <i className="fa-solid fa-arrow-right-long ml-3 mr-3"></i> {new_status}</div>
-        } else if (name_status.toLowerCase() === "sub issue") {
+        } else if (name_status?.toLowerCase() === "sub issue") {
             return <div><span style={{ fontWeight: 'bold' }}>Sub issues</span> <i className="fa-solid fa-arrow-left-long ml-3 mr-3"></i> <span className='text-success'>{new_status}</span></div>
         }
     }
@@ -238,7 +243,7 @@ export default function LeftIssueInfo(props) {
                         <span><span style={{ fontWeight: 'bold' }}>{history?.createBy?.username}</span> {history?.type_history} the <span style={{ fontWeight: 'bold' }}>{capitalizeFirstLetter(history?.name_status)}</span> {convertTime(history?.createAt)}</span>
                     </div>
                     <div className='history-info-status'>
-                        {history?.type_history.toLowerCase() !== "created" ? renderTypeHistory(history?.name_status, history?.old_status, history?.new_status) : <></>}
+                        {history?.type_history?.toLowerCase() !== "created" ? renderTypeHistory(history?.name_status, history?.old_status, history?.new_status) : <></>}
                     </div>
                 </div>
             </div>
@@ -289,29 +294,29 @@ export default function LeftIssueInfo(props) {
             <div className="block-comment" style={{ display: 'flex', flexDirection: 'column' }}>
                 {
                     checkConstraintPermissions(projectInfo, issueInfo, userInfo, 14) ? <div className="input-comment d-flex">
-                    <div className="avatar">
-                        <Avatar src={userInfo?.avatar} size={35} />
-                    </div>
-                    <div style={{ width: '100%' }}>
-                        <Input type='text' placeholder='Add a comment...' defaultValue="" value={comment.content} onChange={(e) => {
-                            setComment({
-                                content: e.target.value,
-                                isSubmit: false
-                            })
-                        }} />
-                        <Button type="primary" onClick={() => {
-                            if (comment.content.trim() === '') {
-                                showNotificationWithIcon('error', 'Tạo bình luận', 'Vui lòng nhập nội dung trước khi gửi')
-                            } else {
-                                dispatch(createCommentAction({ content: comment.content, issueId: issueInfo._id, creator: userInfo?.id }))
+                        <div className="avatar">
+                            <Avatar src={userInfo?.avatar} size={35} />
+                        </div>
+                        <div style={{ width: '100%' }}>
+                            <Input type='text' placeholder='Add a comment...' defaultValue="" value={comment.content} onChange={(e) => {
                                 setComment({
-                                    content: '',
-                                    isSubmit: true
+                                    content: e.target.value,
+                                    isSubmit: false
                                 })
-                            }
-                        }} className='mt-2'>Send</Button>
-                    </div>
-                </div> : <></>
+                            }} />
+                            <Button type="primary" onClick={() => {
+                                if (comment.content.trim() === '') {
+                                    showNotificationWithIcon('error', 'Tạo bình luận', 'Vui lòng nhập nội dung trước khi gửi')
+                                } else {
+                                    dispatch(createCommentAction({ content: comment.content, issueId: issueInfo._id, creator: userInfo?.id }, projectInfo, userInfo, issueInfo))
+                                    setComment({
+                                        content: '',
+                                        isSubmit: true
+                                    })
+                                }
+                            }} className='mt-2'>Send</Button>
+                        </div>
+                    </div> : <></>
                 }
                 <ul className="display-comment mt-2 p-0" style={{ display: 'flex', flexDirection: 'column', height: 400, overflow: 'overlay', scrollbarWidth: 'none' }}>
                     {renderComments()}
@@ -364,7 +369,7 @@ export default function LeftIssueInfo(props) {
             if (info.file.status === 'done') {
                 setFileInfo({})
                 setCurrentIssueId('')
-                dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { uploaded_file_id: info.file.response.data._id }, null, null, userInfo.id, "uploaded", "file"))
+                dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { uploaded_file_id: info.file.response.data._id }, null, null, userInfo.id, "uploaded", "file", projectInfo, userInfo))
                 dispatch(getAllFilesAction())
                 message.success(`${info.file.name} file uploaded successfully`);
             } else if (info.file.status === 'error') {
@@ -445,7 +450,7 @@ export default function LeftIssueInfo(props) {
                         {!record?.isUploading && checkConstraintPermissions(projectInfo, issueInfo, userInfo, 17) ? <Button onClick={() => {
                             setFileInfo({})
                             dispatch(deleteFileAction(record?._id))
-                            dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { uploaded_file_id: record?._id }, null, null, userInfo.id, "remove", "file"))
+                            dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { uploaded_file_id: record?._id }, null, null, userInfo.id, "remove", "file", projectInfo, userInfo))
                             dispatch(getAllFilesAction())
                         }} style={{ padding: '0 8px' }}><i className="fa fa-trash-alt"></i></Button> : <></>}
                         {record?.isUploading ? <Progress type="circle" percent={fileInfo?.percent} size={20} /> : <></>}
@@ -533,20 +538,18 @@ export default function LeftIssueInfo(props) {
                                     }} className="dropdown-item" style={{ fontSize: 15 }} href="##">{switchToListView ? "Switch to strip view" : "Switch to list view"}</a>
                                     {
                                         checkConstraintPermissions(projectInfo, issueInfo, userInfo, 18) ? <a className="dropdown-item d-flex justify-content-between align-items-center" style={{ fontSize: 15 }} href="##">
-                                        <NavLink onClick={() => {
-                                            issueInfo?.file_uploaded?.map(file => {
-                                                const getFileIndex = fileList.findIndex(currentFile => currentFile._id === file.toString())
-                                                if (getFileIndex !== -1) {
-                                                    console.log("fileList[getFileIndex].originalname ", fileList[getFileIndex].fileName);
-
-                                                    const fileNameOriginal = fileList[getFileIndex].originalname
-                                                    const filePath = `${domainName}/api/files/uploads/${fileList[getFileIndex].fileName}`
-                                                    downloadFileWithUrl(filePath, fileNameOriginal)
-                                                }
-                                            })
-                                        }} style={{ textDecoration: 'none', color: '#000' }}>Download all</NavLink>
-                                        <Avatar className='ml-1' style={{ width: 15, height: 15 }}><span style={{ fontSize: 11, display: 'flex', alignItems: 'center' }}>{issueInfo?.file_uploaded?.length}</span></Avatar>
-                                    </a> : <></>
+                                            <NavLink onClick={() => {
+                                                issueInfo?.file_uploaded?.map(file => {
+                                                    const getFileIndex = fileList.findIndex(currentFile => currentFile._id === file.toString())
+                                                    if (getFileIndex !== -1) {
+                                                        const fileNameOriginal = fileList[getFileIndex].originalname
+                                                        const filePath = `${domainName}/api/files/uploads/${fileList[getFileIndex].fileName}`
+                                                        downloadFileWithUrl(filePath, fileNameOriginal)
+                                                    }
+                                                })
+                                            }} style={{ textDecoration: 'none', color: '#000' }}>Download all</NavLink>
+                                            <Avatar className='ml-1' style={{ width: 15, height: 15 }}><span style={{ fontSize: 11, display: 'flex', alignItems: 'center' }}>{issueInfo?.file_uploaded?.length}</span></Avatar>
+                                        </a> : <></>
                                     }
                                     {
                                         checkConstraintPermissions(projectInfo, issueInfo, userInfo, 17) ? <a className="dropdown-item" style={{ fontSize: 15 }} href="##">Delete all</a> : <></>

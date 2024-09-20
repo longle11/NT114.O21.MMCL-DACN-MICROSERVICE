@@ -1,4 +1,4 @@
-import { Avatar, Breadcrumb, Button, Form, Input, Select, Space, Table, Tag } from 'antd'
+import { Avatar, Breadcrumb, Button, DatePicker, Form, Input, InputNumber, Select, Space, Switch, Table, Tag } from 'antd'
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { issueTypeOptions, issueTypeWithoutOptions, iTagForIssueTypes, priorityTypeOptions, renderAssignees, renderEpicList, renderIssueType, renderSprintList, renderVersionList } from '../../../util/CommonFeatures'
@@ -25,12 +25,12 @@ import {
 } from '@dnd-kit/sortable';
 import { getEpicList, getVersionList } from '../../../redux/actions/CategoryAction'
 import { showNotificationWithIcon } from '../../../util/NotificationUtil'
-import { calculateTimeAfterSplitted, convertMinuteToFormat, validateOriginalTime } from '../../../validations/TimeValidation'
+import { calculateTimeAfterSplitted, checkDeadlineIsComing, convertMinuteToFormat, convertTime, validateOriginalTime } from '../../../validations/TimeValidation'
 import MemberProject from '../../../child-components/Member-Project/MemberProject'
 
 export default function IssuesList() {
   const listProject = useSelector(state => state.listProject.listProject)
-  const issuesBacklog = useSelector(state => state.issue.issuesBacklog)
+  const issuesInProject = useSelector(state => state.issue.issuesInProject)
   const projectInfo = useSelector(state => state.listProject.projectInfo)
   const epicList = useSelector(state => state.categories.epicList)
   const versionList = useSelector(state => state.categories.versionList)
@@ -47,6 +47,9 @@ export default function IssuesList() {
     versions: [],
     epics: []
   })
+
+  const setValueChanged = useRef(null)
+  const [displaySetting, setDisplaySetting] = useState(false)
 
   const handleSearchIssue = (versions, epics) => {
     setSearchIssue({ ...searchIssue, versions: versions, epics: epics })
@@ -102,6 +105,77 @@ export default function IssuesList() {
     const save = async (record) => {
       try {
         const values = await form.validateFields();
+        console.log("vale ", values);
+        if (Object.keys(values).includes('epic_link')) {
+          const getEpicIndex = epicList?.findIndex(epic => epic._id?.toString() === setValueChanged.current)
+          if (getEpicIndex !== -1) {
+            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { epic_link: setValueChanged.current }, record?.epic_link ? record?.epic_link?.epic_name : "None", epicList[getEpicIndex].epic_name, userInfo.id, "updated", "epic"))
+          }
+        }
+        if (Object.keys(values).includes('current_sprint')) {
+          const getSprintIndex = sprintList?.findIndex(sprint => sprint._id?.toString() === setValueChanged.current)
+          if (getSprintIndex !== -1) {
+            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { current_sprint: setValueChanged.current }, record?.current_sprint ? record?.current_sprint?.sprint_name : "None", sprintList[getSprintIndex].sprint_name, userInfo.id, "updated", "sprint"))
+          }
+        }
+        if (Object.keys(values).includes('issue_priority')) {
+          if (Number.isInteger(parseInt(setValueChanged.current))) {
+            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { issue_priority: parseInt(setValueChanged.current) }, record?.issue_priority.toString(), setValueChanged.current, userInfo.id, "updated", "priority"))
+          }
+        }
+        if (Object.keys(values).includes('fix_version')) {
+          const fix_version = versionList?.findIndex(version => version._id?.toString() === setValueChanged.current)
+          if (fix_version !== -1) {
+            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { fix_version: setValueChanged.current }, record?.fix_version ? record?.fix_version?.version_name : "None", versionList[fix_version].version_name, userInfo.id, "updated", "version"))
+          }
+        }
+        if (Object.keys(values).includes('issue_status')) {
+          if (Number.isInteger(parseInt(setValueChanged.current))) {
+            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { issue_status: parseInt(setValueChanged.current) }, record?.issue_status.toString(), parseInt(setValueChanged.current).toString(), userInfo.id, "updated", "issue status"))
+          }
+        }
+
+        if (Object.keys(values).includes('issue_type')) {
+          const getProcessIndex = processList?.findIndex(process => process._id?.toString() === setValueChanged.current)
+          if (typeof setValueChanged.current === "string" && getProcessIndex !== -1) {
+            console.log(record?._id, record?.project_id?._id, { issue_type: setValueChanged.current }, record?.issue_type.name_process, processList[getProcessIndex].name_process, userInfo.id, "updated", "issue type");
+
+            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { issue_type: setValueChanged.current }, record?.issue_type.name_process, processList[getProcessIndex].name_process, userInfo.id, "updated", "issue type"))
+          }
+        }
+
+        if (Object.keys(values).includes('start_date')) {
+          console.log("setValueChanged.current ", setValueChanged.current);
+          if (typeof setValueChanged.current === "string") {
+
+            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { start_date: setValueChanged.current }, convertTime(record?.start_date, true), convertTime(setValueChanged.current, true), userInfo.id, "updated", "start time"))
+          }
+        }
+
+        if (Object.keys(values).includes('end_date')) {
+          if (typeof setValueChanged.current === "string") {
+            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { end_date: setValueChanged.current }, convertTime(record?.end_date, true), convertTime(setValueChanged.current, true), userInfo.id, "updated", "end time"))
+          }
+        }
+
+        if (Object.keys(values).includes('summary')) {
+          if (typeof values?.summary === "string") {
+            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { summary: values?.summary }, null, null, userInfo.id, "updated", "summary"))
+          }
+        }
+
+        if (values?.story_point && Number.isInteger(parseInt(values?.story_point))) {
+          dispatch(updateInfoIssue(record?._id, projectInfo?._id, { story_point: parseInt(values?.story_point) }, record?.story_point ? record?.story_point.toString() : "None", values?.story_point, userInfo.id, "updated", "story point"))
+        }
+
+        if (values?.assignees) {
+          if (typeof setValueChanged.current === 'string') {
+            const getUserIndex = projectInfo?.members?.findIndex(user => user?.user_info?._id?.toString() === setValueChanged.current)
+            if (getUserIndex !== -1) {
+              dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { assignees: setValueChanged.current }, null, projectInfo?.members[getUserIndex].user_info.avatar, userInfo.id, "added", "assignees"))
+            }
+          }
+        }
         if (values?.timeOriginalEstimate) {
           if (validateOriginalTime(values.timeOriginalEstimate)) {
             const oldValue = calculateTimeAfterSplitted(record.timeOriginalEstimate ? record.timeOriginalEstimate : 0)
@@ -113,9 +187,19 @@ export default function IssuesList() {
             showNotificationWithIcon('error', '', "Truong du lieu nhap vao khong hop le")
           }
         }
+        if (values?.timeSpent) {
+          if (validateOriginalTime(values.timeSpent)) {
+            const oldValue = calculateTimeAfterSplitted(record.timeSpent ? record.timeSpent : 0)
+            const newValue = calculateTimeAfterSplitted(values.timeSpent)
 
+            dispatch(updateInfoIssue(record?._id, projectInfo?._id, { timeSpent: newValue }, oldValue, newValue, userInfo.id, "updated", "time spent"))
+            showNotificationWithIcon('success', '', "Truong du lieu hop le")
+          } else {
+            showNotificationWithIcon('error', '', "Truong du lieu nhap vao khong hop le")
+          }
+        }
+        setValueChanged.current = null
         toggleEdit();
-
       } catch (errInfo) {
         console.log('save failed:', errInfo);
       }
@@ -199,6 +283,7 @@ export default function IssuesList() {
     };
     return <th {...props} ref={setNodeRef} style={style} {...attributes} {...listeners} />;
   };
+
   const components = {
     header: {
       cell: TableHeaderCell,
@@ -208,71 +293,150 @@ export default function IssuesList() {
       cell: (EditableCell),
     },
   }
+
+  const renderSubmit = (save, record) => {
+    return <div style={{ position: 'absolute', display: 'flex', zIndex: 99999999, right: 0, marginTop: 5 }}>
+      <Button onClick={(e) => {
+        save(record)
+      }} type='primary' className='mr-1'><i className="fa fa-check"></i></Button>
+      <Button onClick={(e) => { save(null) }}><i className="fa fa-times"></i></Button>
+    </div>
+  }
   const renderEditingCellsInRow = (ref, dataIndex, save, record) => {
     if (dataIndex === 'summary') {
-      return <Input ref={ref} onPressEnter={() => {
-        save(record)
-      }} onBlur={() => {
-        save(record)
-      }} />
-    } else if (dataIndex === 'issue_status') {
-      return <Select ref={ref} onPressEnter={() => {
-        save(record)
-      }} onBlur={() => {
-        save(record)
-      }} options={issueTypeWithoutOptions} onSelect={(value) => value} />
-    } else if (dataIndex === 'issue_type') {
+      return <div style={{ position: 'relative' }}>
+        <Input ref={ref} />
+        {renderSubmit(save, record)}
+      </div>
+    }
+    else if (dataIndex === 'issue_status') {
+      return <div style={{ position: 'relative' }}>
+        <Select ref={ref} options={issueTypeWithoutOptions} onSelect={(value) => setValueChanged.current = value} />
+        {renderSubmit(save, record)}
+      </div>
+    }
+    else if (dataIndex === 'issue_priority') {
+      return <div style={{ position: 'relative' }}>
+        <Select style={{ width: 150 }} ref={ref} options={priorityTypeOptions} onSelect={(value) => setValueChanged.current = value} />
+        {renderSubmit(save, record)}
+      </div>
+    }
+    else if (dataIndex === 'issue_type') {
       const renderOptions = renderIssueType(processList, id)
-      return <Select ref={ref} onPressEnter={() => {
-        save(record)
-      }} onBlur={() => {
-        save(record)
-      }} options={renderOptions.filter(option => option.value !== record.issue_type._id)} onSelect={(value) => value} />
-    } else if (dataIndex === 'assignees') {
-      return <Select ref={ref} onPressEnter={() => {
-        save(record)
-      }} onBlur={() => {
-        save(record)
-      }} options={renderAssignees(listProject, id, userInfo)} onSelect={(value) => value} optionRender={(option) => {
-        return <Space>
-          <div>
-            {option.data.desc}
-          </div>
-        </Space>
-      }} />
-    } else if (dataIndex === 'current_sprint') {
-      return <Select ref={ref} onPressEnter={() => {
-        save(record)
-      }} onBlur={() => {
-        save(record)
-      }} options={renderSprintList(sprintList, id)} onSelect={(value) => value} />
-    } else if (dataIndex === 'timeOriginalEstimate') {
-      return <Input ref={ref} defaultValue={''} onPressEnter={() => {
-        save(record)
-      }} onBlur={() => {
-        save(record)
-      }} />
-    } else if (dataIndex === 'epic_link') {
+      return <div style={{ position: 'relative' }}>
+        <Select style={{ width: 200 }} ref={ref} options={renderOptions.filter(option => option.value !== record.issue_type._id)} onSelect={(value) => setValueChanged.current = value} />
+        {renderSubmit(save, record)}
+      </div>
+    }
+    else if (dataIndex === 'assignees') {
+      return <div style={{ position: 'relative' }}>
+        <Select
+          style={{ width: 250 }}
+          ref={ref}
+          onClick={(e) => e.stopPropagation()}
+          options={renderAssignees(listProject, id, userInfo)}
+          onSelect={(value) => {
+            setValueChanged.current = value
+          }}
+          optionRender={(option) => {
+            return <Space>
+              <div>
+                {option.data.desc}
+              </div>
+            </Space>
+          }} />
+        <div style={{ position: 'absolute', zIndex: 99999999, right: 0 }}>
+          <Button onClick={(e) => {
+            e.stopPropagation()
+            save(record)
+          }} type='primary' className='mr-1'><i className="fa fa-check"></i></Button>
+          <Button onClick={(e) => { save(null); setValueChanged.current = null }}><i className="fa fa-times"></i></Button>
+        </div>
+      </div>
+    }
+    else if (dataIndex === 'current_sprint') {
+      return <div style={{ position: 'relative' }}>
+        <Select ref={ref} options={renderSprintList(sprintList, id)} onSelect={(value) => setValueChanged.current = value} />
+        {renderSubmit(save, record)}
+      </div>
+
+    }
+    else if (dataIndex === 'timeOriginalEstimate') {
+      return <div style={{ position: 'relative' }}>
+        <Input ref={ref} defaultValue={''} />
+        <div style={{ position: 'absolute', display: 'flex', zIndex: 99999999, right: 0 }}>
+          <Button onClick={(e) => {
+            save(record)
+          }} type='primary' className='mr-1'><i className="fa fa-check"></i></Button>
+          <Button onClick={(e) => { save(null) }}><i className="fa fa-times"></i></Button>
+        </div>
+      </div>
+    }
+    else if (dataIndex === 'epic_link') {
       const renderOptions = renderEpicList(epicList, id)
-      return <Select ref={ref} onPressEnter={() => {
-        save(record)
-      }} onBlur={() => {
-        save(record)
-      }} options={renderOptions.filter(option => option.value !== record.epic_link?._id)} onSelect={(value) => value} />
+      return <div style={{ position: 'relative' }}>
+        <Select ref={ref} options={renderOptions.filter(option => option.value !== record.epic_link?._id)} onSelect={(value) => setValueChanged.current = value} />
+        {renderSubmit(save, record)}
+      </div>
+
     }
     else if (dataIndex === 'fix_version') {
       const renderOptions = renderVersionList(versionList, id)
-      return <Select ref={ref} onPressEnter={() => {
-        save(record)
-      }} onBlur={() => {
-        save(record)
-      }} options={renderOptions.filter(option => option.value !== record.fix_version?._id)} onSelect={(value) => value} />
+      return <div style={{ position: 'relative' }}>
+        <Select ref={ref} options={renderOptions.filter(option => option.value !== record.fix_version?._id)} onSelect={(value) => setValueChanged.current = value} />
+        {renderSubmit(save, record)}
+      </div>
+    }
+    else if (dataIndex === 'story_point') {
+      return <div style={{ position: 'relative' }}>
+        <InputNumber
+          min={0}
+          max={1000}
+          ref={ref}
+          onClick={(e) => e.stopPropagation()} />
+        {renderSubmit(save, record)}
+      </div>
+    }
+    else if (dataIndex === 'start_date') {
+      setValueChanged.current = dayjs().toISOString()
+      return <div style={{ position: 'relative' }}>
+        <DatePicker style={{ width: 'max-content' }} defaultValue={dayjs()} showTime onChange={(value, dateString) => setValueChanged.current = dateString} />
+        {renderSubmit(save, record)}
+      </div>
+    }
+    else if (dataIndex === 'end_date') {
+      setValueChanged.current = dayjs().toISOString()
+      return <div style={{ position: 'relative' }}>
+        <DatePicker style={{ width: 'max-content' }} defaultValue={dayjs()} showTime onChange={(value, dateString) => setValueChanged.current = dateString} />
+        {renderSubmit(save, record)}
+      </div>
+    }
+    else if (dataIndex === 'story_point') {
+      return <div style={{ position: 'relative' }}>
+        <DatePicker showTime onChange={(dateString) => setValueChanged.current = dateString} />
+        {renderSubmit(save, record)}
+      </div>
+    }
+    else if (dataIndex === 'timeSpent') {
+      return <div style={{ position: 'relative' }}>
+        <Input ref={ref} defaultValue={''} />
+        <div style={{ position: 'absolute', display: 'flex', zIndex: 99999999, right: 0 }}>
+          <Button onClick={(e) => {
+            save(record)
+          }} type='primary' className='mr-1'><i className="fa fa-check"></i></Button>
+          <Button onClick={(e) => { save(null) }}><i className="fa fa-times"></i></Button>
+        </div>
+      </div>
     }
   }
+
   const renderValueColumns = (text, record, index, key) => {
     const style = { marginLeft: record?.parent && record?.issue_status === 4 ? 30 : 0 }
-    if (key === 'issue_status') {
-      return <div style={style}>{iTagForIssueTypes(record?.issue_status)}</div>
+    if (key === 'ordinal_number') {
+      return <span style={style} className='font-weight-bold'>WD-{record?.ordinal_number}</span>
+    }
+    else if (key === 'issue_status') {
+      return <div style={style}>{iTagForIssueTypes(record?.issue_status, null, null)}</div>
     }
     else if (key === 'summary') {
       return <span style={style}>{record?.summary}</span>
@@ -284,10 +448,28 @@ export default function IssuesList() {
       return <span style={style}>{priorityTypeOptions[record.issue_priority]?.label}</span>
     }
     else if (key === 'assignees') {
-      return <span style={style} className='d-flex align-items-center'><Avatar icon={<UserOutlined />} size={30} /> <span className='ml-2'>Unassignee</span></span>
+      if (record?.assignees?.length === 0) {
+        return <span style={style} className='d-flex align-items-center'><Avatar icon={<UserOutlined />} size={30} /> <span className='ml-2'>Unassignee</span></span>
+      } else {
+        return record?.assignees?.map(user => {
+          return <span style={style} className='mr-1'><Avatar src={user.avatar} size={30} /></span>
+        })
+      }
     }
     else if (key === 'creator') {
       return <span style={style}><Avatar src={record.creator?.avatar} className='mr-2' />{record.creator?.username}</span>
+    }
+    else if (key === 'start_date') {
+      if (!record?.start_date) return <span className='mr-1 items-hover d-none'><i className="fa fa-plus"></i> Add start date</span>
+      return <span style={style}><Tag color={checkDeadlineIsComing(record?.start_date, record.end_date).tag_color}>
+        <span style={{ color: checkDeadlineIsComing(record?.start_date, record.end_date).text_color }}>{convertTime(record?.start_date, true)}</span>
+      </Tag></span>
+    }
+    else if (key === 'end_date') {
+      if (!record?.end_date) return <span className='mr-1 items-hover d-none'><i className="fa fa-plus"></i> Add end date</span>
+      return <span style={style}><Tag color={checkDeadlineIsComing(record?.start_date, record.end_date).tag_color}>
+        <span style={{ color: checkDeadlineIsComing(record?.start_date, record.end_date).text_color }}>{convertTime(record?.end_date, true)}</span>
+      </Tag></span>
     }
     else if (key === 'createAt') {
       return <Tag style={style} color="#87d068">{dayjs(record.createAt).format("DD/MM/YYYY")}</Tag>
@@ -296,7 +478,8 @@ export default function IssuesList() {
       return <Tag style={style} color="#2db7f5">{dayjs(record.updateAt).format("DD/MM/YYYY")}</Tag>
     }
     else if (key === 'epic_link') {
-      return record.epic_link !== null ? <Tag style={style} color={record.epic_link?.tag_color}>{record.epic_link?.epic_name}</Tag> : null
+      if (!record.epic_link) return <span className='mr-1 items-hover d-none'><i className="fa fa-plus"></i> Add epic</span>
+      return <Tag style={style} color={record.epic_link?.tag_color}>{record.epic_link?.epic_name}</Tag>
     }
     else if (key === 'parent') {
       if (record.parent) {
@@ -308,18 +491,20 @@ export default function IssuesList() {
       return null
     }
     else if (key === 'fix_version') {
-      if (record.fix_version === null) return <></>
+      if (!record.fix_version) return <span className='mr-1 items-hover d-none'><i className="fa fa-plus"></i> Add version</span>
       return <Tag style={style} color={record.fix_version?.tag_color}>{record.fix_version?.version_name}</Tag>
     }
     else if (key === 'timeOriginalEstimate') {
       if (record.timeOriginalEstimate !== 0) {
         return <span style={style}>{convertMinuteToFormat(record.timeOriginalEstimate)}</span>
       } else {
-        return <span>None</span>
+        return <span className='mr-1 items-hover d-none'><i className="fa fa-plus"></i> Add time estimate</span>
       }
     }
     else if (key === 'timeSpent') {
-      return <span style={style}>{record.timeSpent ? convertMinuteToFormat(record.timeSpent) : "None"}</span>
+      if (typeof record?.timeSpent !== "string")
+        return <span className='mr-1 items-hover d-none'><i className="fa fa-plus"></i> Add time spent</span>
+      return <span style={style}>{convertMinuteToFormat(record.timeSpent)}</span>
     }
     else if (key === 'timeRemaining') {
       return <span style={style}>{Number.isInteger(record?.timeSpent) && Number.isInteger(record.timeOriginalEstimate) ? convertMinuteToFormat(record.timeOriginalEstimate - record?.timeSpent) : "None"}</span>
@@ -328,7 +513,7 @@ export default function IssuesList() {
       if (record?.current_sprint) {
         return <Tag style={style}>{record.current_sprint?.sprint_name}</Tag>
       }
-      return null
+      return <span className='mr-1 items-hover d-none'><i className="fa fa-plus"></i> Add sprint</span>
     }
     else if (key === 'old_sprint') {
       return <div className='d-flex'>
@@ -338,6 +523,7 @@ export default function IssuesList() {
       </div>
     }
     else if (key === 'story_point') {
+      if (typeof record.story_point !== 'number') return <span style={{ width: 'max-content' }} className='mr-1 items-hover d-none'><i className="fa fa-plus"></i> Add story point</span>
       return <span style={style}>{record.story_point}</span>
     }
   }
@@ -346,43 +532,76 @@ export default function IssuesList() {
     const data = projectInfo?.table_issues_list?.filter(col => col.isShowed).map(col => {
       var align = "left"
       var allowEdit = false
-      if (["issue_type", "issue_priority", "summary", "issue_status", "assignees", "current_sprint", "epic_link", "fix_version", "story_point", "timeOriginalEstimate", "timeRemaining"].includes(col.key)) {
+      var icon = null
+      if (["issue_type", "start_date", "end_date", "issue_priority", "summary", "issue_status", "assignees", "current_sprint", "epic_link", "fix_version", "story_point", "timeOriginalEstimate", "timeSpent"].includes(col.key)) {
         allowEdit = true
       }
 
-      var setWidth = 200
+      //set icon
+      if(["createAt", "updateAt", "start_date", "end_date"].includes(col.key)) {
+        icon = <i className="fa fa-calendar-alt"></i>
+      }
+      if(col.key === "ordinal_number") {
+        icon = <i className="fa-solid fa-hashtag"></i>
+      }
+      if(col.key === "summary") {
+        icon = <i className="fa fa-stream"></i>
+      }
+      if(["issue_status", "issue_type"].includes(col.key)) {
+        icon = <i className="fa fa-arrow-circle-right"></i>
+      }
+      if(col.key === "assignees") {
+        icon = <i className="fa-solid fa-people-group"></i>
+      }
+      if(["timeSpent", "timeOriginalEstimate", "timeRemaining"].includes(col.key)) {
+        icon = <i className="fa-solid fa-clock"></i>
+      }
+      if("parent" === col.key) {
+        icon = <i className="fa fa-code-branch"></i>
+      }
+      if("fix_version" === col.key) {
+        icon = <i className="fa-solid fa-folder-open"></i>
+      }
+      if("issue_priority" === col.key) {
+        icon = <i className="fa fa-arrow-alt-circle-down"></i>
+      }
+      if("epic_link" === col.key) {
+        icon = <i className="fa fa-bolt"></i>
+      }
+      if(["current_sprint", "old_sprint"].includes(col.key)) {
+        icon = <i className="fab fa-viadeo"></i>
+      }
+      if("creator" === col.key) {
+        icon = <i className="fa-solid fa-person"></i>
+      }
+      if("story_point" === col.key) {
+        icon = <i className="fa-solid fa-list-ol"></i>
+      }
+
+      var setWidth = 250
       if (["summary", "assignees", "issue_type", "creator"].includes(col.key)) {
         setWidth = 'max-content'
       }
-      if (["issue_status", "issue_priority", "story_point"].includes(col.key)) {
+     
+      if (["issue_status", "issue_priority"].includes(col.key)) {
         setWidth = 100
+      }
+
+      if(["story_point", "ordinal_number"].includes(col.key)) {
+        setWidth = 150
       }
 
       if (["issue_status", "issue_priority", "story_point", "fix_version", "epic_link", "createAt", "updateAt"].includes(col.key)) {
         align = "center"
       }
       return {
-        title: col.title,
+        title: <span style={{color: "#626F86", display: 'flex', alignItems: 'center'}}>{icon} <span className='ml-2' style={{width: 'max-content'}}>{col.title}</span></span>,
         dataIndex: col.key,
         key: col.key,
         editable: allowEdit,
         index: col.til_index,
         width: setWidth,
         align: align,
-        filters: [
-          {
-            text: 'Sort A -> Z',
-            value: 0
-          },
-          {
-            text: 'Sort Z -> A',
-            value: 1
-          },
-          {
-            text: 'Hide field',
-            value: 3
-          }
-        ],
         render: (text, record, index) => {
           return renderValueColumns(text, record, index, col.key)
         }
@@ -453,7 +672,7 @@ export default function IssuesList() {
   };
 
   const renderDataSource = () => {
-    return issuesBacklog?.filter(issue => issue.issue_status !== 4).map(issue => {
+    return issuesInProject?.filter(issue => issue.issue_status !== 4).map(issue => {
       if (issue.sub_issue_list.length === 0) {
         return {
           key: issue._id,
@@ -482,144 +701,155 @@ export default function IssuesList() {
           }
         ]}
       />
-      <div className='d-flex justify-content-between'>
-        <h4>List</h4>
-        <span className='btn btn-light' style={{ fontSize: 13 }}><i className="fa-duotone fa-solid fa-comments"></i> Give feedback</span>
+      <h4>List</h4>
+      <div className='d-flex align-items-center mb-4 justify-content-between'>
+        <MemberProject typeInterface="issue list" projectInfo={projectInfo} id={id} userInfo={userInfo} allIssues={issuesInProject} epicList={epicList} versionList={versionList} handleSearchIssue={handleSearchIssue} searchIssue={searchIssue} />
+        <div>
+          <Button className='mr-2' tyle={{ fontSize: 13 }}><i className="fa-duotone fa-solid fa-comments"></i> Give feedback</Button>
+          <Button onClick={() => {
+            setDisplaySetting(!displaySetting)
+          }}><span><i className="fa-solid fa-sliders mr-2"></i> View Settings</span></Button>
+        </div>
       </div>
-      <div className='d-flex align-items-center mb-4'>
-        <MemberProject typeInterface="issue list" projectInfo={projectInfo} id={id} userInfo={userInfo} allIssues={issuesBacklog} epicList={epicList} versionList={versionList} handleSearchIssue={handleSearchIssue} searchIssue={searchIssue} />
-      </div>
-      <div className='issues-info' style={{ height: '70vh', overflowY: 'auto', scrollbarWidth: 'none' }}>
-        {(renderColumns() !== null || renderColumns() !== undefined) && renderColumns()?.length > 0 ? <div className='d-flex'>
-          <DndContext
-            sensors={sensors}
-            modifiers={[restrictToHorizontalAxis]}
-            onDragEnd={onDragEnd}
-            onDragOver={onDragOver}
-            collisionDetection={closestCenter}
-          >
-            <SortableContext items={renderColumns()?.map((i) => i.key)} strategy={horizontalListSortingStrategy}>
-              <DragIndexContext.Provider value={dragIndex}>
-                <Table
-                  columns={renderColumns()}
-                  dataSource={renderDataSource()}
-                  bordered
-                  className='table-issue-list'
-                  size='middle'
-                  style={{ width: '100%' }}
-                  scroll={{
-                    x: 'max-content',
-                    y: 450
-                  }}
-                  components={components}
-                  rowKey="key"
-                  expandable={{
-                    expandedRowRender: (record) => (
-                      <div style={{ width: '80%', backgroundColor: '#ffff', padding: '5px 20px', border: '2px solid #4BADE8' }}>
-                        <div style={{ width: '100%' }} className='d-flex justify-content-between'>
-                          <div className='d-flex align-items-center' style={{ marginLeft: 100, width: '100%' }}>
-                            <span>{iTagForIssueTypes(0, 'ml-1w99999--', 16)}</span>
-                            <Input onChange={(e) => {
-                              addSubSummaryIssue.current = e.target.value
-                              console.log('addSubSummaryIssue.current ', addSubSummaryIssue.current);
-                            }} className='edit-input-issue-list' style={{ border: 'none', borderRadius: 0, width: '100%' }} placeholder='What needs to be done?' />
-                          </div>
-                          <div className='d-flex align-items-center'>
-                            <Select className='mr-2' defaultValue={issueTypeOptions[4]?.value} options={issueTypeOptions} disabled />
-                            <Button type='primary' onClick={() => {
-                              if (addSubSummaryIssue.current?.trim() !== "") {
-                                dispatch(createIssue({ summary: addSubSummaryIssue.current, creator: userInfo.id, issue_status: 4, issue_priority: 2, issue_type: processList[0]._id, parent: record?._id, project_id: id }, id, userInfo.id, record?.current_sprint?._id, record?._id))
-                              } else {
-                                showNotificationWithIcon('error', '', 'Summary can\'t not left blank')
-                              }
-                              addSubSummaryIssue.current = ""
-                            }}><span style={{ color: "#dddd", fontWeight: 600 }}>Create <i style={{ transform: 'rotate(180deg)' }} className="fa-solid fa-share-from-square"></i></span></Button>
+      <div className='d-flex w-100'>
+        <div className='issues-info' style={{ height: '70vh', overflowY: 'auto', scrollbarWidth: 'none', width: '100%' }}>
+          {(renderColumns() !== null || renderColumns() !== undefined) && renderColumns()?.length > 0 ? <div className='d-flex'>
+            <DndContext
+              sensors={sensors}
+              modifiers={[restrictToHorizontalAxis]}
+              onDragEnd={onDragEnd}
+              onDragOver={onDragOver}
+              collisionDetection={closestCenter}
+            >
+              <SortableContext items={renderColumns()?.map((i) => i.key)} strategy={horizontalListSortingStrategy}>
+                <DragIndexContext.Provider value={dragIndex}>
+                  <Table
+                    columns={renderColumns()}
+                    dataSource={renderDataSource()}
+                    bordered
+                    className='table-issue-list'
+                    size='middle'
+                    style={{ width: '100%' }}
+                    scroll={{
+                      x: issuesInProject?.length > 0 ? 'max-content' : 0,
+                      y: issuesInProject?.length > 0 ? 450 : null 
+                    }}
+                    components={components}
+                    rowKey="key"
+                    expandable={{
+                      expandedRowRender: (record) => (
+                        <div style={{ width: 1000, backgroundColor: '#ffff', padding: '5px 20px', border: '2px solid #4BADE8' }}>
+                          <div style={{ width: '100%' }} className='d-flex justify-content-between'>
+                            <div className='d-flex align-items-center' style={{ marginLeft: 100, width: '100%' }}>
+                              <span>{iTagForIssueTypes(0, 'ml-1', 16)}</span>
+                              <Input onChange={(e) => {
+                                addSubSummaryIssue.current = e.target.value
+                              }} className='edit-input-issue-list' style={{ border: 'none', borderRadius: 0, width: 500 }} placeholder='What needs to be done?' />
+                            </div>
+                            <div className='d-flex align-items-center'>
+                              <Select className='mr-2' defaultValue={issueTypeOptions[4]?.value} options={issueTypeOptions} disabled />
+                              <Button style={{padding: '0 10px'}} type='primary' onClick={() => {
+                                if (addSubSummaryIssue.current?.trim() !== "") {
+                                  dispatch(createIssue({ 
+                                    summary: addSubSummaryIssue.current, 
+                                    creator: userInfo.id, 
+                                    issue_status: 4, 
+                                    issue_priority: 2, 
+                                    issue_type: processList[0]._id, 
+                                    parent: record?._id,
+                                     project_id: id 
+                                    }, id, userInfo.id, record?.current_sprint?._id, record?._id, projectInfo, userInfo))
+                                } else {
+                                  showNotificationWithIcon('error', '', 'Summary can\'t not left blank')
+                                }
+                                addSubSummaryIssue.current = ""
+                              }}><span style={{ color: "#dddd", fontWeight: 600 }}>Create <i style={{ transform: 'rotate(180deg)' }} className="fa-solid fa-share-from-square"></i></span></Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ),
-                    rowExpandable: (record) => !record.parent && record.issue_status !== 4,
-                  }}
-                  footer={() => {
-                    return !openCreatingBacklog ? <button className='btn btn-transparent btn-create-issue' style={{ fontSize: '14px', color: '#ddd' }} onClick={() => {
-                      setOpenCreatingBacklog(true)
-                    }}>
-                      <i className="fa-regular fa-plus mr-2"></i>
-                      Create issue
-                    </button> : <div className='d-flex' style={{ border: '2px solid #4BADE8' }}>
-                      <Select style={{ border: 'none', borderRadius: 0 }}
-                        defaultValue={issueTypeWithoutOptions[0].value}
-                        onChange={(value, option) => {
-                          setIssueStatus(value)
-                        }}
-                        className='edit-select-issue-list'
-                        options={issueTypeWithoutOptions.filter(status => [0, 1, 2].includes(parseInt(status.value)))}
-                      />
-                      <Input
-                        placeholder="What need to be done?"
-                        onChange={(e) => {
-                          summaryValue.current = e.target.value
-                        }}
-                        defaultValue={summaryValue.current}
-                        onBlur={() => {
-                          setOpenCreatingBacklog(false)
-                          summaryValue.current = ""
-                        }}
-                        className='edit-input-issue-list'
-                        style={{ border: 'none', borderRadius: 0 }}
-                        onKeyUp={((e) => {
-                          if (e.key === "Enter") {
-                            if (summaryValue.current.trim() !== "") {
-                              dispatch(createIssue({
-                                project_id: id,
-                                issue_status: issueStatus,
-                                summary: summaryValue.current,
-                                creator: userInfo.id,
-                                issue_type: processList.length === 0 ? null : processList[0]._id,
-                                current_sprint: null
-                              }, id, userInfo.id, null))
-                              //set default is 0 which means story
+                      ),
+                      rowExpandable: (record) => !record.parent && record.issue_status !== 4,
+                    }}
+                    footer={() => {
+                      return !openCreatingBacklog ? <button className='btn btn-transparent btn-create-issue' style={{ fontSize: '14px', color: '#ddd' }} onClick={() => {
+                        setOpenCreatingBacklog(true)
+                      }}>
+                        <i className="fa-regular fa-plus mr-2"></i>
+                        Create issue
+                      </button> : <div className='d-flex' style={{ border: '2px solid #4BADE8' }}>
+                        <Select style={{ border: 'none', borderRadius: 0 }}
+                          defaultValue={issueTypeWithoutOptions[0].value}
+                          onChange={(value, option) => {
+                            setIssueStatus(value)
+                          }}
+                          value={issueStatus}
+                          className='edit-select-issue-list'
+                          options={issueTypeWithoutOptions.filter(status => [0, 1, 2].includes(parseInt(status.value)))}
+                        />
+                        <Input
+                          placeholder="What need to be done?"
+                          onChange={(e) => {
+                            summaryValue.current = e.target.value
+                          }}
+                          defaultValue={summaryValue.current}
+                          className='edit-input-issue-list'
+                          style={{ border: 'none', borderRadius: 0 }}
+                          onKeyUp={((e) => {
+                            if (e.key === "Enter") {
+                              if (summaryValue.current.trim() !== "") {
+                                dispatch(createIssue({
+                                  project_id: id,
+                                  issue_status: issueStatus,
+                                  summary: summaryValue.current,
+                                  creator: userInfo.id,
+                                  issue_type: processList.length === 0 ? null : processList[0]._id,
+                                  current_sprint: null
+                                }, id, userInfo.id, null, projectInfo, userInfo))
+                                //set default is 0 which means story
+                              }
+                              setOpenCreatingBacklog(false)
+                              setIssueStatus(0)
+                              summaryValue.current = ""
                             }
-                            setIssueStatus(0)
-                            summaryValue.current = ""
-                          }
-                        })} />
-                    </div>
-                  }}
-                />
-              </DragIndexContext.Provider>
-            </SortableContext>
-            <DragOverlay>
-              {
-                renderColumns() !== undefined || renderColumns() !== null ? <th
-                  style={{
-                    backgroundColor: 'gray',
-                    padding: 16,
-                  }}
-                >
-                  {renderColumns() !== undefined ? renderColumns()[renderColumns()?.findIndex((i) => i.key === dragIndex.active)]?.title : null}
-                </th> : <></>
-              }
-            </DragOverlay>
-          </DndContext>
-          <div className="dropdown" style={{ width: '7%' }}>
-            <Button className='ml-1' type="primary" id="dropdownMenuTable" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i className="fa fa-plus"></i></Button>
-            <div className="dropdown-menu" aria-labelledby="dropdownMenuTable" style={{ height: 300, overflowY: 'auto', scrollbarWidth: 'none' }}>
-              {projectInfo?.table_issues_list?.map(col => {
-                return <button className="dropdown-item d-flex justify-content-between" type="button" onClick={() => {
-                  dispatch(updateProjectAction(id, { table_col_key: col.key, isShowed: !col.isShowed }, null))
-                }}>
-                  <span style={{ marginRight: 20, fontSize: 15 }}>{col.title}</span>
-                  {
-                    col.isShowed ? <span>
-                      <i className="fa fa-check" style={{ color: '#0D7C66' }}></i>
-                    </span> : <></>
-                  }
-                </button>
-              })}
-            </div>
+                          })} />
+                      </div>
+                    }}
+                  />
+                </DragIndexContext.Provider>
+              </SortableContext>
+              <DragOverlay>
+                {
+                  renderColumns() !== undefined || renderColumns() !== null ? <th
+                    style={{
+                      backgroundColor: 'gray',
+                      padding: 16,
+                    }}
+                  >
+                    {renderColumns() !== undefined ? renderColumns()[renderColumns()?.findIndex((i) => i.key === dragIndex.active)]?.title : null}
+                  </th> : <></>
+                }
+              </DragOverlay>
+            </DndContext>
+          </div> : <div></div>}
+        </div>
+        <div className={`card info-settings mr-1 mt-0`} style={{ width: '25rem', height: 510, display: displaySetting ? 'block' : 'none', margin: '0px 10px', overflowY: 'auto', scrollbarWidth: 'none', marginTop: 7 }}>
+          <div className='d-flex justify-content-between' style={{ padding: '15px 10px' }}>
+            <h6 className='m-0'>View Settings</h6>
+            <i className="fa-solid fa-xmark" onClick={() => {
+              setDisplaySetting(!displaySetting)
+            }}></i>
           </div>
-        </div> : <div></div>}
+          <div className='ml-2 mb-2 row'>
+            {projectInfo?.table_issues_list?.map(col => {
+              return <div className='row col-12 mt-1'>
+                <span className='col-8' style={{ marginRight: 20, fontSize: 15 }}>{col.title}</span>
+                <Switch className='col-2' onChange={() => {
+                  dispatch(updateProjectAction(id, { table_col_key: col.key, isShowed: !col.isShowed }, null))
+                }} defaultValue={col.isShowed} />
+              </div>
+            })}
+          </div>
+        </div>
       </div>
     </div>
   )

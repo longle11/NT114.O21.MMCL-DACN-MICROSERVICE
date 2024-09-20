@@ -1,20 +1,66 @@
 const express = require("express")
 const currentUserMiddleware = require("../Middlewares/currentUser-Middleware")
 const userModel = require("../models/users")
+const { populate } = require("../models/issueModel")
+const { model } = require("mongoose")
 
 const router = express.Router()
 
-router.get("/currentuser", currentUserMiddleware,async (req, res) => {
+router.get("/currentuser", currentUserMiddleware, async (req, res) => {
     let currentUser = null
-    if(!req.currentUser) {
+    if (!req.currentUser) {
         req.session = null
         res.clearCookie("session")
-    }else {
+    } else {
         const getUserInfo = await userModel.findById(req.currentUser)
-
-        if(getUserInfo !== null) {
+            .populate({
+                path: "assigned_issues.issue_id",
+                model: 'issues',
+                populate: [
+                    {
+                        path: 'creator',
+                        model: 'users',
+                        select: 'username avatar'
+                    },
+                    {
+                        path: 'project_id',
+                        model: 'projects'
+                    }
+                ]
+            })
+            .populate({
+                path: "working_issues.issue_id",
+                model: 'issues',
+                populate: [
+                    {
+                        path: 'creator',
+                        model: 'users',
+                        select: 'username avatar'
+                    },
+                    {
+                        path: 'project_id',
+                        model: 'projects'
+                    }
+                ]
+            })
+            .populate({
+                path: "viewed_issues.issue_id",
+                model: 'issues',
+                populate: [
+                    {
+                        path: 'creator',
+                        model: 'users',
+                        select: 'username avatar'
+                    },
+                    {
+                        path: 'project_id',
+                        model: 'projects'
+                    }
+                ]
+            })
+        if (getUserInfo !== null) {
             currentUser = {
-                id: getUserInfo._id,    
+                id: getUserInfo._id,
                 username: getUserInfo.username,
                 email: getUserInfo.email,
                 avatar: getUserInfo.avatar,

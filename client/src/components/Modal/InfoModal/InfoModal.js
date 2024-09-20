@@ -25,17 +25,19 @@ export default function InfoModal(props) {
     const projectInfo = useSelector(state => state.listProject.projectInfo)
     const processList = useSelector(state => state.listProject.processList)
     const workflowList = useSelector(state => state.listProject.workflowList)
-    const userInfo = useSelector(state => state.user.userInfo)
+    const userInfo = props.userInfo
+    
     const historyList = useSelector(state => state.issue.historyList)
     const worklogList = useSelector(state => state.issue.worklogList)
     const epicList = useSelector(state => state.categories.epicList)
     const versionList = useSelector(state => state.categories.versionList)
-    const issuesBacklog = useSelector(state => state.issue.issuesBacklog)
+    const issuesInProject = useSelector(state => state.issue.issuesInProject)
     const commentList = useSelector(state => state.comment.commentList)
     const [subIssueSummary, setSubIssueSummary] = useState('')
     const [showAddSubIssue, setShowAddSubIssue] = useState(false)
     const displayNumberCharacterInSummarySubIssue = props.displayNumberCharacterInSummarySubIssue
     const issueIdForIssueDetail = props.issueIdForIssueDetail   //used to compare for displaying file uploading in issue detail page
+
 
     const [onClickedItems, setOnClickedItems] = useState(false)
 
@@ -130,7 +132,7 @@ export default function InfoModal(props) {
                                 }
                             }}
                             onSelect={(value, option) => {
-                                dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id?._id.toString(), { issue_status: value }, `${issueInfo.issue_status}`, `${value}`, userInfo.id, 'updated', 'status'))
+                                dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id?._id.toString(), { issue_status: value }, `${issueInfo.issue_status}`, `${value}`, userInfo.id, 'updated', 'issue status', projectInfo, userInfo))
                             }}
                             name="issue_status"
                         /> : <span onDoubleClick={() => {
@@ -142,9 +144,9 @@ export default function InfoModal(props) {
                             <div className='d-flex flex-column'>
                                 {editAttributeTag === 'issue_type' ? <Select
                                     options={typeOptionsFollowWorkflow(issueInfo?.issue_type?._id.toString())}
-                                    style={{ width: 200, marginTop: 5 }}
+                                    style={{ width: 400, marginTop: 5 }}
                                     onChange={(value, props) => {
-                                        dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id?._id, { issue_type: value }, issueInfo?.issue_type.name_process, props.label, userInfo.id, "updated", "issue type"))
+                                        dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id?._id, { issue_type: value }, issueInfo?.issue_type.name_process, props.label, userInfo.id, "updated", "issue type", projectInfo, userInfo))
                                     }}
                                     onBlur={() => {
                                         setEditAttributeTag('')
@@ -179,12 +181,12 @@ export default function InfoModal(props) {
                     <div style={{ display: 'flex', alignItems: 'center' }} className="task-click">
                         <div style={{ display: 'flex' }}>
                             {issueInfo?.is_permissions === true ? <i onClick={() => {
-                                dispatch(updateInfoIssue(issueInfo._id, id, { is_permissions: !issueInfo?.is_permissions }, issueInfo?.is_permissions === true ? "blocked" : "unblocked", !issueInfo?.is_permissions === true ? "unblocked" : "blocked", userInfo.id, "apply", "restriction"))
+                                dispatch(updateInfoIssue(issueInfo._id, id, { is_permissions: !issueInfo?.is_permissions }, issueInfo?.is_permissions === true ? "blocked" : "unblocked", !issueInfo?.is_permissions === true ? "unblocked" : "blocked", userInfo.id, "apply", "restriction", projectInfo, userInfo))
                             }} style={{ fontSize: 20, padding: 10 }} className="fa fa-lock"></i> :
                                 <div className='dropdown'>
                                     <i onClick={() => {
 
-                                    }} style={{ fontSize: 20, padding: 10 }} className="fa fa-unlock" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></i>
+                                    }} style={{ fontSize: 20, padding: 10 }} className="fa fa-unlock hover-items" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></i>
                                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style={{ width: 300, padding: '5px 10px' }}>
                                         <h6 style={{ fontSize: 14 }}>Do you want to apply this restrictions to the following objects?</h6>
                                         <ul style={{ fontSize: 13 }}>
@@ -194,7 +196,7 @@ export default function InfoModal(props) {
                                         </ul>
                                         <div className='d-flex justify-content-between align-items-center'>
                                             <Button onClick={() => {
-                                                dispatch(updateInfoIssue(issueInfo._id, id, { is_permissions: !issueInfo?.is_permissions }, issueInfo?.is_permissions === true ? "blocked" : "unblocked", !issueInfo?.is_permissions === true ? "unblocked" : "blocked", userInfo.id, "apply", "restriction"))
+                                                dispatch(updateInfoIssue(issueInfo._id, id, { is_permissions: !issueInfo?.is_permissions }, issueInfo?.is_permissions === true ? "blocked" : "unblocked", !issueInfo?.is_permissions === true ? "unblocked" : "blocked", userInfo.id, "apply", "restriction", projectInfo, userInfo))
                                             }} type='primary'>Apply</Button>
                                             <NavLink onClick={() => {
                                                 dispatch(openModalInfo(false))
@@ -213,24 +215,27 @@ export default function InfoModal(props) {
                                     textDecoration: 'none'
                                 }
                             } className={`${issueInfo?.voted?.length > 0 ? 'hover-items' : ''}`}>
-                                <div className={`dropdown`}>
-                                    <i onClick={(e) => {
-                                        e.stopPropagation()
-                                        e.preventDefault()
-                                        setOnClickedItems(!onClickedItems)
-                                    }} type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style={
-                                        {
-                                            fontSize: 20,
-                                            padding: issueInfo?.voted?.length === 0 ? 10 : 0,
-                                            color: onClickedItems ? '#0C66E4' : issueInfo?.voted?.map(user => user._id)?.includes(userInfo.id) ? '#0C66E4' : '#000',
-                                            backgroundColor: onClickedItems ? '#E9F2FF' : 'transparent',
-                                            textDecoration: 'none'
-                                        }
-                                    } className={`fa fa-thumbs-up ${issueInfo?.voted?.length === 0 ? 'hover-items' : ''}`}></i>
-                                    <div className={`dropdown-menu ${onClickedItems ? "show" : ""}`} aria-labelledby="dropdownMenuButton" style={{ width: 'max-content' }}>
+                                <div className="dropdown">
+                                    <i
+                                        type="button"
+                                        id="dropdownMenuButton"
+                                        data-toggle="dropdown"
+                                        aria-haspopup="true"
+                                        aria-expanded="false"
+                                        style={
+                                            {
+                                                fontSize: 20,
+                                                padding: issueInfo?.voted?.length === 0 ? 10 : 0,
+                                                color: onClickedItems ? '#0C66E4' : issueInfo?.voted?.map(user => user?._id)?.includes(userInfo.id) ? '#0C66E4' : '#000',
+                                                backgroundColor: onClickedItems ? '#E9F2FF' : 'transparent',
+                                                textDecoration: 'none'
+                                            }
+                                        } 
+                                        className={`fa fa-thumbs-up ${issueInfo?.voted?.length === 0 ? 'hover-items' : ''}`}>
+                                    </i>
+                                    <div className="dropdown-menu" aria-labelledby="dropdownMenuButton" style={{ width: 'max-content', top: 0, left: 0 }}>
                                         <a onClick={() => {
-                                            setOnClickedItems(!onClickedItems)
-                                            dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { voted_user_id: userInfo.id }, null, null, userInfo.id, issueInfo?.voted?.map(user => user._id).includes(userInfo.id) ? "Unliked" : "Liked", "issue"))
+                                            dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { voted_user_id: userInfo.id }, null, null, userInfo.id, issueInfo?.voted?.map(user => user._id).includes(userInfo.id) ? "Unliked" : "Liked", "issue", projectInfo, userInfo))
                                         }} style={{ fontSize: 14 }} className="dropdown-item" href="##">
                                             <i style={{ color: '#0052CC', fontSize: 20 }} class="fa fa-thumbs-up mr-3"></i>
                                             {
@@ -258,24 +263,31 @@ export default function InfoModal(props) {
 
                                 {issueInfo?.voted?.length > 0 ? <span className='p-0 pl-2 font-weight-bold'>{issueInfo?.voted?.length}</span> : null}
                             </NavLink>
-                            <i style={{ fontSize: 20, padding: 10 }} className="fa fa-share-alt"></i>
-                            <i style={{ fontSize: 20, padding: 10 }} className="fa-solid fa-link"></i>
+                            <i style={{ fontSize: 20, padding: 10, cursor: 'pointer' }} className="fa fa-share-alt hover-items"></i>
+                            <i style={{ fontSize: 20, padding: 10, cursor: 'pointer' }} className="fa-solid fa-link hover-items"></i>
                             <div className="dropdown">
-                                <i type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style={{ fontSize: 20, padding: 10 }} className="fa fa-ellipsis-h"></i>
+                                <i
+                                    type="button"
+                                    id="dropdownMenuButton"
+                                    data-toggle="dropdown"
+                                    aria-haspopup="true"
+                                    aria-expanded="false"
+                                    style={{ fontSize: 20, padding: 10, cursor: 'pointer' }}
+                                    className="fa fa-ellipsis-h hover-items"></i>
                                 <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                     {
                                         !issueInfo?.isFlagged ? <a className="dropdown-item" href="##" onClick={(e) => {
                                             dispatch(displayComponentInModal(<AddFlagModal editCurrentIssue={issueInfo} userInfo={userInfo} />, 1024, <h4><i style={{ fontSize: 25, color: '#FF5630' }} className="fa fa-flag mr-3"></i> Add Flag</h4>))
                                         }}>Add flag</a> : <a className="dropdown-item" href="##" onClick={(e) => {
-                                            dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { isFlagged: false }, null, null, userInfo.id, "canceled", "flag"))
+                                            dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { isFlagged: false }, null, null, userInfo.id, "canceled", "flag", projectInfo, userInfo))
                                         }}>Remove flag</a>
                                     }
                                     {issueInfo?.issue_status !== 4 ? <a onClick={() => {
-                                        dispatch(displayComponentInModal(<AddParentModal issue={issueInfo} userInfo={userInfo} epicList={epicList}/>, 600, "Add Epic"))
+                                        dispatch(displayComponentInModal(<AddParentModal issue={issueInfo} userInfo={userInfo} epicList={epicList} />, 600, "Add Epic"))
                                     }} className="dropdown-item" href="##">Add Parent</a> : <></>}
                                     <hr className='mt-1 mb-1' />
                                     <a onClick={() => {
-                                        dispatch(displayComponentInModal(<CloneIssueModal issue={issueInfo} userInfo={userInfo}/>, 600, `Clone issue: WD-${issueInfo?.ordinal_number}`))
+                                        dispatch(displayComponentInModal(<CloneIssueModal issue={issueInfo} userInfo={userInfo} />, 600, `Clone issue: WD-${issueInfo?.ordinal_number}`))
                                     }} className="dropdown-item" href="##">Clone issue</a>
                                     <a className="dropdown-item" href="##">Move other projects</a>
                                     <a className="dropdown-item" href="##">Delete</a>
@@ -287,8 +299,8 @@ export default function InfoModal(props) {
                         </div>
                         {
                             issueInfo?.creator?._id.toString() === userInfo?.id ? (
-                                <div>
-                                    <Popconfirm placement="topLeft"
+                                <div className="hover-items" style={{ padding: 10 }}>
+                                    <Popconfirm placement="bottomRight"
                                         title="Delete this issue?"
                                         description="Are you sure to delete this issue from project?"
                                         onConfirm={() => {
@@ -297,7 +309,7 @@ export default function InfoModal(props) {
                                             //dispatch lại sự kiện load lại project
                                             dispatch(GetProjectAction(issueInfo?.project_id?._id, ""))
                                         }} okText="Yes" cancelText="No">
-                                        <i className="fa fa-trash-alt" style={{ cursor: 'pointer' }} />
+                                        <i className="fa fa-trash-alt text-center" style={{ cursor: 'pointer', width: '100% !important', fontSize: 18 }} />
                                     </Popconfirm>
                                 </div>
                             ) : <></>
@@ -321,7 +333,7 @@ export default function InfoModal(props) {
                                 issueInfo={issueInfo}
                                 userInfo={userInfo}
                                 sprintList={sprintList}
-                                issuesBacklog={issuesBacklog}
+                                issuesInProject={issuesInProject}
                                 epicList={epicList}
                                 displayNumberCharacterInSummarySubIssue={displayNumberCharacterInSummarySubIssue}
                                 id={id}

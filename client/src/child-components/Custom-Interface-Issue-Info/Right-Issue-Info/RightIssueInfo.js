@@ -16,14 +16,14 @@ import Assignees from '../../Issue-Attributes/Assignees/Assignees'
 import SubIssueComponent from '../../Sub-Issue-Component/SubIssueComponent'
 import Parent from '../../Issue-Attributes/Parent/Parent'
 import { checkConstraintPermissions } from '../../../util/CheckConstraintFields'
-
+import StartEndDate from '../../Issue-Attributes/Start-End-Date/StartEndDate'
+import './RightIssueInfo.css'
 export default function RightIssueInfo(props) {
     const userInfo = props.userInfo
     const issueInfo = props.issueInfo
     const processList = props.processList
-    const issuesBacklog = props.issuesBacklog
+    const issuesInProject = props.issuesInProject
     const projectInfo = props.projectInfo
-
     const sprintList = props.sprintList
     const epicList = props.epicList
     const versionList = props.versionList
@@ -52,10 +52,11 @@ export default function RightIssueInfo(props) {
         <div className="col-4 p-0"
             style={{ height: '90%', overflowY: 'auto', scrollbarWidth: 'none' }}>
             {issueInfo?.issue_status !== 4 ? <SubIssueComponent
+                projectInfo={projectInfo}
                 issueInfo={issueInfo}
                 processList={processList}
                 userInfo={userInfo}
-                issuesBacklog={issuesBacklog}
+                issuesInProject={issuesInProject}
                 id={id}
                 showAddSubIssue={showAddSubIssue}
                 subIssueSummary={subIssueSummary}
@@ -113,6 +114,27 @@ export default function RightIssueInfo(props) {
                         issueInfo={issueInfo}
                         projectInfo={projectInfo}
                         userInfo={userInfo} />
+
+                    <StartEndDate handleEditAttributeTag={handleEditAttributeTag}
+                        editAttributeTag={editAttributeTag}
+                        date={issueInfo?.start_date}
+                        projectInfo={projectInfo}
+                        name_date="Start Date"
+                        type_date="start_date"
+                        userInfo={userInfo}
+                        issueInfo={issueInfo}
+                    />
+
+                    <StartEndDate handleEditAttributeTag={handleEditAttributeTag}
+                        editAttributeTag={editAttributeTag}
+                        date={issueInfo?.end_date}
+                        projectInfo={projectInfo}
+                        name_date="End Date"
+                        type_date="end_date"
+                        userInfo={userInfo}
+                        issueInfo={issueInfo}
+                    />
+
                     <IssuePriority handleEditAttributeTag={handleEditAttributeTag}
                         editAttributeTag={editAttributeTag}
                         issueInfo={issueInfo}
@@ -134,7 +156,7 @@ export default function RightIssueInfo(props) {
                             <i className="fa fa-clock" />
                             <Progress style={{ width: '100%' }} onClick={() => {
                                 if (checkConstraintPermissions(projectInfo, issueInfo, userInfo, 15)) {
-                                    dispatch(displayComponentInModal(<TrackingTimeModal userInfo={userInfo} issueInfo={issueInfo} />))
+                                    dispatch(displayComponentInModal(<TrackingTimeModal projectInfo={projectInfo} userInfo={userInfo} issueInfo={issueInfo} />, 500, null))
                                 }
                             }} percent={Math.floor(calculateProgress())} size="small" status="active" />
                         </div>

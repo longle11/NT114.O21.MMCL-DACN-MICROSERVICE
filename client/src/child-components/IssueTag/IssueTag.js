@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { useDispatch } from 'react-redux'
-import { getInfoIssue, updateInfoIssue } from '../../redux/actions/IssueAction'
+import { updateInfoIssue, updateIssueFromBacklog } from '../../redux/actions/IssueAction'
 import { updateUserInfo } from '../../redux/actions/UserAction'
-import { iTagForIssueTypes, iTagForPriorities, priorityTypeOptions } from '../../util/CommonFeatures'
+import { CopyLinkButton, iTagForIssueTypes, iTagForPriorities, priorityTypeOptions } from '../../util/CommonFeatures'
 import { Avatar, Button, Divider, Input, InputNumber, Select, Space, Tag, Tooltip } from 'antd'
 import { UserOutlined } from '@ant-design/icons';
 import { NavLink, useParams } from 'react-router-dom'
@@ -10,8 +10,8 @@ import './IssueTag.css'
 import { LightenDarkenColor } from '../../util/HandleColor'
 import { displayComponentInModalInfo } from '../../redux/actions/ModalAction'
 import InfoModal from '../../components/Modal/InfoModal/InfoModal'
-import { delay } from '../../util/Delay'
-import { DISPLAY_LOADING, HIDE_LOADING } from '../../redux/constants/constant'
+import { updateSprintAction } from '../../redux/actions/CreateProjectAction'
+import domainName from '../../util/Config'
 export default function IssueTag(props) {
     const dispatch = useDispatch()
     const [editSummary, setEditSummary] = useState({
@@ -42,6 +42,11 @@ export default function IssueTag(props) {
         open: '',
         value: 0
     })
+    const [editIssueStatus, setEditIssueStatus] = useState({
+        open: '',
+        value: 0
+    })
+
     const onChangeAssignees = props.onChangeAssignees
     const onChangeIssuePriority = props.onChangeIssuePriority
     const onChangeStoryPoint = props.onChangeStoryPoint
@@ -51,6 +56,8 @@ export default function IssueTag(props) {
     const onChangeIssueStatus = props.onChangeIssueStatus
     const onChangeVersions = props.onChangeVersions
     const onChangeEpics = props.onChangeEpics
+    const issuesBacklog = props.issuesBacklog
+    const index = props.index
     const [dropDownLeft, setDropDownLeft] = useState(false)
     const { id } = useParams()
     const issue = props.issue
@@ -63,6 +70,7 @@ export default function IssueTag(props) {
     const epicList = props.epicList
     const versionList = props.versionList
     const type = props.type
+
     const renderAssigneeOptions = () => {
         return projectInfo?.members.filter(user => {
             if (!(user.user_info._id === issue.creator._id || issue.assignees.map(assignee => assignee._id).includes(user.user_info._id))) {
@@ -85,22 +93,24 @@ export default function IssueTag(props) {
 
     const renderAssignees = () => {
         return <div>
-            {editAssignees.open !== issue._id ? (issue.assignees?.length === 0 ? <Avatar size="small" onClick={(e) => {
+            {editAssignees.open !== issue._id ? (issue.assignees?.length === 0 ? <Avatar size="medium" onClick={(e) => {
                 e.stopPropagation()
                 setEditAssignees({
                     ...editAssignees,
                     open: issue._id
                 })
             }} icon={<UserOutlined />} /> : <div>
-                {issue.assignees.map((user) => {
-                    return <Avatar size={"small"} onClick={(e) => {
-                        e.stopPropagation()
-                        setEditAssignees({
-                            ...editAssignees,
-                            open: issue._id
-                        })
-                    }} src={user?.creator?.avatar} />
-                })}
+                <Avatar.Group>
+                    {issue.assignees.map((user) => {
+                        return <Avatar size={"medium"} onClick={(e) => {
+                            e.stopPropagation()
+                            setEditAssignees({
+                                ...editAssignees,
+                                open: issue._id
+                            })
+                        }} src={user?.avatar} />
+                    })}
+                </Avatar.Group>
             </div>) : <div style={{ position: 'relative' }}>
                 <Select
                     style={{
@@ -129,7 +139,6 @@ export default function IssueTag(props) {
                 <div style={{ position: 'absolute', top: 0, left: '-32%', zIndex: 999999 }}>
                     <Button onClick={(e) => {
                         e.stopPropagation()
-
                         setEditAssignees({
                             ...editAssignees,
                             open: ''
@@ -167,7 +176,7 @@ export default function IssueTag(props) {
                             }}
                             onBlur={(value) => {
                                 if (editStoryPoint.value !== parseInt(issue.story_point)) {
-                                    dispatch(updateInfoIssue(issue._id, issue.project_id, { story_point: editStoryPoint.value }, issue.story_point ? issue.story_point.toString() : "None", editStoryPoint.value.toString(), userInfo.id, "updated", "story point"))
+                                    dispatch(updateInfoIssue(issue._id, issue.project_id._id, { story_point: editStoryPoint.value }, issue.story_point ? issue.story_point.toString() : "None", editStoryPoint.value.toString(), userInfo.id, "updated", "story point"))
                                 }
                                 setEditStoryPoint({
                                     open: '',
@@ -183,10 +192,8 @@ export default function IssueTag(props) {
                         <div style={{ position: 'absolute', zIndex: 10000000, right: 0, display: 'flex' }}>
                             <Button onClick={(e) => {
                                 e.stopPropagation()
-                                if (editSummary.value.trim() !== issue.summary.trim()) {
-                                    if (editStoryPoint.value !== parseInt(issue.story_point)) {
-                                        dispatch(updateInfoIssue(issue._id, issue.project_id, { story_point: editStoryPoint.value }, issue.story_point ? issue.story_point.toString() : "None", editStoryPoint.value.toString(), userInfo.id, "updated", "story point"))
-                                    }
+                                if (editStoryPoint.value !== parseInt(issue.story_point)) {
+                                    dispatch(updateInfoIssue(issue._id, issue.project_id._id, { story_point: editStoryPoint.value }, issue.story_point ? issue.story_point.toString() : "None", editStoryPoint.value.toString(), userInfo.id, "updated", "story point"))
                                 }
                                 setEditStoryPoint({
                                     open: '',
@@ -237,7 +244,9 @@ export default function IssueTag(props) {
                         })
                     }}
                     onBlur={() => {
-                        dispatch(updateInfoIssue(issue._id, issue.project_id, { issue_type: editIssueType.value.value }, issue.issue_type.name_process, editIssueType.value.label, userInfo.id, "Updated", "type"))
+                        if (editIssueType.value.value !== issue.issue_type?._id) {
+                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { issue_type: editIssueType.value.value }, issue.issue_type.name_process, editIssueType.value.label, userInfo.id, "Updated", "type"))
+                        }
                         setEditIssueType({
                             value: {},
                             open: ''
@@ -261,7 +270,9 @@ export default function IssueTag(props) {
                 <div style={{ position: 'absolute', zIndex: 99999999, top: 0, left: '-50%' }}>
                     <Button onClick={(e) => {
                         e.stopPropagation()
-                        dispatch(updateInfoIssue(issue._id, issue.project_id, { issue_type: editIssueType.value.value }, issue.issue_type.name_process, editIssueType.value.label, userInfo.id, "Updated", "type"))
+                        if (editIssueType.value.value !== issue.issue_type?._id) {
+                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { issue_type: editIssueType.value.value }, issue.issue_type.name_process, editIssueType.value.label, userInfo.id, "Updated", "type"))
+                        }
                         setEditIssueType({
                             value: {},
                             open: ''
@@ -280,7 +291,7 @@ export default function IssueTag(props) {
     }
 
     const renderSummary = () => {
-        return editSummary.open === issue._id ? <div style={{ position: 'relative' }}>
+        return editSummary.open === issue?._id ? <div style={{ position: 'relative' }}>
             <Input
                 defaultValue={issue.summary}
                 onKeyDown={(e) => {
@@ -301,7 +312,7 @@ export default function IssueTag(props) {
                 }}
                 onBlur={(e) => {
                     if (editSummary.value.trim() !== issue.summary.trim()) {
-                        dispatch(updateInfoIssue(issue._id, issue.project_id, { summary: editSummary.value }, issue.summary, editSummary.value.trim(), userInfo.id, "updated", "summary"))
+                        dispatch(updateInfoIssue(issue._id, issue.project_id._id, { summary: editSummary.value }, issue.summary, editSummary.value.trim(), userInfo.id, "updated", "summary"))
                         setEditSummary({
                             open: '',
                             value: ''
@@ -312,7 +323,7 @@ export default function IssueTag(props) {
                 <Button onClick={(e) => {
                     e.stopPropagation()
                     if (editSummary.value.trim() !== issue.summary.trim()) {
-                        dispatch(updateInfoIssue(issue._id, issue.project_id, { summary: editSummary.value }, issue.summary, editSummary.value.trim(), userInfo.id, "updated", "summary"))
+                        dispatch(updateInfoIssue(issue._id, issue.project_id._id, { summary: editSummary.value }, issue.summary, editSummary.value.trim(), userInfo.id, "updated", "summary"))
                         setEditSummary({
                             open: '',
                             value: ''
@@ -332,7 +343,7 @@ export default function IssueTag(props) {
                 }}><i className="fa fa-times"></i></Button>
             </div>
         </div> : <div>
-            <span>{issue.summary}</span>
+            <span>{issue?.summary}</span>
             <button onClick={(e) => {
                 e.stopPropagation()
                 setEditSummary({
@@ -370,8 +381,9 @@ export default function IssueTag(props) {
                     onClick={(e) => e.stopPropagation()}
                     onBlur={(e) => {
                         e.stopPropagation()
-
-                        dispatch(updateInfoIssue(issue._id, issue.project_id, { epic_link: editEpicLink.value.value }, issue.epic_link ? issue.epic_link.epic_name : "None", editEpicLink.value.label, userInfo.id, "Updated", "epic"))
+                        if (editEpicLink.value.value !== issue.epic_link?._id) {
+                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { epic_link: editEpicLink.value.value }, issue.epic_link ? issue.epic_link.epic_name : "None", editEpicLink.value.label, userInfo.id, "Updated", "epic"))
+                        }
                         setEditEpicLink({
                             value: {},
                             open: ''
@@ -389,8 +401,9 @@ export default function IssueTag(props) {
                 <div style={{ position: 'absolute', zIndex: 99999999, top: 0, left: '-65%' }}>
                     <Button onClick={(e) => {
                         e.stopPropagation()
-
-                        dispatch(updateInfoIssue(issue._id, issue.project_id, { epic_link: editEpicLink.value.value }, issue.epic_link ? issue.epic_link.epic_name : "None", editEpicLink.value.label, userInfo.id, "Updated", "epic"))
+                        if (editEpicLink.value.value !== issue.epic_link?._id) {
+                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { epic_link: editEpicLink.value.value }, issue.epic_link ? issue.epic_link.epic_name : "None", editEpicLink.value.label, userInfo.id, "Updated", "epic"))
+                        }
                         setEditEpicLink({
                             value: {},
                             open: ''
@@ -410,7 +423,7 @@ export default function IssueTag(props) {
     }
 
     const renderVersionListOption = () => {
-        return versionList?.filter(version => version?._id !== issue.fix_version?._id).map(version => {
+        return versionList?.filter(version => version?._id !== issue?.fix_version?._id).map(version => {
             return {
                 label: version.version_name,
                 value: version._id
@@ -419,14 +432,14 @@ export default function IssueTag(props) {
     }
 
     const renderFixVersion = () => {
-        return issue.fix_version !== null ? <div>
-            {editFixVersion.open !== issue._id ? <Tag onClick={(e) => {
+        return issue?.fix_version !== null ? <div>
+            {editFixVersion.open !== issue?._id ? <Tag onClick={(e) => {
                 e.stopPropagation()
                 setEditFixVersion({
                     ...editFixVersion,
-                    open: issue._id
+                    open: issue?._id
                 })
-            }} color={LightenDarkenColor(issue.fix_version.tag_color, 50)}><span style={{ color: LightenDarkenColor(issue.fix_version.tag_color, -100) }}>{issue.fix_version.version_name}</span></Tag> : <div style={{ position: 'relative' }}>
+            }} color={LightenDarkenColor(issue?.fix_version?.tag_color, 50)}><span style={{ color: LightenDarkenColor(issue?.fix_version?.tag_color, -100) }}>{issue?.fix_version?.version_name}</span></Tag> : <div style={{ position: 'relative' }}>
                 <Select
                     style={{
                         minWidth: 150,
@@ -441,20 +454,24 @@ export default function IssueTag(props) {
                     }}
                     onBlur={(e) => {
                         e.stopPropagation()
-                        dispatch(updateInfoIssue(issue._id, issue.project_id, { fix_version: editFixVersion.value.value }, issue.fix_version ? issue.fix_version.version_name : "None", editFixVersion.value.label, userInfo.id, "Updated", "version"))
+                        if (editFixVersion.value.value !== issue?.fix_version?._id) {
+                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { fix_version: editFixVersion?.value?.value }, issue?.fix_version ? issue?.fix_version?.version_name : "None", editFixVersion.value.label, userInfo.id, "Updated", "version"))
+                        }
                         setEditFixVersion({
                             value: {},
                             open: ''
                         })
                     }}
 
-                    defaultValue={issue.fix_version?.version_name}
+                    defaultValue={issue?.fix_version?.version_name}
                     options={renderVersionListOption()}
                 />
                 <div style={{ position: 'absolute', zIndex: 99999999, top: 0, left: '-65%' }}>
                     <Button onClick={(e) => {
                         e.stopPropagation()
-                        dispatch(updateInfoIssue(issue._id, issue.project_id, { fix_version: editFixVersion.value.value }, issue.fix_version ? issue.fix_version.version_name : "None", editFixVersion.value.label, userInfo.id, "Updated", "version"))
+                        if (editFixVersion.value.value !== issue?.fix_version?._id) {
+                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { fix_version: editFixVersion.value.value }, issue?.fix_version ? issue?.fix_version.version_name : "None", editFixVersion.value.label, userInfo.id, "Updated", "version"))
+                        }
                         setEditFixVersion({
                             value: {},
                             open: ''
@@ -495,8 +512,9 @@ export default function IssueTag(props) {
                     }}
                     onBlur={(e) => {
                         e.stopPropagation()
-
-                        dispatch(updateInfoIssue(issue._id, issue.project_id, { issue_priority: editIssuePriority.value }, issue.issue_priority, editIssuePriority.value, userInfo.id, "Updated", "priority"))
+                        if (editIssuePriority.value !== issue.issue_priority) {
+                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { issue_priority: editIssuePriority.value }, issue.issue_priority, editIssuePriority.value, userInfo.id, "Updated", "priority"))
+                        }
                         setEditIssuePriority({
                             value: 0,
                             open: ''
@@ -508,7 +526,9 @@ export default function IssueTag(props) {
 
                     <Button onClick={(e) => {
                         e.stopPropagation()
-                        dispatch(updateInfoIssue(issue._id, issue.project_id, { issue_priority: editIssuePriority.value }, issue.issue_priority, editIssuePriority.value, userInfo.id, "Updated", "priority"))
+                        if (editIssuePriority.value !== issue.issue_priority) {
+                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { issue_priority: editIssuePriority.value }, issue.issue_priority, editIssuePriority.value, userInfo.id, "Updated", "priority"))
+                        }
                         setEditIssuePriority({
                             value: 0,
                             open: ''
@@ -526,13 +546,127 @@ export default function IssueTag(props) {
             </div>}
         </div>
     }
+
+    const renderIssueStatus = () => {
+        return <div>
+            {editIssueStatus.open !== issue?._id ? <span className='ml-2' onClick={(e) => {
+                e.stopPropagation()
+                setEditIssueStatus({
+                    ...editIssueStatus,
+                    open: issue._id
+                })
+            }}>{iTagForIssueTypes(issue?.issue_status, null, null)}</span> : <div style={{ position: 'relative' }}>
+                <Select
+                    style={{
+                        minWidth: 150,
+                        width: 'max-content'
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    onSelect={(value, option) => {
+                        setEditIssueStatus({
+                            ...editIssueStatus,
+                            value: value
+                        })
+                    }}
+                    onBlur={(e) => {
+                        e.stopPropagation()
+                        if (editIssueStatus.value !== issue.issue_status) {
+                            dispatch(updateInfoIssue(issue?._id, issue?.project_id?._id, { issue_status: editIssueStatus.value }, issue.issue_status, editIssueStatus.value, userInfo.id, "Updated", "status"))
+                        }
+                        setEditIssueStatus({
+                            value: 0,
+                            open: ''
+                        })
+                    }}
+                    options={priorityTypeOptions.filter(priority => priority.value != issue.issue_status)}
+                />
+                <div style={{ position: 'absolute', zIndex: 99999999, right: 0 }}>
+
+                    <Button onClick={(e) => {
+                        e.stopPropagation()
+                        if (editIssueStatus.value !== issue.issue_status) {
+                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { issue_status: editIssueStatus.value }, issue.issue_status, editIssueStatus.value, userInfo.id, "Updated", "status"))
+                        }
+                        setEditIssueStatus({
+                            value: 0,
+                            open: ''
+                        })
+                    }} type='primary' className='mr-1'><i className="fa fa-check"></i></Button>
+                    <Button onClick={(e) => {
+                        e.stopPropagation()
+
+                        setEditIssuePriority({
+                            value: 0,
+                            open: ''
+                        })
+                    }}><i className="fa fa-times"></i></Button>
+                </div>
+            </div>}
+        </div>
+    }
+
+
+    const displayMoveUpBtn = () => {
+        var checkValid = false
+        if (issue.current_sprint === null && index === issuesBacklog?.length - 1) {
+            checkValid = true
+        }
+        if (issue.current_sprint !== null) {
+            const getSprintIndex = sprintList?.findIndex(sprint => sprint._id === issue.current_sprint)
+            if (getSprintIndex !== -1 && sprintList[getSprintIndex]?.issue_list?.length - 1 === index) {
+                checkValid = true
+            }
+        }
+        if (checkValid) return <></>
+        return <li onClick={(e) => {
+            e.stopPropagation()
+            //if this is an issue in the sprint
+            if (issue.current_sprint !== null) {
+                dispatch(updateSprintAction(id, { issue_id: issue._id, issue_source_index: index, dest_source_index: index + 1 }))   //add issue to backlog
+            }
+            else { //inbacklog
+                dispatch(updateIssueFromBacklog(id, { issue_source_index: index, issue_dest_index: index + 1 }))   //change the position of backlog's issue
+            }
+        }} className='dropdown-items-setting' style={{ padding: '5px 15px' }}>Move up</li>
+    }
+
+    const displayMoveDownBtn = () => {
+        var checkValid = false
+        if (issue.current_sprint === null && index === 0) {
+            checkValid = true
+        }
+        if (issue.current_sprint !== null && index === 0) {
+            checkValid = true
+        }
+        if (checkValid) return <></>
+        return <li onClick={(e) => {
+            e.stopPropagation()
+            //if this is an issue in the sprint
+            if (issue.current_sprint !== null) {
+                dispatch(updateSprintAction(id, { issue_id: issue._id, issue_source_index: index, dest_source_index: index - 1 }))
+            }
+            else { //inbacklog
+                dispatch(updateIssueFromBacklog(id, { issue_source_index: index, issue_dest_index: index - 1 }))    //change the position of backlog's issue
+            }
+        }} className='dropdown-items-setting' style={{ padding: '5px 15px' }}>Move down</li>
+    }
+
+
     return (
-        <div
+        issue ? <div
             ref={provided.innerRef}
             {...provided.dragHandleProps}
             {...provided.draggableProps}
-            key={`${issue._id.toString()}`}
-            onClick={async () => {
+            key={`${issue?._id?.toString()}`}
+            onClick={async (e) => {
+                console.log("gia tri e tu click", e.target);
+                if (!((e.target.tagName === "I" && e.target.className.includes("fa-bars")) || ((e.target.tagName === "BUTTON" && e.target.className.includes("setting-issue"))))) {
+                    dispatch(displayComponentInModalInfo(<InfoModal userInfo={userInfo} issueIdForIssueDetail={null} issueInfo={issue} displayNumberCharacterInSummarySubIssue={10} />, 1100))
+                    //dispatch event to update viewed issue in auth service
+                    dispatch(updateUserInfo(userInfo?.id, { viewed_issue: issue._id }))
+                }
+
+
                 // dispatch({
                 //     type: DISPLAY_LOADING
                 // })
@@ -541,15 +675,13 @@ export default function IssueTag(props) {
                 // dispatch({
                 //     type: HIDE_LOADING
                 // })
-                dispatch(displayComponentInModalInfo(<InfoModal issueIdForIssueDetail={null} issueInfo={issue} displayNumberCharacterInSummarySubIssue={10} />))
-                //dispatch event to update viewed issue in auth service
-                dispatch(updateUserInfo(userInfo?.id, { viewed_issue: issue._id }))
+
             }}
             className="issues-detail issue-info p-0 issue-info-items">
             <div className={`${issue?.isFlagged ? "isFlagged" : ""}`} style={{ cursor: 'pointer', backgroundColor: issue?.isFlagged ? "#F1CA45" : "#ffff", padding: '5px 5px 5px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div className='content-issue d-flex align-items-center'>
-                    {onChangeIssueStatus ? <span>{iTagForIssueTypes(issue.issue_status, null, null)}</span> : <></>}
-                    {onChangeKey ? <span className='mr-3' style={{ color: '#5e6c84', fontWeight: 'bold' }}>WD-{issue.ordinal_number?.toString()}</span> : <></>}
+                    {onChangeIssueStatus ? renderIssueStatus() : <></>}
+                    {onChangeKey ? <span className='mr-3' style={{ color: '#5e6c84', fontWeight: 'bold' }}>WD-{issue?.ordinal_number?.toString()}</span> : <></>}
                     {renderSummary()}
                 </div>
                 <div className='attach-issue d-flex align-items-center'>
@@ -577,7 +709,11 @@ export default function IssueTag(props) {
                         data-toggle="dropdown"
                         aria-haspopup="true"
                         aria-expanded="false"
-                        onClick={() => {
+                        onClick={(e) => {
+                            console.log("e.target.tagName ", e.target.tagName);
+                            if (!["BUTTON", "I"].includes(e.target.tagName)) {
+                                e.stopPropagation()
+                            }
                             setDropDownLeft(!dropDownLeft)
                         }}>
                         <i className="fa fa-bars"></i>
@@ -590,21 +726,81 @@ export default function IssueTag(props) {
                             </div>
                             <ul className="dropdown-menu dropdown-submenu" style={{ left: 'unset', right: '100%', width: 'max-content' }}>
                                 {sprintList?.filter(sprint => sprint._id !== type).map(sprint => {
-                                    return <li style={{ padding: '5px 15px' }}>{sprint.sprint_name}</li>
+                                    return <li onClick={(e) => {
+                                        e.stopPropagation()
+                                        console.log("gia tri issue ", issue);
+                                        var getSprintName = ""
+                                        const getSprintNameIndex = sprintList?.findIndex(currentSprint => currentSprint._id.toString() === issue.current_sprint)
+                                        if (getSprintNameIndex !== -1) {
+                                            getSprintName = sprintList[getSprintNameIndex].sprint_name
+                                        }
+                                        dispatch(updateInfoIssue(issue._id, id, { current_sprint: sprint._id }, issue.current_sprint !== null ? getSprintName : "Backlog", sprint.sprint_name, userInfo.id, "updated", "sprint", projectInfo, userInfo))
+                                        if (issue.current_sprint !== null) {
+                                            dispatch(updateSprintAction(issue.current_sprint, { issue_id: issue._id, inserted_index: 0 }))  //delete issue in old sprint
+                                        } else {
+                                            dispatch(updateIssueFromBacklog(id, { issue_id: issue._id, inserted_index: -1 }))   //delete issue from backlog
+                                        }
+                                        dispatch(updateSprintAction(sprint._id, { issue_id: issue._id, inserted_index: 0 }))  //add issue in new sprint
+                                    }} className='dropdown-items-setting' style={{ padding: '5px 15px' }}>{sprint.sprint_name}</li>
                                 })}
-                                {type !== "0" ? <li style={{ padding: '5px 15px' }}>Backlog</li> : <></>}
-                                <hr style={{ margin: '2px 0' }} />
-                                <li style={{ padding: '5px 15px' }}>Top of Backlog</li>
-                                <li style={{ padding: '5px 15px' }}>Move up</li>
-                                <li style={{ padding: '5px 15px' }}>Move down</li>
-                                <li style={{ padding: '5px 15px' }}>Bottom of Backlog</li>
+                                {type !== "0" ? <li onClick={(e) => {
+                                    e.stopPropagation()
+                                    var getSprintName = ""
+                                    const getSprintNameIndex = sprintList?.findIndex(currentSprint => currentSprint._id.toString() === issue.current_sprint)
+                                    if (getSprintNameIndex !== -1) {
+                                        getSprintName = sprintList[getSprintNameIndex].sprint_name
+                                        dispatch(updateInfoIssue(issue._id, id, { current_sprint: null }, getSprintName, "Backlog", userInfo.id, "updated", "sprint", projectInfo, userInfo))
+                                        dispatch(updateSprintAction(issue.current_sprint, { issue_id: issue._id, inserted_index: 0 }))  //delete issue in old sprint
+                                        dispatch(updateIssueFromBacklog(id, { issue_id: issue._id }))   //add issue to backlog
+                                    }
+                                }} className='dropdown-items-setting' style={{ padding: '5px 15px' }}>Backlog</li> : <></>}
+                                { 
+                                    (issue.current_sprint === null && sprintList?.length > 0) || (issue.current_sprint !== null) ? <hr style={{ margin: '2px 0' }} /> : <></>
+                                }
+                                <li onClick={(e) => {
+                                    e.stopPropagation()
+                                    //if this is an issue in the sprint
+                                    if (issue.current_sprint !== null) {
+                                        const getSprintNameIndex = sprintList?.findIndex(currentSprint => currentSprint._id.toString() === issue.current_sprint)
+                                        if (getSprintNameIndex !== -1) {
+                                            dispatch(updateSprintAction(issue.current_sprint, { issue_id: issue._id, inserted_index: 0 }))  //delete issue in old sprint
+                                            dispatch(updateInfoIssue(issue._id, id, { current_sprint: null }, sprintList[getSprintNameIndex].sprint_name, "Backlog", userInfo.id, "updated", "sprint", projectInfo, userInfo))
+                                            dispatch(updateIssueFromBacklog(id, { issue_id: issue._id, inserted_index: 0 }))   //add issue to backlog
+                                        }
+                                    } else { //inbacklog
+                                        dispatch(updateIssueFromBacklog(id, { issue_id: issue._id, inserted_index: 0 }))   //add issue to backlog
+                                    }
+                                }} className='dropdown-items-setting' style={{ padding: '5px 15px' }}>Top of Backlog</li>
+
+                                {displayMoveUpBtn()}
+
+                                {displayMoveDownBtn()}
+                                
+                                <li onClick={(e) => {
+                                    e.stopPropagation()
+                                    //if this is an issue in the sprint
+                                    if (issue.current_sprint !== null) {
+                                        const getSprintNameIndex = sprintList?.findIndex(currentSprint => currentSprint._id.toString() === issue.current_sprint)
+                                        if (getSprintNameIndex !== -1) {
+                                            dispatch(updateSprintAction(issue.current_sprint, { issue_id: issue._id, inserted_index: 0 }))  //delete issue in old sprint
+                                            dispatch(updateInfoIssue(issue._id, id, { current_sprint: null }, sprintList[getSprintNameIndex].sprint_name, "Backlog", userInfo.id, "updated", "sprint", projectInfo, userInfo))
+                                            dispatch(updateIssueFromBacklog(id, { issue_id: issue._id, inserted_index: issuesBacklog?.length }))   //add issue to backlog
+                                        }
+                                    } else { //inbacklog
+                                        dispatch(updateIssueFromBacklog(id, { issue_id: issue._id, inserted_index: issuesBacklog?.length }))   //change the position of issue to the last list
+                                    }
+                                }} className='dropdown-items-setting' style={{ padding: '5px 15px' }}>Bottom of Backlog</li>
                             </ul>
                         </li>
-                        <li className='dropdown-items-setting' style={{ padding: '5px 15px' }}>Copy issue link</li>
+
+                        <li onClick={(e) => {
+                            e.stopPropagation()
+                            CopyLinkButton(`${domainName}/projectDetail/${id}/issues/issue-detail/${issue._id}`)
+                        }} className='dropdown-items-setting' style={{ padding: '5px 15px' }}>Copy issue link</li>
                         <li className='dropdown-items-setting' style={{ padding: '5px 15px' }}>Delete</li>
                     </ul>
                 </div>
             </div>
-        </div>
+        </div> : <></>
     )
 }

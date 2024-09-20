@@ -1,13 +1,14 @@
-import { GET_INFO_ISSUE, GET_ISSUE_HISTORIES_LIST, GET_ISSUE_LIST, GET_ISSUES_BACKLOG, GET_WORKLOG_HISTORIES_LIST } from "../constants/constant"
+import { GET_INFO_ISSUE, GET_ISSUE_HISTORIES_LIST, GET_ISSUE_LIST, GET_ISSUES_BACKLOG, GET_ISSUES_IN_PROJECT, GET_WORKLOG_HISTORIES_LIST } from "../constants/constant"
 
 /* eslint-disable import/no-anonymous-default-export */
 const initialState = {
     //duoc su dung de hien thi modal cua issue
     issueInfo: null,
-    issuesBacklog: [],
+    issuesInProject: [],
     historyList: [],
     worklogList: [],
-    issueList: []
+    issueList: [],
+    issuesBacklog: []
 }
 
 export default (state = initialState, action) => {
@@ -15,6 +16,9 @@ export default (state = initialState, action) => {
         state.issueInfo = action.issueInfo
     } else if (action.type === GET_ISSUES_BACKLOG) {
         state.issuesBacklog = action.issuesBacklog
+    }
+    else if (action.type === GET_ISSUES_IN_PROJECT) {
+        state.issuesInProject = action.issuesInProject
     }
     else if (action.type === GET_ISSUE_HISTORIES_LIST) {
         state.historyList = action.historyList

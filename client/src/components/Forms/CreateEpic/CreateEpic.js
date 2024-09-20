@@ -5,9 +5,10 @@ import { submit_edit_form_action } from '../../../redux/actions/DrawerAction';
 import { createEpic, updateEpic } from '../../../redux/actions/CategoryAction';
 import { withFormik } from 'formik';
 import { showNotificationWithIcon } from '../../../util/NotificationUtil';
-import { issueTypeOptions, iTagForIssueTypes } from '../../../util/CommonFeatures';
+import { issueTypeOptions } from '../../../util/CommonFeatures';
+import './CreateEpic.css'
 function CreateEpic(props) {
-    const { handleChange, handleSubmit, setFieldValue } = props
+    const { handleChange, handleSubmit } = props
     const dispatch = useDispatch()
     useEffect(() => {
         // //submit sự kiện để gửi lên form
@@ -19,17 +20,13 @@ function CreateEpic(props) {
         <form onSubmit={handleSubmit}>
             <div className='d-flex justify-content-between'>
                 <h4>Create Epic</h4>
-                <div>
-                    <button className='btn btn-primary mr-2'>Import issues</button>
-                    <burton className='btn btn-primary'>...</burton>
-                </div>
             </div>
             <div>
                 <div className='form-group'>
                     <label htmlFor='projectForm' className='p-0'>Project <span className='text-danger'>*</span></label>
                     <Select id="projectForm"
                         defaultValue={props.currentEpic.name_project}
-                        className='form-control p-0'
+                        className='form-control edit-create_epic-select p-0'
                         style={{
                             width: '100%',
                             border: 'none'
@@ -41,7 +38,7 @@ function CreateEpic(props) {
                     <label htmlFor='issueTypeForm' className='p-0'>Issue type <span className='text-danger'>*</span></label>
                     <Select id="issueTypeForm"
                         value={3}
-                        className='form-control p-0'
+                        className='form-control edit-create_epic-select p-0'
                         style={{
                             width: '100%',
                             border: 'none'
@@ -51,14 +48,14 @@ function CreateEpic(props) {
                     />
                 </div>
             </div>
-            <hr className='mt-5 mb-4' />
+            <hr className='mt-3 mb-2' />
             <div className='form-group'>
                 <label htmlFor='epic_name' className='p-0'>Epic name <span className='text-danger'>*</span></label>
                 <Input onChange={handleChange} id='epic_name' className='form-control' defaultValue={props.currentEpic.epic_name} />
                 <small className='mt-2 form-text text-muted'>Provide a short name to edentify this epic.</small>
             </div>
             <div className='form-group'>
-                <label htmlFor='summary' className='p-0'>Summary <span className='text-danger'>*</span></label>
+                <label htmlFor='summary' className='p-0'>Summary</label>
                 <Input onChange={handleChange} id='summary' className='form-control' defaultValue={props.currentEpic.summary} />
             </div>
             {/* <div className='form-group'>
@@ -82,7 +79,7 @@ const handleSubmitForm = withFormik({
         }
     },
     handleSubmit: (value, { props }) => {
-        if (value.epic_name !== undefined && value.undefined !== null && (value.epic_name.trim() === "" || value.summary.trim === "")) {
+        if (value.summary.trim() === "") {
             showNotificationWithIcon('error', 'Notification', 'Field (*) can\'t be left blank')
         } else {
             if (!value.currentEpic.id) {    //create new

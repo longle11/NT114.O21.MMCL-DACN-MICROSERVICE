@@ -90,3 +90,11 @@ build:
         manual:
           - dest: .
             src: 'src/**/*.js'
+    - image: longle2003/notification
+      context: notification
+      docker:
+        dockerfile: Dockerfile.dev
+      sync:
+        manual:
+          - dest: .
+            src: 'src/**/*.js'

@@ -15,7 +15,7 @@ export default (state = initialState, action) => {
             state.listProject = action.data
             return { ...state }
         case GET_PROJECT_API:
-            state.projectInfo = action.data
+            state.projectInfo = action.projectInfo
             return { ...state }
         case GET_PROCESSES_PROJECT:
             state.processList = action.processList

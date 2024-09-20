@@ -16,10 +16,13 @@ export default function FixVersion(props) {
     return (
         <div className='row d-flex align-items-center mt-2'>
             <span className='col-4' style={{ fontSize: 14, color: '#42526e', fontWeight: '500' }}>Fix Version</span>
-            {props.editAttributeTag === 'fix_version' ? <Select options={renderVersionList(versionList, id)} className='col-7' style={{ width: '100%', padding: 0 }}
+            {props.editAttributeTag === 'fix_version' ? <Select
+                options={renderVersionList(versionList, id)}
+                className='col-7 info-item-field'
+                style={{ width: '100%', padding: 0 }}
                 value={issueInfo?.fix_version?._id}
                 onSelect={(value, option) => {
-                    dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id?._id, { fix_version: value }, issueInfo?.fix_version ? issueInfo?.fix_version?.version_name : "None", option.label, userInfo.id, "updated", "fix version"))
+                    dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id?._id, { fix_version: value }, issueInfo?.fix_version ? issueInfo?.fix_version?.version_name : "None", option.label, userInfo.id, "updated", "fix version", projectInfo, userInfo))
                     //update new issue in versio
                     dispatch(updateVersion(value, { issue_id: issueInfo?._id.toString(), version_id: issueInfo?.fix_version === null ? null : issueInfo?.fix_version._id.toString() }, issueInfo?.project_id?._id.toString()))
                 }}
@@ -28,7 +31,7 @@ export default function FixVersion(props) {
                 }}
             /> :
                 <span onDoubleClick={() => {
-                    if(checkConstraintPermissions(projectInfo, issueInfo, userInfo, 6)) {
+                    if (checkConstraintPermissions(projectInfo, issueInfo, userInfo, 6)) {
                         props.handleEditAttributeTag('fix_version')
                     }
                 }} className='items-attribute col-7' style={{ padding: '10px 10px', width: '100%', color: '#7A869A' }}>{issueInfo?.fix_version ? issueInfo?.fix_version?.version_name : "None"}</span>}

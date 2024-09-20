@@ -13,10 +13,15 @@ export default function StoryPoint(props) {
     return (
         <div className='row d-flex align-items-center mt-2'>
             <span className='col-4' style={{ fontSize: 14, color: '#42526e', fontWeight: '500' }}>Story point</span>
-            {props.editAttributeTag === 'story_point' ? <InputNumber className='col-7' min={0} max={1000} defaultValue={issueInfo?.story_point} value={issueInfo?.story_point} onBlur={(e) => {
+            {props.editAttributeTag === 'story_point' ? <InputNumber 
+            className='col-7 info-item-field' min={0} 
+            max={1000} 
+            defaultValue={issueInfo?.story_point} 
+            value={issueInfo?.story_point}
+            onBlur={(e) => {
                 props.handleEditAttributeTag('')
                 if (e.target.value > 0 && e.target.value <= 1000) {
-                    dispatch(updateInfoIssue(issueInfo?._id.toString(), issueInfo?.project_id?._id?.toString(), { story_point: e.target.value }, issueInfo?.story_point === null ? "None" : issueInfo?.story_point?.toString(), e.target.value, userInfo.id, "updated", "story point"))
+                    dispatch(updateInfoIssue(issueInfo?._id.toString(), issueInfo?.project_id?._id?.toString(), { story_point: e.target.value }, issueInfo?.story_point === null ? "None" : issueInfo?.story_point?.toString(), e.target.value, userInfo.id, "updated", "story point", projectInfo, userInfo))
                 } else {
                     showNotificationWithIcon('error', '', 'Story point\'s value must greater than 0')
                 }

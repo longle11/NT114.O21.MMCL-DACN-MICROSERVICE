@@ -25,7 +25,7 @@ export default function ReleaseVersionModal(props) {
         }, [endDate, value, selectVersion])
     const handleClickOK = async () => {
         if (endDate && dayjs(endDate).isAfter(versionInfo.start_date)) {
-            dispatch(updateVersion(versionInfo._id, { end_date: dayjs(endDate).format("DD/MM/YYYY"), version_status: 1 }, versionInfo.project_id))
+            dispatch(updateVersion(versionInfo._id, { end_date: dayjs(endDate), version_status: 1 }, versionInfo.project_id))
             if (value && issuesUncompleted.length !== 0) {
                 var newVersionName = ""
                 if (value === 1) {  //means move unresolved issues to other versions
@@ -65,7 +65,7 @@ export default function ReleaseVersionModal(props) {
                     <label htmlFor='release_date'>Release Date</label>
                     <DatePicker style={{ width: '50%' }} name="release_date" onChange={(date, dateString) => {
                         setEndDate(dayjs(dateString, dayjs(dateString)))
-                    }} defaultValue={dayjs(endDate, "DD/MM/YYYY")} value={dayjs(endDate, "DD/MM/YYYY")} />
+                    }} defaultValue={dayjs(endDate)} value={dayjs(endDate)} />
                 </div>
             </div> : <div>
                 <p>This release contains {issuesUncompleted?.length === 1 ? <NavLink>1 unresolved issue</NavLink> : <NavLink>{issuesUncompleted?.length} unresolved issues</NavLink>}.</p>

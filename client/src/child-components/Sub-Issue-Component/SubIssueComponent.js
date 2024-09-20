@@ -11,6 +11,7 @@ export default function SubIssueComponent(props) {
     const processList = props.processList
     const userInfo = props.userInfo
     const issuesBacklog = props.issuesBacklog
+    const projectInfo = props.projectInfo
     const id = props.id
     const showAddSubIssue = props.showAddSubIssue
     const subIssueSummary = props.subIssueSummary
@@ -90,7 +91,7 @@ export default function SubIssueComponent(props) {
                                     }} />
                                     <div className='d-flex' style={{ position: 'absolute', right: 0 }}>
                                         <Button onClick={() => {
-                                            dispatch(updateInfoIssue(subIssue._id, subIssue?.project_id, { summary: editSubIssueSummary }, null, null, userInfo.id, "updated", "summary"))
+                                            dispatch(updateInfoIssue(subIssue._id, subIssue?.project_id, { summary: editSubIssueSummary }, null, null, userInfo.id, "updated", "summary", projectInfo, userInfo))
                                             setEditSubIssueSummary('')
                                             setOpenSetEditSubIssueSummary('')
                                         }} className='mr-1 d-flex justify-content-center align-items-center' type="primary" style={{ width: 20, height: 30, zIndex: 9999999 }}><i style={{ fontSize: 13 }} className="fa fa-check"></i></Button>
@@ -116,7 +117,7 @@ export default function SubIssueComponent(props) {
                                         }} />
                                         <div className='d-flex' style={{ position: 'absolute', right: 0 }}>
                                             <Button onClick={() => {
-                                                dispatch(updateInfoIssue(subIssue._id, subIssue?.project_id, { issue_priority: editSubIssueIssuePriority }, subIssue.issue_status.toString(), editSubIssueIssuePriority.toString(), userInfo.id, "updated", "priority"))
+                                                dispatch(updateInfoIssue(subIssue._id, subIssue?.project_id, { issue_priority: editSubIssueIssuePriority }, subIssue.issue_status.toString(), editSubIssueIssuePriority.toString(), userInfo.id, "updated", "priority", projectInfo, userInfo))
                                                 setEditSubIssueIssuePriority(2)
                                                 setOpenSetEditSubIssuePriority('')
                                             }} className='mr-1 d-flex justify-content-center align-items-center' type="primary" style={{ width: 20, height: 30, zIndex: 9999999 }}><i style={{ fontSize: 13 }} className="fa fa-check"></i></Button>
@@ -182,7 +183,7 @@ export default function SubIssueComponent(props) {
                                         <div className='d-flex' style={{ position: 'absolute', right: 0 }}>
                                             <Button onClick={() => {
                                                 const index = renderIssueType(processList, id).findIndex(process => process.value === editSubIssueIssueIssueType)
-                                                dispatch(updateInfoIssue(subIssue._id, subIssue?.project_id, { issue_type: editSubIssueIssueIssueType }, subIssue.issue_type.name_process, renderIssueType(processList, id)[index].label, userInfo.id, "updated", "type"))
+                                                dispatch(updateInfoIssue(subIssue._id, subIssue?.project_id, { issue_type: editSubIssueIssueIssueType }, subIssue.issue_type.name_process, renderIssueType(processList, id)[index].label, userInfo.id, "updated", "type", projectInfo, userInfo))
                                                 setEditSubIssueIssueAssignees([])
                                                 setOpenSetEditSubIssueIssueType('')
                                             }} className='mr-1 d-flex justify-content-center align-items-center' type="primary" style={{ width: 20, height: 30, zIndex: 9999999 }}><i style={{ fontSize: 13 }} className="fa fa-check"></i></Button>

@@ -37,6 +37,9 @@ const issueSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'issues'
     },
+    current_sprint: {
+        type: mongoose.Schema.Types.ObjectId
+    },
     assignees: [
         {
             type: mongoose.Schema.Types.ObjectId,
@@ -73,11 +76,6 @@ issueSchema.virtual('issuesRefSubIssueList', {
     ref: 'issues',
     foreignField: '_id',
     localField: 'sub_issue_list'
-})
-issueSchema.virtual('issuesRefParent', {
-    ref: 'issues',
-    foreignField: '_id',
-    localField: 'parent'
 })
 
 const issueModel = mongoose.model('issues', issueSchema)

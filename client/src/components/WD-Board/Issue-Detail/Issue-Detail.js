@@ -16,6 +16,7 @@ export default function IssueDetail() {
     const processList = useSelector(state => state.listProject.processList)
     const [issueInfo, setIssueInfo] = useState({})
     const issuesBacklog = useSelector(state => state.issue.issuesBacklog)
+    const userInfo = useSelector(state => state.user.userInfo)
     const { id, issueId } = useParams()
 
     const navigate = useNavigate()
@@ -184,7 +185,7 @@ export default function IssueDetail() {
                 <div className='row'>
                     <div className='issue-info-left col-2' style={{ border: '1px solid #dddd', padding: 0, borderRadius: '5px', height: 'fit-content', backgroundColor: '#091e420f' }}>
                         <div className='d-flex justify-content-between'>
-                            <button className='btn btn-transparent'>Created <i className="fa-solid fa-caret-down ml-2"></i></button>
+                            <button className='btn btn-transparent' style={{fontSize: 14, fontWeight: 'bold'}}>Created <i className="fa-solid fa-caret-down ml-2"></i></button>
                             <div>
                                 <button className='btn btn-transparent' style={{ fontSize: 13 }}><i className="fa-solid fa-sort"></i></button>
                                 <button className='btn btn-transparent' onClick={() => {
@@ -199,7 +200,7 @@ export default function IssueDetail() {
                     </div>
                     {/* col 10 row */}
                     {(issueInfo !== null || issueInfo !== undefined) && Object.keys(issueInfo).length === 0 ? <div className='col-10'>No issues</div> : <div className='col-10'>
-                        <InfoModal issueIdForIssueDetail={issueId} issueInfo={issueInfo} displayNumberCharacterInSummarySubIssue={25} />
+                        <InfoModal userInfo={userInfo} issueIdForIssueDetail={issueId} issueInfo={issueInfo} displayNumberCharacterInSummarySubIssue={25} />
                     </div>}
                 </div>
             </div>

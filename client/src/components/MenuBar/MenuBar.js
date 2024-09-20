@@ -83,6 +83,9 @@ export default function MenuBar() {
         else if (key === 'sub32') {
             return navigate(`${absolutePath}/settings/issue-permissions`)
         }
+        else if (key === 'sub33') {
+            return navigate(`${absolutePath}/settings/notifications`)
+        }
     }
     const items = [
         getItem('PLANNING', '1', <i className="fa fa-tasks" aria-hidden="true"></i>, [
@@ -106,7 +109,8 @@ export default function MenuBar() {
         ]),
         getItem('Settings', '3', <SettingOutlined />, [
             getItem('Add user', 'sub31'),
-            getItem('Issue permissions', 'sub32')
+            getItem('Issue permissions', 'sub32'),
+            getItem('Notifications', 'sub33'),
         ]),
     ];
     return (
@@ -129,7 +133,6 @@ export default function MenuBar() {
                     handleOnClickItem(e)
                 }} mode="inline" items={items} />
             </Sider>
-
         </div>
     )
 }

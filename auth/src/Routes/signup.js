@@ -3,11 +3,11 @@ const userModel = require("../models/users")
 const BadRequestError = require("../Errors/Bad-Request-Error")
 const router = express.Router()
 const bcrypt = require("bcrypt")
-const authPublisher = require("../nats/auth-published")
 const sendEmail = require("../Utils/email")
 const UnauthorizedError = require("../Errors/UnAuthorized-Error")
 const crypto = require('crypto')
 const { log } = require("console")
+const authPublisher = require("../nats/publisher/auth-published")
 // router.post("/signup", async (req, res, next) => {
 //     try {
 //         const { username, email, password } = req.body

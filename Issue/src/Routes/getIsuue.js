@@ -2,6 +2,7 @@ const express = require("express")
 const currentUserMiddleware = require("../Middlewares/currentUser-Middleware")
 const issueModel = require('../models/issueModel')
 const BadRequestError = require("../Errors/Bad-Request-Error")
+const issueBacklogModel = require("../models/issueBacklogModel")
 const router = express.Router()
 
 router.get("/:issueId", currentUserMiddleware, async (req, res, next) => {
@@ -118,7 +119,7 @@ router.get("/issues/all", async (req, res) => {
     }
 })
 
-router.post("/backlog/:projectId", async (req, res) => {
+router.post("/all-issues/:projectId", async (req, res) => {
     try {
         const { projectId } = req.params
         var isSearchEpics = false
@@ -158,7 +159,6 @@ router.post("/backlog/:projectId", async (req, res) => {
                 { assignees: { $in: req.body.user_id } }
             ]
         }
-        console.log("searchEpicsOrVersions ", searchEpicsOrVersions);
 
         const search = {
             $and: [
@@ -231,13 +231,13 @@ router.post("/backlog/:projectId", async (req, res) => {
 
         if (getAllIssuesInProject.length !== 0) {
             return res.status(200).json({
-                message: "successfully get all issues belonging to backlog",
+                message: "successfully get all issues belonging to project",
                 data: getAllIssuesInProject
             })
         } else {
             return res.status(200).json({
-                message: "No issues in backlog",
-                data: getAllIssuesInProject
+                message: "No issues found",
+                data: []
             })
         }
     } catch (error) {
@@ -245,5 +245,46 @@ router.post("/backlog/:projectId", async (req, res) => {
     }
 })
 
+
+
+router.get("/backlog/:projectId", async (req, res) => {
+    try {
+        const { projectId } = req.params
+        const getAllIssuesInProject = await issueBacklogModel.find({ project_id: projectId })
+            .populate({
+                path: 'issue_list',
+                populate: [
+                    {
+                        path: "creator",
+                    },
+                    {
+                        path: "epic_link",
+                    },
+                    {
+                        path: "assignees",
+                    },
+                    {
+                        path: "fix_version",
+                    },
+                    {
+                        path: "issue_type",
+                    }
+                ]
+            })
+        if (getAllIssuesInProject.length !== 0) {
+            return res.status(200).json({
+                message: "successfully get all issues belonging to backlog",
+                data: getAllIssuesInProject[0].issue_list
+            })
+        } else {
+            return res.status(200).json({
+                message: "No issues in backlog",
+                data: []
+            })
+        }
+    } catch (error) {
+        console.log(error)
+    }
+})
 
 module.exports = router;

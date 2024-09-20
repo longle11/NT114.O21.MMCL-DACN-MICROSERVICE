@@ -45,21 +45,39 @@ const userSchema = new mongoose.Schema({
     },
     assigned_issues: [
         {
-            issue_id: mongoose.Schema.Types.ObjectId,
-            createAt: Date
+            issue_id: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'issues'
+            },
+            createAt: {
+                type: Date,
+                default: null
+            }
         }
     ],
     working_issues: [
         {
-            issue_id: mongoose.Schema.Types.ObjectId,
-            createAt: Date,
+            issue_id: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'issues'
+            },
+            createAt: {
+                type: Date,
+                default: null
+            },
             action: String
         }
     ],
     viewed_issues: [
         {
-            issue_id: mongoose.Schema.Types.ObjectId,
-            createAt: Date
+            issue_id: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'issues'
+            },
+            createAt: {
+                type: Date,
+                default: null
+            }
         }
     ]
 })

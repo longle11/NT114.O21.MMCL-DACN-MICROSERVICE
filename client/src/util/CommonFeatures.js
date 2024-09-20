@@ -58,11 +58,11 @@ export const priorityTypeOptions = [
 ]
 
 export const priorityTypeWithouOptions = [
-    { label: <span className="align-items-center d-flex">{iTagForPriorities(0, null, 20)}</span>, value: 0 },
-    { label: <span className="align-items-center d-flex">{iTagForPriorities(1, null, 20)}</span>, value: 1 },
-    { label: <span className="align-items-center d-flex">{iTagForPriorities(2, null, 20)}</span>, value: 2 },
-    { label: <span className="align-items-center d-flex">{iTagForPriorities(3, null, 20)}</span>, value: 3 },
-    { label: <span className="align-items-center d-flex">{iTagForPriorities(4, null, 20)}</span>, value: 4 }
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(0, "m-0", 20)}</span>, value: 0 },
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(1, "m-0", 20)}</span>, value: 1 },
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(2, "m-0", 20)}</span>, value: 2 },
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(3, "m-0", 20)}</span>, value: 3 },
+    { label: <span className="align-items-center d-flex">{iTagForPriorities(4, "m-0", 20)}</span>, value: 4 }
 ]
 
 export const issueTypeOptions = [

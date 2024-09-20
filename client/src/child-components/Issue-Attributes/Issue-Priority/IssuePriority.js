@@ -17,7 +17,7 @@ export default function IssuePriority(props) {
                 onBlur={() => {
                     props.handleEditAttributeTag('')
                 }}
-                className='col-7'
+                className='col-7 info-item-field'
                 style={{ width: '100%', padding: 0 }}
                 placeholder={priorityTypeOptions[issueInfo?.issue_priority]?.label}
                 defaultValue={priorityTypeOptions[issueInfo?.issue_priority]?.value}
@@ -26,7 +26,7 @@ export default function IssuePriority(props) {
                 onSelect={(value, option) => {
                     const old_value = `${issueInfo.issue_priority}`
                     const new_value = `${value}`
-                    dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id?._id, { issue_priority: value }, old_value, new_value, userInfo.id, "updated", "priority"))
+                    dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id?._id, { issue_priority: value }, old_value, new_value, userInfo.id, "updated", "priority", projectInfo, userInfo))
                 }}
                 name="priority"
             /> :

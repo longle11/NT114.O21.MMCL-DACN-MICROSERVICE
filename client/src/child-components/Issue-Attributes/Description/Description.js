@@ -5,6 +5,7 @@ import Parser from 'html-react-parser';
 import { Editor } from '@tinymce/tinymce-react';
 import { Button } from 'antd';
 import { checkConstraintPermissions } from '../../../util/CheckConstraintFields';
+import { NavLink } from 'react-router-dom';
 
 export default function Description(props) {
     const userInfo = props.userInfo
@@ -24,12 +25,12 @@ export default function Description(props) {
                 return <p className='text-danger'>You don't have permissions enough to see description</p>
             }
         }
-        return <p style={{ color: 'blue' }}>There is no description yet. Add Your Description</p>
+        return <NavLink style={{ color: 'blue' }}>There is no description yet. Add Your Description</NavLink>
     }
     return (
         <div className="description">
             <p style={{ fontWeight: 'bold', fontSize: '15px' }}>Description</p>
-            {editDescription ? (<p onKeyDown={() => { }} onDoubleClick={() => {
+            {editDescription ? (<p onKeyDown={() => { }} onClick={() => {
                 if (checkConstraintPermissions(projectInfo, issueInfo, userInfo, 1)) {
                     setEditDescription(false)
                 }

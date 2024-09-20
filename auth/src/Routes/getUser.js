@@ -6,6 +6,7 @@ const router = express.Router()
 
 router.get("/findUser", async (req, res) => {
     const getUserInfo = await userModel.find({ email: req.query.keyword })
+    
     if (getUserInfo.length !== 0) {
         return res.status(200).json({
             message: "Get successfully the user",

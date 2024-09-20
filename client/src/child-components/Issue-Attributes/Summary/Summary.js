@@ -12,19 +12,22 @@ export default function Summary(props) {
     const dispatch = useDispatch()
     const [editAttributeTag, setEditAttributeTag] = useState("")
     const [summary, setSummary] = useState('')
-    useEffect(() => {}, [summary]) 
+    useEffect(() => { }, [summary])
     return (
         <div>
-            {editAttributeTag === 'summary' ? <Input onChange={(e) => {
-                setSummary(e.target.value)
-            }}
-                className="issue_summary"
+            {editAttributeTag === 'summary' ? <Input
+                onChange={(e) => {
+                    setSummary(e.target.value)
+                }}
+                className="issue_summary mt-2"
                 onKeyDown={(e) => {
                     if (e.key.toLowerCase() === 'enter') {
                         if (summary.trim() === "") {
                             showNotificationWithIcon('error', '', "Summary can't be left blank")
                         } else {
-                            dispatch(updateInfoIssue(issueInfo?._id, issueInfo.project_id, { summary: summary }, null, null, userInfo.id, "updated", "summary"))
+                            if (summary.trim() !== issueInfo.summary.trim()) {
+                                dispatch(updateInfoIssue(issueInfo?._id, issueInfo.project_id._id, { summary: summary }, null, null, userInfo.id, "updated", "summary"))
+                            }
                             setEditAttributeTag('')
                         }
                     }
@@ -33,7 +36,9 @@ export default function Summary(props) {
                     if (summary.trim() === "") {
                         showNotificationWithIcon('error', '', "Summary can't be left blank")
                     } else {
-                        dispatch(updateInfoIssue(issueInfo?._id, issueInfo.project_id, { summary: summary }, null, null, userInfo.id, "updated", "summary"))
+                        if (summary.trim() !== issueInfo.summary.trim()) {
+                            dispatch(updateInfoIssue(issueInfo?._id, issueInfo.project_id._id, { summary: summary }, null, null, userInfo.id, "updated", "summary"))
+                        }
                         setEditAttributeTag('')
                     }
                 }}
@@ -43,7 +48,7 @@ export default function Summary(props) {
                         setEditAttributeTag('summary')
                         setSummary(issueInfo?.summary)
                     }
-                }} className='items-attribute m-0' style={{ padding: '10px 20px 10px 5px', width: '100%', display: 'block', fontSize: '24px', fontWeight: 'bold' }}>{issueInfo?.summary}</span>}
+                }} className='items-attribute m-0 mt-2' style={{ width: '100%', display: 'block', fontSize: '24px', fontWeight: 'bold' }}>{issueInfo?.summary}</span>}
         </div>
     )
 }

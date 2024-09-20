@@ -5,16 +5,25 @@ import { connect, useDispatch } from 'react-redux';
 import { submit_edit_form_action } from '../../../redux/actions/DrawerAction';
 import dayjs from 'dayjs';
 import { createVersion, updateVersion } from '../../../redux/actions/CategoryAction';
+import { showNotificationWithIcon } from '../../../util/NotificationUtil';
 function CreateVersion(props) {
 
     const dispatch = useDispatch()
     useEffect(() => {
         // //submit sự kiện để gửi lên form
         dispatch(submit_edit_form_action(handleSubmit))
+        if (props.currentVersion?.start_date === null) {
+            setFieldValue('start_date', dayjs().toISOString())
+        }
+        if (props.currentVersion?.end_date === null) {
+            setFieldValue('end_date', dayjs().toISOString())
+        }
         // eslint-disable-next-line
     }, [])
-    const [startDate, setStartDate] = useState(props.currentVersion?.start_date)
-    const [endDate, setEndDate] = useState(props.currentVersion?.end_date)
+
+    const [startDate, setStartDate] = useState(props.currentVersion?.start_date ? dayjs(props.currentVersion?.start_date) : dayjs())
+    const [endDate, setEndDate] = useState(props.currentVersion?.end_date ? dayjs(props.currentVersion?.end_date) : dayjs())
+
     const {
         handleChange,
         handleSubmit,
@@ -30,22 +39,22 @@ function CreateVersion(props) {
             <div className='d-flex'>
                 <div className='startdate-release'>
                     <p className='m-0'>Start date</p>
-                    <DatePicker defaultValue={dayjs(startDate ? startDate : dayjs(new Date()), "DD/MM/YYYY")} name='start_date'
-                        value={dayjs(startDate)}
+                    <DatePicker defaultValue={endDate} name='start_date'
+                        value={startDate}
                         allowClear={false}
                         onChange={(date, dateString) => {
                             setFieldValue('start_date', dateString)
-                            setStartDate(dateString)
+                            setStartDate(dayjs(dateString))
                         }} />
                 </div>
                 <div className='enddate-release ml-4'>
                     <p className='m-0'>Release date</p>
-                    <DatePicker defaultValue={dayjs(endDate ? endDate : dayjs(new Date()), "DD/MM/YYYY")}
-                        value={dayjs(endDate)}
+                    <DatePicker defaultValue={endDate}
+                        value={endDate}
                         allowClear={false}
                         onChange={(date, dateString) => {
                             setFieldValue('end_date', dateString)
-                            setEndDate(dateString)
+                            setEndDate(dayjs(dateString))
                         }} />
                 </div>
             </div>
@@ -71,23 +80,29 @@ const handleSubmitForm = withFormik({
         }
     },
     handleSubmit: (values, { props }) => {
-        console.log("value tra ve ", values);
-        
         if (props.currentVersion.id === null) {
-            props.dispatch(createVersion({
-                project_id: values.project_id,
-                version_name: values.version_name,
-                description: values.description,
-                start_date: values.start_date,
-                end_date: values.end_date
-            }))
+            if (values.version_name.trim() !== "") {
+                props.dispatch(createVersion({
+                    project_id: values.project_id,
+                    version_name: values.version_name,
+                    description: values.description,
+                    start_date: values.start_date,
+                    end_date: values.end_date
+                }))
+            } else {
+                showNotificationWithIcon('error', "", "Field * can not be left blank")
+            }
         } else {
-            props.dispatch(updateVersion(props.currentVersion.version_id, {
-                version_name: values.version_name,
-                description: values.description,
-                start_date: values.start_date,
-                end_date: values.end_date
-            }, props.currentVersion.project_id))
+            if (values.version_name.trim() !== "") {
+                props.dispatch(updateVersion(props.currentVersion.version_id, {
+                    version_name: values.version_name,
+                    description: values.description,
+                    start_date: values.start_date,
+                    end_date: values.end_date
+                }, props.currentVersion.project_id))
+            } else {
+                showNotificationWithIcon('error', "", "Field * can not be left blank")
+            }
         }
     }
 })(CreateVersion)

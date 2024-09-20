@@ -75,6 +75,13 @@ spec:
               name: file-srv
               port: 
                 number: 4008     
+        - path: /api/notification/
+          pathType: Prefix
+          backend:
+            service:
+              name: notification-srv
+              port: 
+                number: 4009
         - path: /
           pathType: Prefix
           backend:

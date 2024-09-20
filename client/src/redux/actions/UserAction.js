@@ -3,7 +3,6 @@ import { DISPLAY_LOADING, GET_USER_BY_KEYWORD_API, HIDE_LOADING, SHOW_MODAL_INPU
 import { ListProjectAction } from "./ListProjectAction"
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
 import domainName from '../../util/Config'
-import { renderIssueInfoMenuDashboard } from "../../util/SubFunctionsInRedux"
 export const getUserKeyword = (keyword) => {
     return async dispatch => {
         try {
@@ -35,14 +34,12 @@ export const updateUserInfo = (user_id, props) => {
         try {
             //tien hanh cap nhat thong tin cho user
             const getUserUpdated = await Axios.post(`${domainName}/api/users/update/${user_id}`, props)
-            
-            dispatch({
-                type: USER_LOGGED_IN,
-                userInfo: getUserUpdated.data.data
-            })
+            if(getUserUpdated.status === 200) {
+                dispatch(userLoggedInAction())
+            }
         } catch (error) {
             console.log("error getUserUpdated updateUserInfo", error);
-            
+
         }
     }
 }
@@ -142,20 +139,10 @@ export const userLoginAction = (email, password) => {
 
             if (loggedIn) {
                 const res = await Axios.get(`${domainName}/api/users/currentuser`)
-
-                if (res.data.currentUser) {
-                    const getAllIssues = await Axios.get(`${domainName}/api/issue/issues/all`)
-                    if (getAllIssues.status === 200) {                        
-                        res.data.currentUser.working_issues = renderIssueInfoMenuDashboard(getAllIssues, res.data.currentUser.working_issues)
-                        res.data.currentUser.viewed_issues = renderIssueInfoMenuDashboard(getAllIssues, res.data.currentUser.viewed_issues)
-                        res.data.currentUser.assigned_issues = renderIssueInfoMenuDashboard(getAllIssues, res.data.currentUser.assigned_issues)
-
-                        dispatch({
-                            type: USER_LOGGED_IN,
-                            userInfo: res.data.currentUser
-                        })
-                    }
-                }
+                dispatch({
+                    type: USER_LOGGED_IN,
+                    userInfo: res.data.currentUser
+                })
             }
         } catch (error) {
             if (error.response.status === 401) {
@@ -184,26 +171,19 @@ export const userLoggedInAction = () => {
                     userInfo: null
                 })
             } else {
-                const getAllIssues = await Axios.get(`${domainName}/api/issue/issues/all`)
-                if (getAllIssues.status === 200) {
-
-                    res.data.currentUser.working_issues = renderIssueInfoMenuDashboard(getAllIssues, res.data.currentUser.working_issues)
-                    res.data.currentUser.viewed_issues = renderIssueInfoMenuDashboard(getAllIssues, res.data.currentUser.viewed_issues)
-                    res.data.currentUser.assigned_issues = renderIssueInfoMenuDashboard(getAllIssues, res.data.currentUser.assigned_issues)
-
-                    dispatch({
-                        type: USER_LOGGED_IN,
-                        userInfo: res.data.currentUser
-                    })
-                }
+                console.log("gia tri current user ma thong tin thu thap duoc ", res.data.currentUser);
+                
+                dispatch({
+                    type: USER_LOGGED_IN,
+                    userInfo: res.data.currentUser
+                })
             }
-
-            dispatch({
-                type: HIDE_LOADING
-            })
         } catch (error) {
             console.log(error);
         }
+        dispatch({
+            type: HIDE_LOADING
+        })
     }
 }
 

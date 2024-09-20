@@ -80,7 +80,7 @@ export default function ReleaseDetail() {
                     <Button data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i className="fa fa-ellipsis-h"></i></Button>
                     <div className="dropdown-menu" style={{ width: 'max-content' }}>
                         <a href='##' onClick={() => {
-                            dispatch(updateInfoIssue(record._id, record.project_id._id, { fix_version: null }, versionInfo.name_version, "None", userInfo.id, "updated", "version"))
+                            dispatch(updateInfoIssue(record._id, record.project_id._id, { fix_version: null }, versionInfo.name_version, "None", userInfo.id, "updated", "version", projectInfo, userInfo))
                         }} style={{ padding: '10px', backgroundColor: '#ddd', color: '#000', textDecoration: 'none' }}>Remove from version</a>
                     </div>
                 </div>
@@ -141,8 +141,8 @@ export default function ReleaseDetail() {
                             <Tag color={versionInfo.tag_color}>{versionInfo.version_status === 0 ? <span className='text-muted font-weight-bold'>Unreleased</span> : <span className='text-muted font-weight-bold'>Released <i className="fa fa-check ml-2 text-success"></i></span>}</Tag>
                         </div>
                         <div className='d-flex'>
-                            <span className='mr-3'><i className="fa fa-calendar-alt mr-2"></i><span>Start: {versionInfo.start_date}</span></span>
-                            <span>Release: {versionInfo?.end_date}</span>
+                            <span className='mr-3'><i className="fa fa-calendar-alt mr-2"></i><span><span className='font-weight-bold'>Start:</span> {dayjs(versionInfo.start_date).format("DD/MM/YYYY hh:mm A")}</span></span>
+                            <span><span className='font-weight-bold'>Release:</span> {dayjs(versionInfo?.end_date).format("DD/MM/YYYY hh:mm A")}</span>
                         </div>
                     </div>
                     <div>
@@ -168,7 +168,7 @@ export default function ReleaseDetail() {
                     <p><span className='font-weight-bold'>Description:</span> {versionInfo?.description ? versionInfo.description : "No description added yet"}</p>
                 </div>
                 <div className='mb-4'>
-                    <span className='mb-2'>{calculateTaskRemainingTime(dayjs(versionInfo?.start_date, "DD/MM/YYYY"), dayjs(versionInfo?.end_date, "DD/MM/YYYY"))} remaining</span>
+                    <span className='mb-2'>{calculateTaskRemainingTime(dayjs(versionInfo?.start_date), dayjs(versionInfo?.end_date))} remaining</span>
                     <Progress
                         percent={calculatePercentageForProgress()}
                         percentPosition={{
@@ -261,7 +261,6 @@ export default function ReleaseDetail() {
                         })}
                     </div>
                 </div>
-
             </div>
         </div>
     )

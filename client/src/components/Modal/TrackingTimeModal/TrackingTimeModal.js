@@ -9,6 +9,7 @@ import { createWorklogHistory, updateInfoIssue } from '../../../redux/actions/Is
 export default function TrackingTimeModal(props) {
     const issueInfo = props.issueInfo
     const userInfo = props.userInfo
+    const projectInfo = props.projectInfo
     const [formData, setFormData] = useState({
         timeSpent: 0,
         dateWorking: '',
@@ -30,7 +31,7 @@ export default function TrackingTimeModal(props) {
             working_date: formData.dateWorking,
             description: formData.description,
             timeSpent: convertMinuteToFormat(formData.timeSpent)
-        }))
+        }, projectInfo, userInfo, issueInfo))
     }
     const compareTimeSpentWithTimeOriginal = (timeSpent) => {
         return issueInfo.timeOriginalEstimate >= calculateTimeAfterSplitted(timeSpent)

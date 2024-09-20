@@ -44,3 +44,8 @@ td.ant-table-cell.ant-table-row-expand-icon-cell {
 .ant-breadcrumb {
     background-color: #ffff !important;
 }
+
+.ant-table-cell:hover .items-hover {
+    display: block !important;
+    cursor: pointer;
+}

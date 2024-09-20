@@ -6,6 +6,7 @@ import { displayComponentInModalInfo, openModalInfo } from '../redux/actions/Mod
 export default function ModalInfoHOC() {
     const visibleModalInfo = useSelector(state => state.isOpenModal.visibleModalInfo)
     const componentModalInfo = useSelector(state => state.isOpenModal.componentModalInfo)
+    const setWidthInfo = useSelector(state => state.isOpenModal.setWidthInfo)
     const dispatch = useDispatch()
     const handleCancel = () => {
         dispatch(displayComponentInModalInfo(<div />))   //create default component for modal
@@ -26,7 +27,7 @@ export default function ModalInfoHOC() {
             destroyOnClose="true"
             open={visibleModalInfo}
             footer={null}
-            width={1024}
+            width={setWidthInfo}
             onCancel={handleCancel}
             centered
             // loading={loading}

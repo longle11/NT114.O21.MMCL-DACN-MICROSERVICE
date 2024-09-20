@@ -9,7 +9,7 @@ import { deleteItemCategory, getItemCategory } from '../../redux/actions/EditCat
 import { getUserKeyword, insertUserIntoProject, updateUserInfo } from '../../redux/actions/UserAction';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
-import { deleteUserInProject } from '../../redux/actions/CreateProjectAction';
+import { deleteUserInProject, updateProjectAction } from '../../redux/actions/CreateProjectAction';
 import Parser from 'html-react-parser'
 import Search from 'antd/es/input/Search';
 export default function ProjectManager() {
@@ -117,10 +117,9 @@ export default function ProjectManager() {
             key: 'marked',
             width: '3%',
             render: (text, record, index) => {
-                if (record?.creator?._id === userInfo?.id) {
-                    return <button className='btn btn-transparent'>{record?.marked === true ? <i className="fa-solid fa-star" style={{ color: '#ff8b00', fontSize: 15 }}></i> : <i className="fa-solid fa-star" style={{ fontSize: 15 }}></i>}</button>
-                }
-                return null
+                return <button onClick={(e) => {
+                    dispatch(updateProjectAction(record._id, { marked: !record.marked }, null, null))
+                }} className='btn btn-transparent'>{record?.marked === true ? <i className="fa-solid fa-star" style={{ color: '#ff8b00', fontSize: 15 }}></i> : <i className="fa-solid fa-star" style={{ fontSize: 15 }}></i>}</button>
             }
         },
         {
@@ -129,9 +128,9 @@ export default function ProjectManager() {
             key: 'name_project',
             width: 'max-content',
             render: (text, record, index) => {
-                if (record?.creator?._id === userInfo?.id || record.members.findIndex(user => user.user_info._id === userInfo?.id) !== -1) {
+                if (record?.creator?._id === userInfo?.id || record.members.findIndex(user => user.user_info._id === userInfo?.id && user.status === "approved") !== -1) {
                     return <NavLink to={`/projectDetail/${record._id}/board`} onClick={() => {
-                        dispatch(GetProjectAction(record._id, ""))
+                        dispatch(GetProjectAction(record._id, null, null))
                         dispatch(updateUserInfo(userInfo?.id, { project_working: record._id }))
                     }} style={{ textDecoration: 'none' }}>
                         <span>{record.name_project}</span>
@@ -257,9 +256,11 @@ export default function ProjectManager() {
     ];
     return (
         <div className='container-fluid'>
-            <div className="project-list-header d-flex justify-content-between">
-                <h4 className="ml-2">Projects</h4>
-                <button className="btn btn-primary mr-5">Create Project</button>
+            <div className="project-list-header d-flex justify-content-between mt-3">
+                <h4>Projects</h4>
+                <Button onClick={() => {
+                    navigate('/create')
+                }} className="mr-5">Create Project</Button>
             </div>
             <Search
                 placeholder="Search projects"

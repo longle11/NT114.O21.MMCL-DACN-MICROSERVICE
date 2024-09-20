@@ -25,6 +25,7 @@ import AddUser from './components/Project-Setiing/Add-User/AddUser';
 import YourWork from './components/Your-Work/YourWork';
 import IssuePermissions from './components/Project-Setiing/Issue-Permissions/IssuePermissions';
 import Calendar from './components/WD-Board/Calendar/Calendar';
+import Notification from './components/Project-Setiing/Notifications/Notification';
 function App() {
   const dispatch = useDispatch()
   useEffect(() => {
@@ -52,6 +53,7 @@ function App() {
           <Route path='/projectDetail/:id/workflows/edit/:workflowId' Component={WorkflowEdit} />
           <Route path='/projectDetail/:id/issues/issue-detail?/:issueId' element={<MainPageTemplate Component={IssueDetail} />} />
           <Route path='/projectDetail/:id/settings/access' element={<MainPageTemplate Component={AddUser} />} />
+          <Route path='/projectDetail/:id/settings/notifications' element={<MainPageTemplate Component={Notification} />} />
           <Route path='/projectDetail/:id/settings/issue-permissions?/:issueId' element={<MainPageTemplate Component={IssuePermissions} />} />
           <Route path='/your-work' element={<MainPageTemplate Component={YourWork} />} />
 

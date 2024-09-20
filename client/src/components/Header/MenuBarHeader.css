@@ -27,3 +27,29 @@ div.nav-working-on.show {
 div.tab-content-move:hover {
     background-color: #dddd;
 }
+
+.edit-notifications:hover {
+    background-color: #dddd !important;
+}
+
+.edit-navlink-notification {
+    text-decoration: underline;
+    color: #0077BE
+}
+
+.custom-notification-navs > .nav-item > .nav-link,
+.custom-yourwork-nav > .nav-item > .nav-link {
+    color: #000;
+}
+
+.custom-notification-navs > .nav-item > .nav-link:hover,
+.custom-yourwork-navs > .nav-item > .nav-link:hover {
+    border: none
+}
+
+.custom-notification-navs > .nav-item > .nav-link.active,
+.custom-yourwork-navs > .nav-item > .nav-link.active {
+    border: none;
+    border-bottom: 3px solid #0077BE;
+    color: #0077BE;
+}

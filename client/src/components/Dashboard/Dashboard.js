@@ -24,6 +24,7 @@ import { getEpicList } from '../../redux/actions/CategoryAction';
 import { drawer_edit_form_action } from '../../redux/actions/DrawerAction';
 import CreateSprint from '../Forms/CreateSprint/CreateSprint';
 import AddFlagModal from '../Modal/AddFlagModal/AddFlagModal';
+import { updateUserInfo } from '../../redux/actions/UserAction';
 export default function Dashboard() {
     const dispatch = useDispatch()
     //set display epic and version fields
@@ -244,8 +245,13 @@ export default function Dashboard() {
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        onClick={() => {
-                            dispatch(displayComponentInModalInfo(<InfoModal issueIdForIssueDetail={null} issueInfo={issue} userInfo={userInfo} displayNumberCharacterInSummarySubIssue={10} />))
+                        onClick={(e) => {
+                            //if target contains button setting => hide open modal
+                            if (!(e.target.className.includes("fa-ellipsis-h") || e.target.className.includes("ant-btn"))) {
+                                dispatch(displayComponentInModalInfo(<InfoModal issueIdForIssueDetail={null} issueInfo={issue} userInfo={userInfo} displayNumberCharacterInSummarySubIssue={10} />, 1024))
+                                //dispatch event to update viewed issue in auth service
+                                dispatch(updateUserInfo(userInfo?.id, { viewed_issue: issue._id }))
+                            }
                         }}
                         onKeyDown={() => { }}>
                         <div className={`${issue?.isFlagged ? "isFlagged" : ""}`} style={{ cursor: 'pointer', backgroundColor: issue?.isFlagged ? "#F1CA45" : "#ffff", height: '100%', width: '100%', padding: '10px' }}>
@@ -277,7 +283,13 @@ export default function Dashboard() {
                                     {issue?.summary?.length > 15 ? `${issue?.summary?.substring(0, 15)}...` : issue?.summary} <i className="fa fa-pen ml-2 hide-items d-none" style={{ fontSize: 12 }}></i>
                                 </NavLink>}
                                 <div className="dropdown">
-                                    <Button className='hide-items d-none' data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <Button onClick={(e) => {
+                                        if (!e.target?.className?.includes("fa-ellipsis-h") || !e.target?.className?.includes("ant-btn")) {
+                                            return
+                                        } else {
+                                            e.stopPropagation()
+                                        }
+                                    }} className='hide-items d-none' data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         {/* Setting button for this issue */}
                                         <i style={{ fontSize: 20 }} className="fa fa-ellipsis-h"></i>
                                     </Button>
@@ -389,11 +401,11 @@ export default function Dashboard() {
         })
         return <div>
             {issueTags}
-            {openCreatingIssue !== processId ? <NavLink onClick={() => {
+            {openCreatingIssue !== processId ? (typeof projectInfo?.sprint_id === 'string' ? <NavLink onClick={() => {
                 setOpenCreatingIssue(processId)
                 setSummary('')
                 setIssueStatus(0)
-            }} className={`dashboard-creating-issue ${issueTags?.length === 0 || issueTags?.length <= 3 ? 'd-none' : 'd-block'}`} style={{ padding: '10px 20px', display: 'block', width: '100%', color: 'black', textDecoration: 'none' }}><i className="fa fa-plus mr-2"></i>Create issue</NavLink> :
+            }} className={`dashboard-creating-issue ${issueTags?.length === 0 || issueTags?.length <= 3 ? 'd-none' : 'd-block'}`} style={{ padding: '10px 20px', display: 'block', width: '100%', color: 'black', textDecoration: 'none' }}><i className="fa fa-plus mr-2"></i>Create issue</NavLink> : <></>) :
                 <div
                     style={{ height: 100, backgroundColor: '#ffff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', margin: 5, border: '2px solid #2684FF' }}>
                     <Input className='dashboard-edit-input-ant' onChange={(e) => {
@@ -409,7 +421,14 @@ export default function Dashboard() {
                         {summary.trim() === "" ? <Button disabled style={{ border: 'none', borderRadius: 0 }}>Create</Button> : <Button onClick={(e) => {
                             e.stopPropagation()
                             e.preventDefault()
-                            dispatch(createIssue({ summary: summary, issue_status: issueStatus, issue_type: processId, current_sprint: sprintId, project_id: id, creator: userInfo.id }, id, userInfo.id, sprintId, null))
+                            dispatch(createIssue({
+                                summary: summary,
+                                issue_status: issueStatus,
+                                issue_type: processId,
+                                current_sprint: sprintId,
+                                project_id: id,
+                                creator: userInfo.id
+                            }, id, userInfo.id, sprintId, null, projectInfo, userInfo))
                             setOpenCreatingIssue('')
                             setIssueStatus(0)
                             setSummary('')
@@ -482,9 +501,11 @@ export default function Dashboard() {
                             <i style={{ fontSize: 20 }} className="fa fa-ellipsis-h"></i>
                         </Button>
                         <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                            <a className="dropdown-item" href="##" onClick={() => {
-                                dispatch(drawer_edit_form_action(<CreateSprint currentSprint={sprintInfo} />, 'Save', '700px'))
-                            }}>Edit Sprint</a>
+                            {
+                                projectInfo?.sprint_id !== null ? <a className="dropdown-item" href="##" onClick={() => {
+                                    dispatch(drawer_edit_form_action(<CreateSprint currentSprint={sprintInfo} />, 'Save', '700px'))
+                                }}>Edit Sprint</a> : <></>
+                            }
                             <a className="dropdown-item" href={`/projectDetail/${id}/workflows`}>Manage Workflow</a>
                         </div>
                     </div>

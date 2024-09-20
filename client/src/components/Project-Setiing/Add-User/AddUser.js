@@ -6,8 +6,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useParams } from 'react-router-dom'
 import { GetProjectAction } from '../../../redux/actions/ListProjectAction'
 import { showNotificationWithIcon } from '../../../util/NotificationUtil'
-import { addUserToProject, updateProjectAction } from '../../../redux/actions/CreateProjectAction'
-import { updateUserInfo } from '../../../redux/actions/UserAction'
+import { updateProjectAction } from '../../../redux/actions/CreateProjectAction'
 
 export default function AddUser() {
     const projectInfo = useSelector(state => state.listProject.projectInfo)
@@ -15,14 +14,17 @@ export default function AddUser() {
     const { id } = useParams()
     const dispatch = useDispatch()
     useEffect(() => {
-        dispatch(GetProjectAction(id))
+        if (id) {
+            dispatch(GetProjectAction(id, null, null))
+        }
     }, [])
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [userEmail, setUserEmail] = useState('')
     const [userRole, setuserRole] = useState(0)
     const handleOk = () => {
         setIsModalOpen(false);
-        dispatch(updateUserInfo(id, {email: userEmail, user_role: userRole}, null))
+        dispatch(updateProjectAction(id, { email: userEmail, user_role: userRole }, null, userInfo.id))
         setUserEmail('')
         setuserRole(0)
     };
@@ -51,19 +53,29 @@ export default function AddUser() {
             dataIndex: 'user_role',
             render: (text, record) => {
                 const findIndexUserRole = projectInfo.members.findIndex(user => user.user_info._id.toString() === userInfo.id)
-                if(record.user_info?._id?.toString() === projectInfo?.creator?._id?.toString()) {
-                    return <Input style={{width: 'fit-content'}} defaultValue={userPermissions[record.user_role].label} disabled/>
-                }else {
+                if (record.user_info?._id?.toString() === projectInfo?.creator?._id?.toString()) {
+                    return <Input style={{ width: 'fit-content' }} defaultValue={userPermissions[record.user_role].label} disabled />
+                } 
+                else {
                     return <Select
-                    mode="multiple"
-                    defaultValue={userPermissions[record.user_role].label}
-                    style={{
-                        flex: 1,
-                    }}
-                    disabled={projectInfo.members[findIndexUserRole]?.user_role !== 0}
-                    options={userPermissions}
-                />
+                        defaultValue={userPermissions[record.user_role].label}
+                        style={{
+                            flex: 1,
+                        }}
+                        onSelect={(value) => {
+                            dispatch(updateProjectAction(id, { user_info: record.user_info._id.toString(), user_role: value }, null, userInfo.id))
+                        }}
+                        disabled={projectInfo.members[findIndexUserRole]?.user_role !== 0}
+                        options={userPermissions}
+                    />
                 }
+            }
+        },
+        {
+            title: 'Status',
+            dataIndex: 'status',
+            render: (text, record) => {
+                return <span>{record?.status}</span>
             }
         },
         {
@@ -71,11 +83,11 @@ export default function AddUser() {
             dataIndex: 'action',
             render: (text, record) => {
                 const findIndexUserRole = projectInfo.members.findIndex(user => user.user_info._id.toString() === userInfo.id)
-                if(record.user_info?._id?.toString() === projectInfo?.creator?._id?.toString()) {
+                if (record.user_info?._id?.toString() === projectInfo?.creator?._id?.toString()) {
                     return <></>
-                }else {
+                } else {
                     return <Button type='primary' disabled={projectInfo.members[findIndexUserRole]?.user_role !== 0} onClick={() => {
-                        dispatch(updateProjectAction(id, {user_info: record.user_info._id.toString()}, null))
+                        dispatch(updateProjectAction(id, { user_info: record.user_info._id.toString() }, null, userInfo.id))
                     }}>Delete</Button>
                 }
             }

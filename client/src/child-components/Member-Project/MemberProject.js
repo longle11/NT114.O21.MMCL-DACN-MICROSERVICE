@@ -31,7 +31,7 @@ export default function MemberProject(props) {
 
     const handleAddUserToProjectOk = () => {
         setIsModalOpen(false);
-        dispatch(updateProjectAction(id, { email: userEmail, user_role: userRole }, null))
+        dispatch(updateProjectAction(id, { email: userEmail, user_role: userRole }, null, userInfo.id))
         setUserEmail('')
         setuserRole(0)
     };

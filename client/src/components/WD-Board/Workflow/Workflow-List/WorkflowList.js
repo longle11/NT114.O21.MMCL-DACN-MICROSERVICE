@@ -177,7 +177,7 @@ export default function WorkflowList() {
     ];
     return (
         <div style={{ padding: '0 20px' }}>
-            <div className='d-flex justify-content-between'>
+            <div className='d-flex justify-content-between mt-3'>
                 <h5>Workflows</h5>
                 <Button type="primary" onClick={() => {
                     localStorage.setItem('nodes', JSON.stringify([{
