@@ -6,6 +6,7 @@ import {
     useNodesState,
     useEdgesState,
     ReactFlowProvider,
+    MarkerType,
 } from '@xyflow/react';
 import { ReactFlow } from '@xyflow/react';
 import './WorkflowView.css'
@@ -20,8 +21,21 @@ const nodeTypes = {
 const defaultViewport = { x: 0, y: 0, zoom: 1.5};
 function View(props) {
     const [nodes, setNodes, onNodesChange] = useNodesState(JSON.parse(localStorage.getItem('nodes')));
-    const [edges, setEdges, onEdgesChange] = useEdgesState(JSON.parse(localStorage.getItem('edges')));
-    console.log(edges, JSON.parse(localStorage.getItem('edges')))
+    const [edges, setEdges, onEdgesChange] = useEdgesState(JSON.parse(localStorage.getItem('edges'))?.map(edge => {
+        return {
+            ...edge,
+            markerEnd: {
+                type: MarkerType.ArrowClosed,
+                width: 10,
+                height: 10,
+                color: '#A0522D',
+            },
+            style: {
+                strokeWidth: 1,
+                stroke: '#A0522D',
+            }
+        }
+    }));
     return (
         <div style={{ width: '100wh', height: '60vh' }}>
             <ReactFlow

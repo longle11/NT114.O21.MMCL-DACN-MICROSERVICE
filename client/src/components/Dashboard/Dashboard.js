@@ -3,9 +3,9 @@ import DrawerHOC from '../../HOC/DrawerHOC'
 import { NavLink, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Avatar, Breadcrumb, Button, Input, InputNumber, Modal, Select, Switch, Tag, Tooltip } from 'antd';
-import { createIssue, getIssuesBacklog, updateInfoIssue } from '../../redux/actions/IssueAction';
+import { createIssue, getIssuesInProject, updateInfoIssue } from '../../redux/actions/IssueAction';
 import { CreateProcessACtion, GetProcessListAction, GetProjectAction, GetSprintAction, GetSprintListAction, UpdateProcessAction } from '../../redux/actions/ListProjectAction';
-import { updateProjectAction } from '../../redux/actions/CreateProjectAction';
+import { deleteProcessAction, updateProjectAction } from '../../redux/actions/CreateProjectAction';
 import { CopyLinkButton, issueTypeWithoutOptions, iTagForIssueTypes, iTagForPriorities } from '../../util/CommonFeatures';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
 import dayjs from 'dayjs';
@@ -25,6 +25,7 @@ import { drawer_edit_form_action } from '../../redux/actions/DrawerAction';
 import CreateSprint from '../Forms/CreateSprint/CreateSprint';
 import AddFlagModal from '../Modal/AddFlagModal/AddFlagModal';
 import { updateUserInfo } from '../../redux/actions/UserAction';
+import DeleteProcessModal from '../Modal/DeleteProcessModal/DeleteProcessModal';
 export default function Dashboard() {
     const dispatch = useDispatch()
     //set display epic and version fields
@@ -45,11 +46,10 @@ export default function Dashboard() {
 
     const projectInfo = useSelector(state => state.listProject.projectInfo)
     const userInfo = useSelector(state => state.user.userInfo)
-    const issuesBacklog = useSelector(state => state.issue.issuesBacklog)
+    const issuesInProject = useSelector(state => state.issue.issuesInProject)
     const processList = useSelector(state => state.listProject.processList)
     const sprintList = useSelector(state => state.listProject.sprintList)
     const epicList = useSelector(state => state.categories.epicList)
-    const [currentProcess, setCurrentProcess] = useState(null)
     const sprintInfo = useSelector(state => state.listProject.sprintInfo)
     const [valueProcess, setValueProcess] = useState('')
     const [onEditNameProcess, setOnEditNameProcess] = useState('')
@@ -109,7 +109,7 @@ export default function Dashboard() {
             dispatch(GetSprintAction(sprintId))
         }
         dispatch(getEpicList(id))
-        dispatch(getIssuesBacklog(id))
+        dispatch(getIssuesInProject(id, null))
         dispatch(GetProjectAction(id, null, navigate))
         dispatch(GetSprintListAction(id))
     }, [])
@@ -117,42 +117,12 @@ export default function Dashboard() {
     const search = useRef(null)
     const navigate = useNavigate()
 
-    const [open, setOpen] = useState(false);
     const [openAddProcess, setOpenAddProcess] = useState(false)
     const [openCreatingIssue, setOpenCreatingIssue] = useState('')
     const [summary, setSummary] = useState('')
     const [issueStatus, setIssueStatus] = useState(0)
     const [lockDroppable, setLockDroppable] = useState(true)
 
-
-    const showModal = () => {
-        setOpen(true);
-    };
-
-    const handleOk = () => {
-
-    };
-
-    const handleCancel = () => {
-        console.log('Clicked cancel button');
-        setOpen(false);
-    };
-
-    const renderProcessListOptions = (currentProcessId) => {
-        var processListOptions = []
-        processList.filter(process => {
-            if (process._id.toString() !== currentProcessId) {
-                const processOption = {
-                    label: <span style={{ backgroundColor: process.tag_color, width: '100%', height: '100%', display: 'block' }}>{process.name_process}</span>,
-                    value: process._id.toString()
-                }
-                processListOptions.push(processOption)
-                return true
-            }
-            return false
-        })
-        return processListOptions
-    }
 
 
 
@@ -212,7 +182,7 @@ export default function Dashboard() {
                 type: DISPLAY_LOADING
             })
             if (Number.isInteger(getSourceTypeIndex) && getIssue && Number.isInteger(getDestTypeIndex)) {
-                dispatch(updateInfoIssue(getIssue._id, id, { issue_type: dest.droppableId }, processList[getSourceTypeIndex].name_process, processList[getDestTypeIndex].name_process, userInfo.id, "updated", "type"))
+                dispatch(updateInfoIssue(getIssue._id, id, { issue_type: dest.droppableId }, processList[getSourceTypeIndex].name_process, processList[getDestTypeIndex].name_process, userInfo.id, "updated", "type", projectInfo, userInfo))
             }
             await delay(1000)
 
@@ -226,18 +196,18 @@ export default function Dashboard() {
     //type là loại được chọn để hiển thị (tất cả vấn đề / các vấn đề thuộc user)
     const renderIssue = (processId, limitcol) => {
         if (sprintInfo === null) return <></>
-        var issuesBacklogAfterSearching = []
+        var issuesInProjectAfterSearching = []
         if (searchIssue.epics.length > 0) {
-            issuesBacklogAfterSearching = [...issuesBacklog?.filter(issue => searchIssue.epics.includes(issue.epic_link ? issue.epic_link?._id : null))]
+            issuesInProjectAfterSearching = [...issuesInProject?.filter(issue => searchIssue.epics.includes(issue.epic_link ? issue.epic_link?._id : null))]
         } else {
-            issuesBacklogAfterSearching = [...issuesBacklog]
+            issuesInProjectAfterSearching = [...issuesInProject]
         }
-        const listIssues = issuesBacklogAfterSearching?.filter(issue => sprintInfo?.issue_list?.map(issue => issue._id.toString())?.includes(issue._id) && issue.issue_status !== 4)
+        const listIssues = issuesInProjectAfterSearching?.filter(issue => sprintInfo?.issue_list?.map(issue => issue._id.toString())?.includes(issue._id))
         if (limitcol && listIssues?.length > limitcol) {
             listIssues?.splice(0, limitcol)
         }
-        const issueTags = listIssues?.filter((issue, index) => processId === issue.issue_type._id).map((issue, index) => {
-            return <Draggable draggableId={issue._id} index={index} key={issue._id}>
+        const issueTags = listIssues?.filter((issue, index) => processId === issue.issue_type?._id).map((issue, index) => {
+            return <Draggable draggableId={issue?._id} index={index} key={issue?._id}>
                 {(provided) => {
                     return <div
                         key={issue._id}
@@ -265,7 +235,7 @@ export default function Dashboard() {
                                         <Button onClick={(e) => {
                                             e.stopPropagation()
                                             if (editSummaryIssue.trim() !== "") {
-                                                dispatch(updateInfoIssue(issue._id, issue.project_id, { summary: editSummaryIssue.trim() }, null, null, userInfo.id, "updated", "summary"))
+                                                dispatch(updateInfoIssue(issue._id, issue.project_id, { summary: editSummaryIssue.trim() }, null, null, userInfo.id, "updated", "summary", projectInfo, userInfo))
                                             }
                                             setOnEditSummaryIssue('')
                                             setEditSummaryIssue('')
@@ -300,7 +270,7 @@ export default function Dashboard() {
                                         }}>Copy issue link</a>
                                         <a className="dropdown-item" href="##" onClick={(e) => {
                                             e.stopPropagation()
-                                            CopyLinkButton(`WD-${issue.ordinal_number}`)
+                                            CopyLinkButton(`${projectInfo?.key_name}-${issue.ordinal_number}`)
                                         }}>Copy issue key</a>
                                         <div className="dropdown-divider" />
                                         {
@@ -309,7 +279,7 @@ export default function Dashboard() {
                                                 dispatch(displayComponentInModal(<AddFlagModal editCurrentIssue={issue} userInfo={userInfo} />, 1024, <h4><i style={{ fontSize: 25, color: '#FF5630' }} className="fa fa-flag mr-3"></i> Add Flag</h4>))
                                             }}>Add flag</a> : <a className="dropdown-item" href="##" onClick={(e) => {
                                                 e.stopPropagation()
-                                                dispatch(updateInfoIssue(issue._id, issue.project_id._id, { isFlagged: false }, null, null, userInfo.id, "canceled", "flag"))
+                                                dispatch(updateInfoIssue(issue._id, issue.project_id._id, { isFlagged: false }, null, null, userInfo.id, "canceled", "flag", projectInfo, userInfo))
                                             }}>Remove flag</a>
                                         }
                                         <a className="dropdown-item" href="##">Link Issue</a>
@@ -327,7 +297,7 @@ export default function Dashboard() {
 
                             <div className="block" style={{ display: 'flex' }}>
                                 <div className="block-left d-flex align-items-center">
-                                    <span className='mr-2'>WD-{issue?.ordinal_number}</span>
+                                    <span className='mr-2'>{projectInfo?.key_name}-{issue?.ordinal_number}</span>
                                     {iTagForIssueTypes(issue.issue_status, null, null)}
                                     {iTagForPriorities(issue.issue_priority, null, null)}
                                 </div>
@@ -340,7 +310,7 @@ export default function Dashboard() {
                                             <Button onClick={(e) => {
                                                 e.stopPropagation()
                                                 if (parseInt(editStoryPointIssue) && editStoryPointIssue > 0) {
-                                                    dispatch(updateInfoIssue(issue._id, issue.project_id, { story_point: editStoryPointIssue }, issue.story_point ? issue.story_point.toString() : "None", editStoryPointIssue.toString(), userInfo.id, "updated", "story point"))
+                                                    dispatch(updateInfoIssue(issue._id, issue.project_id, { story_point: editStoryPointIssue }, issue.story_point ? issue.story_point.toString() : "None", editStoryPointIssue.toString(), userInfo.id, "updated", "story point", projectInfo, userInfo))
                                                 } else {
                                                     showNotificationWithIcon('error', '', 'Input value is invalid')
                                                 }
@@ -586,7 +556,7 @@ export default function Dashboard() {
                                                                         setOnEditNameProcess(process._id)
                                                                     }} style={{ textDecoration: 'none', color: '#454545' }}>{process?.name_process}</NavLink>
                                                                     <Avatar className='ml-2' size={25}><span style={{ fontSize: 12, display: 'flex' }}>{sprintInfo !== null && Object.keys(sprintInfo).length !== 0 ? sprintInfo?.issue_list?.filter(issue => {
-                                                                        return issue.issue_type._id === process._id && issue.issue_status !== 4
+                                                                        return issue?.issue_type?._id === process?._id && issue?.issue_status !== 4
                                                                     }).length : '0'}</span></Avatar>
                                                                     {process?._id === processList[processList.length - 1]?._id ? <span className='ml-2 font-weight-bold'><i style={{ color: 'green' }} className="fa fa-check"></i></span> : <></>}
                                                                 </div>
@@ -605,8 +575,12 @@ export default function Dashboard() {
                                                                     setIsOpenModalSetColumn(true)
                                                                 }} className="dropdown-item">Set column limit</button>
                                                                 <button className="dropdown-item" onClick={() => {
-                                                                    setCurrentProcess(process)
-                                                                    showModal()
+                                                                    const checkIssueExisted = sprintInfo?.issue_list?.filter(issue => issue.issue_type._id === process._id)
+                                                                    if (checkIssueExisted?.length > 0) {
+                                                                        dispatch(displayComponentInModal(<DeleteProcessModal issue_list={checkIssueExisted.map(issue => issue._id)} processList={processList} sprintInfo={sprintInfo} process={process} />, 500, ''))
+                                                                    } else {
+                                                                        dispatch(deleteProcessAction(process._id, id))
+                                                                    }
                                                                 }}>Delete</button>
                                                             </div>
                                                         </div>
@@ -750,34 +724,6 @@ export default function Dashboard() {
                         </div>
                     </div>
                 </div>
-
-                <Modal
-                    open={open}
-                    onOk={handleOk}
-                    onCancel={handleCancel}
-                >
-                    <div className='d-flex'>
-                        <i className="glyphicon glyphicon-alert"></i>
-                        <span style={{ fontSize: '16px', fontWeight: 'bold' }}>Move work from <span>{currentProcess?.name_process}</span> column</span>
-                    </div>
-                    <p>Select a new home for any work with the <span>{currentProcess?.name_process}</span> status, including work in the backlog.</p>
-                    <div className='d-flex justify-content-between align-items-center'>
-                        <div className='d-flex flex-column'>
-                            <label htmlFor='currentProcess'>This status will be deleted:</label>
-                            <div style={{ textDecoration: 'line-through', backgroundColor: currentProcess?.tag_color, display: 'inline' }}>{currentProcess?.name_process}</div>
-                        </div>
-                        <i className="fa fa-long-arrow-alt-right"></i>
-                        <div className='d-flex flex-column'>
-                            <label htmlFor='newProcess?'>Move existing issues to:</label>
-                            <Select
-                                showSearch
-                                optionFilterProp="label"
-                                options={renderProcessListOptions(currentProcess?._id.toString())}
-                                defaultValue={renderProcessListOptions(currentProcess?._id.toString())[0]?.value}
-                            />
-                        </div>
-                    </div>
-                </Modal>
 
                 <Modal destroyOnClose={true} title="Column limit" open={isOpenModalSetColumn} onOk={handleModalSetColumnOk} onCancel={handleModalSetColumnCancel}>
                     <p>We'll highlight this column if the number of issues in it passes this limit.</p>

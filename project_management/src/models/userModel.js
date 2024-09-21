@@ -21,6 +21,12 @@ userSchema.virtual('ProjectRefCategory', {
     foreignField: 'category'
 })
 
+userSchema.virtual('ProjectRefProjectLeader', {
+    ref: 'projects',
+    localField: '_id',
+    foreignField: 'project_leader'
+})
+
 userSchema.virtual('ProjectRefCreator', {
     ref: 'projects',
     localField: '_id',
@@ -44,6 +50,7 @@ userSchema.virtual('IssueRefCreator', {
     localField: '_id',
     foreignField: 'creator'
 })
+
 
 const userModel = new mongoose.model('users', userSchema)
 

@@ -6,6 +6,7 @@ const natsWrapper = require('./nats-wrapper')
 const issueCreatedListener = require('./nats/listener/issue-listener/issue-created-listeners')
 const authCreatedListener = require('./nats/listener/auth-listener/auth-created-listener')
 const issueUpdatedListener = require('./nats/listener/issue-listener/issue-updated-listener')
+const issueManyUpdatedListener = require('./nats/listener/issue-listener/issue-many-updated-listener')
 const app = express()
 
 app.use(bodyParser.json())
@@ -24,6 +25,7 @@ async function connectToNats() {
         process.on('SIGTERM', () => { natsWrapper.client.close() })
 
         issueCreatedListener()
+        issueManyUpdatedListener()
         authCreatedListener()
         issueUpdatedListener()
         console.log("Ket noi thanh cong toi nats");

@@ -22,7 +22,7 @@ export default function WorkflowSideBar() {
 
     return (
         <aside>
-            <div className="description">You can drag these nodes to the pane on the bottom.</div>
+            <div className="description mt-1 mb-2">You can drag these nodes to the pane on the bottom.</div>
             <div className="dropdown">
                 <button className="btn btn-light dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Choose an existing process

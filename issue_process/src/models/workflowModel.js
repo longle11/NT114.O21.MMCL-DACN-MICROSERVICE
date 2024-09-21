@@ -19,15 +19,15 @@ const workflowSchema = new mongoose.Schema({
         ref: 'users'
     },
     createAt: {
-        type: Date,
-        default: Date.now
+        type: String,
+        default: null
     },
     isActivated: {
         type: Boolean,
         default: false
     },
     updateAt: {
-        type: Date,
+        type: String,
         default: null
     },
     nodes: [

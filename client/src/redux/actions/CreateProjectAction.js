@@ -3,7 +3,7 @@ import { CLOSE_DRAWER, DISPLAY_LOADING, GET_PROCESSES_PROJECT, GET_SPRINT_PROJEC
 import { delay } from "../../util/Delay"
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
 import domainName from '../../util/Config'
-import { GetProjectAction, GetWorkflowListAction, ListProjectAction } from "./ListProjectAction"
+import { GetProcessListAction, GetProjectAction, GetWorkflowListAction } from "./ListProjectAction"
 import { updateUserInfo } from "./UserAction"
 import { createNotificationAction } from "./NotificationAction"
 export const createProjectAction = (data) => {
@@ -146,13 +146,28 @@ export const createWorkflowAction = (props, navigate) => {
 export const deleteSprintAction = (sprintId, projectId) => {
     return async dispatch => {
         try {
-            const res = await Axios.post(`${domainName}/api/sprint/delete/${sprintId}`, { project_id: projectId })
+            const res = await Axios.post(`${domainName}/api/issueprocess/delete/${sprintId}`, { project_id: projectId })
             if (res.status === 200) {
                 showNotificationWithIcon('success', 'Xoa', res.data.message)
                 dispatch({
                     type: GET_SPRINT_PROJECT,
                     sprintList: res.data.data
                 })
+            }
+        } catch (error) {
+            console.log(error);
+
+        }
+    }
+}
+
+export const deleteProcessAction = (processId, projectId) => {
+    return async dispatch => {
+        try {
+            const res = await Axios.delete(`${domainName}/api/issueprocess/process/${processId}`)
+            if (res.status === 200) {
+                showNotificationWithIcon('success', '', res.data.message)
+                dispatch(GetProcessListAction(projectId))
             }
         } catch (error) {
             console.log(error);

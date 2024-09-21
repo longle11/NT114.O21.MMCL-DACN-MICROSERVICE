@@ -13,6 +13,14 @@ const projectSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users'
     },
+    key_name: {
+        type: String,
+        defaul: null
+    },
+    project_leader: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'users'
+    },
     members: [
         {
             user_info: {

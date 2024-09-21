@@ -15,6 +15,7 @@ import MenuBar from '../components/MenuBar/MenuBar'
 import { ListProjectAction } from '../redux/actions/ListProjectAction'
 import ModalHOC from '../HOC/ModalHOC'
 import ModalInfoHOC from '../HOC/ModalInfoHOC'
+import ChildModalHOC from '../HOC/ChildModalHOC'
 export default function MainPageTemplate({ Component }) {
     const isLoading = useSelector(state => state.loading.isLoading)
     const userInfo = useSelector(state => state.user.userInfo)
@@ -45,6 +46,7 @@ export default function MainPageTemplate({ Component }) {
                             <DrawerHOC />
                             <ModalHOC />
                             <ModalInfoHOC />
+                            <ChildModalHOC />
                             {/* <MenuBar /> */}
                             <div style={{ width: '100%', padding: '0 10px', marginBottom: '20px',  height: '90vh', overflow: 'hidden' }} className='main'>
                                 <Component />

@@ -8,9 +8,9 @@ var color = randomColor({ luminosity: 'light' });
 router.post('/create', async (req, res, next) => {
     try {
         const data = req.body
-        const checkExisted = await issueProcessModel.find({ name_process: req.body.name_process })
+        const checkExisted = await issueProcessModel.find({ project_id: req.body.project_id,name_process: req.body.name_process })
         if (checkExisted.length === 0) {
-            const issueProcess = new issueProcessModel({ ...data, tag_color: req.body?.tag_color ? req._construct.body.tag_color : color })
+            const issueProcess = new issueProcessModel({ ...data, tag_color: req.body?.tag_color ? req.body.tag_color : color })
             const newIssueProcess = await issueProcess.save()
 
             const issueProcessDataCopy = {
@@ -124,8 +124,6 @@ router.post('/create/default/:id', async (req, res) => {
         // await servicePublisher({ workflow_id: workflowCreate._id.toString(), project_id: workflowCreate.project_id.toString() }, "workflow:created")
         const processList = await issueProcessModel.find({ project_id: req.params.id })
         await servicePublisher({ processList: processList.map(process => {
-            console.log("mac dinh duoc tao ra la ", process );
-            
             return {
                 _id: process._id,
                 name_process: process.name_process,

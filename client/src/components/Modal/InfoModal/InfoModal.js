@@ -117,7 +117,7 @@ export default function InfoModal(props) {
             <div className="modal-content border-0">
                 <div className="modal-header align-items-center border-0" style={{ padding: '0 15px 5px 15px' }}>
                     <div className="task-title d-flex align-items-center" style={{ width: 'max-content' }}>
-                        <NavLink to={`/projectDetail/${id}/issues/issue-detail/${issueInfo?._id}`} style={{ width: '100%', marginRight: 10 }}>WD-{issueInfo?.ordinal_number}</NavLink>
+                        <NavLink to={`/projectDetail/${id}/issues/issue-detail/${issueInfo?._id}`} style={{ width: '100%', marginRight: 10 }}>{projectInfo?.key_name}-{issueInfo?.ordinal_number}</NavLink>
                         {editAttributeTag === "issue_status" ? <Select
                             placeholder={issueTypeOptions[issueInfo?.issue_status]?.label}
                             defaultValue={issueTypeOptions[issueInfo?.issue_status]?.value}
@@ -148,9 +148,6 @@ export default function InfoModal(props) {
                                     onChange={(value, props) => {
                                         dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id?._id, { issue_type: value }, issueInfo?.issue_type.name_process, props.label, userInfo.id, "updated", "issue type", projectInfo, userInfo))
                                     }}
-                                    onBlur={() => {
-                                        setEditAttributeTag('')
-                                    }}
                                     dropdownRender={(menu) => (
                                         <>
                                             {menu}
@@ -159,11 +156,15 @@ export default function InfoModal(props) {
                                                     margin: '8px 0',
                                                 }}
                                             />
-                                            <div className='view-workflow' style={{ padding: '10px 20px', marginTop: 5, width: 'max-content' }}>
-                                                <span style={{ textDecoration: 'none', color: 'black' }} onClick={() => {
+                                            <div className='view-workflow' style={{ padding: '10px 20px', marginTop: 5, width: '100%' }}>
+                                                <NavLink style={{ textDecoration: 'none', color: 'black' }} onClick={(e) => {
+                                                    console.log("eee");
+                                                    
+                                                    e.stopPropagation()
+                                                    e.preventDefault()
                                                     navigate(`/projectDetail/${id}/workflows`)
                                                     window.location.reload()
-                                                }}>View your workflow</span>
+                                                }}>View your workflow</NavLink>
                                             </div>
                                         </>
                                     )}
@@ -287,7 +288,7 @@ export default function InfoModal(props) {
                                     }} className="dropdown-item" href="##">Add Parent</a> : <></>}
                                     <hr className='mt-1 mb-1' />
                                     <a onClick={() => {
-                                        dispatch(displayComponentInModal(<CloneIssueModal issue={issueInfo} userInfo={userInfo} />, 600, `Clone issue: WD-${issueInfo?.ordinal_number}`))
+                                        dispatch(displayComponentInModal(<CloneIssueModal issue={issueInfo} userInfo={userInfo} />, 600, `Clone issue: {projectInfo?.key_name}-${issueInfo?.ordinal_number}`))
                                     }} className="dropdown-item" href="##">Clone issue</a>
                                     <a className="dropdown-item" href="##">Move other projects</a>
                                     <a className="dropdown-item" href="##">Delete</a>

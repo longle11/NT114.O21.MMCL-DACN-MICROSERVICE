@@ -10,6 +10,7 @@ export default function ModalHOC() {
     const setWidth = useSelector(state => state.isOpenModal.setWidth)
     const setTitle = useSelector(state => state.isOpenModal.setTitle)
     const dispatch = useDispatch()
+    
     const handleCancel = () => {
         dispatch(displayComponentInModal(<div />))   //create default component for modal
         dispatch(openModal(false))  //default it will close modal

@@ -2,7 +2,7 @@ import { Avatar, Breadcrumb, Button, DatePicker, Form, Input, InputNumber, Selec
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { issueTypeOptions, issueTypeWithoutOptions, iTagForIssueTypes, priorityTypeOptions, renderAssignees, renderEpicList, renderIssueType, renderSprintList, renderVersionList } from '../../../util/CommonFeatures'
-import { createIssue, getIssuesBacklog, updateInfoIssue } from '../../../redux/actions/IssueAction'
+import { createIssue, getIssuesBacklog, getIssuesInProject, updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import './IssuesList.css'
@@ -55,7 +55,7 @@ export default function IssuesList() {
     setSearchIssue({ ...searchIssue, versions: versions, epics: epics })
   }
   useEffect(() => {
-    dispatch(getIssuesBacklog(id, null))
+    dispatch(getIssuesInProject(id, null))
     dispatch(GetProcessListAction(id))
     dispatch(GetProjectAction(id, null, null))
     dispatch(getEpicList(id))
@@ -64,7 +64,7 @@ export default function IssuesList() {
   }, [])
 
   useEffect(() => {
-    dispatch(getIssuesBacklog(id, {
+    dispatch(getIssuesInProject(id, {
       epics: searchIssue.epics,
       versions: searchIssue.versions
     }))
@@ -433,7 +433,7 @@ export default function IssuesList() {
   const renderValueColumns = (text, record, index, key) => {
     const style = { marginLeft: record?.parent && record?.issue_status === 4 ? 30 : 0 }
     if (key === 'ordinal_number') {
-      return <span style={style} className='font-weight-bold'>WD-{record?.ordinal_number}</span>
+      return <span style={style} className='font-weight-bold'>{projectInfo?.key_name}-{record?.ordinal_number}</span>
     }
     else if (key === 'issue_status') {
       return <div style={style}>{iTagForIssueTypes(record?.issue_status, null, null)}</div>
@@ -485,7 +485,7 @@ export default function IssuesList() {
       if (record.parent) {
         return <div style={style} className='d-flex align-items-center'>
           <span className='mr-1'>{iTagForIssueTypes(record.parent?.issue_status, null, null)}</span>
-          <span className='mr-1'>WD-{record.parent?.ordinal_number}</span>
+          <span className='mr-1'>{projectInfo?.key_name}-{record.parent?.ordinal_number}</span>
         </div>
       }
       return null

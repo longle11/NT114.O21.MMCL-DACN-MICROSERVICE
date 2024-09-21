@@ -681,13 +681,13 @@ export default function IssueTag(props) {
             <div className={`${issue?.isFlagged ? "isFlagged" : ""}`} style={{ cursor: 'pointer', backgroundColor: issue?.isFlagged ? "#F1CA45" : "#ffff", padding: '5px 5px 5px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div className='content-issue d-flex align-items-center'>
                     {onChangeIssueStatus ? renderIssueStatus() : <></>}
-                    {onChangeKey ? <span className='mr-3' style={{ color: '#5e6c84', fontWeight: 'bold' }}>WD-{issue?.ordinal_number?.toString()}</span> : <></>}
+                    {onChangeKey ? <span className='mr-3' style={{ color: '#5e6c84', fontWeight: 'bold' }}>{projectInfo?.key_name}-{issue?.ordinal_number?.toString()}</span> : <></>}
                     {renderSummary()}
                 </div>
                 <div className='attach-issue d-flex align-items-center'>
                     {issue?.isFlagged ? <i style={{ fontSize: 15, color: '#FF5630' }} className="fa fa-flag mr-2"></i> : <></>}
-                    {issue?.issue_type._id === processList[processList?.length - 1]?._id ? <i style={{ fontSize: 15, color: 'green' }} className="fa fa-check mr-2"></i> : <></>}
-                    {onChangeParent ? (issue?.sub_issue_list?.length > 0 ? <Tooltip title={`${issue?.sub_issue_list?.filter(issue => issue?.issue_type?._id === processList[processList.length - 1]?._id).length} of ${issue?.sub_issue_list?.length} child issues completed`}><i style={{ padding: 5 }} className='fa-solid fa-sitemap icon-options mr-3'></i></Tooltip> : <></>) : <></>}
+                    {issue?.issue_type?._id === processList[processList?.length - 1]?._id ? <i style={{ fontSize: 15, color: 'green' }} className="fa fa-check mr-2"></i> : <></>}
+                    {onChangeParent ? (issue?.sub_issue_list?.length > 0 ? <Tooltip title={`${issue?.sub_issue_list?.filter(issue => issue?.issue_type?._id === processList[processList?.length - 1]?._id).length} of ${issue?.sub_issue_list?.length} child issues completed`}><i style={{ padding: 5 }} className='fa-solid fa-sitemap icon-options mr-3'></i></Tooltip> : <></>) : <></>}
                     {/* specify which components does issue belong to? */}
                     {onChangeVersions ? renderFixVersion() : <></>}
                     {/* specify which epics does issue belong to? */}

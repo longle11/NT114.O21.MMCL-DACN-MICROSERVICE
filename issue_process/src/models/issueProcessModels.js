@@ -17,12 +17,12 @@ const issueProcessSchema = new mongoose.Schema({
         type: String,
         default: '#dddd'
     },
-    issue_list: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'issues'
-        }
-    ],
+    // issue_list: [
+    //     {
+    //         type: mongoose.Schema.Types.ObjectId,
+    //         ref: 'issues'
+    //     }
+    // ],
     limited_number_issues: {
         type: Number,
         default: null

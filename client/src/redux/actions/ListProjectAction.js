@@ -153,13 +153,15 @@ export const UpdateWorkflowAction = (workflow_id, props, navigate) => {
     }
 }
 
-export const DeleteWorkflowAction = (workflow_id) => {
+export const DeleteWorkflowAction = (workflow_id, project_id) => {
     return async dispatch => {
         try {
             const res = await Axios.delete(`${domainName}/api/issueprocess/workflow/delete/${workflow_id}`)
+            console.log("ket qua tra ve sau khi xoa DeleteWorkflowAction", res);
+            
             if (res.status === 200) {
                 showNotificationWithIcon('success', '', res.data.message)
-                window.location.reload()
+                dispatch(GetWorkflowListAction(project_id))
             }
         } catch (errors) {
             console.log("error UpdateWorkflowAction", errors);

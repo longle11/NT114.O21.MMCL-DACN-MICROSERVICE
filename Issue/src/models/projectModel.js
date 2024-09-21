@@ -8,7 +8,11 @@ const projectSchema = mongoose.Schema({
     name_project: {
         type: String, 
         default: null
-    }
+    },
+    key_name: {
+        type: String,
+        defaul: null
+    },
 })
 
 projectSchema.virtual('projectsRefProjectID', {

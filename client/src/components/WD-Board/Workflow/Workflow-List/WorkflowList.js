@@ -1,34 +1,36 @@
-import { Avatar, Button, Modal, Table } from 'antd'
+import { Avatar, Button, Modal, Popconfirm, Table } from 'antd'
 import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { CreateProcessACtion, DeleteWorkflowAction, GetProcessListAction, GetProjectAction, GetWorkflowListAction, UpdateWorkflowAction } from '../../../../redux/actions/ListProjectAction'
+import { DeleteWorkflowAction, GetProcessListAction, GetProjectAction, GetSprintListAction, GetWorkflowListAction, UpdateWorkflowAction } from '../../../../redux/actions/ListProjectAction'
 import { NavLink, useNavigate, useParams } from 'react-router-dom'
 import { iTagForIssueTypes } from '../../../../util/CommonFeatures'
 import WorkflowView from '../Workflow-View/WorkflowView'
 import { EditOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs'
 import { showNotificationWithIcon } from '../../../../util/NotificationUtil'
-import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd'
+import { delay } from '../../../../util/Delay'
+import { displayComponentInModal } from '../../../../redux/actions/ModalAction'
+import UpdateProcessesOnDashboard from '../../../Modal/UpdateProcessesOnDashboard/UpdateProcessesOnDashboard'
 
 export default function WorkflowList() {
     const workflowList = useSelector(state => state.listProject.workflowList)
     const navigate = useNavigate()
     const { id } = useParams()
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isModalCreatingProcessOpen, setIsModalOpenCreatingProcess] = useState(false);
-    const [virtualProcessesDashboard, setVirtualProcessesDashboard] = useState({})
-    const [processesWorkflow, setProcessesWorkflow] = useState({})
     const [workflowId, setWorkflowId] = useState('')
     const projectInfo = useSelector(state => state.listProject.projectInfo)
     const processList = useSelector(state => state.listProject.processList)
-    const newProcesses = useRef([])
+    const sprintList = useSelector(state => state.listProject.sprintList)
     const workflowWorking = useRef({})
+
     const dispatch = useDispatch()
     useEffect(() => {
         dispatch(GetWorkflowListAction(id))
-        dispatch(GetProjectAction(id))
+        dispatch(GetProjectAction(id, null, null))
         dispatch(GetProcessListAction(id))
+        dispatch(GetSprintListAction(id, null))
     }, [])
+
     const handleOk = () => {
         setIsModalOpen(false);
         localStorage.removeItem('nodes')
@@ -40,23 +42,6 @@ export default function WorkflowList() {
         localStorage.removeItem('nodes')
         localStorage.removeItem('edges')
         setWorkflowId('')
-    };
-
-    const handleCreatingProcessOk = () => {
-        setIsModalOpenCreatingProcess(false);
-
-        //proceed create all new processes 
-        newProcesses.current.forEach((data) => {
-            dispatch(CreateProcessACtion(data))
-        })
-        //move workflow from inactive to active
-        dispatch(UpdateWorkflowAction(workflowWorking.current._id, { isActivated: true }))
-
-        workflowWorking.current = null
-        newProcesses.current = null
-    };
-    const handleCreatingProcessCancel = () => {
-        setIsModalOpenCreatingProcess(false);
     };
 
     const columns = [
@@ -82,17 +67,19 @@ export default function WorkflowList() {
         {
             title: 'Issue Statuses',
             dataIndex: 'issue_statuses',
+            align: 'center',
             render: (text, record) => {
                 return <span>{record.issue_statuses.map((status, index) => {
-                    return <span key={index}>{iTagForIssueTypes(status)}</span>
+                    return <span key={index}>{iTagForIssueTypes(status, null, null)}</span>
                 })}</span>
             }
         },
         {
             title: 'Creator',
             dataIndex: 'creator',
+            align: 'center',
             render: (text, record) => {
-                return <span><Avatar src={record.creator.avatar} className='mr-2' />{record.creator.username}</span>
+                return <span style={{ with: 'max-content' }}><Avatar src={record.creator.avatar} className='mr-2' />{record.creator.username}</span>
             }
         },
         {
@@ -106,7 +93,7 @@ export default function WorkflowList() {
             title: 'Update At',
             dataIndex: 'updateAt',
             render: (text, record) => {
-
+                return <span>{dayjs(record.updateAt).format("DD/MM/YYYY")}</span>
             }
         },
         {
@@ -122,10 +109,20 @@ export default function WorkflowList() {
                             <a className="dropdown-item" href={`/projectDetail/${id}/workflows/edit/${record._id}`} onClick={() => {
                                 localStorage.setItem('nodes', JSON.stringify(record.nodes))
                                 localStorage.setItem('edges', JSON.stringify(record.edges))
+                                localStorage.setItem('workflowInfo', JSON.stringify(record))
                             }}>Edit</a>
-                            {record?.isActivated ? <></> : <a className="dropdown-item" href="##" onClick={() => {
-                                dispatch(DeleteWorkflowAction(record._id))
-                            }}>Delete</a>}
+                            <Popconfirm
+                                title="Delete an inactive workflow"
+                                description="Are you sure to delete this workflow?"
+                                onConfirm={() => {
+                                    dispatch(DeleteWorkflowAction(record._id, id))
+                                }}
+                                okText="Yes"
+                                cancelText="No"
+                            >
+                                {record?.isActivated ? <></> : <a className="dropdown-item" href="##">Delete</a>}
+                            </Popconfirm>
+
                             {record.isActivated ? <a className="dropdown-item" href="##" onClick={() => {
                                 //handle event when user clicks to move to inactive
                                 dispatch(UpdateWorkflowAction(record._id, { isActivated: false }))
@@ -137,35 +134,74 @@ export default function WorkflowList() {
                                     //check whether the number of new processes creating in workflow should insert into dashboard or not
                                     if (record.nodes.findIndex(processNode => !processList.includes(processNode.id) === -1)) {
                                         //if it is the default workflow, we will eliminate those statuses in activated workflow
-                                        setProcessesWorkflow(record)
-                                        setIsModalOpenCreatingProcess(true)
-                                        setVirtualProcessesDashboard(processList)
+                                        dispatch(displayComponentInModal(<UpdateProcessesOnDashboard workflowList={workflowList} flowArrs={[]} currentWorkflowInactive={null} processListTemp={processList} id={id} projectInfo={projectInfo} sprintList={sprintList} processesWorkflow={record} processList={processList} workflowWorking={workflowWorking}/>, 500, 'Update new processes on dashboard'))
                                         workflowWorking.current = record
                                     } else {
-                                        showNotificationWithIcon('success', '', 'khong co thang trung')
+                                        showNotificationWithIcon('success', '', 'There are no duplicate values')
                                     }
                                 } else {
-                                    const flowArrs = []
+                                    var flowArrs = []
                                     getAllWorkflowInActiveMode.forEach(workflow => {
                                         getCurrentWorkflow.issue_statuses.forEach(status => {
                                             if (workflow.issue_statuses.includes(status)) {
-                                                if (flowArrs.length === 0 || flowArrs.findIndex(flow => flow === workflow) === -1) {
+                                                if (flowArrs.length === 0 || flowArrs.findIndex(flow => flow === workflow._id) === -1) {
                                                     flowArrs.push(workflow)
                                                     return
                                                 }
                                             }
                                         })
                                     })
-                                    //if this array has length equal 0, which means it doesn't have those statuses in inactive
+                                    //if this array has length equal 0, which means it doesn't have those statuses in active
                                     if (flowArrs.length === 0) {
-                                        dispatch(UpdateWorkflowAction(getCurrentWorkflow._id, { isActivated: true }))
+                                        dispatch(UpdateWorkflowAction(getCurrentWorkflow._id, { isActivated: true }))   //if there are no have any statuses => move to active
                                     } else {
+                                        const updatedActiveWorkflows = []
+                                        //proceed to remove statuses in active of current workflow to apply statuses in inactive workflow
+                                        flowArrs = [...new Set(flowArrs)]
                                         //move this flow to active and all flows in active to inactive
                                         flowArrs.forEach((flow, index) => {
-                                            dispatch(UpdateWorkflowAction(flow._id, { isActivated: false }))
-                                        })
+                                            //procceed to unmount statuses on active mode 
+                                            if (updatedActiveWorkflows.length === 0) {
+                                                flow.issue_statuses.forEach(currentStatus => {
+                                                    if (!getCurrentWorkflow.issue_statuses.includes(currentStatus)) {
 
-                                        dispatch(UpdateWorkflowAction(getCurrentWorkflow._id, { isActivated: true }))
+                                                        if (updatedActiveWorkflows.length === 0) {
+                                                            updatedActiveWorkflows.push({ workflow_id: flow._id, issue_statuses: [currentStatus] })
+                                                        } else {
+                                                            const index = updatedActiveWorkflows.findIndex(workflow => workflow.workflow_id === flow._id)
+                                                            if (index !== -1) {
+                                                                updatedActiveWorkflows[index].issue_statuses.push(currentStatus)
+                                                            }
+                                                        }
+                                                    } else {
+                                                        if (updatedActiveWorkflows.length === 0) {
+                                                            updatedActiveWorkflows.push({ workflow_id: flow._id, issue_statuses: [] })
+                                                        }
+                                                    }
+                                                })
+                                            } else {
+                                                flow.issue_statuses.forEach(currentStatus => {
+                                                    if (updatedActiveWorkflows.map(currentFlow => currentFlow.workflow_id).includes(flow._id)) {
+                                                        if (!getCurrentWorkflow.issue_statuses.includes(currentStatus)) {
+                                                            const index = updatedActiveWorkflows.findIndex(workflow => workflow.workflow_id === flow._id)
+                                                            if (index !== -1) {
+                                                                updatedActiveWorkflows[index].issue_statuses.push(currentStatus)
+                                                            }
+                                                        }
+                                                    } else {
+                                                        if (!getCurrentWorkflow.issue_statuses.includes(currentStatus)) {
+                                                            updatedActiveWorkflows.push({ workflow_id: flow._id, issue_statuses: [currentStatus] })
+                                                        } else {
+                                                            updatedActiveWorkflows.push({ workflow_id: flow._id, issue_statuses: [] })
+                                                        }
+                                                    }
+                                                })
+                                            }
+
+                                        })
+                                        if (updatedActiveWorkflows.length > 0) {
+                                            dispatch(displayComponentInModal(<UpdateProcessesOnDashboard workflowList={workflowList} flowArrs={[...updatedActiveWorkflows]} currentWorkflowInactive={getCurrentWorkflow} processListTemp={processList} id={id} projectInfo={projectInfo} sprintList={sprintList} processesWorkflow={record} processList={processList} workflowWorking={workflowWorking}/>, 500, 'Update new processes on dashboard'))
+                                        }
                                     }
                                 }
                             }} href="##">Move to active</a>}
@@ -175,6 +211,7 @@ export default function WorkflowList() {
             },
         },
     ];
+    
     return (
         <div style={{ padding: '0 20px' }}>
             <div className='d-flex justify-content-between mt-3'>
@@ -187,6 +224,7 @@ export default function WorkflowList() {
                         position: { x: 250, y: 0 },
                     },]))
                     localStorage.setItem('edges', JSON.stringify([]))
+                    localStorage.setItem('workflowInfo', JSON.stringify(null))
                     navigate(`/projectDetail/${id}/workflows/create-workflow`)
                 }}>Add Workflow</Button>
             </div>
@@ -213,76 +251,6 @@ export default function WorkflowList() {
             </div>
             <Modal destroyOnClose={true} title={`Workflow diagram ${workflowId}`} width={1000} open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
                 <WorkflowView />
-            </Modal>
-            <Modal destroyOnClose={true} title={`Create process`} width={1000} open={isModalCreatingProcessOpen} onOk={handleCreatingProcessOk} onCancel={handleCreatingProcessCancel}>
-                <span className='text-danger'>If you want to display processes in workflow to dashboard.<br /> Please drag the processes from workflow and drop into dashboard</span>
-                {/* Display processes in current dashboard */}
-                <DragDropContext onDragEnd={(result) => {
-                    const source = result.source
-                    const dest = result.destination
-                    if (dest === null) {
-                        return
-                    }
-                    if (source.droppableId !== dest.droppableId && dest.droppableId.includes('processes-0')) {
-                        const getCurrentProcessInWorkflow = processesWorkflow.nodes[source.index]
-                        if (virtualProcessesDashboard.map(process => process._id.toString()).includes(getCurrentProcessInWorkflow.id.toString())) {
-                            showNotificationWithIcon('error', '', 'gia tri nay da ton tai roi')
-                        } else {
-                            const newProcess = {
-                                _id: getCurrentProcessInWorkflow.id,
-                                name_process: getCurrentProcessInWorkflow.data.label,
-                                project_id: id
-                            }
-                            virtualProcessesDashboard.push(newProcess)
-                            newProcesses.current.push(newProcess)
-
-                            setVirtualProcessesDashboard(virtualProcessesDashboard)
-                        }
-                    }
-                }}>
-                    <div>
-                        <label htmlFor='processesDashboard'>Processes are displayed in dashboard</label>
-                        <div>
-                            <Droppable droppableId='processes-0' direction='horizontal'>
-                                {(provided) => {
-                                    return <div ref={provided.innerRef} {...provided.droppableProps} name="processesDashboard" style={{ padding: '5px 10px', border: '1px solid black', height: 'max-content', display: 'flex' }}>
-                                        {virtualProcessesDashboard?.map((process, index) => {
-                                            return <Draggable key={`process-0-${process._id.toString()}`} draggableId={`process-0-${process._id.toString()}`} index={index}>
-                                                {(provided) => {
-                                                    return <div ref={provided.innerRef} {...provided.dragHandleProps} {...provided.draggableProps}>
-                                                        <div style={{ padding: '6px 20px', border: '1px solid #dddd', marginRight: '10px' }}>{process.name_process}</div>
-                                                    </div>
-                                                }}
-                                            </Draggable>
-                                        })}
-                                        {provided.placeholder}
-                                    </div>
-                                }}
-                            </Droppable>
-                        </div>
-                    </div>
-                    {/* Display processes in current workflow */}
-                    <div>
-                        <label htmlFor='processesWorkflow'>Processes are displayed in workflow</label>
-                        <Droppable droppableId='processes-1' direction='horizontal'>
-                            {(provided) => {
-                                return <div ref={provided.innerRef} {...provided.droppableProps} name="processesWorkflow" style={{ padding: '5px 10px', border: '1px solid black', height: 'max-content', display: 'flex' }}>
-                                    {processesWorkflow?.nodes?.map((process, index) => {
-                                        return <Draggable key={`process-1-${process.id.toString()}`} draggableId={`process-1-${process.id.toString()}`} index={index}>
-                                            {(provided) => {
-                                                if (process.id.toString() === '0') return <div key={process.id.toString()} ref={provided.innerRef} {...provided.dragHandleProps} {...provided.draggableProps}></div>
-                                                return <div key={process.id.toString()} ref={provided.innerRef} {...provided.dragHandleProps} {...provided.draggableProps}>
-                                                    <div style={{ padding: '6px 20px', border: '1px solid #dddd', marginRight: '10px' }}>{process.data.label}</div>
-                                                </div>
-                                            }}
-                                        </Draggable>
-                                    })}
-                                    {provided.placeholder}
-                                </div>
-                            }}
-                        </Droppable>
-                    </div>
-                </DragDropContext>
             </Modal>
         </div>
     )

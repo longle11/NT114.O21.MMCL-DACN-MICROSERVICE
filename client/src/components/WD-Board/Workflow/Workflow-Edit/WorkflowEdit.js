@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import mongoose from "mongoose";
 import {
     MiniMap,
     Controls,
@@ -16,55 +15,75 @@ import { ReactFlow } from '@xyflow/react';
 import './WorkflowEdit.css'
 import { DnDProvider, useDnD } from './DNDContext';
 import '@xyflow/react/dist/style.css';
-import { Input, Modal, Select } from 'antd';
+import { Button } from 'antd';
 import CustomNode from '../Custom-Worklow-Node/CustomNode';
 import CustomNodeProcess from '../Custom-Worklow-Node/CustomNodeProcess';
 import WorkflowSideBar from './WorkflowSideBar';
 import { showNotificationWithIcon } from '../../../../util/NotificationUtil';
 import { useDispatch, useSelector } from 'react-redux';
-import { createWorkflowAction } from '../../../../redux/actions/CreateProjectAction';
 import { NavLink, useNavigate, useParams } from 'react-router-dom';
-import { GetProcessListAction, GetProjectAction, GetWorkflowListAction, UpdateWorkflowAction } from '../../../../redux/actions/ListProjectAction';
-import { issueTypeOptions, issueTypeWithoutOptions } from '../../../../util/CommonFeatures';
+import { GetProcessListAction, GetProjectAction, GetWorkflowListAction } from '../../../../redux/actions/ListProjectAction';
+import { issueTypeWithoutOptions } from '../../../../util/CommonFeatures';
+import { DELETE_NODE_IN_WORKFLOW } from '../../../../redux/constants/constant';
+import { displayComponentInModal } from '../../../../redux/actions/ModalAction';
+import AddNewNodeWorkflowModal from '../../../Modal/AddNewNodeWorkflowModal/AddNewNodeWorkflowModal';
+import ModalHOC from '../../../../HOC/ModalHOC';
+import CreateOrUpdateWorkflowModal from '../../../Modal/CreateOrUpdateWorkflowModal/CreateOrUpdateWorkflowModal';
+import CreateConnectionWorkflowModal from '../../../Modal/CreateConnectionWorkflowModal/CreateConnectionWorkflowModal';
 const nodeTypes = {
     custom: CustomNode,
     customNodeProcess: CustomNodeProcess,
 };
-function WorflowEditView(props) {
-    const [isModalOpen, setIsModalOpen] = useState(false)
+function WorflowEditView() {
     const navigate = useNavigate()
     const dispatch = useDispatch()
-    const [isModalCreatingWorkflowlOpen, setModalCreatingWorkflowOpen] = useState(false)
-    const [isModalProcessOpen, setIsModalProcessOpen] = useState(false)
-    const [valueConnection, setValueConnection] = useState({})
-    const [valueNameProcess, setValueNameProcess] = useState('')
+
     const [nodes, setNodes, onNodesChange] = useNodesState(JSON.parse(localStorage.getItem('nodes')));
-    const [edges, setEdges, onEdgesChange] = useEdgesState(JSON.parse(localStorage.getItem('edges')));
+    const [edges, setEdges, onEdgesChange] = useEdgesState(JSON.parse(localStorage.getItem('edges'))?.map(edge => {
+        return {
+            ...edge,
+            markerEnd: {
+                type: MarkerType.ArrowClosed,
+                width: 10,
+                height: 10,
+                color: '#A0522D',
+            },
+            style: {
+                strokeWidth: 1,
+                stroke: '#A0522D',
+            }
+        }
+    }));
     const [labelEdge, setLabelEdge] = useState('')
+    
     const edgeReconnectSuccessful = useRef(true);
     const processList = useSelector(state => state.listProject.processList)
     const projectInfo = useSelector(state => state.listProject.projectInfo)
+
     const workflowList = useSelector(state => state.listProject.workflowList)
     const userInfo = useSelector(state => state.user.userInfo)
     const { id, workflowId } = useParams()
     //state for creating new workflow information
-    const [workflowName, setWorkflowName] = useState('')
-    const [statuses, setStatuses] = useState(issueTypeOptions)
-
-
 
     useEffect(() => {
-        dispatch(GetProcessListAction(id))
-        dispatch(GetProjectAction(id))
-        dispatch(GetWorkflowListAction(id))
+        if (id) {
+            dispatch(GetProcessListAction(id))
+            dispatch(GetProjectAction(id, null, null))
+            dispatch(GetWorkflowListAction(id))
+        }
     }, [])
 
     const onConnect = useCallback((params) => {
-        setIsModalOpen(true)
-        setValueConnection(params)
+        dispatch(displayComponentInModal(<CreateConnectionWorkflowModal nodes={nodes} params={params} setLabelEdge={setLabelEdge} labelEdge={labelEdge} setEdges={setEdges} addEdge={addEdge}/>, "500px", "Create connection"))
     });
     const deleteNodeById = (id) => {
-        setNodes(nds => nds.filter(node => node.id !== id));
+        dispatch({
+            type: DELETE_NODE_IN_WORKFLOW,
+            handleClickDeleteNode: () => {
+                setNodes(nds => nds.filter(node => node.id !== id));
+            }
+        })
+
     };
 
     const onReconnectStart = useCallback(() => {
@@ -76,205 +95,24 @@ function WorflowEditView(props) {
     }, []);
 
 
-    //use for users permit modify available workflow, not for creating new
-    const renderCurrentStatuesForUpdating = () => {
-        if (workflowId) {
-            const getWorkflow = workflowList?.filter(workflow => workflow._id === workflowId)
-            if (getWorkflow?.length !== 0) {
-                const issueStatusArrs = []
-                getWorkflow[0].issue_statuses?.forEach(status => {
-                    issueStatusArrs.push(issueTypeOptions[status])
-                    return issueTypeOptions[status]
-                })
-                return issueStatusArrs
-            } 
-        }
-        return issueTypeOptions
-    }
-    const renderCurrentNameWorkflowForUpdating = () => {
-        if (workflowId) {
-            const getWorkflow = workflowList?.filter(workflow => workflow._id === workflowId)
-            if (getWorkflow?.length !== 0) {
-                return getWorkflow[0].name_workflow
-            }
-        }
-        return null
-    }
+    
 
     const renderCurrentStatuesWithoutNameForUpdating = () => {
         if (workflowId) {
             const getWorkflow = workflowList?.filter(workflow => workflow._id === workflowId)
             if (getWorkflow?.length !== 0) {
                 const arrs = getWorkflow[0].issue_statuses.map(indexStatus => {
-                    return <span>{issueTypeWithoutOptions[indexStatus].label}</span>
+                    return <span>{issueTypeWithoutOptions[indexStatus]?.label}</span>
                 })
 
                 return <span className='d-flex align-items-center'>{arrs}</span>
-            } 
+            }
         }
         return <span className='d-flex align-items-center'> {issueTypeWithoutOptions.map(status => <span>{status.label}</span>)}</span>
     }
 
 
-    const nodeOptions = () => {
-        return nodes?.map(node => {
-            return {
-                label: node.data.label,
-                value: node.id
-            }
-        })
-    }
-
-
-    const handleOk = () => {
-        if (valueConnection.source === valueConnection.target) {
-            showNotificationWithIcon('error', '', 'Source and Target can not duplicate')
-        } else {
-            setIsModalOpen(false);
-            //default if valueConnection is null, that means user doesn't choose any status => default is both default selection
-            if (Object.keys(valueConnection).length === 0) {
-                valueConnection.source = nodeOptions()[0].id
-                valueConnection.target = nodeOptions()[0].id
-                valueConnection.sourceHandle = null
-                valueConnection.targetHandle = null
-            }
-            setEdges((eds) => {
-                valueConnection.label = labelEdge
-                valueConnection.type = 'smoothstep'
-                valueConnection.markerEnd = {
-                    type: MarkerType.ArrowClosed,
-                    width: 10,
-                    height: 10,
-                    color: '#A0522D',
-                }
-                valueConnection.style = {
-                    strokeWidth: 1,
-                    stroke: '#A0522D',
-                }
-                return addEdge(valueConnection, eds)
-            }, [setEdges])
-
-            setValueConnection({})
-            setLabelEdge('')
-        }
-    };
-    const handleCancel = () => {
-        setIsModalOpen(false);
-    };
-
-
-    const handleCreatingProcessOk = () => {
-        if (!nodes.map(node => node.data.label.toLowerCase()).includes(valueNameProcess.toLowerCase())) {
-            setIsModalProcessOpen(false);
-            onAdd(valueNameProcess)
-        } else {
-            showNotificationWithIcon('error', '', 'This name is already existed, please entering the different name')
-        }
-    };
-    const handleCreatingProcessCancel = () => {
-        setIsModalProcessOpen(false);
-        setValueNameProcess('')
-    };
-
-    const handleCreatingWorkflowCancel = () => {
-        setModalCreatingWorkflowOpen(false);
-    };
-    const handleCreatingWorkflowOk = () => {
-        //handle creating workflow and storing in database
-        const nodesCopy = nodes.map(node => node.data.label)
-        for (let node_name1 of nodesCopy) {
-            var nameNode = ''
-            let index = 0
-            for (let node_name2 of nodesCopy) {
-                if (node_name1 === node_name2) {
-                    index++
-                    if (index > 1) {
-                        nameNode = node_name1
-                        break
-                    }
-                }
-            }
-            if (index > 1) {
-                showNotificationWithIcon('error', '', `Please deleting node ${nameNode} which have the same name and try again`)
-                return;
-            }
-        }
-        localStorage.setItem('edges', JSON.stringify(edges))
-        localStorage.setItem('nodes', JSON.stringify(nodes))
-        const customNode = JSON.parse(localStorage.getItem('nodes')).map((node) => {
-            return {
-                id: node.id,
-                type: node?.type,
-                data: {
-                    label: node.data?.label,
-                    color: node.data?.color
-                },
-                position: {
-                    x: node.position.x,
-                    y: node.position.y,
-                },
-            }
-        })
-        const customEdge = JSON.parse(localStorage.getItem('edges')).map(edge => {
-            return {
-                id: edge.id,
-                label: edge.label,
-                source: edge.source,
-                target: edge.target,
-                type: 'smoothstep',
-                markerEnd: {
-                    type: MarkerType.ArrowClosed,
-                    width: 10,
-                    height: 10,
-                    color: '#A0522D',
-                },
-                style: {
-                    strokeWidth: 1,
-                    stroke: '#A0522D',
-                }
-            }
-        })
-
-        localStorage.removeItem('edges')
-        localStorage.removeItem('nodes')
-
-        if (nodes.length !== 1 && edges.length !== 0) {
-            if (statuses.length === 0) {
-                showNotificationWithIcon('error', '', 'Status field must have at least one status')
-            } else if (workflowName.trim() === "") {
-                showNotificationWithIcon('error', '', 'Name workflow can not be left blank')
-            }
-            else {
-                //if id is existed, for updating else for creating
-                if(workflowId) {
-                    dispatch(UpdateWorkflowAction(workflowId, {
-                        project_id: id,
-                        name_workflow: workflowName,
-                        issue_statuses: statuses?.map(status => parseInt(status)),
-                        nodes: customNode,
-                        edges: customEdge,
-                    }, navigate))
-                }else {
-                    dispatch(createWorkflowAction({
-                        project_id: id,
-                        name_workflow: workflowName,
-                        issue_statuses: statuses?.map(status => parseInt(status)),
-                        creator: userInfo.id,
-                        nodes: customNode,
-                        edges: customEdge,
-                    }, navigate))
-                }
-
-                setStatuses([])
-                setWorkflowName('')
-                setModalCreatingWorkflowOpen(false);
-            }
-
-        } else {
-            showNotificationWithIcon('error', '', 'Create failed. You need more than one node and one edge to start')
-        }
-
-    };
+   
 
     const onReconnectEnd = useCallback((_, edge) => {
         if (!edgeReconnectSuccessful.current) {
@@ -283,25 +121,7 @@ function WorflowEditView(props) {
 
         edgeReconnectSuccessful.current = true;
     }, [])
-    const onAdd = useCallback((value) => {
-        //generate randomly id to fit mongoose's id structure
-        const idRandom = new mongoose.Types.ObjectId();
-        setNodes(nodes => {
-            return [
-                ...nodes,
-                {
-                    id: idRandom.toString(),
-                    type: 'customNodeProcess',
-                    data: { label: value.toUpperCase(), color: generateColor() },
-                    position: {
-                        x: Math.random() * 500,
-                        y: Math.random() * 500,
-                    }
-                }
-            ]
-        })
-        setValueNameProcess('')
-    }, []);
+
 
     //drop existed processes
     const onDragOver = useCallback((event) => {
@@ -313,11 +133,7 @@ function WorflowEditView(props) {
     const [type] = useDnD();
     const { screenToFlowPosition } = useReactFlow();
 
-    //create randomly color for new process
-    function generateColor() {
-        const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-        return '#' + randomColor
-    }
+    
     const onDrop = useCallback(
         (event) => {
             try {
@@ -377,28 +193,33 @@ function WorflowEditView(props) {
                         <span style={{ fontWeight: 'bold', marginRight: '4px' }}>Workflow for </span>
                         {renderCurrentStatuesWithoutNameForUpdating()}
                     </p>
-                    <NavLink to={`/projectDetail/${id}/board`}>{projectInfo.name_project}</NavLink>
+                    <span>
+                        Project Name:
+                        <NavLink className="ml-1" to={`/projectDetail/${id}/board`}>{projectInfo?.name_project}</NavLink>
+                    </span>
                 </div>
                 <WorkflowSideBar />
 
                 <div>
-                    <button className='btn btn-primary ml-2 mr-2' style={{ height: 'fit-content' }} onClick={() => {
-                        setIsModalProcessOpen(true)
-                    }}>Add new node</button>
-                    <button className='btn btn-primary mr-2' style={{ height: 'fit-content' }} onClick={() => {
-                        setIsModalOpen(true)
-                    }}>Add connection</button>
+                    <Button type='primary' className='ml-2 mr-2' style={{ height: 'fit-content' }} onClick={() => {
+                        console.log("click trong nay");
+                        
+                        dispatch(displayComponentInModal(<AddNewNodeWorkflowModal nodes={nodes} setNodes={setNodes}/>, "500px", "Add new node"))
+                    }}>Add new node</Button>
+                    <Button danger className='mr-2' style={{ height: 'fit-content' }} onClick={() => {
+                          dispatch(displayComponentInModal(<CreateConnectionWorkflowModal nodes={nodes} params={null} setLabelEdge={setLabelEdge} labelEdge={labelEdge} setEdges={setEdges} addEdge={addEdge}/>, "500px", "Create connection"))
+                    }}>Add connection</Button>
                 </div>
                 <div>
-                    {nodes?.length === 1 || edges?.length === 0 ? <button className='btn btn-light mr-2' disabled style={{ height: 'fit-content' }}>{workflowId ? "Update Workflow" : "Create new workflow"}</button> : <button className='btn btn-light mr-2' style={{ height: 'fit-content' }} onClick={() => {
-                        setModalCreatingWorkflowOpen(true)
-                    }}>{workflowId ? "Update Workflow" : "Create new workflow"}</button>}
-                    <button className='btn btn-dark' style={{ height: 'fit-content' }} onClick={() => {
+                    {nodes?.length === 1 || edges?.length === 0 ? <Button className='mr-2' disabled style={{ height: 'fit-content' }}>{workflowId ? "Update Workflow" : "Create new workflow"}</Button> : <Button className='btn btn-light mr-2' style={{ height: 'fit-content' }} onClick={() => {
+                        dispatch(displayComponentInModal(<CreateOrUpdateWorkflowModal id={id} workflowId={workflowId} workflowList={workflowList} nodes={nodes} edges={edges} userInfo={userInfo}/>, 500, JSON.parse(localStorage.getItem('workflowInfo')) === null ? "Create workflow" : "Upadte workflow"))
+                    }}>{workflowId ? "Update Workflow" : "Create new workflow"}</Button>}
+                    <Button className='btn btn-dark' style={{ height: 'fit-content' }} onClick={() => {
                         navigate(`/projectDetail/${id}/workflows`)
 
                         localStorage.removeItem('nodes')
                         localStorage.removeItem('edges')
-                    }}>Close</button>
+                    }}>Close</Button>
                 </div>
             </div>
             <div style={{ width: '100wh', height: '90vh' }}>
@@ -439,63 +260,6 @@ function WorflowEditView(props) {
                     <Background />
                 </ReactFlow>
             </div>
-            <Modal title="Create connection" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
-                <div>
-                    <p>Connections connect statuses. They represent actions people take to move issues through your workflow. They also appear as drop zones when people move cards across your project's board.</p>
-                    <div className='row'>
-                        <div className='col-6 d-flex flex-column'>
-                            <label htmlFor='fromStatus'>From status</label>
-                            <Select defaultValue={null} value={valueConnection !== null && Object.keys(valueConnection).length !== 0 ? valueConnection.source : null} options={nodeOptions()} id='fromStatus' onSelect={(value) => {
-                                valueConnection.source = value
-                                valueConnection.sourceHandle = null
-                            }} />
-                        </div>
-                        <div className='col-6 d-flex flex-column'>
-                            <label htmlFor='targetStatus'>To status</label>
-                            <Select defaultValue={null} value={valueConnection !== null && Object.keys(valueConnection).length !== 0 ? valueConnection.target : null} options={nodeOptions()} id='targetStatus' onSelect={(value) => {
-                                valueConnection.target = value
-                                valueConnection.targetHandle = null
-                            }} />
-                        </div>
-                    </div>
-                    <div>
-                        <label htmlFor='name'>Name</label>
-                        <Input placeholder='Give your connection a name' value={labelEdge} defaultValue="" onChange={(e) => {
-                            setLabelEdge(e.target.value)
-                        }} />
-                        <small>Try a name that's easy to understand e.g. todo</small>
-                    </div>
-                </div>
-            </Modal>
-            <Modal title="Add new status" open={isModalProcessOpen} onOk={handleCreatingProcessOk} onCancel={handleCreatingProcessCancel}>
-                <div>
-                    <Input value={valueNameProcess} defaultValue="" onChange={(e) => {
-                        setValueNameProcess(e.target.value)
-                    }} placeholder='Enter name for new node' />
-                    <small>Try a name that's easy to understand e.g. To do</small>
-                </div>
-            </Modal>
-
-            <Modal destroyOnClose="true" title="Create workflow" open={isModalCreatingWorkflowlOpen} onOk={handleCreatingWorkflowOk} onCancel={handleCreatingWorkflowCancel}>
-                <p>Changes to this workflow will apply to the issue statuses selected.</p>
-                <label>Enter a new name for your workflow <span className='text-danger'>*</span></label>
-                <Input defaultValue={renderCurrentNameWorkflowForUpdating()} onChange={(e) => {
-                    setWorkflowName(e.target.value)
-                }} />
-                <label className='mt-2'>Select the issue statuses you want to copy this workflow to: <span className='text-danger'>*</span></label>
-                <Select
-                    mode="multiple"
-                    placeholder="Please select"
-                    defaultValue={renderCurrentStatuesForUpdating()}
-                    options={issueTypeOptions}
-                    onChange={(value) => {
-                        setStatuses(value)
-                    }}
-                    style={{
-                        width: '100%',
-                    }}
-                />
-            </Modal>
         </div>
     )
 }
@@ -503,6 +267,7 @@ function WorflowEditView(props) {
 export default function WorkflowEdit(props) {
     return (
         <ReactFlowProvider>
+            <ModalHOC />
             <DnDProvider>
                 <WorflowEditView {...props} />
             </DnDProvider>

@@ -69,3 +69,8 @@
         max-width: 250px;
     }
 }
+
+.react-flow__node.react-flow__node-customNodeProcess,
+.react-flow__node.react-flow__node-custom {
+    border: none !important;
+}

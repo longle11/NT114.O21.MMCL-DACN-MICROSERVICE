@@ -474,7 +474,7 @@ export default function Backlog() {
         })
         return newSprintList?.map((sprint, index) => {
             return <div key={index} className='issues-info-sprint m-0 mb-4' style={{ width: '100%', backgroundColor: '#f7f8f9' }}>
-                <div className="d-flex justify-content-between align-items-center" style={{ padding: '10px 20px' }}>
+                <div className="d-flex justify-content-between align-items-center" style={{ padding: '10px 20px', paddingBottom: 0 }}>
                     <div
                         className='d-flex'
                         data-toggle="collapse"
@@ -522,7 +522,7 @@ export default function Backlog() {
                         }} className='btn btn-primary'>Complete sprint</button> : (projectInfo?.sprint_id === null && sprint.issue_list.length > 0 ? <button className='btn btn-primary' onClick={() => {
                             //allow to start sprint if no sprints are started and only when a sprint has start and end date
                             //with start date greater than or equal current day
-                            if (projectInfo?.sprint_id === null && sprint.start_date !== null && (dayjs(sprint.start_date).isAfter(dayjs(new Date())))) {
+                            if (projectInfo?.sprint_id === null && sprint.start_date !== null && ((dayjs(sprint.start_date).isBefore(dayjs(new Date()))) || (dayjs(sprint.start_date).isSame(dayjs(new Date()))))) {
                                 dispatch(updateProjectAction(id, { sprint_id: sprint._id }, navigate))
                                 dispatch(updateSprintAction(sprint._id, { sprint_status: 'processing' }))
                             } else {
@@ -1190,7 +1190,6 @@ export default function Backlog() {
                                                 defaultValue={summary}
                                                 placeholder="What needs to be done?"
                                                 onChange={(e) => {
-                                                    console.log("gia tri duoc set ", e.target.value);
                                                     setSummary(e.target.value)
                                                 }}
                                                 onBlur={() => setOpenCreatingSprint(null)}

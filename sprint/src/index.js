@@ -11,6 +11,8 @@ const issueUpdatedListener = require('./nats/listener/issue-listener/issue-updat
 const issueInsertToSprintCreated = require('./nats/listener/issue-listener/issueInsertToSprint-created-listeners copy')
 const issueProcessCreatedListener = require('./nats/listener/issueprocess-listener/issueprocess-created-listener')
 const issueProcessUpdatedListener = require('./nats/listener/issueprocess-listener/issueprocess-updated-listener')
+const issueManyUpdatedListener = require('./nats/listener/issue-listener/issue-many-updated-listener')
+const issueProcessDeletedListener = require('./nats/listener/issueprocess-listener/issueprocess-deleted-listener')
 const app = express()
 app.use(cors())
 app.use(bodyParser.json())
@@ -41,9 +43,11 @@ async function connectToNats() {
         epicCreatedListener()
         issueCreatedListener()
         issueUpdatedListener()
+        issueManyUpdatedListener()
         issueInsertToSprintCreated()
         issueProcessCreatedListener()
         issueProcessUpdatedListener()
+        issueProcessDeletedListener()
 
         console.log("Connected successfully to nats");
     }catch(err) {

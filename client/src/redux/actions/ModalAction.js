@@ -1,4 +1,4 @@
-import { CLOSE_MODAL, CLOSE_MODAL_INFO, DISPLAY_MODAL_INFO_WITH_COMPONENT, DISPLAY_MODAL_WITH_COMPONENT, HANDLE_CLICK_OK_MODAL, OPEN_MODAL, OPEN_MODAL_INFO } from "../constants/constant"
+import { CLOSE_CHILD_MODAL, CLOSE_MODAL, CLOSE_MODAL_INFO, DISPLAY_CHILD_MODAL_WITH_COMPONENT, DISPLAY_MODAL_INFO_WITH_COMPONENT, DISPLAY_MODAL_WITH_COMPONENT, HANDLE_CHILD_CLICK_OK_MODAL, HANDLE_CLICK_OK_MODAL, OPEN_CHILD_MODAL, OPEN_MODAL, OPEN_MODAL_INFO } from "../constants/constant"
 
 export const openModal = (status) => {
     return dispatch => {
@@ -13,6 +13,22 @@ export const openModal = (status) => {
         }
     }
 }
+
+
+export const openChildModal = (status) => {
+    return dispatch => {
+        if (status) {
+            dispatch({
+                type: OPEN_CHILD_MODAL
+            })
+        } else {
+            dispatch({
+                type: CLOSE_CHILD_MODAL
+            })
+        }
+    }
+}
+
 export const openModalInfo = (status) => {
     return dispatch => {
         if (status) {
@@ -37,6 +53,17 @@ export const displayComponentInModal = (component, setWidth, setTitle) => {
         })
     }
 }
+export const displayChildComponentInModal = (component, setWidth, setTitle) => {
+    return dispatch => {
+        dispatch({
+            type: DISPLAY_CHILD_MODAL_WITH_COMPONENT,
+            component: component,
+            setWidth: setWidth,
+            setTitle: setTitle
+        })
+    }
+}
+
 
 export const displayComponentInModalInfo = (component, setWidthInfo) => {
     return dispatch => {
@@ -53,6 +80,16 @@ export const handleClickOk = (callbackOk) => {
         dispatch({
             type: HANDLE_CLICK_OK_MODAL,
             handleOk: callbackOk
+        })
+    }
+}
+
+
+export const handleChildClickOk = (callbackOk) => {
+    return dispatch => {
+        dispatch({
+            type: HANDLE_CHILD_CLICK_OK_MODAL,
+            childHandleOk: callbackOk
         })
     }
 }

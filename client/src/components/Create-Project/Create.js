@@ -1,46 +1,58 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Editor } from '@tinymce/tinymce-react';
 import { withFormik } from 'formik';
-import { connect, useDispatch, useSelector } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import { getListCategories } from '../../redux/actions/CategoryAction';
-import { createProjectAction } from '../../redux/actions/CreateProjectAction';
-import { showNotificationWithIcon } from '../../util/NotificationUtil';
 import PropTypes from 'prop-types';
-
+import { Avatar, Breadcrumb, Select } from 'antd';
+import * as Yup from "yup";
+import { showNotificationWithIcon } from '../../util/NotificationUtil';
+import { createProjectAction } from '../../redux/actions/CreateProjectAction';
 function Create(props) {
-    const { handleSubmit, handleChange, setFieldValue } = props;
+    const { handleSubmit, handleChange, setFieldValue, errors } = props;
     const handlEditorChange = (content, editor) => {
         setFieldValue('description', content)
     }
+    const [keyName, setKeyName] = useState('')
 
     const dispatch = useDispatch()
-    const categoryList = useSelector(state => state.categories.categoryList)
     useEffect(() => {
         dispatch(getListCategories())
         // eslint-disable-next-line
     }, [])
 
     return (
-        <div className='container'>
-            <div className="header">
-                <nav aria-label="breadcrumb">
-                    <ol className="breadcrumb" style={{ backgroundColor: 'white' }}>
-                        <li className="breadcrumb-item">Project</li>
-                        <li className="breadcrumb-item active" aria-current="page">
-                            Create Project
-                        </li>
-                    </ol>
-                </nav>
+        <div style={{ height: '100%', overflowY: 'auto', scrollbarWidth: 'thin' }}>
+            <div>
+                <div className="header">
+                    <Breadcrumb
+                        style={{ marginBottom: 10 }}
+                        items={[
+                            {
+                                title: <a href="/">Projects</a>,
+                            }
+                        ]}
+                    />
+                </div>
+                <h4>Create Project</h4>
             </div>
-            <h3>Create Project</h3>
-            <div className="info">
-                <form onSubmit={handleSubmit}>
+            <div className="info d-flex justify-content-center">
+                <form onSubmit={handleSubmit} style={{ width: '50%' }}>
                     <div className='form-group'>
-                        <p>Name <span style={{ color: 'red' }}>(*)</span></p>
+                        <label htmlFor='name_project'>Name <span style={{ color: 'red' }}>(*)</span></label>
                         <input onChange={handleChange} className='form-control' name='name_project' />
+                        {errors.name_project ? (<div style={{ color: '#ae2e24', marginTop: 5 }}><i className="fa fa-exclamation-triangle mr-2"></i>{errors.name_project}</div>) : null}
                     </div>
                     <div className='form-group'>
-                        <p>Description</p>
+                        <label htmlFor='key_name'>Key project <span style={{ color: 'red' }}>(*)</span></label>
+                        <input value={keyName} onChange={(e) => {
+                            setKeyName(e.target.value.toUpperCase())
+                            setFieldValue('key_name', e.target.value.toUpperCase())
+                        }} className='form-control' name='key_name' />
+                        {errors.key_name ? (<div style={{ color: '#ae2e24', marginTop: 5 }}><i className="fa fa-exclamation-triangle mr-2"></i>{errors.key_name}</div>) : null}
+                    </div>
+                    <div className='form-group'>
+                        <label htmlFor='description'>Description</label>
                         <Editor name='description'
                             apiKey='golyll15gk3kpiy6p2fkqowoismjya59a44ly52bt1pf82oe'
                             init={{
@@ -57,12 +69,18 @@ function Create(props) {
                             onEditorChange={handlEditorChange}
                         />
                     </div>
-                    <div className='form-group'>
-                        <select name='category' className='form-control' onChange={handleChange} >
-                            {categoryList.map((value, index) => {
-                                return <option value={value._id} key={value.id}>{value.name}</option>
-                            })}
-                        </select>
+                    <div className='form-group d-flex flex-column'>
+                        <label htmlFor='project_leader'>Project leader</label>
+                        <Select
+                            name="project_leader"
+                            style={{ height: 40, width: '50%' }}
+                            options={[
+                                {
+                                    value: props.userInfo.id,
+                                    label: <span><Avatar size="small" src={props.userInfo.avatar} /> {props.userInfo.username}</span>
+                                }
+                            ]}
+                            defaultValue={props.userInfo.id} />
                     </div>
                     <button type='submit' className='btn btn-primary'>Create project</button>
                 </form>
@@ -79,25 +97,28 @@ Create.propTypes = {
 const handleCreateProject = withFormik({
     enableReinitialize: true,
     mapPropsToValues: (props) => {
-        return { name_project: '', description: '', category: props.categoryList[0]?._id }
+        return { name_project: '', description: '', key_name: '', project_lead: props.userInfo.id }
     },
-    // validationSchema: Yup.object().shape({
-
-    // }),
+    validationSchema: Yup.object().shape({
+        name_project: Yup.string()
+            .trim()
+            .required("Name project is required")
+            .min(2, "Name project has a minimum of 2 characters"),
+        key_name: Yup.string()
+            .trim()
+            .required("Key name is required")
+            .min(2, "Key name has a minimum of 2 characters")
+            .max(10, "Key name has a maximum of 10 characters")
+            .matches(/^[A-Za-z][A-Za-z0-9]*$/, "Key name must start with a letter and contain no special characters or spaces")
+    }),
     handleSubmit: (values, { props, setSubmitting }) => {
-        if (values.name_project.trim() === '') {
-            showNotificationWithIcon('error', 'Tạo dự án', 'Trường * không được bỏ trống')
-        }
-        if (values.name_project.trim() !== '' && values.description.trim() !== '') {
-            if (props.userInfo) {
-                values.creator = props.userInfo.id
-                props.dispatch(createProjectAction({ ...values, members: [{ user_info: props.userInfo.id, user_role: 0, status: 'approved' }], sprint_id: null }))
-            } else {
-                showNotificationWithIcon('error', 'Tạo dự án', 'Vui lòng đăng nhập trước khi tạo dự án')
-            }
+        if (props.userInfo) {
+            values.creator = props.userInfo.id
+            props.dispatch(createProjectAction({ ...values, members: [{ user_info: props.userInfo.id, user_role: 0, status: 'approved' }], sprint_id: null }))
+        } else {
+            showNotificationWithIcon('error', 'Tạo dự án', 'Vui lòng đăng nhập trước khi tạo dự án')
         }
     },
-
     displayName: 'EditForm',
 })(Create);
 

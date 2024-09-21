@@ -182,6 +182,24 @@ router.post("/issue-backlog/:projectId", currentUserMiddleware, async (req, res,
     }
 })
 
+//update many issues at the same times
+router.post('/update/issues', async (req, res, next) => {
+    try {
+        const data = await issueModel.updateMany({ _id: { $in: req.body.issue_list } }, { $set: { issue_type: req.body.new_issue_type } })
+        // public su kien cap nhat nhieu issue cung luc 
+        await issuePublisher({
+            issue_list: req.body.issue_list,
+            issue_type: req.body.new_issue_type
+        }, 'issue-many:updated')
+        return res.status(200).json({
+            message: "Successfully updated issue list",
+            data: data
+        })
+    } catch (error) {
+        next(error)
+    }
+})
+
 
 
 module.exports = router;

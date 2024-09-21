@@ -7,9 +7,6 @@ const workflowModel = require('../models/workflowModel');
 router.get('/:projectId', async (req, res) => {
     try {
         const processList = await issueProcessModel.find({project_id: req.params.projectId})
-            .populate({
-                path: 'issue_list'
-            })
         
         res.status(200).json({
             message: "Successfully got process list",

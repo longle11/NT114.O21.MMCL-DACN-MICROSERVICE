@@ -1,7 +1,7 @@
 import Axios from "axios"
 import { sendNotificationToValidUserWithAssigningToIssue, sendNotificationToValidUserWithCreatingIssues, sendNotificationToValidUserWithEditingIssues, sendNotificationToValidUserWithSomeoneWriteTheirWorklog, showNotificationWithIcon } from "../../util/NotificationUtil"
 import { GET_INFO_ISSUE, GET_ISSUE_HISTORIES_LIST, GET_ISSUE_LIST, GET_ISSUES_BACKLOG, GET_ISSUES_IN_PROJECT, GET_WORKLOG_HISTORIES_LIST, USER_LOGGED_IN } from "../constants/constant"
-import { GetProjectAction, GetSprintListAction } from "./ListProjectAction"
+import { GetProjectAction, GetSprintAction, GetSprintListAction } from "./ListProjectAction"
 import domainName from '../../util/Config'
 import { delay } from "../../util/Delay"
 import { updateUserInfo } from "./UserAction"
@@ -20,7 +20,7 @@ export const createIssue = (props, project_id, creator_history, sprintId, issueP
                     issue_id: res.data.data._id.toString(),
                     createBy: creator_history,
                     type_history: "created",
-                    name_status: "issue",   
+                    name_status: "issue",
                     old_status: null,
                     new_status: null
                 }))
@@ -37,7 +37,7 @@ export const createIssue = (props, project_id, creator_history, sprintId, issueP
                     //add this new issue to sprint
                     dispatch(updateSprintAction(sprintId, { issue_id: res.data.data._id }))
                     dispatch(GetSprintListAction(project_id))
-                }else {
+                } else {
                     dispatch(getIssuesBacklog(project_id))
                 }
 
@@ -116,7 +116,7 @@ export const updateIssueFromBacklog = (projectId, props) => {
     return async dispatch => {
         try {
             const res = await Axios.post(`${domainName}/api/issue/issue-backlog/${projectId}/`, props)
-            if(res.status === 200) {
+            if (res.status === 200) {
                 dispatch(getIssuesBacklog(projectId))
                 showNotificationWithIcon("success", "", res.data.message)
             }
@@ -156,7 +156,7 @@ export const updateInfoIssue = (issueId, projectId, props, old_status, new_statu
                 //if this is add a assignee
                 if (props?.assignees) {
                     const getUserNameIndex = projectInfo?.members?.findIndex(user => user.user_info._id.toString() === props?.assignees)
-                    if(getUserNameIndex !== -1) {
+                    if (getUserNameIndex !== -1) {
                         const getUsername = projectInfo?.members[getUserNameIndex].user_info.username
                         sendNotificationToValidUserWithAssigningToIssue(projectInfo, userInfo, res.data.data, dispatch, creator_history, props?.assignees, getUsername)
                     }
@@ -211,7 +211,7 @@ export const updateInfoIssue = (issueId, projectId, props, old_status, new_statu
                     typeUpdated = "an assignee"
                 }
 
-                if(typeUpdated.trim() !== "") {
+                if (typeUpdated.trim() !== "") {
                     sendNotificationToValidUserWithEditingIssues(projectInfo, userInfo, res.data.data, dispatch, creator_history, typeUpdated)
                 }
                 dispatch(getIssuesBacklog(projectId))
@@ -234,6 +234,24 @@ export const updateInfoIssue = (issueId, projectId, props, old_status, new_statu
             if (error.response.status === 400) {
                 showNotificationWithIcon('error', '', error.response.data.message)
             }
+        }
+    }
+}
+
+export const updateManyIssueAction = (sprint_id, props) => {
+    return async dispatch => {
+        try {
+            const res = await Axios.post(`${domainName}/api/issue/update/issues/`, props)
+            if (res.status === 200) {
+                //lấy ra danh sách issue sau khi thay đổi
+                dispatch(GetSprintAction(sprint_id))
+
+                showNotificationWithIcon("success", "", res.data.message)
+            }
+
+
+        } catch (error) {
+            
         }
     }
 }

@@ -15,7 +15,7 @@ export default function MemberProject(props) {
     const id = props.id
     const allIssues = props.allIssues
     const typeInterface = props.typeInterface
-    
+
     const epicList = props.epicList
     const versionList = props.versionList
     const dispatch = useDispatch()
@@ -106,7 +106,7 @@ export default function MemberProject(props) {
             <div className="info" style={{ display: 'flex' }}>
                 <div className="search-block">
                     <Search
-                    
+
                         placeholder="Search"
                         style={{ width: 200, borderRadius: 0 }}
                         onSearch={value => {
@@ -132,7 +132,7 @@ export default function MemberProject(props) {
                         if (searchMyIssue !== null) {
                             setSearchMyIssue(null)
                         }
-                    }} className=' ml-2 mr-2 d-flex justify-content-center'>All issues {searchMyIssue === null ? <span>({allIssues?.filter(issue => issue.issue_status !== 4)?.length})</span> : <></>}</Button>
+                    }} className=' ml-2 mr-2 d-flex justify-content-center'>All issues {searchMyIssue === null ? (allIssues?.length > 0 ? <span>({allIssues?.length})</span> : <></>) : <></>}</Button>
                     <Button type={`${searchMyIssue !== null ? "primary" : "default"}`} onClick={() => {
                         if (searchMyIssue === null) {
                             setSearchMyIssue(userInfo.id)
@@ -140,33 +140,33 @@ export default function MemberProject(props) {
                             setSearchMyIssue(null)
                         }
                     }}>
-                        Only my issues {searchMyIssue !== null ? <span>({allIssues?.filter(issue => ((issue.creator._id === userInfo.id || issue.assignees.map(currentIssue => currentIssue._id).includes(userInfo.id))) && issue.issue_status !== 4).length})</span> : <></>}
+                        Only my issues {searchMyIssue !== null ? (allIssues?.length > 0 ? <span>({allIssues?.filter(issue => ((issue.creator?._id === userInfo.id || issue?.assignees?.map(currentIssue => currentIssue._id).includes(userInfo.id))))?.length})</span> : <></>) : <></>}
                     </Button>
                 </div>
 
                 {
                     typeInterface !== "dashboard" ? <div className='ml-1 mr-1'>
-                    <Button className="mr-2 ml-2" id="dropdownVersionButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Versions {countVersion !== 0 ? <span className='ml-1 mr-2' style={{ color: 'blue' }}>({countVersion})</span> : <></>} <i className="fa fa-angle-down ml-2"></i>
-                    </Button>
-                    <div className="dropdown-menu" aria-labelledby="dropdownVersionButton">
-                        {versionList !== null && versionList?.length > 0 ? <Checkbox.Group defaultValue={props.searchIssue.versions} value={props.searchIssue.versions} style={{ width: '100%' }} onChange={(value) => {
-                            props.handleSearchIssue([...value], props.searchIssue.epics)
-                            setCountVersion(value.length)
-                        }}>
-                            <Row>
-                                <Col span={16} style={{ padding: '5px 10px' }}>
-                                    <Checkbox value={null}>Issue without epics</Checkbox>
-                                </Col>
-                                {versionList?.map(version => {
-                                    return <Col span={16} style={{ padding: '5px 10px' }}>
-                                        <Checkbox value={version._id}>{version.version_name}</Checkbox>
+                        <Button className="mr-2 ml-2" id="dropdownVersionButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Versions {countVersion !== 0 ? <span className='ml-1 mr-2' style={{ color: 'blue' }}>({countVersion})</span> : <></>} <i className="fa fa-angle-down ml-2"></i>
+                        </Button>
+                        <div className="dropdown-menu" aria-labelledby="dropdownVersionButton">
+                            {versionList !== null && versionList?.length > 0 ? <Checkbox.Group defaultValue={props.searchIssue.versions} value={props.searchIssue.versions} style={{ width: '100%' }} onChange={(value) => {
+                                props.handleSearchIssue([...value], props.searchIssue.epics)
+                                setCountVersion(value.length)
+                            }}>
+                                <Row style={{width: '100%'}}>
+                                    <Col span={16} style={{ padding: '5px 10px' }}>
+                                        <Checkbox style={{width: 'max-content'}} value={null}>Issue without epics</Checkbox>
                                     </Col>
-                                })}
-                            </Row>
-                        </Checkbox.Group> : <p style={{ padding: '5px 20px' }}>Unreleased versions in this project</p>}
-                    </div>
-                </div> : <></>
+                                    {versionList?.map(version => {
+                                        return <Col span={16} style={{ padding: '5px 10px' }}>
+                                            <Checkbox value={version._id}>{version.version_name}</Checkbox>
+                                        </Col>
+                                    })}
+                                </Row>
+                            </Checkbox.Group> : <p style={{ padding: '5px 20px' }}>Unreleased versions in this project</p>}
+                        </div>
+                    </div> : <></>
                 }
                 <div className='ml-1'>
                     <Button id="dropdownEpicButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -176,7 +176,7 @@ export default function MemberProject(props) {
                         {
                             epicList !== null && epicList?.length > 0 ? <Checkbox.Group defaultValue={props.searchIssue.epics} value={props.searchIssue.epics} style={{ width: '100%' }} onChange={(value) => {
                                 console.log("props.searchIssue.versions, [...value] ", props.searchIssue.versions, [...value]);
-                                
+
                                 props.handleSearchIssue(props.searchIssue.versions, [...value])
                                 setCountEpic(value.length)
                             }}>

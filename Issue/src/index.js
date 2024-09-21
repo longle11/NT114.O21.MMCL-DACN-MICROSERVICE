@@ -9,6 +9,7 @@ const authCreatedListener = require("./nats/listener/auth-listener/auth-created-
 const sprintDeletedListener = require("./nats/listener/sprint-listener/sprint-deleted-listener")
 const projectManagementCreatedListener = require("./nats/listener/project-listener/projectManagement-created-listener")
 const issueProcessUpdatedListener = require("./nats/listener/issueprocess-listener/issueprocess-updated-listener")
+const issueProcessDeletedListener = require("./nats/listener/issueprocess-listener/issueprocess-deleted-listener")
 
 async function connectToNats() {
     try {
@@ -28,6 +29,7 @@ async function connectToNats() {
         sprintDeletedListener()
         issueProcessCreatedListener()
         issueProcessUpdatedListener()
+        issueProcessDeletedListener()
         projectManagementCreatedListener()
 
         console.log("Successfully connected to nats");
