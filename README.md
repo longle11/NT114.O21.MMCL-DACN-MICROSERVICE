@@ -1,22 +1,21 @@
-![image](https://github.com/user-attachments/assets/90cd1dee-7505-4822-8d56-b70e1f07b6e5)![image](https://github.com/u
-ser-attachments/assets/c88e0794-7ca0-4d45-9c95-353fc3d44da8)![image](https://github.com/user-attachments/assets/ffa3d8e4-11f1-4c59-a851-c26b9ab065db)<h3>Kiến trúc tổng quát của hệ thống microservies</h3>
-<img src="https://github.com/user-attachments/assets/73ce64a2-6c72-43cb-a363-2a3829f80738" alt="Pipeline Devsecops" />
+<h3>Kiến trúc tổng quát của hệ thống microservies</h3>
+<img align="center" src="https://github.com/user-attachments/assets/73ce64a2-6c72-43cb-a363-2a3829f80738" alt="Pipeline Devsecops" />
 
 <h3>Kiến trúc hệ thống Microservices</h3>
 
-<img src="https://github.com/user-attachments/assets/69ba9210-ba51-4230-b9ca-4672fa5d6120" alt="microservices architecture" />
+<img align="center" src="https://github.com/user-attachments/assets/69ba9210-ba51-4230-b9ca-4672fa5d6120" alt="microservices architecture" />
 
 <h3>Các công cụ triển khai</h3>
 
-<img src="https://github.com/user-attachments/assets/73d672f0-4aed-4aea-b116-ddb5b2f5f3d7" alt="tools" />
+<img align="center" src="https://github.com/user-attachments/assets/73d672f0-4aed-4aea-b116-ddb5b2f5f3d7" alt="tools" />
 
 <h3>Chiến lược triển khai từ development sang staging</h3>
 
-<img src="https://github.com/user-attachments/assets/afefb764-53f3-4f4c-9d3c-333b4d5fe22e" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/afefb764-53f3-4f4c-9d3c-333b4d5fe22e" alt="database models"/>
 
 <h3>Chiến lược triển khai từ staging sang production</h3>
 
-<img src="https://github.com/user-attachments/assets/5996e395-730a-4f23-a783-7640a5298aad" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/5996e395-730a-4f23-a783-7640a5298aad" alt="database models"/>
 
 
 
@@ -79,22 +78,22 @@ Cài đặt docker và docker compose: sudo apt install docker.io docker-compose
 Cài đặt nginx: sudo apt install nginx
 Bước 3: Chuẩn bị file Docker compose có tên docker-compose.sonarqube.yml với nội dung như sau
 
-<img src="https://github.com/user-attachments/assets/e063f195-0aac-4650-8891-ddc743da63ca" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/e063f195-0aac-4650-8891-ddc743da63ca" alt="database models"/>
 
 Bước 4: Sử dụng docker-compose -f docker-compose.sonarqube.yml up -d để chạy nền và sử dụng docker ps -a để xem cá
 c container đã chạy hay chưa lúc này ta có thể truy cập qua địa chỉ ip:9001
-<img src="https://github.com/user-attachments/assets/67c08d1e-4ad6-4a30-977a-acd1e1c0a00e" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/67c08d1e-4ad6-4a30-977a-acd1e1c0a00e" alt="database models"/>
 
 Bước 5: Chỉnh sửa cấu hình nginx để cho phép giả lập domain truy cập
 Chỉnh sửa thông tin trong file /etc/nginx/sites-available/default phần listen chỉnh port qua 9999 (hoặc bất kì port nào)
 Tiến hành tạo file /etc/nginx/conf.d/sonarqube.taskscheduler.com.conf với nội dung
 
-<img src="https://github.com/user-attachments/assets/b9d828cd-a4ca-42af-8af5-403efa21a6fa" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/b9d828cd-a4ca-42af-8af5-403efa21a6fa" alt="database models"/>
 
 Sử dụng sudo systemctl restart nginx để áp dụng cấu hình
 Bước 6: Tiến hành add host trên máy thật để có thể truy cập qua server như bước làm ở gitlab và truy cập qua http:
 //sonarqube.taskscheduler.com để truy cập web
-<img src="https://github.com/user-attachments/assets/2f023b25-8216-4e7f-89b5-e512cf1d1305" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/2f023b25-8216-4e7f-89b5-e512cf1d1305" alt="database models"/>
 
 
 Bước 7: Tiến hành tạo token sonar và import vào variable trong gitlab nếu muốn liên kết sonar với gitlab
@@ -108,34 +107,36 @@ Bước 5: Tiến hành truy cập website qua http://IP:8002 với username là
 Bước 6: Nếu muốn truy cập website thông qua domain ảo thì tiến hành tương tự với cài sonarqube => Cài nginx và tạo file conf trong conf.d
 Bước 7: Tiến hành add host trên các máy muốn truy cập thông qua domain http://jfrog.taskscheduler.com
 
-<img src="https://github.com/user-attachments/assets/66e0bfa3-77aa-4cbe-8ab5-c0ded838d84a" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/66e0bfa3-77aa-4cbe-8ab5-c0ded838d84a" alt="database models"/>
 
 **7 Hướng dẫn triển khai Portus truy cập thông qua xác thực SSL**
 Bước 1: Tạo máy ảo EC2 trên Cloud (trong phần hướng dẫn này sẽ sử dụng AWS)
 
-<img src="https://github.com/user-attachments/assets/728b73b0-84f3-42c6-a56f-23f70fefec46" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/728b73b0-84f3-42c6-a56f-23f70fefec46" alt="database models"/>
 
 Bước 2: Chuẩn bị 1 domain (trong phần hướng dẫn sử dụng domain của tenten)
 
-<img src="https://github.com/user-attachments/assets/a8fab482-0b68-4ef0-810a-45f69fc34834" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/a8fab482-0b68-4ef0-810a-45f69fc34834" alt="database models"/>
 
 Bước 3: Cấu hình tạo một sub-domain với Record A, trước tiên tạo domain đã đăng ký lên Route53 và ánh xạ các Namep
 servers từ Route53 vào Namepservers trong tenten
-<img src="https://github.com/user-attachments/assets/86640007-3990-4649-9304-6217f57dff67" alt="database models"/>
+
+<img align="center" src="https://github.com/user-attachments/assets/86640007-3990-4649-9304-6217f57dff67" alt="database models"/>
 
 
-<img src="https://github.com/user-attachments/assets/dbf60e55-8979-4ef7-9f76-b2480d9ecd81" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/dbf60e55-8979-4ef7-9f76-b2480d9ecd81" alt="database models"/>
 
 Bước 4: Chèn địa chỉ public IP của instance đã tạo vào create record có sub-domain là portus.nt533uitjiradev.click
 
-<img src="https://github.com/user-attachments/assets/f71a4e8b-46d3-4e28-a44c-a6c92c7d9fcf" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/f71a4e8b-46d3-4e28-a44c-a6c92c7d9fcf" alt="database models"/>
 
 Bước 5: Tiến hành cập nhật lại các package và cài đặt các gói sử dụng lệnh sudo -i, sudo apt update -y, sudo apt install docker.io docker-compose certbot net-tools -y
 Bước 6: Tạo thư mục làm việc mkdir -p /tools/portus, sau đó tiến hành clone source code trên git sử dụng lệnh git clone https://github.com/SUSE/Portus.git
 Bước 7: Di chuyển các file trong thư mục compose ra thư mục làm việc hiện tại “mv Portus/examples/compose/ .” và xoá thư mục làm việc portus sử dụng lệnh “rm -rf Portus/”
 Bước 8: Tiến hành cd vào thư mục compose và sử dụng lệnh để xác thực ssl cho domain name sử dụng lệnh “certbot cer
 tonly --standalone -d portus.nt533uitjiradev.click  --preferred-challenges http --agree-tos -m ltphilong2001@gmail.com --keep-until-expiring --non-interactive”
-<img src="https://github.com/user-attachments/assets/f71a4e8b-46d3-4e28-a44c-a6c92c7d9fcf" alt="database models"/>
+
+<img align="center" src="https://github.com/user-attachments/assets/f71a4e8b-46d3-4e28-a44c-a6c92c7d9fcf" alt="database models"/>
 
 Bước 9: Comment dòng ssl on ở file nginx/nginx.conf sử dụng lệnh “sed -i 's/^[ \t]*ssl on;/#ssl on;/' nginx/nginx.conf”
 Bước 10: Tiến hành đặt lại tên của đường dẫn /etc/letsencrypt/live/ portuserver.nt533uitjiradev.click/fullchain.pem và /etc/letsencrypt/live/ portuserver.nt533uitjiradev.click/privkey.pem cho đúng với tên trong file nginx.conf
@@ -145,17 +146,17 @@ Bước 11: Sử dụng lệnh sed -i 's/^MACHINE_FQDN=.*/MACHINE_FQDN=portusser
 Bước 12: Sử dụng lệnh docker-compose -f docker-compose.clair-ssl.yml up -d để khởi tạo container và Nếu có lỗi xảy ra: Nếu có lỗi xảy ra: docker-compose -f docker-compose.clair-ssl.yml restart.
 
 
-<img src="https://github.com/user-attachments/assets/8b643e83-3dd3-4123-9aaf-3a8181ec8851" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/8b643e83-3dd3-4123-9aaf-3a8181ec8851" alt="database models"/>
 
 
-<img src="https://github.com/user-attachments/assets/b3794eaa-b170-49d3-bf2c-1969cf6e50b9" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/b3794eaa-b170-49d3-bf2c-1969cf6e50b9" alt="database models"/>
 
 
 Bước 12: Truy cập vào domain: https://portus.nt533uitjiradev.click/users/sign_up
 •	username: admin
 •	password: 12341234
 
-<img src="https://github.com/user-attachments/assets/ca7d4add-e574-48e7-aa2f-41172497bf8c" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/ca7d4add-e574-48e7-aa2f-41172497bf8c" alt="database models"/>
 
 **8 Hướng dẫn triển khai NFS và mount vào container trong kubernetes**
 Bước 1: Tạo 1 server và cấu hình ip tĩnh như các server trên
@@ -168,18 +169,18 @@ Bước 6:  Restart lại server: systemctl restart nfs-kernel-server
 Bước 7: Trên server k8s phải cài nfs-common thì mới kết nối được nfs server: apt install nfs-common trên các server k8s
 Bước 8: Trên server k8s tạo ra 1 storage class để quản lý các persistent volume trên nfs
 
-<img src="https://github.com/user-attachments/assets/8418978c-aae8-479d-b37f-3ff85d6489f3" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/8418978c-aae8-479d-b37f-3ff85d6489f3" alt="database models"/>
 
 Bước 9: Tạo Persistent Volume và tiến hành kết nối tới NFS Server với địa chỉ ip là server cấu hình nfs
 
-<img src="https://github.com/user-attachments/assets/f183342b-e4a0-46c8-b161-f3c96939a952" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/f183342b-e4a0-46c8-b161-f3c96939a952" alt="database models"/>
 
 
 **9 Hướng dẫn triển khai Mino server dành cho việc lưu trữ**
 Bước 1: Đầu tiên tiến hành cài docker compose
 Bước 2: Tạo file docker-compose.minio.yml
 
-<img src="https://github.com/user-attachments/assets/d9da3c05-1a49-4659-aa0a-25357b3907a8" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/d9da3c05-1a49-4659-aa0a-25357b3907a8" alt="database models"/>
 
 
 Bước 3: Tạo thư mục làm việc data bằng cách sử dụng lệnh mkdir /data
@@ -187,20 +188,20 @@ Bước 4: Tiến hành chạy file docker-compose -f docker-compose.minio.yml u
 Bước 5: Tiến hành truy cập website thông qua port 9001 và đăng nhập với username, password đã cấu hình trong file docker-compose
 
 
-<img src="https://github.com/user-attachments/assets/180018ab-aab2-480e-83c7-86d737b988a9" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/180018ab-aab2-480e-83c7-86d737b988a9" alt="database models"/>
 
 
 Bước 6: Sau khi login vào server minio thì tiến hành tạo bucket với tên <taskscheduler-files-storage> và lưu lại access_key và secret_key
 Bước 7: Tiến hành tạo resource là type là secret để lưu trữ access_key và secret_key để sử dụng cho việc kết nối t
 ới server mino từ service file
-<img src="https://github.com/user-attachments/assets/593c4fed-e65f-4b4f-94eb-91d89063fe33" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/593c4fed-e65f-4b4f-94eb-91d89063fe33" alt="database models"/>
 
 
 Bước 8: Sử dụng lệnh kubectl apply -f <tên file secret>.yml
 Bước 9: Để pod thuộc deployment file-depl có thể kết nối tới server minio thì phải tiến hành add host aliases, trong file yml ở thư mục /infras/k8s_test/test/file_depl.yml tiến hành chỉnh sửa host aliases thành địa chỉ ip của server triển khai minio.
 
 
-<img src="https://github.com/user-attachments/assets/d63fcb28-7a46-40ae-9cff-e4126cdef4af" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/d63fcb28-7a46-40ae-9cff-e4126cdef4af" alt="database models"/>
 
 
 **10 Hướng dẫn triển khai cài server Rancher để quản lý tập trung cụm K8S**
@@ -214,13 +215,13 @@ Bước 6: mount -a và dùng df -h để kiểm tra
 Lưu ý: lỗi khi cài rancher xong Kubernetes cluster không thể kết nối vào do rancher không hỗ trợ cho version k8s đó nên sẽ không thể kết nối, đảm bảo kết nối được thì phải kiểm tra version tại: https://www.suse.com/suse-rancher/support-matrix/all-supported-versions/rancher-v2-6-8/
 Bước 7: Tiến hành tạo file docker-compose.rancher.yml để triển khai cấu hình tạo container
 
-<img src="https://github.com/user-attachments/assets/976ea0ea-2968-4544-b0e4-265abae22f3b" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/976ea0ea-2968-4544-b0e4-265abae22f3b" alt="database models"/>
 
 Bước 8: Để lấy password để cập vào rancher sử dụng lệnh docker logs rancher-server 2>&1 | grep "Bootstrap Password:"
 Bước 9: Nếu muốn truy cập thông qua domain thì giả lập domain tương tự với cài đặt các server khác và truy cập thông qua https
 
 
-<img src="https://github.com/user-attachments/assets/f7f9a92e-4d08-4172-903b-190c9e0887ac" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/f7f9a92e-4d08-4172-903b-190c9e0887ac" alt="database models"/>
 
 
 Bước 10: Sau khi login thành công tiến hành đổi password và chọn vào loại cluster muốn import (Kubernetes On-Primese) sau đó copy link và dán vào trong node master của cluster và đợi kết nối.
@@ -233,7 +234,7 @@ Bước 4: Sử dụng helm update để cập nhật lại values cho kong vớ
 Bước 5: Truy cập dashboard thông qua port 8002
 
 
-<img src="https://github.com/user-attachments/assets/89c5debb-12c7-438e-8d70-4a71bc99e847" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/89c5debb-12c7-438e-8d70-4a71bc99e847" alt="database models"/>
 
 
 Bước 6: Áp dụng file cấu hình ingress để có thể triển khai traffic vào từng loại service tương ứng sử dụng kubectl apply -f path/ingress.yml
@@ -252,11 +253,11 @@ Bước 3: Trong trường hợp metric server không thể chạy với lỗi x
         - --metric-resolution=15s
 Và thay các port 10250 thành port 4443
 
-<img src="https://github.com/user-attachments/assets/4bf9f32d-7763-4e1b-995b-79277f54cbb2" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/4bf9f32d-7763-4e1b-995b-79277f54cbb2" alt="database models"/>
 
 Bước 4: Sử dụng kubectl top pods hoặc kubectl get hpa để kiểm tra thông tin theo dõi tài nguyên từ metric server
 
-<img src="https://github.com/user-attachments/assets/f2948f8f-d135-4c83-a492-9418fe48ed0c" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/f2948f8f-d135-4c83-a492-9418fe48ed0c" alt="database models"/>
 
 **13 Cài đặt ArgoCD sử dụng helm chart**
 Bước 1: Tạo namespace: kubectl create namespace argocd
@@ -265,7 +266,7 @@ Bước 3: Sử dụng lệnh để lấy secret trong argocd: kubectl -n argocd
 Bài 4: Tiến hành chỉnh sửa argocd-server từ cluster ip sang nodeport sau đó truy cập web thông qua https://localhost:<port>
 
 
-<img src="https://github.com/user-attachments/assets/07652494-0240-494d-b0f4-889a4f03c5d9" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/07652494-0240-494d-b0f4-889a4f03c5d9" alt="database models"/>
 
 
 **14 Cài đặt Prometheus + Grafana sử dụng helm**
@@ -274,31 +275,31 @@ Bước 2: Tiến hành clone chart về repo sử dụng lệnh helm repo add p
 Bước 3: Tạo namespace tên monitoring sử dụng lệnh kubectl create ns monitoring và chạy lệnh để cài đặt prometheus và grafana để mount dữ liệu từ prometheus vào /monitoring-data
 
 
-<img src="https://github.com/user-attachments/assets/c1c65097-8d2c-4de0-a5de-04f105bc059b" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/c1c65097-8d2c-4de0-a5de-04f105bc059b" alt="database models"/>
 
 Bước 3: Để có thể truy cập thông qua domain từ prometheus và grafana thì tạo file ingress cho prometheus và grafana sau đó sử dụng kubectl apply -f <file>.yml để áp dụng cấu hình.
 
 
-<img src="https://github.com/user-attachments/assets/7e098fff-5c15-446d-b1aa-a66eea521d24" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/7e098fff-5c15-446d-b1aa-a66eea521d24" alt="database models"/>
 
 
-<img src="https://github.com/user-attachments/assets/a53c2a42-8e0c-4603-88d9-708b43a3c31b" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/a53c2a42-8e0c-4603-88d9-708b43a3c31b" alt="database models"/>
 
 
 Bước 4: Tiến hành add host ở máy thật để có thể phân giải được domain ảo của prometheus và grafana với cấu hình
 
-<img src="https://github.com/user-attachments/assets/f4df142d-da92-4196-a042-08a20d7034f4" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/f4df142d-da92-4196-a042-08a20d7034f4" alt="database models"/>
 
 Bước 5: Trên giao diện grafana tiến hành login với username là admin và password là prom-operator
 •	Truy cập Grafana thông qua domain https://grafana.taskscheduler.com
 
 
-<img src="https://github.com/user-attachments/assets/c234f648-0140-4355-bf71-cf6a7f37f8fc" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/c234f648-0140-4355-bf71-cf6a7f37f8fc" alt="database models"/>
 
 
 •	Truy cập Prometheus thông qua domain  https://prometheus.taskscheduler.com
 
-<img src="https://github.com/user-attachments/assets/2fd502bd-9f45-4344-bc3e-ddddb1a2e98e" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/2fd502bd-9f45-4344-bc3e-ddddb1a2e98e" alt="database models"/>
 
 
 **15 Cài đặt Uptime Kuma sử dụng helm**
@@ -307,11 +308,11 @@ Bước 1: Tiến hành add repo vào kho lưu trữ: helm repo add uptime-kuma 
 Bước 2: Cài đặt updatime kuma: helm install uptimekuma uptime-kuma/uptime-kuma --namespace monitoring.
 Bước 3: Tiến hành tạo thư mục /uptime-kuma để mount dữ liệu từ uptime kuma vào server nfs sau khi mount thành công
  thì dữ liệu sẽ hiển thị như bên dưới.
-<img src="https://github.com/user-attachments/assets/54da2268-6e92-4c79-b8c0-404a8ca1f9b8" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/54da2268-6e92-4c79-b8c0-404a8ca1f9b8" alt="database models"/>
 
 Bước 4: Tạo PV kết nối tới nfs thư mục uptime kuma và PVC để kết nối tới PV
 
-<img src="https://github.com/user-attachments/assets/66a29b71-f251-4183-b867-11a7dd9ccc62" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/66a29b71-f251-4183-b867-11a7dd9ccc62" alt="database models"/>
 
 Bước 5: Sử dụng lệnh helm show values uptime-kuma/uptime-kuma > values.yml để clone file cấu hình về máy local, ở phần volume chọn existingClaim và điền tên PVC muốn kết nối tới (uptime-kuma-pvc) sau đó sử dụng lệnh helm upgrade -n monitoring uptimekuma uptime-kuma/ uptime-kuma -f custom-values.yml
 
@@ -329,9 +330,10 @@ Bước 5: Tiến hành export các variables để kết nối tới minio serv
 
 Bước 6: Tạo namespace velero và tiến hành áp dụng cấu hình bên dưới:
 
-<img src="https://github.com/user-attachments/assets/4b4fb5b0-9f96-4f32-83ae-59af47a13111" alt="database models"/>
+<img align="center" src="https://github.com/user-attachments/assets/4b4fb5b0-9f96-4f32-83ae-59af47a13111" alt="database models"/>
 
 Bước 7: Có thể backup dữ liệu theo từng namespace hoặc backup cả cụm sử dụng lệnh velero backup create <tên-file> --include-namespace=”*” (có thể chỉ định tên namespace nếu muốn backup từng namespace) và velero backup get để lấy danh sách backup.
 Bước 8: Nếu muốn backup dữ liệu thì sử dụng lệnh velero restore create <tên backup> --from-backup <tên backup>  --
 include-namespaces “*” và muốn backup định kỳ theo ngày tự động thì velero schedule create daily-cluster-backup --scheduler"0 0 * * *"  --include-namespace '*'. Sau khi kiểm tra thì trên minio server sẽ có toàn bộ thông tin file backup
-<img src="https://github.com/user-attachments/assets/a480bd18-ea3f-4849-9b9e-78221982eb99" alt="database models"/>
+
+<img align="center" src="https://github.com/user-attachments/assets/a480bd18-ea3f-4849-9b9e-78221982eb99" alt="database models"/>
