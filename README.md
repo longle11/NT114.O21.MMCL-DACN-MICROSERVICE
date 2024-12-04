@@ -1,8 +1,13 @@
-<h3>Kiến trúc của microservice</h3>
-<img src="https://github.com/longle11/NT114.O21.MMCL-DACN-MICROSERVICE/assets/166148333/a7a5824a-c1ce-408a-8542-f253237fdbed" alt="Microservice architecture in kubernetes" />
-<h3>Quy trình tự động hóa microservice lên môi trường kubernetes</h3>
-<img src="https://github.com/longle11/NT114.O21.MMCL-DACN-MICROSERVICE/assets/166148333/9c9f50e4-079b-4a25-8da6-5cf50703d615" alt="Automatic Process to deploy microservice on kubernetes" />
-<h3>Sơ đồ usecase của hệ thống</h3>
-<img src="https://github.com/longle11/NT114.O21.MMCL-DACN-MICROSERVICE/assets/166148333/e9c854dd-a96f-43a7-9dd9-7b45b3866477" alt="Usecase model for application" />
-<h3>Mô hình cơ sở dữ liệu</h3>
-<img src="https://github.com/longle11/NT114.O21.MMCL-DACN-MICROSERVICE/assets/166148333/6d8df925-4787-4ff6-8324-d4d9560d26a6" alt="database models"/>
+<h3>Kiến trúc tổng quát của hệ thống microservies</h3>
+<img src="https://github.com/user-attachments/assets/73ce64a2-6c72-43cb-a363-2a3829f80738" alt="Pipeline Devsecops" />
+<h3>Kiến trúc hệ thống Microservices</h3>
+<img src="https://github.com/user-attachments/assets/69ba9210-ba51-4230-b9ca-4672fa5d6120" alt="microservices architecture" />
+<h3>Các công cụ triển khai</h3>
+<img src="https://github.com/user-attachments/assets/73d672f0-4aed-4aea-b116-ddb5b2f5f3d7" alt="tools" />
+<h3>Chiến lược triển khai từ development sang staging</h3>
+<img src="https://github.com/user-attachments/assets/afefb764-53f3-4f4c-9d3c-333b4d5fe22e" alt="database models"/>
+<h3>Chiến lược triển khai từ staging sang production</h3>
+<img src="https://github.com/user-attachments/assets/5996e395-730a-4f23-a783-7640a5298aad" alt="database models"/>
+
+
+
