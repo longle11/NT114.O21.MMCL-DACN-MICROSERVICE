@@ -1,5 +1,5 @@
-
-<div align="center"><h3>Kiến trúc tổng quát của hệ thống microservies</h3>
+<h3>Kiến trúc tổng quát của hệ thống microservies</h3>
+<div align="center">
   <img src="https://github.com/user-attachments/assets/73ce64a2-6c72-43cb-a363-2a3829f80738" alt="Pipeline Devsecops" />
 </div>
 
