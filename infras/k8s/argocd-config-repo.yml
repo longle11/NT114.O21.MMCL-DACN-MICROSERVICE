@@ -1,0 +1,273 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backend-auth
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.com/manifests4/taskscheduler-backend-auth.git
+    targetRevision: HEAD
+    path: ./
+  destination: 
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
+
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backend-category
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.com/manifests4/taskscheduler-backend-category.git
+    targetRevision: HEAD
+    path: ./
+  destination: 
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
+
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backend-comment
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.com/manifests4/taskscheduler-backend-comment.git
+    targetRevision: HEAD
+    path: ./
+  destination: 
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
+
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backend-file
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.com/manifests4/taskscheduler-backend-file.git
+    targetRevision: HEAD
+    path: ./
+  destination: 
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
+
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backend-issue
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.com/manifests4/taskscheduler-backend-issue.git
+    targetRevision: HEAD
+    path: ./
+  destination: 
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
+
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backend-issuehistory
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.com/manifests4/taskscheduler-backend-issuehistory.git
+    targetRevision: HEAD
+    path: ./
+  destination: 
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
+
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backend-issueprocess
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.com/manifests4/taskscheduler-backend-issueprocess.git
+    targetRevision: HEAD
+    path: ./
+  destination: 
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
+
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backend-notification
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.com/manifests4/taskscheduler-backend-notification.git
+    targetRevision: HEAD
+    path: ./
+  destination: 
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
+
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backend-management
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.com/manifests4/taskscheduler-backend-projectmanagement.git
+    targetRevision: HEAD
+    path: ./
+  destination: 
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
+
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backend-report
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.com/manifests4/taskscheduler-backend-report.git
+    targetRevision: HEAD
+    path: ./
+  destination: 
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
+
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backend-sprint
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.com/manifests4/taskscheduler-backend-sprint.git
+    targetRevision: HEAD
+    path: ./
+  destination: 
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
+
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: frontend-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.com/manifests4/taskscheduler-frontend.git
+    targetRevision: HEAD
+    path: ./
+  destination: 
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true

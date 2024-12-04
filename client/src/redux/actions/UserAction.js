@@ -1,6 +1,6 @@
 import Axios from "axios"
-import { GET_USER_BY_KEYWORD_API, USER_LOGGED_IN } from "../constants/constant"
-import { ListProjectAction } from "./ListProjectAction"
+import { DISPLAY_LOADING, GET_USER_BY_KEYWORD_API, HIDE_LOADING, SHOW_MODAL_INPUT_TOKEN, USER_LOGGED_IN } from "../constants/constant"
+import { GetProjectAction, ListProjectAction } from "./ListProjectAction"
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
 import domainName from '../../util/Config'
 export const getUserKeyword = (keyword) => {
@@ -29,75 +29,151 @@ export const insertUserIntoProject = (props) => {
     }
 }
 
+export const updateUserInfo = (user_id, props) => {
+    return async dispatch => {
+        try {
+            //tien hanh cap nhat thong tin cho user
+            const getUserUpdated = await Axios.post(`${domainName}/api/users/update/${user_id}`, props)
+            if(getUserUpdated.status === 200) {
+                dispatch(userLoggedInAction())
+            }
+        } catch (error) {
+            console.log("error getUserUpdated updateUserInfo", error);
+        }
+    }
+}
+
 export const signUpUserAction = (props) => {
     return async dispatch => {
         try {
+            dispatch({
+                type: DISPLAY_LOADING
+            })
             const newUser = {
                 username: props.username,
                 email: props.email,
                 password: props.password
             }
             const res = await Axios.post(`${domainName}/api/users/signup`, newUser)
-
-            if (res.status === 201) {
-                showNotificationWithIcon("success", "Register", "Successfully created the user")
+            if (res.status === 200) {
+                showNotificationWithIcon("success", "Notification", res.data.message)
+                await dispatch({
+                    type: SHOW_MODAL_INPUT_TOKEN,
+                    status: true,
+                    temporaryUserRegistrationId: res.data.data
+                })
+                dispatch({
+                    type: HIDE_LOADING
+                })
             }
         } catch (errors) {
             if (errors?.response?.status === 400) {
-                showNotificationWithIcon("error", "Login", errors?.response?.data.message)
+                showNotificationWithIcon("error", "Notification", errors?.response.data.message)
+                await dispatch({
+                    type: SHOW_MODAL_INPUT_TOKEN,
+                    status: false,
+                    temporaryUserRegistrationId: null
+                })
             }
         }
     }
 }
 
+export const loginWithGoogleAction = (props) => {
+    return async dispatch => {
+        dispatch({
+            type: DISPLAY_LOADING
+        })
+        const newUser = {
+            username: props.username,
+            email: props.email,
+            password: null
+        }
+        try {
+            await Axios.post(`${domainName}/api/users/signup`, newUser)
+        } catch (err) {
+            if (err.response.status === 400) {
+                let loggedIn = false
+                await Axios.post(`${domainName}/api/users/login`, {
+                    email: newUser.email,
+                    password: null
+                })
+                    .then(res => {
+                        showNotificationWithIcon("success", "Đăng nhập", "Đăng nhập thành công")
+                        loggedIn = true
+                    })
+                    .catch(err => {
+                        showNotificationWithIcon("error", "Đăng nhập", "Đăng nhập thất bại")
+                    })
+                if (loggedIn) {
+                    const res = await Axios.get(`${domainName}/api/users/currentuser`)
+
+                    if (res.data.currentUser) {
+                        dispatch({
+                            type: USER_LOGGED_IN,
+                            userInfo: res.data.currentUser
+                        })
+                    }
+                }
+            }
+        }
+        dispatch({
+            type: HIDE_LOADING
+        })
+    }
+}
 
 export const userLoginAction = (email, password) => {
-
-    return async (dispatch) => {
+    return async (dispatch) => {        
         try {
             let loggedIn = false
-            await Axios.post(`${domainName}/api/users/login`, {
+            const res = await Axios.post(`${domainName}/api/users/login`, {
                 email,
                 password
             })
-                .then(res => {
-                    showNotificationWithIcon("success", "Đăng nhập", "Đăng nhập thành công")
-                    loggedIn = true
-                })
-                .catch(err => {
-                    showNotificationWithIcon("error", "Đăng nhập", "Đăng nhập thất bại")
-                })
+            if (res.status === 200) {
+                showNotificationWithIcon("success", "Loggin", res.data.message)
+                loggedIn = true
+            }
 
             if (loggedIn) {
                 const res = await Axios.get(`${domainName}/api/users/currentuser`)
-
-                if (res.data.currentUser) {
-                    dispatch({
-                        type: USER_LOGGED_IN,
-                        status: true,
-                        userInfo: res.data.currentUser
-                    })
-                }
+                dispatch({
+                    type: USER_LOGGED_IN,
+                    userInfo: res.data.currentUser
+                })
             }
-        } catch (errors) {
-
+        } catch (error) {
+            if (error.response.status === 401) {
+                showNotificationWithIcon("error", "Loggin", error.response.data.message)
+            } else if (error.response.status === 400) {
+                showNotificationWithIcon("error", "Loggin", error.response.data.message)
+                dispatch({
+                    type: SHOW_MODAL_INPUT_TOKEN,
+                    status: true,
+                    temporaryUserRegistrationId: error.response.data.userId
+                })
+            }
         }
     }
 }
-export const userLoggedInAction = () => {
+
+export const userLoggedInAction = (navigate) => {
     return async dispatch => {
         try {
             const res = await Axios.get(`${domainName}/api/users/currentuser`)
             if (!res.data.currentUser) {
+                if(navigate) {
+                    navigate("/login")
+                }
                 dispatch({
                     type: USER_LOGGED_IN,
-                    status: false,
                     userInfo: null
                 })
             } else {
+                dispatch(GetProjectAction(res.data.currentUser.project_working, null, null))
                 dispatch({
                     type: USER_LOGGED_IN,
-                    status: true,
                     userInfo: res.data.currentUser
                 })
             }
@@ -107,7 +183,7 @@ export const userLoggedInAction = () => {
     }
 }
 
-export const userLoggedoutAction = () => {
+export const userLoggedoutAction = (navigate) => {
     return async dispatch => {
         await Axios.post(`${domainName}/api/users/logout`)
             .then(res => {
@@ -116,9 +192,50 @@ export const userLoggedoutAction = () => {
                     type: USER_LOGGED_IN,
                     status: false
                 })
+                navigate('/login')
             })
             .catch(err => {
                 console.log("Something went wrong");
             })
+    }
+}
+
+export const verifyTokenAction = (params) => {
+    return async dispatch => {
+        try {
+            const res = await Axios.post(`${domainName}/api/users/token/${params.userId}`, { id: params.token })
+            if (res.status === 201) {
+                showNotificationWithIcon('success', 'Register', res.data.message)
+
+                dispatch({
+                    type: SHOW_MODAL_INPUT_TOKEN,
+                    status: false,
+                    temporaryUserRegistrationId: null
+                })
+            }
+        } catch (error) {
+            if (error?.response?.status === 400) {
+                showNotificationWithIcon('error', 'Register', error?.response?.data.message)
+                dispatch({
+                    type: SHOW_MODAL_INPUT_TOKEN,
+                    status: true
+                })
+            }
+        }
+    }
+}
+
+export const getTokenAction = (userId) => {
+    return async dispatch => {
+        try {
+            const res = await Axios.get(`${domainName}/api/users/token/${userId}`)
+            if (res.status === 200) {
+                showNotificationWithIcon('success', 'Notification', res.data.message)
+            }
+        } catch (error) {
+            if (error?.response.status === 400) {
+                showNotificationWithIcon('error', 'Notification', error.response.data.message)
+            }
+        }
     }
 }

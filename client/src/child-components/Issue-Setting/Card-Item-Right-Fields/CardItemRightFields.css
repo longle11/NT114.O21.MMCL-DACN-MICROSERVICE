@@ -1,0 +1,15 @@
+.right_items-fields:hover .item_info_setting_1_right-hover {
+    display: none !important;
+}
+.right_items-fields:hover .item_info_setting_2_right-hover {
+    display: block !important;
+}
+
+.right_items-fields:hover {
+    background-color: #FAFBFC !important;
+    cursor: pointer;
+}
+
+.available-fields_custom {
+    width: 100%;
+}

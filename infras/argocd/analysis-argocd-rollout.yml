@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: canary-success-rate-analysis
+spec:
+  args:
+  - name: service-name
+  metrics:
+  - name: canary-success-rate-analysis
+    interval: 5m
+    successCondition: len(result) > 0 && result[0] >= 0.95
+    failureLimit: 3
+    provider:
+      prometheus:
+        address: http://prometheus-operated.monitoring.svc.cluster.local:9090
+        query: |
+          sum(rate(
+            client_requests_total{service="{{ args.service-name }}", success="true"}[1m])
+          ) by (service)
+          /
+          sum(rate(
+            client_requests_total{service="{{ args.service-name }}"}[1m])
+          ) by (service)
+          unless sum(rate(
+            client_requests_total{service="{{ args.service-name }}"}[1m])
+          ) by (service) == 0

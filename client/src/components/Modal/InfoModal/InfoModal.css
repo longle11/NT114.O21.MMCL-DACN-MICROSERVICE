@@ -2,10 +2,6 @@
     max-width: 1000px !important;
 }
 
-.modal-info .modal-content {
-    padding: 20px 24px;
-}
-
 .modal-info .modal-content .modal-header {
     padding: 1rem 2rem;
     border-bottom: none;
@@ -28,6 +24,10 @@
     padding-bottom: 16px !important;
 }
 
+.hover-items:hover {
+    background-color: #091E420F !important;
+}
+
 .modal-info .modal-body .issue {
     font-size: 20px;
     font-weight: 500;
@@ -35,6 +35,11 @@
 
 .modal-info .modal-body .description p:first-child {
     margin-bottom: 5px;
+}
+
+
+.task-click div span {
+    padding: 0;
 }
 
 .input-comment {
@@ -131,4 +136,53 @@
 
 .modal {
     scrollbar-width: none;
+}
+
+div>i.icon-options:hover {
+    background-color: rgba(9, 30, 66, 0.08) !important;
+}
+
+.infomodal-edit-select-ant-add-issue div.ant-select-selector {
+    border-radius: 0 !important;
+}
+
+.infomodal-edit-select-ant div.ant-select-selector {
+    border: none !important;
+    border-radius: 0 !important;
+}
+
+input.infomodal-edit-input-ant.ant-input:focus {
+    box-shadow: none !important;
+    border: 1px solid #388bff !important;
+}
+
+div.subIssue:hover {
+    background-color: #091e420f !important;
+}
+span.sub-issue-summary:hover > a {
+    display: block !important;
+}
+
+span.sub-issue-summary:hover > a:hover {
+    background-color: gray !important;
+}
+/* input.infomodal-edit-input-ant.ant-input:focus > .infomodal-edit-select-ant.ant-select {
+    border: 2px solid #dddd !important;
+    height: max-content !important;
+    background-color: red;
+} */
+
+.item-value_field {
+    padding: 5px 10px
+}
+.item-value_field:hover {
+    background-color: #dddd;
+}
+
+.items-field:hover .field-pinned {
+    display: block;
+}
+
+.field-pinned {
+    display: none;
 }

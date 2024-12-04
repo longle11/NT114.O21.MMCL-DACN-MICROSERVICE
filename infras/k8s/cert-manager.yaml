@@ -5,10 +5,10 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: 21522302@gm.uit.edu.vn
+    email: ltphilong2001@gmail.com
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
       - http01:
           ingress:
-            class: nginx
+            class: kong

@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/longle/Documents/Project/NT114.O21.MMCL-DACN-MICROSERVICE/evaluate_chatbot_model/mlruns/981699343922922546/550051c995ec4a159dc0c993eb4dc22b/artifacts
+end_time: 1732352241997
+entry_point_name: ''
+experiment_id: '981699343922922546'
+lifecycle_stage: active
+run_id: 550051c995ec4a159dc0c993eb4dc22b
+run_name: whimsical-ape-62
+run_uuid: 550051c995ec4a159dc0c993eb4dc22b
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1732352241989
+status: 4
+tags: []
+user_id: admin

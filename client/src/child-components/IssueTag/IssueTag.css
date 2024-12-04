@@ -1,0 +1,22 @@
+div.view-workflow:hover {
+    background-color: #dddd;
+}
+
+div.issue-info-items {
+    border-top: 1px solid #dddd;
+    border-left: 1px solid #dddd;
+    border-right: 1px solid #dddd;
+    border-bottom: none;
+}
+
+div.issue-info-items:last-child {
+    border-bottom: 1px solid #dddd !important;
+}
+
+li.dropdown-items-setting:hover {
+    background-color: #dddd;
+}
+
+div.isFlagged:hover {
+    background-color: #FFF7D6 !important;
+}

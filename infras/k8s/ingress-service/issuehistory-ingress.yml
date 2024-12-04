@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: issue-history-ingress
+  namespace: default
+  annotations:
+    konghq.com/methods: GET,POST,PUT,DELETE
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: kong
+  tls:
+    - hosts:
+        - www.khoaluantotnghiep.click 
+      secretName: ca-ingress-tls
+  rules:
+    - host: www.khoaluantotnghiep.click 
+      http:
+        paths:
+          - path: /api/issueprocess/
+            pathType: Prefix
+            backend:
+              service:
+                name: issueprocess-srv
+                port:
+                  number: 4006

@@ -1,12 +1,17 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { withFormik } from 'formik'
 import * as Yup from "yup";
-import { connect, useSelector } from 'react-redux'
+import { connect, useDispatch, useSelector } from 'react-redux'
 import { NavLink, Navigate } from 'react-router-dom';
-import { userLoginAction } from '../../redux/actions/UserAction';
+import { getTokenAction, loginWithGoogleAction, userLoginAction, verifyTokenAction } from '../../redux/actions/UserAction';
 import './Login.css'
 import PropTypes from 'prop-types';
-
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from "jwt-decode";
+import { Modal, Popconfirm } from 'antd';
+import { SHOW_MODAL_INPUT_TOKEN } from '../../redux/constants/constant';
+import { timeToResetToken } from '../../util/Delay';
+import domainName from '../../util/Config';
 function Login(props) {
     const {
         errors,
@@ -14,6 +19,57 @@ function Login(props) {
         handleSubmit,
     } = props;
     const status = useSelector(state => state.user.status)
+    const showModalInputToken = useSelector(state => state.user.showModalInputToken)
+    const temporaryUserRegistrationId = useSelector(state => state.user.temporaryUserRegistrationId)
+    const dispatch = useDispatch()
+    const [inputValue, setInputValue] = useState('');
+    const [popUpOpen, setPopUpOpen] = useState(false)
+    const handleInputChange = (event) => {
+        setInputValue(event.target.value);
+    };
+
+
+    //countdown time to send token
+    // Sử dụng hook useState để tạo trạng thái countdown, khởi tạo là một số nguyên dương
+    const [countdown, setCountdown] = useState(timeToResetToken);
+    // Sử dụng hook useState để tạo trạng thái isRunning, khởi tạo là false
+    const [isRunning, setIsRunning] = useState(false);
+    // Hàm xử lý sự kiện khi nhấn nút "Start"
+    const handleStart = () => {
+        // Bắt đầu đếm ngược chỉ khi không đang trong quá trình đếm ngược
+        if (!isRunning) {
+            setIsRunning(true);
+            setCountdown(timeToResetToken); // Đặt lại thời gian đếm ngược về giá trị ban đầu
+        }
+    };
+    // Hàm xử lý sự kiện khi đếm ngược hoàn thành
+    const handleCompletion = () => {
+        setIsRunning(false);
+    };
+    useEffect(() => {
+        if (showModalInputToken === true) {
+            let timer;
+            if (isRunning) {
+                // Sử dụng setInterval để giảm thời gian đếm ngược mỗi giây
+                timer = setInterval(() => {
+                    setCountdown((prevCountdown) => prevCountdown - 1);
+                }, 1000);
+            }
+
+            // Kiểm tra và xử lý khi đếm ngược đến 0
+            if (countdown === 0) {
+                handleCompletion();
+                clearInterval(timer); // Dừng đếm ngược
+            } else {
+                handleStart()
+            }
+
+            // Sử dụng hook useEffect để xử lý khi component unmount
+            return () => clearInterval(timer);
+        }
+    }, [isRunning, countdown, showModalInputToken])
+
+
     return (
         <>
             {
@@ -51,9 +107,31 @@ function Login(props) {
                                                     <span className='text-danger'>{errors.password}</span>
                                                 </div>
                                                 {/* Submit button */}
-                                                <button type="submit" data-mdb-button-init data-mdb-ripple-init className="btn btn-primary btn-block mb-4">
+                                                <button type="submit" style={{ marginBottom: '10px' }} className="btn btn-primary btn-block mb-4">
                                                     Sign In
                                                 </button>
+                                                <GoogleLogin
+                                                    text="continue_with"
+                                                    width="100%"
+                                                    locale="en"
+                                                    containerProps={{
+                                                        style: {
+                                                            width: "100% !important",
+                                                        },
+                                                    }}
+                                                    onSuccess={credentialResponse => {
+                                                        const decryptData = jwtDecode(credentialResponse.credential);
+                                                        const newUser = {
+                                                            username: decryptData.name,
+                                                            email: decryptData.email,
+                                                            password: null
+                                                        }
+                                                        dispatch(loginWithGoogleAction(newUser))
+                                                    }}
+                                                    onError={() => {
+                                                        console.log('Login Failed');
+                                                    }}
+                                                />
                                             </form>
                                             <NavLink to='/signup'>Create an account</NavLink>
                                         </div>
@@ -61,6 +139,48 @@ function Login(props) {
                                 </div>
                             </div>
                         </div>
+                        <Popconfirm
+                            title="Cancel Verification"
+                            description="Are you sure to cancel this verification?"
+                            okText="Yes"
+                            placement="topRight"
+                            onCancel={() => {
+                                setPopUpOpen(false)
+                            }}
+                            onConfirm={() => {
+                                props.dispatch({
+                                    type: SHOW_MODAL_INPUT_TOKEN,
+                                    status: false,
+                                    temporaryUserRegistrationId: null
+                                })
+                                setPopUpOpen(false)
+                            }}
+                            cancelText="No"
+                            open={popUpOpen}
+                        />
+                        <Modal title="Verify Token" open={showModalInputToken} onOk={() => {
+                            if (inputValue.trim() === "") {
+                                alert("Token is not empty")
+                            } else {
+                                if (temporaryUserRegistrationId !== null) {
+                                    props.dispatch(verifyTokenAction({ userId: temporaryUserRegistrationId, token: inputValue }))
+                                }
+                            }
+                        }} onCancel={() => {
+                            setPopUpOpen(true)
+                        }}>
+                            <div className="form-group">
+                                <label htmlFor="token">Input your token</label>
+                                <input value={inputValue} onChange={handleInputChange} type="text" className="form-control" id="token" placeholder="Input token" />
+                                <div className='d-flex mt-2'>
+                                    <p className='m-0'>Time remaining: <span style={{ color: 'red' }}>{countdown}</span></p>
+                                    <NavLink className="ml-2" to="#" style={{ visibility: isRunning ? 'hidden' : 'visible' }} onClick={() => {
+                                        setCountdown(timeToResetToken)
+                                        props.dispatch(getTokenAction(temporaryUserRegistrationId))
+                                    }}>Get token</NavLink>
+                                </div>
+                            </div>
+                        </Modal>
                     </section>
                 ) : <Navigate to="/" />
             }

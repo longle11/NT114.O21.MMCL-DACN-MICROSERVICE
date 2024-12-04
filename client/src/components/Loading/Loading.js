@@ -7,7 +7,7 @@ export default function Loading() {
         <>
             {
                 isLoading ? (
-                    <img style={{ width: '100%', height: '100vh', objectFit: 'none' }} src={require('../../assets/loading.gif')} alt='loading' />) : ''
+                    <img style={{ width: '100%', height: '100vh', objectFit: 'none' }} src={'/assets/loading.gif'} alt='loading' />) : ''
             }
         </>
     )

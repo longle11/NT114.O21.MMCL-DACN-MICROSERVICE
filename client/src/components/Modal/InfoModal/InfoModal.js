@@ -1,451 +1,406 @@
-import { Avatar, Button, Input, InputNumber, Popconfirm, Select } from 'antd';
-import React, { useRef, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux';
-import { Editor } from '@tinymce/tinymce-react';
-import Parser from 'html-react-parser';
-import { Option } from 'antd/es/mentions';
-import { deleteAssignee, deleteIssue, updateInfoIssue } from '../../../redux/actions/IssueAction';
-import { createCommentAction, deleteCommentAction, updateCommentAction } from '../../../redux/actions/CommentAction';
-import { showNotificationWithIcon } from '../../../util/NotificationUtil';
-import storeListComments from '../../../util/StoreListComment';
-import { GetProjectAction } from '../../../redux/actions/ListProjectAction';
-import { priorityTypeOptions, issueTypeOptions } from '../../../util/CommonFeatures';
-const { DateTime } = require('luxon');
-const { TextArea } = Input;
-export default function InfoModal() {
-    const issueInfo = useSelector(state => state.issue.issueInfo)
+import { Avatar, Button, Divider, Popconfirm, Select, Tag } from 'antd'
+import React, { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { deleteIssue, getInfoIssue, updateInfoIssue } from '../../../redux/actions/IssueAction'
+import { GetProjectAction, GetWorkflowListAction } from '../../../redux/actions/ListProjectAction'
+import { issueTypeOptions, iTagForIssueTypes } from '../../../util/CommonFeatures'
+import { getComponentList, getEpicList, getVersionList } from '../../../redux/actions/CategoryAction'
+import { NavLink, useNavigate, useParams } from 'react-router-dom'
+import './InfoModal.css'
+import LeftIssueInfo from '../../../child-components/Custom-Interface-Issue-Info/Left-Issue-Info/LeftIssueInfo'
+import RightIssueInfo from '../../../child-components/Custom-Interface-Issue-Info/Right-Issue-Info/RightIssueInfo'
+import { getCommentAction } from '../../../redux/actions/CommentAction'
+import { checkConstraintPermissions } from '../../../util/CheckConstraintFields'
+import domainName from '../../../util/Config'
+import { displayComponentInModal, openModalInfo } from '../../../redux/actions/ModalAction'
+import AddFlagModal from '../AddFlagModal/AddFlagModal'
+import AddParentModal from '../AddParentModal/AddParentModal'
+import CloneIssueModal from '../CloneIssueModal/CloneIssueModal'
+import { getValueOfNumberFieldInIssue, getValueOfObjectFieldInIssue } from '../../../util/IssueFilter'
+import { eyeSlashIcon } from '../../../util/icon'
+
+
+export default function InfoModal(props) {
+    const { id } = useParams()
+    const sprintList = useSelector(state => state.listProject.sprintList)
     const projectInfo = useSelector(state => state.listProject.projectInfo)
-    const userInfo = useSelector(state => state.user.userInfo)
+    const processList = useSelector(state => state.listProject.processList)
+    const workflowList = useSelector(state => state.listProject.workflowList)
+    const issueInfo = useSelector(state => state.issue.issueInfo)
 
-    const [time, setTime] = useState(false)
-    const [trackingTime, setTrackingTime] = useState({
-        timeSpent: issueInfo?.timeSpent,
-        timeRemaining: issueInfo?.timeRemaining
-    })
+    const historyList = useSelector(state => state.issue.historyList)
+    const worklogList = useSelector(state => state.issue.worklogList)
+    const epicList = useSelector(state => state.categories.epicList)
+    const componentList = useSelector(state => state.categories.componentList)
+    const versionList = useSelector(state => state.categories.versionList)
+    const issuesInProject = useSelector(state => state.issue.issuesInProject)
+    const commentList = useSelector(state => state.comment.commentList)
 
-    //sử dụng cho phần bình luận
-    //tham số isSubmit thì để khi bấm send thì mới thực hiện duyệt mảng comments
-    const [comment, setComment] = useState({
-        content: '',
-        isSubmit: true,
-    })
-    //su dung cho debounce time original
-    const inputTimeOriginal = useRef(null)
+    const [editAttributeTag, setEditAttributeTag] = useState('')
 
-
-    const issueStatus = [
-        { label: 'BACKLOG', value: 0 },
-        { label: 'SELECTED FOR DEVELOPMENT', value: 1 },
-        { label: 'IN PROGRESS', value: 2 },
-        { label: 'DONE', value: 3 }
-    ]
-
-    const [editDescription, setEditDescription] = useState(true)
-    //tham số truyền vào sẽ là id của comment khi click vào chỉnh sửa
-    const [editComment, setEditComment] = useState('')
-    const [editContentComment, setEditContentComment] = useState('')
-
-    const [addAssignee, setAddAssignee] = useState(true)
-    const [description, setDescription] = useState('')
-    const handlEditorChange = (content, editor) => {
-        setDescription(content)
+    const handleEditAttributeTag = (status) => {
+        setEditAttributeTag(status)
     }
 
+    const [subIssueSummary, setSubIssueSummary] = useState('')
+    const [showAddSubIssue, setShowAddSubIssue] = useState(false)
+
+    const userInfo = props.userInfo
+    const colLeft = props.colLeft
+    const colRight = props.colRight
+    const height = props.height
+
+    const displayNumberCharacterInSummarySubIssue = props.displayNumberCharacterInSummarySubIssue
+    const issueIdForIssueDetail = props.issueIdForIssueDetail   //used to compare for displaying file uploading in issue detail page
+    while (!issueIdForIssueDetail) { }
+
+    const [onClickedItems, setOnClickedItems] = useState(false)
+
+    const hanleClickDisplayAddSubIssue = (valueForShowAddSubIssue) => {
+        setShowAddSubIssue(valueForShowAddSubIssue)
+    }
+    const hanleClickEditSummaryInSubIssue = (valueForIssueSummary) => {
+        setSubIssueSummary(valueForIssueSummary)
+    }
+
+    useEffect(() => {
+        if (id) {
+            dispatch(GetWorkflowListAction(id))
+            dispatch(getVersionList(id))
+            if (issueIdForIssueDetail) {
+                dispatch(getInfoIssue(issueIdForIssueDetail))
+                dispatch(getCommentAction(issueIdForIssueDetail, -1))
+            }
+            dispatch(getEpicList(id))
+            dispatch(getComponentList(id))
+            dispatch(GetProjectAction(id, null, null))
+        }
+    }, [issueIdForIssueDetail])
+    const navigate = useNavigate()
 
     const dispatch = useDispatch()
-
-
-    const convertTime = (commentTime) => {
-        const diff = DateTime.now().diff(DateTime.fromISO(commentTime), ['minutes', 'hours', 'days', 'months']).toObject();
-
-        if (diff.hours >= 1) {
-            return `${Math.round(diff.hours)} hour ago`
+    const renderIssueTypeWithPermissions = () => {
+        return <Tag
+            className='mr-3'
+            style={{ borderRadius: 5, padding: '5px 25px' }}
+            onDoubleClick={() => {
+                if (checkConstraintPermissions(projectInfo, issueInfo, userInfo, 1)) {
+                    setEditAttributeTag('issue_type')
+                }
+            }}
+            color={getValueOfObjectFieldInIssue(issueInfo, "issue_type")?.tag_color}>
+                {checkConstraintPermissions(projectInfo, issueInfo, userInfo, 9) ? getValueOfObjectFieldInIssue(issueInfo, "issue_type")?.name_process : eyeSlashIcon }
+            </Tag>
+    }
+    //su dung de render option theo workflow chi dinh
+    const typeOptionsFollowWorkflow = (current_type) => {
+        const getWorkflowsActive = workflowList.filter(workflow => workflow.isActivated)
+        if (getWorkflowsActive.length !== 0) {
+            const getIndex = getWorkflowsActive.findIndex(workflow => workflow.issue_statuses.includes(getValueOfNumberFieldInIssue(issueInfo, "issue_status")))
+            if (getIndex !== -1) {
+                const getCurrentWorkflow = getWorkflowsActive[getIndex]
+                const getEdges = getCurrentWorkflow.edges
+                const data = getEdges.filter(edge => {
+                    if (current_type === edge.source) {
+                        return true
+                    }
+                    return false
+                })
+                const newdata = data?.filter(option => processList.map(process => process._id).includes(option.target)).map(option => {
+                    const getNameNodeIndex = getCurrentWorkflow.nodes.findIndex(node => node.id === option.target)
+                    if (getCurrentWorkflow.nodes[getNameNodeIndex]?.data) {
+                        return {
+                            label: <span>{option?.label} <i className="fa fa-long-arrow-alt-right ml-3 mr-3"></i><span style={{ fontWeight: "bold" }}>{getCurrentWorkflow.nodes[getNameNodeIndex]?.data?.label}</span></span>,
+                            value: option.target
+                        }
+                    }
+                })
+                return newdata
+            }
         }
-        if (diff.minutes >= 1) {
-            return `${Math.round(diff.minutes)} minutes ago`
-        }
-        if (diff.days >= 1) {
-            return `${Math.round(diff.days)} days ago`
-        }
-        if (diff.months >= 1) {
-            return `${Math.round(diff.months)} months ago`
-        } else {
-            return 'a few second ago'
-        }
+        return processList?.filter(process => process._id !== current_type).map(process => {
+            return {
+                label: <span>{process.name_process}</span>,
+                value: process._id.toString()
+            }
+        })
     }
 
-    const renderContentModal = () => {
-        if (issueInfo?.description.trim() !== '') {
-            return Parser(`${issueInfo?.description}`)
-        }
-
-        if (issueInfo?.creator._id === userInfo.id) {
-            return <p style={{ color: 'blue' }}>Add Your Description</p>
-        }
-        return <p>There is no description yet</p>
-    }
-
-    const renderComments = () => {
-        let listComments = issueInfo?.comments.map((value, index) => {
-            return (<li className='comment d-flex' key={value._id}>
-                <div className="avatar">
-                    <Avatar src={value.creator.avatar} size={40} />
-                </div>
-                <div style={{ width: '100%' }}>
-                    <p style={{ marginBottom: 5, fontWeight: 'bold' }}>
-                        {value.creator.username} <span style={{ fontWeight: 'normal' }} className='ml-4'>{value?.isModified ? "Modified " : ''}{convertTime(value?.timeStamp)}</span>
-                    </p>
-                    {editComment.trim() !== '' && editComment === value._id.toString() ? (
-                        <div>
-                            <TextArea value={editContentComment} defaultValue="" onChange={(e) => {
-                                setEditContentComment(e.target.value)
-                            }} autosize={{ minRows: 5, maxRows: 10 }} />
-                            <div>
-                                <Button onClick={() => {
-                                    setEditComment('')
-                                    //gửi lên sự kiện cập nhật comment
-                                    dispatch(updateCommentAction({ commentId: value._id.toString(), content: editContentComment, issueId: issueInfo?._id.toString(), timeStamp: new Date() }))
-                                }} type="primary" className='mt-2 mr-2'>Save</Button>
-                                <Button onClick={() => {
-                                    setEditComment('')
-                                }} className='mt-2'>Cancel</Button>
+    return <div style={{ overflowY: 'hidden', width: '100%' }}>
+        <div className="info-modal">
+            <div className="modal-content border-0">
+                <div className="modal-header align-items-center border-0" style={{ padding: '0 15px 5px 15px' }}>
+                    <div className="task-title d-flex align-items-center" style={{ width: 'max-content' }}>
+                        <NavLink to={`/projectDetail/${id}/issues/issue-detail/${issueInfo?._id}`} style={{ width: '100%', marginRight: 10 }}>{projectInfo?.key_name}-{issueInfo?.ordinal_number}</NavLink>
+                        {editAttributeTag === "issue_status" ? <Select
+                            placeholder={issueTypeOptions(projectInfo?.issue_types_default)[getValueOfNumberFieldInIssue(issueInfo, "issue_status")]?.label}
+                            defaultValue={issueTypeOptions(projectInfo?.issue_types_default)[getValueOfNumberFieldInIssue(issueInfo, "issue_status")]?.value}
+                            style={{ width: '100%' }}
+                            options={issueTypeOptions(projectInfo?.issue_types_default)}
+                            onBlur={() => {
+                                setEditAttributeTag('')
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key.toLowerCase() === "enter") {
+                                    setEditAttributeTag('')
+                                }
+                            }}
+                            onSelect={(value, option) => {
+                                dispatch(updateInfoIssue(
+                                    issueInfo?._id,
+                                    issueInfo?.project_id?._id.toString(),
+                                    { issue_status: value },
+                                    `${getValueOfNumberFieldInIssue(issueInfo, "issue_status")}`,
+                                    `${value}`,
+                                    userInfo.id,
+                                    'updated',
+                                    'issue status',
+                                    projectInfo,
+                                    userInfo
+                                ))
+                            }}
+                            name="issue_status"
+                        /> : <span onDoubleClick={() => {
+                            if (checkConstraintPermissions(projectInfo, issueInfo, userInfo, 1)) {
+                                setEditAttributeTag('issue_status')
+                            }
+                        }} className='items-attribute m-0' style={{ padding: '10px 5px 5px 10px', width: 'max-content' }}>
+                            {checkConstraintPermissions(projectInfo, issueInfo, userInfo, 9) ? iTagForIssueTypes(getValueOfNumberFieldInIssue(issueInfo, "issue_status"), null, null, projectInfo?.issue_types_default) : eyeSlashIcon}
+                        </span>}
+                        <div className="issue_type">
+                            <div className='d-flex flex-column'>
+                                {editAttributeTag === 'issue_type' ? <Select
+                                    options={typeOptionsFollowWorkflow(getValueOfObjectFieldInIssue(issueInfo, "issue_type")?._id.toString())}
+                                    style={{ width: 400, marginTop: 5 }}
+                                    onChange={(value, props) => {
+                                        var issueCompleted = false
+                                        if (processList[processList.length - 1]._id?.toString() === value) {
+                                            issueCompleted = true
+                                        }
+                                        const getNameOfProcess = processList.findIndex(process => process._id?.toString() === value?.toString())
+                                        dispatch(updateInfoIssue(
+                                            issueInfo?._id,
+                                            issueInfo?.project_id?._id,
+                                            {
+                                                issue_type: value,
+                                                isCompleted: issueCompleted
+                                            },
+                                            getValueOfObjectFieldInIssue(issueInfo, "issue_type").name_process,
+                                            getNameOfProcess.name_process,
+                                            userInfo.id,
+                                            "updated",
+                                            "type",
+                                            projectInfo,
+                                            userInfo))
+                                    }}
+                                    dropdownRender={(menu) => (
+                                        <>
+                                            {menu}
+                                            <Divider
+                                                style={{
+                                                    margin: '8px 0',
+                                                }}
+                                            />
+                                            <div className='view-workflow' style={{ padding: '10px 20px', marginTop: 5, width: '100%' }}>
+                                                <NavLink style={{ textDecoration: 'none', color: 'black' }} onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    e.preventDefault()
+                                                    navigate(`/projectDetail/${id}/workflows`)
+                                                    window.location.reload()
+                                                }}>View your workflow</NavLink>
+                                            </div>
+                                        </>
+                                    )}
+                                    value={getValueOfObjectFieldInIssue(issueInfo, "issue_type")?.name_process}
+                                /> : <div className='d-flex align-items-center'>
+                                    {
+                                        renderIssueTypeWithPermissions()
+                                    }
+                                    {getValueOfObjectFieldInIssue(issueInfo, "issue_type")?._id === processList[processList?.length - 1]?._id ? <span className='d-flex align-items-center align-items-center font-weight-bold'><i className="fa fa-check text-success font-weight-bold mr-2"></i> Done</span> : <></>}
+                                </div>}
                             </div>
                         </div>
-                    ) : (
-                        <div>
-                            <p style={{ marginBottom: 5 }}>
-                                {value.content}
-                            </p>
-                            {
-                                value.creator._id === userInfo.id ? (<div className="mb-2"><button className="btn bg-transparent p-0 mr-3" onClick={() => {
-                                    setEditContentComment(value.content);
-                                    setEditComment(value._id.toString());
-                                }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }}>Edit</button>
-                                    <button className="btn bg-transparent p-0" onKeyDown={() => { }} onClick={() => {
-                                        dispatch(deleteCommentAction({ commentId: value._id.toString(), issueId: issueInfo?._id.toString() }));
-                                    }} style={{ color: '#929398', fontWeight: 'bold', cursor: 'pointer' }}>Delete</button></div>) : <div className='mt-3'></div>
-
-                            }
-                        </div>
-                    )}
-                </div>
-            </li>)
-        });
-
-        if (comment.isSubmit) {
-            storeListComments.setComments(listComments)
-        }
-
-        return storeListComments.getComments()
-    }
-
-
-    const renderIssueStatus = (pos) => {
-        return issueStatus.map((status) => {
-            if (pos === status.value) {
-                return <option key={status.value} selected value={status.value}>{status.label}</option>
-            }
-            return <option key={status.value} value={status.value}>{status.label}</option>
-        })
-    }
-    const renderOptionAssignee = () => {
-        return projectInfo?.members?.filter((value, index) => {
-            const isExisted = issueInfo?.assignees?.findIndex((user) => {
-                return user._id === value._id
-            })
-            return !(issueInfo?.creator._id === value._id || isExisted !== -1)
-        }).map((value, index) => {
-            return <Option key={value._id} value={value._id}>{value.username}</Option>
-        })
-    }
-
-
-
-    return <div role="dialog" className="modal fade" id="infoModal" tabIndex={-1} aria-labelledby="infoModal" aria-hidden="true">
-        <div className="modal-dialog modal-info">
-            <div className="modal-content">
-                <div className="modal-header align-items-center">
-                    <div className="task-title">
-                        <Select
-                            placeholder={issueTypeOptions[issueInfo?.issueType]?.label}
-                            defaultValue={issueTypeOptions[issueInfo?.issueType]?.value}
-                            style={{ width: '100%' }}
-                            options={issueTypeOptions}
-                            disabled={issueInfo?.creator?._id !== userInfo.id}
-                            onSelect={(value, option) => {
-                                dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { issueType: value }))
-                            }}
-                            name="issueType"
-                        />
+                        {issueInfo?.isFlagged ? <div className='issue_flagged ml-3 d-flex align-items-center'><i style={{ fontSize: 16, color: '#FF5630' }} className="fa fa-flag mr-2"></i> <span className='font-weight-bold m-0'>Flagged</span></div> : <></>}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center' }} className="task-click">
+                        <div style={{ display: 'flex' }}>
+                            {issueInfo?.is_permissions === true ? <i onClick={() => {
+                                dispatch(updateInfoIssue(issueInfo._id, id, { is_permissions: !issueInfo?.is_permissions }, issueInfo?.is_permissions === true ? "blocked" : "unblocked", !issueInfo?.is_permissions === true ? "unblocked" : "blocked", userInfo.id, "apply", "restriction", projectInfo, userInfo))
+                            }} style={{ fontSize: 20, padding: 10 }} className="fa fa-lock hover-items"></i> :
+                                <div className='dropdown'>
+                                    <i style={{ fontSize: 20, padding: 10 }} className="fa fa-unlock hover-items" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></i>
+                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style={{ width: 300, padding: '5px 10px' }}>
+                                        <h6 style={{ fontSize: 14 }}>Do you want to apply this restrictions to the following objects?</h6>
+                                        <ul style={{ fontSize: 13 }}>
+                                            <li>Members</li>
+                                            <li>Viewers</li>
+                                            <li>Assignees</li>
+                                        </ul>
+                                        <div className='d-flex justify-content-between align-items-center'>
+                                            <Button onClick={() => {
+                                                dispatch(updateInfoIssue(issueInfo._id, id, { is_permissions: !issueInfo?.is_permissions }, issueInfo?.is_permissions === true ? "blocked" : "unblocked", !issueInfo?.is_permissions === true ? "unblocked" : "blocked", userInfo.id, "apply", "restriction", projectInfo, userInfo))
+                                            }} type='primary'>Apply</Button>
+                                            <NavLink onClick={() => {
+                                                dispatch(openModalInfo(false))
+                                            }} style={{ fontSize: 12 }} to={`${domainName}/projectDetail/${id}/settings/issue-permissions/${issueInfo?._id}`}>Go to settings</NavLink>
+                                        </div>
+                                    </div>
+                                </div>}
+
+
+                            <NavLink style={
+                                {
+                                    width: 'fit-content',
+                                    padding: issueInfo?.voted?.length === 0 ? 0 : 10,
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    textDecoration: 'none'
+                                }
+                            } className={`${issueInfo?.voted?.length > 0 ? 'hover-items' : ''}`}>
+                                <div className="dropdown">
+                                    <i
+                                        type="button"
+                                        id="dropdownMenuButton"
+                                        data-toggle="dropdown"
+                                        aria-haspopup="true"
+                                        aria-expanded="false"
+                                        style={
+                                            {
+                                                fontSize: 20,
+                                                padding: issueInfo?.voted?.length === 0 ? 10 : 0,
+                                                color: onClickedItems ? '#0C66E4' : issueInfo?.voted?.map(user => user?._id)?.includes(userInfo.id) ? '#0C66E4' : '#000',
+                                                backgroundColor: onClickedItems ? '#E9F2FF' : 'transparent',
+                                                textDecoration: 'none'
+                                            }
+                                        }
+                                        className={`fa fa-thumbs-up ${issueInfo?.voted?.length === 0 ? 'hover-items' : ''}`}>
+                                    </i>
+                                    <div className="dropdown-menu" aria-labelledby="dropdownMenuButton" style={{ width: 'max-content', top: 0, left: 0 }}>
+                                        <a onClick={() => {
+                                            dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { voted_user_id: userInfo.id }, null, null, userInfo.id, issueInfo?.voted?.map(user => user._id).includes(userInfo.id) ? "Unliked" : "Liked", "issue", projectInfo, userInfo))
+                                        }} style={{ fontSize: 14 }} className="dropdown-item" href="##">
+                                            <i style={{ color: '#0052CC', fontSize: 20 }} class="fa fa-thumbs-up mr-3"></i>
+                                            {
+                                                issueInfo?.voted?.map(user => user._id)?.includes(userInfo.id) ? <span>Remove vote</span> : <span>Vote for this issue</span>
+                                            }
+                                        </a>
+                                        <hr className='mt-2 mb-0' />
+                                        <div>
+                                            {issueInfo?.voted?.length === 0 ? <div style={{ padding: '15px 10px' }}>
+                                                <span style={{ fontSize: 13 }}>No one has voted for this issue</span>
+                                            </div> : <div>
+                                                <h6 style={{ fontSize: 14, margin: '10px 0 10px 10px' }}>Voted for this issue</h6>
+                                                {
+                                                    issueInfo?.voted?.map((user, index) => {
+                                                        return <div className="dropdown-item" style={{ padding: '5px 10px' }} key={index}>
+                                                            <Avatar className='mr-2' src={user.avatar} />
+                                                            <span>{user.username}</span>
+                                                        </div>
+                                                    })
+                                                }
+                                            </div>}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {issueInfo?.voted?.length > 0 ? <span className='p-0 pl-2 font-weight-bold'>{issueInfo?.voted?.length}</span> : null}
+                            </NavLink>
+                            <i style={{ fontSize: 20, padding: 10, cursor: 'pointer' }} className="fa fa-share-alt hover-items"></i>
+                            <i style={{ fontSize: 20, padding: 10, cursor: 'pointer' }} className="fa-solid fa-link hover-items"></i>
+                            <div className="dropdown">
+                                <i
+                                    type="button"
+                                    id="dropdownMenuButton"
+                                    data-toggle="dropdown"
+                                    aria-haspopup="true"
+                                    aria-expanded="false"
+                                    style={{ fontSize: 20, padding: 10, cursor: 'pointer' }}
+                                    className="fa fa-ellipsis-h hover-items"></i>
+                                <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                    {
+                                        !issueInfo?.isFlagged ? <a className="dropdown-item" href="##" onClick={(e) => {
+                                            dispatch(displayComponentInModal(<AddFlagModal editCurrentIssue={issueInfo} userInfo={userInfo} />, 1024, <h4><i style={{ fontSize: 25, color: '#FF5630' }} className="fa fa-flag mr-3"></i> Add Flag</h4>))
+                                        }}>Add flag</a> : <a className="dropdown-item" href="##" onClick={(e) => {
+                                            dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { isFlagged: false }, null, null, userInfo.id, "canceled", "flag", projectInfo, userInfo))
+                                        }}>Remove flag</a>
+                                    }
+                                    {getValueOfNumberFieldInIssue(issueInfo, "issue_status") !== 4 ? <a onClick={() => {
+                                        dispatch(displayComponentInModal(<AddParentModal projectInfo={projectInfo} issue={issueInfo} userInfo={userInfo} epicList={epicList} />, 600, "Add Epic"))
+                                    }} className="dropdown-item" href="##">Add Parent</a> : <></>}
+                                    <hr className='mt-1 mb-1' />
+                                    <a onClick={() => {
+                                        dispatch(displayComponentInModal(<CloneIssueModal issue={issueInfo} userInfo={userInfo} />, 600, `Clone issue: {projectInfo?.key_name}-${issueInfo?.ordinal_number}`))
+                                    }} className="dropdown-item" href="##">Clone issue</a>
+                                    <a className="dropdown-item" href="##">Move other projects</a>
+                                    <a className="dropdown-item" href="##">Delete</a>
+                                    <hr className='mt-1 mb-1' />
+                                    <a className="dropdown-item" href="##">Configuration</a>
+                                </div>
+                            </div>
+
+                        </div>
                         {
-                            issueInfo?.creator?._id.toString() === userInfo.id ? (
-                                <div>
-                                    <Popconfirm placement="topLeft"
+                            issueInfo?.creator?._id?.toString() === userInfo?.id ? (
+                                <div className="hover-items" style={{ padding: 10 }}>
+                                    <Popconfirm placement="bottomRight"
                                         title="Delete this issue?"
                                         description="Are you sure to delete this issue from project?"
-                                        onConfirm={async () => {
+                                        onConfirm={() => {
                                             //dispatch su kien xoa nguoi dung khoi du an
-                                            await dispatch(deleteIssue(issueInfo?._id))
-
+                                            dispatch(deleteIssue(issueInfo?._id))
                                             //dispatch lại sự kiện load lại project
-                                            dispatch(GetProjectAction(issueInfo?.projectId, ""))
+                                            dispatch(GetProjectAction(issueInfo?.project_id?._id, ""))
                                         }} okText="Yes" cancelText="No">
-                                        <i className="fa fa-trash-alt" style={{ cursor: 'pointer' }} />
+                                        <i className="fa fa-trash-alt text-center" style={{ cursor: 'pointer', width: '100% !important', fontSize: 18 }} />
                                     </Popconfirm>
                                 </div>
                             ) : <></>
                         }
-                        <button type="button" className="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">×</span>
-                        </button> 
                     </div>
                 </div>
-                <div className="modal-body">
+                <div className="modal-body p-0">
                     <div className="container-fluid">
-                        <div className="row">
-                            <div className="col-8">
-                                <p className="issue" style={{ fontSize: '24px', fontWeight: 'bold' }}>{issueInfo?.shortSummary}</p>
-                                <div className="description">
-                                    <p style={{ fontWeight: 'bold', fontSize: '15px' }}>Description</p>
-                                    {editDescription ? (<p onKeyDown={() => { }} onDoubleClick={() => {
-                                        if (issueInfo?.creator?._id === userInfo.id) {
-                                            setEditDescription(false)
-                                        }
-                                    }}>
-                                        {renderContentModal()}
-                                    </p>) : (
-                                        <>
-                                            <Editor name='description'
-                                                apiKey='golyll15gk3kpiy6p2fkqowoismjya59a44ly52bt1pf82oe'
-                                                init={{
-                                                    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount linkchecker',
-                                                    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
-                                                    tinycomments_mode: 'embedded',
-                                                    tinycomments_author: 'Author name',
-                                                    mergetags_list: [
-                                                        { value: 'First.Name', title: 'First Name' },
-                                                        { value: 'Email', title: 'Email' },
-                                                    ],
-                                                    ai_request: (request, respondWith) => respondWith.string(() => Promise.reject("See docs to implement AI Assistant")),
-                                                }}
-                                                initialValue={issueInfo?.description}
-                                                onEditorChange={handlEditorChange}
-                                            />
-
-                                            <div className='mt-2'>
-                                                <Button onClick={() => {
-                                                    setEditDescription(true)
-                                                    dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { description }))
-                                                }} type="primary" className='mr-2'>Save</Button>
-                                                <Button onClick={() => {
-                                                    setEditDescription(true)
-                                                }}>Cancel</Button>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                                <div className="comment">
-                                    <h6>Comment</h6>
-
-                                    {/* Kiểm tra xem nếu người đó thuộc về issue thì mới có thể đăng bình luận */}
-                                    {issueInfo?.creator?._id === userInfo.id || issueInfo?.assignees.findIndex(value => value._id === userInfo.id) !== -1 ? (
-                                        <div className="block-comment" style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <div className="input-comment d-flex">
-                                                <div className="avatar">
-                                                    <Avatar src={userInfo?.avatar} size={40} />
-                                                </div>
-                                                <div style={{ width: '100%' }}>
-                                                    <Input type='text' placeholder='Add a comment...' defaultValue="" value={comment.content} onChange={(e) => {
-                                                        setComment({
-                                                            content: e.target.value,
-                                                            isSubmit: false
-                                                        })
-                                                    }} />
-                                                    <Button type="primary" onClick={() => {
-                                                        if (comment.content.trim() === '') {
-                                                            showNotificationWithIcon('error', 'Tạo bình luận', 'Vui lòng nhập nội dung trước khi gửi')
-                                                        } else {
-                                                            dispatch(createCommentAction({ content: comment.content, issueId: issueInfo._id, creator: userInfo?.id }))
-                                                            setComment({
-                                                                content: '',
-                                                                isSubmit: true
-                                                            })
-                                                        }
-                                                    }} className='mt-2'>Send</Button>
-                                                </div>
-                                            </div>
-                                            <ul className="display-comment mt-2 p-0" style={{ display: 'flex', flexDirection: 'column', height: '35rem', overflow: 'overlay', scrollbarWidth: 'none' }}>
-                                                {renderComments()}
-                                            </ul>
-                                        </div>
-                                    ) : <p className='text-danger'>Plese join in this issue to read comments</p>}
-
-                                </div>
+                        {/* 630 */}
+                        <div className="row" style={{ height: height }}>
+                            <div className={`col-${colLeft}`}>
+                                <LeftIssueInfo
+                                    issueInfo={issueInfo}
+                                    userInfo={userInfo}
+                                    sprintList={sprintList}
+                                    epicList={epicList}
+                                    versionList={versionList}
+                                    id={id}
+                                    componentList={componentList}
+                                    issuesInProject={issuesInProject}
+                                    historyList={historyList}
+                                    issueIdForIssueDetail={issueIdForIssueDetail}
+                                    handleEditAttributeTag={handleEditAttributeTag}
+                                    editAttributeTag={editAttributeTag}
+                                    worklogList={worklogList}
+                                    projectInfo={projectInfo}
+                                    commentList={commentList}
+                                    hanleClickDisplayAddSubIssue={hanleClickDisplayAddSubIssue}
+                                    hanleClickEditSummaryInSubIssue={hanleClickEditSummaryInSubIssue} />
                             </div>
-                            <div className="col-4">
-                                <div className="status">
-                                    <h6>STATUS</h6>
-                                    <select className="custom-select" disabled={issueInfo?.creator._id !== userInfo.id} onChange={(event) => {
-                                        dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { issueStatus: event.target.value }))
-                                    }}>
-                                        {renderIssueStatus(issueInfo?.issueStatus)}
-                                    </select>
-                                </div>
-                                <div className="assignees">
-                                    <h6>ASSIGNEES</h6>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)' }}>
-                                        {issueInfo?.assignees?.map((value, index) => {
-                                            return <div key={value._id} style={{ display: 'flex', alignItems: 'center', marginRight: '5px' }} className="item mt-2">
-                                                <div className="avatar">
-                                                    <Avatar key={value._id} src={value.avatar} />
-                                                </div>
-                                                <p className="name d-flex align-items-center ml-1" style={{ fontWeight: 'bold' }}>
-                                                    {value.username}
-                                                    {issueInfo?.creator._id === userInfo.id ? (
-                                                        <Popconfirm placement="topLeft"
-                                                            title="Delete this user?"
-                                                            description="Are you sure to delete this user from project?"
-                                                            onConfirm={() => {
-                                                                //dispatch su kien xoa nguoi dung khoi du an
-                                                                dispatch(deleteAssignee(issueInfo?._id, issueInfo?.projectId, value._id))
-                                                            }} okText="Yes" cancelText="No">
-                                                            <i className="fa fa-times text-danger" style={{ marginLeft: 5 }} />
-                                                        </Popconfirm>
-                                                    ) : <></>}
-                                                </p>
-                                            </div>
-                                        })}
-                                        {
-                                            issueInfo?.creator._id === userInfo.id ? (
-                                                <div style={{ display: 'flex', alignItems: 'center', width: '100px' }}>
-                                                    <button onKeyDown={() => { }} className='text-primary mt-2 mb-2 btn bg-transparent' style={{ fontSize: '12px', margin: '0px', cursor: 'pointer' }} onClick={() => {
-                                                        setAddAssignee(false)
-                                                    }} >
-                                                        <i className="fa fa-plus" style={{ marginRight: 5 }} />Add more
-                                                    </button>
-                                                </div>
-                                            ) : <></>
-                                        }
-
-                                    </div>
-                                    {!addAssignee ? (
-                                        <div>
-                                            <Select
-                                                style={{ width: '200px' }}
-                                                placeholder="Select a person"
-                                                optionFilterProp="children"
-                                                disabled={issueInfo?.creator._id !== userInfo.id}
-                                                onSelect={(value, option) => {
-                                                    setAddAssignee(true)
-                                                    dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { assignees: value }))
-                                                }}
-                                                filterOption={(input, option) => option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
-                                            >
-                                                {renderOptionAssignee()}
-                                            </Select>
-                                        </div>
-                                    ) : <></>}
-                                </div>
-                                <div className="reporter">
-                                    <h6 className='mt-3'>CREATOR</h6>
-                                    <div style={{ display: 'flex' }} className="item">
-                                        <div className="avatar">
-                                            <Avatar src={issueInfo?.creator.avatar} />
-                                        </div>
-                                        <p className="name d-flex align-items-center ml-    1" style={{ fontWeight: 'bold' }}>
-                                            {issueInfo?.creator.username}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="priority" style={{ marginBottom: 20 }}>
-                                    <h6>PRIORITY</h6>
-                                    <Select
-                                        style={{ width: '100%' }}
-                                        placeholder={priorityTypeOptions[issueInfo?.priority]?.label}
-                                        defaultValue={priorityTypeOptions[issueInfo?.priority]?.value}
-                                        options={priorityTypeOptions}
-                                        disabled={issueInfo?.creator._id !== userInfo.id}
-                                        onSelect={(value, option) => {
-                                            dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { priority: value }))
-                                        }}
-                                        name="priority"
-                                    />
-                                </div>
-                                <div className="estimate">
-                                    <h6>ORIGINAL ESTIMATE (HOURS)</h6>
-                                    <input type="number" className="estimate-hours" onChange={(e) => {
-                                        //kiem tra gia tri co khac null khong, khac thi xoa
-                                        if (inputTimeOriginal.current) {
-                                            clearTimeout(inputTimeOriginal.current)
-                                        }
-                                        inputTimeOriginal.current = setTimeout(() => {
-                                            dispatch(updateInfoIssue(issueInfo?._id, projectInfo?._id, { timeOriginalEstimate: e.target.value }))
-                                        }, 500)
-                                    }} disabled={issueInfo?.creator._id !== userInfo.id} defaultValue={issueInfo?.timeOriginalEstimate} />
-                                </div>
-                                <div className="time-tracking">
-                                    <h6>TIME TRACKING</h6>
-                                    <div style={{ display: 'flex' }}>
-                                        <i className="fa fa-clock" />
-                                        <div style={{ width: '100%' }}>
-                                            <div className="progress" onDoubleClick={() => {
-                                                setTime(true);
-                                            }} onKeyDown={() => { }}>
-                                                <progress
-                                                    className="progress-bar"
-                                                    style={{ width: (issueInfo?.timeSpent / (issueInfo?.timeSpent + issueInfo?.timeRemaining)) * 100 + '%' }}
-                                                />
-                                            </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <p className="logged">{issueInfo?.timeSpent}h logged</p>
-                                                <p className="estimate-time">{issueInfo?.timeRemaining}h estimated</p>
-                                            </div>
-
-                                            {issueInfo?.creator._id === userInfo.id && time ? (
-                                                <div>
-                                                    <div className='row'>
-                                                        <div className='col-6 p-0'>
-                                                            <label htmlFor='timeSpent'>Time spent</label>
-                                                            <InputNumber min={0} name="timeSpent" defaultValue={issueInfo?.timeSpent} onChange={(value) => {
-                                                                if(value !== null) {
-                                                                    setTrackingTime({
-                                                                        ...trackingTime,
-                                                                        timeSpent: value
-                                                                    })
-                                                                }
-                                                            }} />
-                                                        </div>
-                                                        <div className='col-6 p-0 text-center'>
-                                                            <label htmlFor='timeRemaining'>Time remaining</label>
-                                                            <InputNumber min={0} defaultValue={issueInfo?.timeRemaining} name="timeRemaining" onChange={(value) => {
-                                                                if(value !== null) {
-                                                                    setTrackingTime({
-                                                                        ...trackingTime,
-                                                                        timeRemaining: value
-                                                                    })
-                                                                }
-                                                            }} />
-                                                        </div>
-
-                                                        <div className='col-12 mt-3 p-0'>
-                                                            <Button type='primary mr-2' onClick={() => {
-                                                                dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.projectId, { timeSpent: trackingTime.timeSpent, timeRemaining: trackingTime.timeRemaining }))
-                                                                setTime(false)
-                                                            }}>Save</Button>
-                                                            <Button type='default' onClick={() => {
-                                                                setTime(false)
-                                                            }}>Cancel</Button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ) : <></>}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div style={{ color: '#929398' }}>Create at {convertTime(issueInfo?.creatAt)}</div>
-                                <div style={{ color: '#929398' }}>{issueInfo?.creatAt !== issueInfo?.updateAt ? `Update at ${convertTime(issueInfo?.updateAt)}` : ""}</div>
+                            <div className={`col-${colRight}`} style={{ height: '90%', overflowY: 'auto', scrollbarWidth: 'none' }}>
+                                <RightIssueInfo
+                                    issueInfo={issueInfo}
+                                    userInfo={userInfo}
+                                    sprintList={sprintList}
+                                    issuesInProject={issuesInProject}
+                                    epicList={epicList}
+                                    componentList={componentList}
+                                    displayNumberCharacterInSummarySubIssue={displayNumberCharacterInSummarySubIssue}
+                                    id={id}
+                                    hanleClickDisplayAddSubIssue={hanleClickDisplayAddSubIssue}
+                                    hanleClickEditSummaryInSubIssue={hanleClickEditSummaryInSubIssue}
+                                    showAddSubIssue={showAddSubIssue}
+                                    handleEditAttributeTag={handleEditAttributeTag}
+                                    editAttributeTag={editAttributeTag}
+                                    subIssueSummary={subIssueSummary}
+                                    projectInfo={projectInfo}
+                                    versionList={versionList}
+                                    processList={processList} />
                             </div>
                         </div>
                     </div>

@@ -1,0 +1,133 @@
+.e-list-text {
+    width: 100%;
+}
+
+.e-text-content,
+.e-list-parent {
+    padding-left: 0 !important;
+}
+
+.e-list-item.e-hover .e-fullrow {
+    background-color: transparent !important;
+    border-color: transparent !important;
+}
+
+/* .e-appointment.e-lib.e-draggable {
+    width: 100%;
+} */
+.e-appointment-details {
+    width: 100%;
+    height: 100%;
+    padding: 0 !important;
+}
+.e-indicator.e-icons.e-left-icon,
+.e-indicator.e-icons.e-right-icon {
+    width: fit-content;
+}
+
+.e-appointment-details .template-wrap.not-expired {
+    background-color: #E9F2FF;
+    padding: 2px 3px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+/* More detail for not expired*/
+.e-appointment.e-lib.e-draggable {
+    background-color: transparent !important;
+}
+.e-appointment.e-lib.e-draggable > div, .e-appointment-details > div {
+    width: 100%;
+    height: 100%;
+}
+
+
+
+.e-appointment.e-lib.e-draggable > div > .template-wrap.not-expired {
+    background-color: #E9F2FF;
+    padding: 2px 3px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.e-schedule .e-appointment {
+    min-height: 30px; /* Hoặc chiều cao tối thiểu bạn mong muốn */
+}
+
+/* More detail for expired*/
+.e-appointment.e-lib.e-draggable > div > .template-wrap.expired {
+    background-color: #FFECEA;
+    padding: 2px 3px;
+    display: flex;
+    align-items: center;
+}
+.e-appointment.e-lib.e-draggable:hover > div > .template-wrap.expired {
+    background-color: #FFD5D2 !important;
+}
+
+/* More detail for sprint */
+.e-appointment.e-lib.e-draggable > div > .template-wrap.custom-sprint.not-expired,
+.e-appointment-details .template-wrap.custom-sprint.not-expired {
+    background-color: #D0FFBC;
+    padding: 2px 3px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+.e-appointment.e-lib.e-draggable:hover > div > .template-wrap.custom-sprint.not-expired,
+.e-appointment-details:hover .template-wrap.custom-sprint.not-expired {
+    background-color: #00A300 !important;
+}
+
+
+.e-appointment-details:hover .template-wrap.not-expired,
+.e-appointment.e-lib.e-draggable:hover > div > .template-wrap.not-expired {
+    background-color: #2684FF !important;
+}
+
+.e-appointment-details:hover .remove-items-calendar,
+.e-appointment.e-lib.e-draggable:hover .remove-items-calendar {
+    display: block !important;
+}
+
+.e-appointment-details .template-wrap.expired,
+.e-appointment.e-lib.e-draggable .template-wrap.expired {
+    background-color: #FFECEA;
+    padding: 2px 3px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.e-appointment-details:hover .template-wrap.expired,
+.e-appointment.e-lib.e-draggable:hover .template-wrap.expired {
+    background-color: #FFD5D2 !important;
+}
+
+
+.edit-btn-close-calendar:focus {
+    box-shadow: none;
+}
+
+.edit-btn-close-calendar:hover {
+    background-color: #ddd !important;
+}
+
+.card-calendar {
+    /* Add shadows to create the "card-calendar" effect */
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    transition: 0.3s;
+}
+
+/* On mouse-over, add a deeper shadow */
+.card-calender:hover {
+    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+}
+
+
+/* This field is used for displaying info selected */
+.selected {
+    border: 2px solid #2684FF;
+}

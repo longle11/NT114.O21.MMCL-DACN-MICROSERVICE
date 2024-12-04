@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: issueprocess-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: issueprocess
+  template:
+    metadata:
+      labels:
+        app: issueprocess
+    spec:
+      imagePullSecrets:
+        - name: authenticate-registry
+      hostAliases:
+        - ip: "192.168.73.101"
+          hostnames:
+          - "gitlab.taskscheduler.com"
+      containers:
+        - name: issueprocess
+          image: longle2003/issue_history
+          env:
+            - name: NATS_URL
+              value: "http://nats-srv:4222"
+            - name: NATS_CLUSTER_ID
+              value: "jiraproject"
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MONGO_URL
+              value: "mongodb://issueprocess-mongo-srv:27017/issueprocess"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: issueprocess-srv
+spec: 
+  selector:
+    app: issueprocess
+  ports:
+    - name: issueprocess
+      protocol: TCP
+      port: 4005
+      targetPort: 4005

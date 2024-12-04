@@ -1,0 +1,27 @@
+a.edit-comment-time {
+    color: #626f86;
+}
+
+a.edit-comment-time:hover {
+    text-decoration: none;
+    color: black;
+}
+
+.flag-icon-comment {
+    color: #FF5630 !important;
+}
+
+div.file-card:hover div.file-img {
+    background-color: #A9A9A9 !important;
+}
+
+div.file-card:hover div.file-btns {
+    display: flex !important;
+}
+button.btns-hover:hover  {
+    background-color: #dddd !important;
+}
+
+.custom-file-table .ant-table-cell {
+    padding: 5px 5px 5px 0 !important;
+}

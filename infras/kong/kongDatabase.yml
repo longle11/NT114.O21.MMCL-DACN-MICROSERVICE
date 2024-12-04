@@ -1,0 +1,45 @@
+
+apiVersion: apps/v1
+kind: Statefulset
+metadata:
+  name: postgresql-db
+  namespace: kong
+spec:
+  serviceName: postgresql-db-service
+  selector:
+    matchLabels:
+      app: postgresql-db
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgresql-db
+    spec:
+      containers:
+      - name: postgresql-db
+        image: postgres:9.5
+        volumeMounts:
+        - name: pg-kong-persistent-storage
+          mountPath: /var/lib/postgresql/data
+        env:
+          - name: POSTGRES_PASSWORD
+            value: kong
+          - name: PGDATA
+            value: /var/lib/postgresql/data/kong
+      volumes:
+      - name: pg-kong-persistent-storage
+        claimName: ebs-kong-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-db-svc
+  namespace: kong
+spec:
+  selector:
+    app: postgresql-db
+  ports:
+    - name: postgresql-db
+      protocol: TCP
+      port: 5432
+      targetPort: 5432

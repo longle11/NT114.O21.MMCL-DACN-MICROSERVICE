@@ -1,0 +1,18 @@
+button.btn-options {
+    border-radius: 5px;
+}
+button.btn-options:hover { 
+    background-color: #091E420F;
+}
+/* button#btn-option1:active,
+button#btn-option2:active,
+button#btn-option3:active,
+button#btn-option4:active {
+    background-color: #091e4224;
+    color: #172b4d;
+} */
+
+.ant-checkbox-wrapper {
+    display: flex !important;
+    align-items: center !important;
+}

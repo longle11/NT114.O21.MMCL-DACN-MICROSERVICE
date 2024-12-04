@@ -6,10 +6,12 @@ import { GetProjectAction, ListProjectAction } from '../../redux/actions/ListPro
 import { drawer_edit_form_action } from '../../redux/actions/DrawerAction';
 import FormEdit from '../Forms/FormEdit';
 import { deleteItemCategory, getItemCategory } from '../../redux/actions/EditCategoryAction';
-import { getUserKeyword, insertUserIntoProject } from '../../redux/actions/UserAction';
+import { getUserKeyword, insertUserIntoProject, updateUserInfo } from '../../redux/actions/UserAction';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
-import { deleteUserInProject } from '../../redux/actions/CreateProjectAction';
+import { deleteUserInProject, updateProjectAction } from '../../redux/actions/CreateProjectAction';
+import Parser from 'html-react-parser'
+import Search from 'antd/es/input/Search';
 export default function ProjectManager() {
     const dispatch = useDispatch()
     const listProject = useSelector(state => state.listProject.listProject)
@@ -51,8 +53,8 @@ export default function ProjectManager() {
             }}
             defaultValue=''
             options={listUser?.reduce((newListUser, user) => {
-                if (user._id !== userInfo.id) {
-                    return [...newListUser, { label: user.username, value: user._id }]
+                if (user.user_info._id !== userInfo?.id) {
+                    return [...newListUser, { label: user.user_info.username, value: user.user_info._id }]
                 }
                 return newListUser
             }, [])}
@@ -74,7 +76,7 @@ export default function ProjectManager() {
             dataIndex: 'avatar',
             key: 'avatar',
             render: (text, record, index) => {
-                return <Avatar src={text} size={30} alt={index} />
+                return <Avatar src={record.user_info.avatar} size={30} alt={index} />
             }
         },
         {
@@ -82,7 +84,7 @@ export default function ProjectManager() {
             dataIndex: 'username',
             key: 'username',
             render: (text, record, index) => {
-                return <span>{text}</span>
+                return <span>{record.user_info.username}</span>
             }
         },
         {
@@ -110,40 +112,59 @@ export default function ProjectManager() {
     }
     const columns = [
         {
-            title: 'ID',
-            dataIndex: '_id',
-            key: '_id',
+            title: '',
+            dataIndex: 'marked',
+            key: 'marked',
+            width: '3%',
+            render: (text, record, index) => {
+                return <button onClick={(e) => {
+                    dispatch(updateProjectAction(record._id, { marked: !record.marked }, null, null))
+                }} className='btn btn-transparent'>{record?.marked === true ? <i className="fa-solid fa-star" style={{ color: '#ff8b00', fontSize: 15 }}></i> : <i className="fa-solid fa-star" style={{ fontSize: 15 }}></i>}</button>
+            }
         },
         {
-            title: 'Project Name',
-            dataIndex: 'projectName',
-            key: 'projectName',
+            title: 'Name',
+            dataIndex: 'name_project',
+            key: 'name_project',
+            width: 'max-content',
             render: (text, record, index) => {
-                if (record?.creator?._id === userInfo.id || record.members.findIndex(user => user._id === userInfo.id) !== -1) {
-                    return <NavLink to={`/projectDetail/${record._id}`} onClick={() => {
-                        dispatch(GetProjectAction(record._id, ""))
+                if (record?.creator?._id === userInfo?.id || record.members.findIndex(user => user.user_info._id === userInfo?.id && user.status === "approved") !== -1) {
+                    return <NavLink to={`/projectDetail/${record._id}/${record.template_name?.toLowerCase() === 'scrum' ? 'board' : 'kanban-board'}`} onClick={() => {
+                        dispatch(GetProjectAction(record._id, null, null))
+                        dispatch(updateUserInfo(userInfo?.id, { project_working: record._id }))
                     }} style={{ textDecoration: 'none' }}>
-                        <span>{record.nameProject}</span>
+                        <span>{record.name_project}</span>
                     </NavLink>
                 } else {
                     return <NavLink style={{ color: 'black', textDecoration: 'none' }} onKeyDown={() => { }} onClick={() => {
                         showNotificationWithIcon('error', '', 'You have not participated in this project ')
-                    }}>{record.nameProject}</NavLink>
+                    }}>{record.name_project}</NavLink>
                 }
             }
         },
+        // {
+        //     title: 'Category',
+        //     dataIndex: 'category',
+        //     key: 'category',
+        //     render: (text, record, index) => {
+        //         return <Tag key={index} color="magenta">{record.category?.name}</Tag>
+        //     }
+        // },
         {
-            title: 'Category',
-            dataIndex: 'category',
-            key: 'category',
+            title: 'Description',
+            dataIndex: 'description',
+            key: 'description',
+            width: 'max-content',
+
             render: (text, record, index) => {
-                return <Tag key={index} color="magenta">{record.category?.name}</Tag>
+                return <span>{record?.description ? Parser(record?.description) : null}</span>
             }
         },
         {
             title: 'Creator',
             dataIndex: 'creatorId',
             key: 'creatorId',
+            width: '10%',
             render: (text, record, index) => {
                 return <Tag key={index} color="green">{record.creator?.username}</Tag>
             }
@@ -152,16 +173,16 @@ export default function ProjectManager() {
             title: 'Members',
             dataIndex: 'members',
             key: 'members',
-            render: (text, record, index) => {  //userInfo.id === record.creator._id
+            render: (text, record, index) => {  //userInfo?.id === record.creator._id
                 return <>
-                    {userInfo.id === record.creator?._id ? (
+                    {userInfo?.id === record.user_info?.creator?._id ? (
                         <div>
                             {
                                 record.members?.slice(0, 3).map((user, index) => {
-                                    return <Popover key={user._id} content={() => {
+                                    return <Popover key={user.user_info._id} content={() => {
                                         renderMembers(record, user)
                                     }} title="Members">
-                                        <Avatar key={user._id} src={<img src={user.avatar} alt="avatar" />} />
+                                        <Avatar key={user.user_info._id} src={<img src={user.user_info.avatar} alt="avatar" />} />
                                     </Popover>
                                 })
                             }
@@ -174,7 +195,7 @@ export default function ProjectManager() {
                         </div>) : (
                         <div>
                             {record.members?.slice(0, 3).map((user, index) => {
-                                return <Avatar key={user._id} src={<img src={user.avatar} alt="avatar" />} />
+                                return <Avatar key={user.user_info._id} src={<img src={user.user_info.avatar} alt="avatar" />} />
                             })}
                             {record.members?.length >= 3 ? <Avatar>...</Avatar> : ''}
                         </div>)
@@ -184,11 +205,24 @@ export default function ProjectManager() {
             }
         },
         {
+            title: 'Key',
+            dataIndex: 'key_name',
+            key: 'key_name',
+            width: 'max-content'
+        },
+        {
+            title: 'Template',
+            dataIndex: 'template_name',
+            key: 'template_name',
+            width: 'max-content'
+        },
+        {
             title: 'Action',
             dataIndex: 'action',
             key: 'categoryId',
+            width: '10%',
             render: (text, record, index) => {
-                if (userInfo.id === record.creator?._id) {
+                if (userInfo?.id === record.creator?._id) {
                     return <div>
                         <Button className='mr-2 text-primary' type="default" icon={<EditOutlined />} size='large' onClick={() => {
                             dispatch(drawer_edit_form_action(<FormEdit />, "Submit", 730, '30px'))
@@ -215,22 +249,38 @@ export default function ProjectManager() {
                     return <></>
                 }
             },
+        },
+        {
+            title: 'Settings',
+            dataIndex: 'setting',
+            key: 'setting',
+            width: '5%',
+            render: (text, record, index) => {
+                if (userInfo?.id === record.creator?._id) {
+                    return <div>
+                        <button className="btn btn-primary"><i className="fa fa-bars"></i></button>
+                    </div>
+                } else {
+                    return <></>
+                }
+            },
         }
     ];
     return (
         <div className='container-fluid'>
-            <div className="header">
-                <nav aria-label="breadcrumb">
-                    <ol className="breadcrumb" style={{ backgroundColor: 'white' }}>
-                        <li className="breadcrumb-item">Project</li>
-                        <li className="breadcrumb-item active" aria-current="page">
-                            Project management
-                        </li>
-                    </ol>
-                </nav>
+            <div className="project-list-header d-flex justify-content-between mt-3">
+                <h4>Projects</h4>
+                <Button onClick={() => {
+                    navigate('/create-project/software-project/templates')
+                }} className="mr-5">Create Project</Button>
             </div>
-            <h3>Project management</h3>
-            <div className="content">
+            <Search
+                placeholder="Search projects"
+                style={{
+                    width: 200
+                }}
+            />
+            <div className="project-list-info">
                 <Table columns={columns} rowKey={"id"} dataSource={listProject} />
             </div>
         </div>

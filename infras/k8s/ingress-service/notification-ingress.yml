@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: notification-ingress
+  namespace: default
+  annotations:
+    konghq.com/methods: GET,POST,PUT,DELETE
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: kong
+  tls:
+    - hosts:
+        - www.khoaluantotnghiep.click 
+      secretName: ca-ingress-tls
+  rules:
+    - host: www.khoaluantotnghiep.click 
+      http:
+        paths:
+          - path: /api/notification/
+            pathType: Prefix
+            backend:
+              service:
+                name: notification-srv
+                port:
+                  number: 4009

@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  namespace: default
+  annotations:
+    konghq.com/methods: GET
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: client-srv
+                port: 
+                  number: 3006

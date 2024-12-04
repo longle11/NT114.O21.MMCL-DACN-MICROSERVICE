@@ -1,0 +1,7 @@
+button:focus {
+    box-shadow: none;
+}
+
+.edit-create_epic-select .ant-select-selector {
+    border-radius: 0 !important;
+}

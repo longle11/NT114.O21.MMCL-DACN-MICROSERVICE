@@ -1,0 +1,69 @@
+.btn:focus {
+    box-shadow: none;
+}
+
+.issues-backlog-detail:last-child {
+    border-bottom: none !important;
+    padding: 5px 0
+}
+
+.dragIssue {
+    opacity: 0;
+}
+
+div.epic-footer:hover, div.version-footer:hover  {
+    background-color: #dddd;
+}
+
+/* div.issues:last-child {
+    border-bottom: 1px solid #dddd;
+} */
+
+/* when hover in tag of issue -> all hide attributes will display */
+div.issue-info:hover button.setting-issue {
+    visibility: visible !important;
+}
+div.issue-info:hover button.btn-edit-summary {
+    display: inline !important;
+}
+
+div.backlog-creating-sprint:hover {
+    background-color: #dddd !important;
+}
+
+.dropdown-menu li {
+    position: relative;
+}
+
+.dropdown-menu .dropdown-submenu {
+    display: none;
+    position: absolute;
+    left: -82.2%;
+    top: 0;
+}
+
+.dropdown-menu>li:hover>.dropdown-submenu {
+    display: block;
+}
+
+.selected_epic {
+    background-color: #85B8FF ;
+}
+.unselected_epic {
+    background-color: #ffff ;
+}
+.selected_version {
+    background-color: #85B8FF;
+}
+.unselected_version {
+    background-color: #ffff;
+}
+
+.edit-select-issue-backlog div.ant-select-selector {
+    border: none !important;
+    border-radius: 0 !important;
+}
+
+input.edit-input-issue-backlog:focus {
+    box-shadow: none !important;
+}

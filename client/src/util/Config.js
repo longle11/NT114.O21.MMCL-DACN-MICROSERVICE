@@ -1,4 +1,2 @@
-// const domainName = "https://www.nt533uitjiradev.click"
-const domainName = "https://jira.dev"
-
+const domainName = "https://khoaluantotnghiep.click"
 export default domainName

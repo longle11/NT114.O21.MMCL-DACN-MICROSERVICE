@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: sprint-mongo-depl
+spec: 
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sprint-mongo
+  template: 
+    metadata:
+      labels: 
+        app: sprint-mongo
+    spec: 
+      containers: 
+        - name: db
+          image: mongo
+          volumeMounts:
+            - name: sprint-mongo-pvc
+              mountPath: /data
+      volumes: 
+        - name: sprint-mongo-pvc
+          persistentVolumeClaim:
+            claimName: sprint-mongo-pvc   
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sprint-mongo-srv
+spec:
+  selector: 
+    app: sprint-mongo
+  ports:  
+    - name: sprint-db
+      protocol: TCP
+      port: 27017
+      targetPort: 27017

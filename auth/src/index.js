@@ -1,6 +1,8 @@
 const mongoose = require("mongoose")
 const app = require('./app')
-const natsWrapper = require("./nats-wrapper")
+const natsWrapper = require("./nats-wrapper");
+const issueCreatedListener = require("./nats/listener/issue-listener/issue-created-listeners");
+const projectManagementCreatedListener = require("./nats/listener/project-listener/projectManagement-created-listener");
 
 async function connectToMongoDb() {
     try {
@@ -19,6 +21,9 @@ async function connectToNats() {
             console.log('NATs connection closed');
             process.exit()
         })
+
+        projectManagementCreatedListener()
+        issueCreatedListener()
 
         process.on('SIGINT', () => { natsWrapper.client.close() })
         process.on('SIGTERM', () => { natsWrapper.client.close() })

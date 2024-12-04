@@ -1,0 +1,7 @@
+input::placeholder {
+    font-size: 13px;
+}
+
+.collapse-issue-setting.show {
+    display: block !important;
+}

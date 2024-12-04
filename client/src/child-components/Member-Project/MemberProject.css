@@ -1,0 +1,7 @@
+input.ant-input, span.ant-input-group-addon > button.ant-btn {
+    border-radius: 0!important;
+}
+
+.ant-checkbox-wrapper {
+    width: max-content !important;
+}

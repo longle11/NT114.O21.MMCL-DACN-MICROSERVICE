@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: issuehistory-mongo-depl
+spec: 
+  replicas: 1
+  selector:
+    matchLabels:
+      app: issuehistory-mongo
+  template: 
+    metadata:
+      labels: 
+        app: issuehistory-mongo
+    spec: 
+      containers: 
+        - name: db
+          image: mongo
+          volumeMounts:
+            - name: issuehistory-mongo-pvc
+              mountPath: /data
+      volumes: 
+        - name: issuehistory-mongo-pvc
+          persistentVolumeClaim:
+            claimName: issuehistory-mongo-pvc   
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: issuehistory-mongo-srv
+spec:
+  selector: 
+    app: issuehistory-mongo
+  ports:  
+    - name: issuehistory-db
+      protocol: TCP
+      port: 27017
+      targetPort: 27017

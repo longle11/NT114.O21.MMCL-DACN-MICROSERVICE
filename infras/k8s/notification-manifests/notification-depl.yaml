@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: notification-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification
+  template:
+    metadata:
+      labels:
+        app: notification
+    spec:
+      imagePullSecrets:
+        - name: authenticate-registry
+      hostAliases:
+        - ip: "192.168.73.101"
+          hostnames:
+          - "gitlab.taskscheduler.com"
+      containers:
+        - name: notification
+          image: longle2003/notification
+          env:
+            - name: NATS_URL
+              value: "http://nats-srv:4222"
+            - name: NATS_CLUSTER_ID
+              value: "jiraproject"
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MONGO_URL
+              value: "mongodb://notification-mongo-srv:27017/notification"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-srv
+spec: 
+  selector:
+    app: notification
+  ports:
+    - name: notification
+      protocol: TCP
+      port: 4009
+      targetPort: 4009

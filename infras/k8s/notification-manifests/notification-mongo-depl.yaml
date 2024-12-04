@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: notification-mongo-depl
+spec: 
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-mongo
+  template: 
+    metadata:
+      labels: 
+        app: notification-mongo
+    spec: 
+      containers: 
+        - name: db
+          image: mongo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-mongo-srv
+spec:
+  selector: 
+    app: notification-mongo
+  ports:  
+    - name: notification-db
+      protocol: TCP
+      port: 27017
+      targetPort: 27017

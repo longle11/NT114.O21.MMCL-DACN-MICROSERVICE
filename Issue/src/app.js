@@ -16,8 +16,6 @@ app.use(cors({
 
 app.set('trust proxy', 1)
 
-
-
 app.use(cookieSession({
     signed: false,
     secure: true
@@ -27,7 +25,7 @@ app.use('/api/issue', require('./Routes/create'))
 app.use('/api/issue', require('./Routes/getIsuue'))
 app.use('/api/issue', require('./Routes/delete'))
 app.use('/api/issue', require('./Routes/update'))
-app.use('/api/issue', require('./Routes/deleteAssignee'))
+// app.use('/api/issue', require('./Routes/deleteAssignee'))
 
 app.use(errorHandler)
 
