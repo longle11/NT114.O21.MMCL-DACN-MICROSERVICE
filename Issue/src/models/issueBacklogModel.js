@@ -2,8 +2,8 @@ const mongoose = require('mongoose')
 
 const issueBacklogSchema = mongoose.Schema({
     project_id: {
-        type: mongoose.Schema.Types.ObjectId, 
-        default: null
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'projects'
     },
     issue_list: [
         {

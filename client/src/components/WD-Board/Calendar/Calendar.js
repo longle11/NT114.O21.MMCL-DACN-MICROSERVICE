@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { NavLink, useParams } from 'react-router-dom';
 import './Calendar.css'
-import { Inject, ScheduleComponent, Month, ViewsDirective, ViewDirective, Day, DragAndDrop, Resize} from '@syncfusion/ej2-react-schedule'
+import { Inject, ScheduleComponent, Month, ViewsDirective, ViewDirective, Day, DragAndDrop, Resize } from '@syncfusion/ej2-react-schedule'
 import { TreeViewComponent } from '@syncfusion/ej2-react-navigations'
 import { useDispatch, useSelector } from 'react-redux';
-import { getIssuesBacklog, getIssuesInProject, updateInfoIssue } from '../../../redux/actions/IssueAction';
+import { getIssuesInProject, updateInfoIssue } from '../../../redux/actions/IssueAction';
 import { iTagForIssueTypes, iTagForPriorities, priorityTypeWithouOptions } from '../../../util/CommonFeatures';
 import { Avatar, Breadcrumb, Button, Input, Select, Switch, Tag } from 'antd';
 import { registerLicense } from '@syncfusion/ej2-base';
@@ -15,6 +15,11 @@ import dayjs from 'dayjs';
 import IssueCreatingModal from '../../Modal/IssueCreatingModal/IssueCreatingModal';
 import Search from 'antd/es/input/Search';
 import SprintModalInfo from '../../Modal/SprintInfoModal/SprintInfoModal';
+import { getValueOfArrayObjectFieldInIssue, getValueOfNumberFieldInIssue, getValueOfObjectFieldInIssue, getValueOfStringFieldInIssue } from '../../../util/IssueFilter';
+import { showNotificationWithIcon } from '../../../util/NotificationUtil';
+import { updateUserInfo } from '../../../redux/actions/UserAction';
+registerLicense('Ngo9BigBOggjHTQxAR8/V1NDaF5cWWtCf1JpR2RGfV5ycEVHYFZUQXxcQ00SNHVRdkdnWH5edHZWRmBZVE13W0I=');
+
 export default function Calendar() {
     const issuesInProject = useSelector(state => state.issue.issuesInProject)
     const projectInfo = useSelector(state => state.listProject.projectInfo)
@@ -27,7 +32,6 @@ export default function Calendar() {
         priorities: [],
         types: []
     })
-    registerLicense('Ngo9BigBOggjHTQxAR8/V1NCaF1cWWhIfkx3R3xbf1x0ZFBMY15bRH9PMyBoS35RckVqWH1edXdXR2BUWE11');
 
     //SWITCH VALUE
     const [keySwitch, setKeySwitch] = useState(true)
@@ -42,11 +46,11 @@ export default function Calendar() {
     const currentDate = useRef(null)
     useEffect(() => {
         if (id) {
-            dispatch(getIssuesInProject(id))
+            dispatch(getIssuesInProject(id, null))
             dispatch(GetProjectAction(id, null, null))
             dispatch(GetProcessListAction(id))
             dispatch(GetWorkflowListAction(id))
-            dispatch(GetSprintListAction(id))
+            dispatch(GetSprintListAction(id, null))
         }
     }, [])
 
@@ -68,21 +72,35 @@ export default function Calendar() {
     const eventTemplate = (props) => {
         const issue = getIssueByIndex(props.Id)
         if (issue) {
-            const checkExpired = dayjs(issue?.end_date).isBefore(dayjs(new Date()))
-            const originalSummary = issue.summary
+            const checkExpired = dayjs(getValueOfStringFieldInIssue(issue, "end_date")).isBefore(dayjs(new Date()))
+            const originalSummary = getValueOfStringFieldInIssue(issue, "summary")
             const summary = originalSummary.length > 10 ? originalSummary.substring(0, 5) + "..." + originalSummary.substring(originalSummary.length - 3) : originalSummary
             return (
                 <div className={`template-wrap d-flex align-items-center ${checkExpired ? "expired" : "not-expired"}`} style={{ width: '100%' }}>
                     <NavLink
                         onClick={(e) => {
                             e.stopPropagation()
-                            const oldValue = (issue.start_date ? dayjs(issue.start_date).format("DD/MM/YYYY hh:mm") : "None") + " - " + (issue.end_date ? dayjs(issue.end_date).format("DD/MM/YYYY hh:mm") : "None")
-                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { start_date: null, end_date: null }, oldValue, "None - None", userInfo.id, "updated", "Start Date - End Date"))
+                            const oldValue = (getValueOfStringFieldInIssue(issue, "start_date") ? dayjs(getValueOfStringFieldInIssue(issue, "start_date")).format("DD/MM/YYYY hh:mm") : "None") + " - " + (getValueOfStringFieldInIssue(issue, "end_date") ? dayjs(getValueOfStringFieldInIssue(issue, "end_date")).format("DD/MM/YYYY hh:mm") : "None")
+                            dispatch(updateInfoIssue(
+                                issue._id,
+                                issue.project_id._id,
+                                {
+                                    start_date: null,
+                                    end_date: null
+                                },
+                                oldValue,
+                                "None - None",
+                                userInfo.id,
+                                "updated",
+                                "Start Date - End Date",
+                                projectInfo,
+                                userInfo
+                            ))
                         }}
                         className="text-light mr-2 d-none remove-items-calendar">
                         <i className="fa fa-times-circle"></i>
                     </NavLink>
-                    <span className='mr-1 ml-1'>{iTagForIssueTypes(issue.issue_status)}</span>
+                    <span className='mr-1 ml-1'>{iTagForIssueTypes(getValueOfNumberFieldInIssue(issue, "issue_status"), null, null, projectInfo?.issue_types_default)}</span>
                     {keySwitch ? <span className='mr-2' style={{ color: '#333' }}>WD-{issue.ordinal_number}</span> : <></>}
                     <span className='mr-2' style={{ color: '#333', fontWeight: 'bold' }}>{summary}</span>
                     {checkExpired ? <i style={{ color: '#C9372C' }} className="fa fa-clock mr-2"></i> : <></>}
@@ -107,19 +125,12 @@ export default function Calendar() {
 
 
     const renderData = () => {
-        const issuesData = issuesInProject?.filter(issue => issue?.start_date && issue?.end_date).map(issue => {
-            console.log({
-                Id: issue._id,
-                Subject: issue.summary,
-                StartTime: (new Date(issue?.start_date)).toISOString(),
-                EndTime: (new Date(issue?.end_date)).toISOString(),
-            });
-
+        const issuesData = issuesInProject?.filter(issue => getValueOfStringFieldInIssue(issue, "start_date") && getValueOfStringFieldInIssue(issue, "end_date")).map(issue => {
             return {
                 Id: issue._id,
-                Subject: issue.summary,
-                StartTime: (new Date(issue?.start_date)).toISOString(),
-                EndTime: (new Date(issue?.end_date)).toISOString(),
+                Subject: getValueOfStringFieldInIssue(issue, "summary"),
+                StartTime: (new Date(getValueOfStringFieldInIssue(issue, "start_date"))).toISOString(),
+                EndTime: (new Date(getValueOfStringFieldInIssue(issue, "end_date"))).toISOString(),
             }
         })
         const sprintDataIndex = sprintList?.findIndex(sprint => sprint.sprint_status === "processing")
@@ -132,19 +143,19 @@ export default function Calendar() {
                 EndTime: new Date(sprintList[sprintDataIndex].end_date),
             }]
         }
-        return issuesData?.length > 0 ? issuesData?.concat(sprintData) : []
+        return issuesData?.length > 0 ? issuesData?.concat(sprintData) : (sprintData?.length > 0 ? sprintData : [])
     }
 
     const renderDataSourceForTreeView = () => {
-        return issuesInProject?.filter(issue => issue?.start_date === null && issue?.end_date === null)?.filter(issue => {
+        return issuesInProject?.filter(issue => getValueOfStringFieldInIssue(issue, "start_date") === null && getValueOfStringFieldInIssue(issue, "end_date") === null)?.filter(issue => {
             if (selectOptions.assignees.length === 0 && selectOptions.priorities.length === 0 && selectOptions.types.length === 0) return true
             var isSearch = false
             if (selectOptions.assignees.length > 0) {
-                if (issue.assignees?.length === 0) {
+                if (getValueOfArrayObjectFieldInIssue(issue, "assignees")?.length === 0) {
                     isSearch = false
                 } else {
                     selectOptions.assignees.filter(user_id => {
-                        if (issue.assignees?.map(user => user._id)?.includes(user_id)) {
+                        if (getValueOfArrayObjectFieldInIssue(issue, "assignees")?.map(user => user._id)?.includes(user_id)) {
                             isSearch = true
                         }
                     })
@@ -152,13 +163,13 @@ export default function Calendar() {
             }
 
             if (selectOptions.priorities.length > 0) {
-                if (selectOptions.priorities.includes(issue.issue_status)) {
+                if (selectOptions.priorities.includes(getValueOfNumberFieldInIssue(issue, "issue_status"))) {
                     isSearch = true
                 }
             }
 
             if (selectOptions.types.length > 0) {
-                if (selectOptions.types.includes(issue.issue_type._id)) {
+                if (selectOptions.types.includes(getValueOfObjectFieldInIssue(issue, "issue_type")._id)) {
                     isSearch = true
                 }
             }
@@ -166,7 +177,7 @@ export default function Calendar() {
         }).map(issue => {
             return {
                 Id: issue._id,
-                Summary: issue.summary
+                Summary: getValueOfStringFieldInIssue(issue, "summary")
             }
         })
     }
@@ -180,6 +191,10 @@ export default function Calendar() {
     }
 
     const nodeTreeViewDrop = (args) => {
+        const getStartDateIndex = projectInfo?.issue_fields_config?.findIndex(field => field.field_key_issue === 'start_date')
+        const getEndDateIndex = projectInfo?.issue_fields_config?.findIndex(field => field.field_key_issue === 'end_date')
+
+
         const targetClassEle = args.target?.className
         if (!targetClassEle?.includes("e-work-cells")) return
         if (scheduleObj.current === null) return
@@ -187,34 +202,53 @@ export default function Calendar() {
         const issueIndex = issuesInProject?.findIndex(issue => issue._id === args.draggedNodeData.id)
         if (issueIndex !== -1) {
             const issue = issuesInProject[issueIndex]
-            const oldValue = (issue.start_date ? dayjs(issue.start_date).format("DD/MM/YYYY hh:mm") : "None") + " - " + (issue.end_date ? dayjs(issue.end_date).format("DD/MM/YYYY hh:mm") : "None")
-            const newValue = dayjs(cellDate.startTime).format("DD/MM/YYYY hh:mm") + " - " + dayjs(cellDate.endTime).format("DD/MM/YYYY hh:mm")
+            if (getStartDateIndex !== -1 && getEndDateIndex !== -1 && projectInfo?.issue_fields_config[getStartDateIndex].field_position_display.findIndex(field => field.issue_status === getValueOfNumberFieldInIssue(issue, "issue_status")) !== -1 && projectInfo?.issue_fields_config[getEndDateIndex].field_position_display.findIndex(field => field.issue_status === getValueOfNumberFieldInIssue(issue, "issue_status")) !== -1) {
+                const oldValue = (getValueOfStringFieldInIssue(issue, "start_date") ? dayjs(getValueOfStringFieldInIssue(issue, "start_date")).format("DD/MM/YYYY hh:mm") : "None") + " - " + (getValueOfStringFieldInIssue(issue, "end_date") ? dayjs(getValueOfStringFieldInIssue(issue, "end_date")).format("DD/MM/YYYY hh:mm") : "None")
+                const newValue = dayjs(cellDate.startTime).format("DD/MM/YYYY hh:mm") + " - " + dayjs(cellDate.endTime).format("DD/MM/YYYY hh:mm")
 
-            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { start_date: cellDate.startTime, end_date: cellDate.endTime }, oldValue, newValue, userInfo.id, "updated", "Start Date - End Date"))
-            const eventData = {
-                Id: args.draggedNodeData.id,
-                Subject: args.draggedNodeData.text,
-                StartTime: cellDate.startTime,
-                EndTime: cellDate.endTime
+                dispatch(updateInfoIssue(
+                    issue._id,
+                    issue.project_id._id,
+                    {
+                        start_date: cellDate.startTime?.toISOString(),
+                        end_date: cellDate.endTime?.toISOString()
+                    },
+                    oldValue,
+                    newValue,
+                    userInfo.id,
+                    "updated",
+                    "Start Date - End Date",
+                    projectInfo,
+                    userInfo
+                ))
+                const eventData = {
+                    Id: args.draggedNodeData.id,
+                    Subject: args.draggedNodeData.text,
+                    StartTime: cellDate.startTime,
+                    EndTime: cellDate.endTime
+                }
+                scheduleObj.current.addEvent(eventData)
+            } else {
+                showNotificationWithIcon('error', '', 'Vui long kich hoat truong start data va end date truoc khi su dung tinh nang nay')
             }
-            scheduleObj.current.addEvent(eventData)
         }
     }
 
     const nodeTemplate = (args) => {
         const issueIndex = issuesInProject?.findIndex(issue => issue._id.toString() === args.Id)
         if (issueIndex !== -1) {
+            const summary = getValueOfStringFieldInIssue(issuesInProject[issueIndex], "summary")
             return (
                 <div id={issuesInProject[issueIndex]._id} key={issuesInProject[issueIndex]._id} className='template-wrap' style={{ boxShadow: '0px 1px 1px #091e423f, 0px 0px 1px #091e4221', backgroundColor: '#fff', borderRadius: 2, padding: '5px 10px' }}>
-                    <span className='mb-1'>{issuesInProject[issueIndex].summary}</span>
+                    <span className='mb-1'>{summary?.length > 40 ? summary.substring(0, 25) + "..." + summary?.substring(summary.length - 5) : summary}</span>
                     <div className='d-flex justify-content-between'>
                         <div className='d-flex align-items-center'>
-                            <span className='mr-2'>{iTagForIssueTypes(issuesInProject[issueIndex].issue_status)}</span>
+                            <span className='mr-2'>{iTagForIssueTypes(getValueOfNumberFieldInIssue(issuesInProject[issueIndex], "issue_status"), null, null, projectInfo?.issue_types_default)}</span>
                             {keySwitch ? <span>WD-{issuesInProject[issueIndex].ordinal_number}</span> : <></>}
                         </div>
                         <div className='d-flex align-items-center'>
-                            <Tag className='mr-2' color={issuesInProject[issueIndex].issue_type.tag_color}>{issuesInProject[issueIndex].issue_type.name_process}</Tag>
-                            <span>{iTagForPriorities(issuesInProject[issueIndex].issue_priority)}</span>
+                            <Tag className='mr-2' color={getValueOfObjectFieldInIssue(issuesInProject[issueIndex], "issue_type")?.tag_color}>{getValueOfObjectFieldInIssue(issuesInProject[issueIndex], "issue_type")?.name_process}</Tag>
+                            <span>{iTagForPriorities(getValueOfNumberFieldInIssue(issuesInProject[issueIndex], "issue_priority"), null, null)}</span>
                         </div>
                     </div>
                 </div>
@@ -225,9 +259,23 @@ export default function Calendar() {
     const updateDataAfterDragOrResize = (e) => {
         const issue = getIssueByIndex(e.data.Id)
         if (issue) {
-            const oldValue = (issue.start_date ? dayjs(issue.start_date).format("DD/MM/YYYY hh:mm") : "None") + " - " + (issue.end_date ? dayjs(issue.end_date).format("DD/MM/YYYY hh:mm") : "None")
+            const oldValue = (getValueOfStringFieldInIssue(issue, "start_date") ? dayjs(getValueOfStringFieldInIssue(issue, "start_date")).format("DD/MM/YYYY hh:mm") : "None") + " - " + (getValueOfStringFieldInIssue(issue, "end_date") ? dayjs(getValueOfStringFieldInIssue(issue, "end_date")).format("DD/MM/YYYY hh:mm") : "None")
             const newValue = dayjs(e.data.StartTime).format("DD/MM/YYYY hh:mm") + " - " + dayjs(e.data.EndTime).format("DD/MM/YYYY hh:mm")
-            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { start_date: e.data.StartTime, end_date: e.data.EndTime }, oldValue, newValue, userInfo.id, "updated", "Start Date - End Date"))
+            dispatch(updateInfoIssue(
+                issue._id,
+                issue.project_id._id,
+                {
+                    start_date: e.data.StartTime,
+                    end_date: e.data.EndTime
+                },
+                oldValue,
+                newValue,
+                userInfo.id,
+                "updated",
+                "Start Date - End Date",
+                projectInfo,
+                userInfo
+            ))
         }
     }
 
@@ -253,7 +301,7 @@ export default function Calendar() {
                     <div className='d-flex'>
                         <Button onClick={(e) => {
                             setOpenScheduler(!openScheduler)
-                        }} style={{ borderRadius: 5 }}><i className="fa fa-calendar-alt mr-2"></i>Unscheduled (<span>{issuesInProject?.filter(issue => issue.start_date === null && issue.end_date === null)?.length}</span>)</Button>
+                        }} style={{ borderRadius: 5 }}><i className="fa fa-calendar-alt mr-2"></i>Unscheduled (<span>{issuesInProject?.filter(issue => getValueOfStringFieldInIssue(issue, "start_date") === null && getValueOfStringFieldInIssue(issue, "end_date") === null)?.length}</span>)</Button>
                         <div className="dropdown">
                             <Button className="ml-2" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style={{ borderRadius: 5 }}><i className="fa fa-sliders-h"></i></Button>
                             <div style={{ width: 'max-content', padding: '10px 15px' }} className="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -339,7 +387,15 @@ export default function Calendar() {
                         }
                         const getIssueIndex = issuesInProject?.findIndex(issue => issue?._id === e.data.Id)
                         if (getIssueIndex !== -1) {
-                            dispatch(displayComponentInModalInfo(<InfoModal issueIdForIssueDetail={null} issueInfo={issuesInProject[getIssueIndex]} displayNumberCharacterInSummarySubIssue={10} />, 1024))
+                            //dispatch event to update viewed issue in auth service
+                            dispatch(updateUserInfo(userInfo?.id, { viewed_issue: issuesInProject[getIssueIndex]?._id }))
+                            dispatch(displayComponentInModalInfo(<InfoModal
+                                colLeft={8}
+                                colRight={4}
+                                height={630}
+                                displayNumberCharacterInSummarySubIssue={10}
+                                issueIdForIssueDetail={issuesInProject[getIssueIndex]?._id}
+                                userInfo={userInfo} />, 1024))
                         }
 
                         const getSprintIndex = sprintList?.findIndex(sprint => sprint?._id === e.data.Id)
@@ -357,7 +413,14 @@ export default function Calendar() {
                     cellClick={(e) => {
                         const preventClickedToMoreOrItems = e.event.target
                         if (preventClickedToMoreOrItems?.className?.includes("e-work-cells")) {
-                            dispatch(displayComponentInModal(<IssueCreatingModal userInfo={userInfo} startDate={e.startTime} endDate={e.endTime} workflowList={workflowList} processList={processList} projectId={id} />))
+                            dispatch(displayComponentInModal(<IssueCreatingModal
+                                userInfo={userInfo}
+                                startDate={e.startTime}
+                                endDate={e.endTime}
+                                workflowList={workflowList}
+                                projectInfo={projectInfo}
+                                processList={processList}
+                                projectId={id} />))
                         }
                     }}
                     dragStop={(e) => {
@@ -374,7 +437,7 @@ export default function Calendar() {
                     </ViewsDirective>
                     <Inject services={[Month, Day, DragAndDrop, Resize]} />
                 </ScheduleComponent>
-                <div className='card-calendar ml-2' style={{ padding: '10px 10px', display: openScheduler ? "block" : "none" }}>
+                <div className='card-calendar ml-2' style={{ padding: '10px 10px', display: openScheduler ? "block" : "none", width: 350 }}>
                     <div className='mb-2'>
                         <div className='d-flex align-items-center justify-content-between'>
                             <h5 className='treeview-title-component'>Schedule your work</h5>
@@ -503,9 +566,16 @@ export default function Calendar() {
                                 nodeClicked={(e) => {
                                     const getIdElement = e.node.querySelector(".template-wrap").getAttribute('id')
                                     if (getIdElement) {
-                                        const issueIndex = getIssueByIndex(getIdElement)
-                                        if (issueIndex) {
-                                            dispatch(displayComponentInModalInfo(<InfoModal issueIdForIssueDetail={null} issueInfo={issueIndex} displayNumberCharacterInSummarySubIssue={10} />, 1024))
+                                        const issueInfo = getIssueByIndex(getIdElement)
+                                        if (issueInfo) {
+                                            dispatch(updateUserInfo(userInfo?.id, { viewed_issue: issueInfo._id }))
+                                            dispatch(displayComponentInModalInfo(<InfoModal
+                                                userInfo={userInfo}
+                                                issueIdForIssueDetail={issueInfo._id}
+                                                colLeft={8}
+                                                colRight={4}
+                                                height={630}
+                                                displayNumberCharacterInSummarySubIssue={10} />, 1024))
                                         }
                                     }
                                 }}

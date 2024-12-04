@@ -11,6 +11,7 @@ import { jwtDecode } from "jwt-decode";
 import { Modal, Popconfirm } from 'antd';
 import { SHOW_MODAL_INPUT_TOKEN } from '../../redux/constants/constant';
 import { timeToResetToken } from '../../util/Delay';
+import domainName from '../../util/Config';
 function Login(props) {
     const {
         errors,

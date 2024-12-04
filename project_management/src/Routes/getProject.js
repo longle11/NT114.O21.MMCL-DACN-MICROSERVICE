@@ -16,7 +16,7 @@ router.get('/:id', async (req, res, next) => {
                     path: 'members',
                     populate: {
                         path: 'user_info'
-                    },      
+                    },
                     select: '-__v'
                 })
                 .populate({
@@ -48,8 +48,8 @@ router.get('/:id', async (req, res, next) => {
 
 
             // currentProject.issues = filteredIssues
-            res.status(200).json({
-                message: "Lay thanh cong project",
+            return res.status(200).json({
+                message: "Successfully got the project",
                 data: currentProject
             })
         } else {
@@ -58,6 +58,26 @@ router.get('/:id', async (req, res, next) => {
 
     } catch (error) {
         next(error)
+    }
+})
+
+router.get('/get-project/name', async (req, res) => {
+    try {
+        console.log("data ", " voi req.query.name_project", req.query.name_project);
+
+        const data = await projectModel.find({ name_project: req.query.name_project })
+        
+        if(data.length > 0) {
+            return res.status(200).json({
+                message: "Successfully got the project",
+                data: data[0]
+            })
+        }
+
+        throw new BadRequestError('Project not found')
+    } catch (error) {
+        console.log("error ", error);
+        
     }
 })
 

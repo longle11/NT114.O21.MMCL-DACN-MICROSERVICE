@@ -12,6 +12,7 @@ export default function Epic() {
     const dispatch = useDispatch()
     const { id } = useParams()
     const epicList = useSelector(state => state.categories.epicList)
+    
     const userInfo = useSelector(state => state.user.userInfo)
     const projectInfo = useSelector(state => state.listProject.projectInfo)
     useEffect(() => {
@@ -80,7 +81,7 @@ export default function Epic() {
                 </div>
             }
         }
-    ];
+    ]
     return (
         <div >
             <Breadcrumb

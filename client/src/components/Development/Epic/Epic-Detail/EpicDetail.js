@@ -1,56 +1,61 @@
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { getEpicById } from '../../../../redux/actions/CategoryAction'
-import { useParams } from 'react-router-dom'
+import { NavLink, useParams } from 'react-router-dom'
 import { Avatar, Breadcrumb, Button, Table, Tag } from 'antd'
 import { GetProcessListAction, GetProjectAction } from '../../../../redux/actions/ListProjectAction'
-import { getIssuesBacklog } from '../../../../redux/actions/IssueAction'
+import { getIssuesInProject } from '../../../../redux/actions/IssueAction'
 import { iTagForIssueTypes, iTagForPriorities } from '../../../../util/CommonFeatures'
 import { UserOutlined } from '@ant-design/icons';
-import { displayComponentInModal } from '../../../../redux/actions/ModalAction'
 import { drawer_edit_form_action } from '../../../../redux/actions/DrawerAction'
 import CreateEpic from '../../../Forms/CreateEpic/CreateEpic'
+import { getValueOfArrayObjectFieldInIssue, getValueOfNumberFieldInIssue, getValueOfObjectFieldInIssue, getValueOfStringFieldInIssue } from '../../../../util/IssueFilter'
+import { displayComponentInModal } from '../../../../redux/actions/ModalAction'
+import SelectIssuesModal from '../../../Modal/SelectIssuesModal/SelectIssuesModal'
 export default function EpicDetail() {
   const epicInfo = useSelector(state => state.categories.epicInfo)
+  const userInfo = useSelector(state => state.user.userInfo)
+
   const { epicId, id } = useParams()
   const processList = useSelector(state => state.listProject.processList)
-  const issuesBacklog = useSelector(state => state.issue.issuesBacklog)
+  const issuesInProject = useSelector(state => state.issue.issuesInProject)
   const projectInfo = useSelector(state => state.listProject.projectInfo)
+
+
 
   const dispatch = useDispatch()
   useEffect(() => {
     dispatch(getEpicById(epicId))
     dispatch(GetProcessListAction(id))
-    dispatch(getIssuesBacklog(id))
+    dispatch(getIssuesInProject(id, null))
     dispatch(GetProjectAction(id, null, null))
   }, [])
 
   useEffect(() => {
-    setDataSource(issuesBacklog?.filter(issue => issue.epic_link?._id?.toString() === epicInfo?._id?.toString()))
-    console.log("loop infinity in EpicDetail");
-
-  }, [issuesBacklog])
-  const renderAddIssue = () => {
-    return <div style={{ height: 250, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-      <h6>Nothing to see here</h6>
-      <p>No issues have been added yet.</p>
-      <Button onClick={() => {
-
-      }} type='primary'><i className="fa-solid fa-plus mr-2"></i>Add issues</Button>
-    </div>
-  }
+    setDataSource(issuesInProject?.filter(issue => getValueOfObjectFieldInIssue(issue, "epic_link")?._id?.toString() === epicInfo?._id?.toString()))
+  }, [issuesInProject])
   const [dataSource, setDataSource] = useState([])
+  console.log("dataSource ", dataSource);
+
   const columns = [
+    {
+      title: 'Ordinal number',
+      dataIndex: 'ordinal_number',
+      key: 'ordinal_number',
+      render: (text, record) => {
+        return <NavLink to={`/projectDetail/${projectInfo?._id}/issues/issue-detail/${record._id}?typeview=detailview`}>{projectInfo?.key_name}-{record.ordinal_number}</NavLink>
+      }
+    },
     {
       title: 'Issue',
       dataIndex: 'issue',
       key: 'issue',
       render: (text, record) => {
         return <div className='d-flex align-items-center'>
-          <span>{iTagForPriorities(record.issue_priority)}</span>
-          <span className='ml-2'>{iTagForIssueTypes(record.issue_status)}</span>
+          <span>{iTagForPriorities(getValueOfNumberFieldInIssue(record, "issue_priority"), null, null)}</span>
+          <span className='ml-2'>{iTagForIssueTypes(getValueOfNumberFieldInIssue(record, "issue_status"), null, null, projectInfo?.issue_types_default)}</span>
           {/* <span>WD-{record._id.toString()}</span> */}
-          <span className='ml-2'>{record.summary}</span>
+          <span className='ml-2'>{getValueOfStringFieldInIssue(record, "summary")}</span>
         </div>
       }
     },
@@ -59,7 +64,7 @@ export default function EpicDetail() {
       dataIndex: 'assignees',
       key: 'assignees',
       render: (text, record) => {
-        if (record.assignees.length === 0) {
+        if (getValueOfArrayObjectFieldInIssue(record, "assignees").length === 0) {
           return <span><Avatar icon={<UserOutlined />} /> <span className='ml-2'>Unassignee</span></span>
         }
       }
@@ -69,10 +74,26 @@ export default function EpicDetail() {
       dataIndex: 'issue_status',
       key: 'issue_status',
       render: (text, record) => {
-        return <Tag color={record.issue_type.tag_color}>{record.issue_type.name_process}</Tag>
+        return <Tag color={getValueOfObjectFieldInIssue(record, "issue_type").tag_color}>{getValueOfObjectFieldInIssue(record, "issue_type").name_process}</Tag>
       }
     },
-  ];
+  ]
+  const renderAddIssue = (processInfo) => {
+    return <div style={{ height: 250, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      <h6>Nothing to see here</h6>
+      <p>No issues have been added yet.</p>
+      <Button onClick={() => {
+        dispatch(displayComponentInModal(<SelectIssuesModal
+          projectInfo={projectInfo}
+          processList={processList}
+          issuesInProject={issuesInProject.filter(issue => getValueOfNumberFieldInIssue(issue, "issue_status") !== 4)}
+          versionInfo={null}
+          epicInfo={epicInfo}
+          userInfo={userInfo}
+          processInfo={processInfo} />))
+      }} type='primary'><i className="fa-solid fa-plus mr-2"></i>Add issues</Button>
+    </div>
+  }
   return (
     <div>
       <div className='epic-header'>
@@ -96,9 +117,11 @@ export default function EpicDetail() {
           <div className='epic-title-header'>
             <h4>{epicInfo?.epic_name}</h4>
           </div>
-          <div className='epic-title-summary'>
-            <p>Summary: {epicInfo?.summary}</p>
-          </div>
+          {
+            epicInfo?.summary ? <div className='epic-title-summary'>
+              <p>Summary: {epicInfo?.summary}</p>
+            </div> : <></>
+          }
         </div>
         <div>
           <Button className="mr-2"><i className="fa-solid fa-comment mr-2"></i> Give feedback</Button>
@@ -129,9 +152,14 @@ export default function EpicDetail() {
                 aria-controls="nav-epic"
                 aria-selected="true"
                 onClick={() => {
-                  setDataSource(issuesBacklog?.filter(issue => issue.epic_link?._id.toString() === epicInfo?._id.toString()))
+                  setDataSource(issuesInProject?.filter(issue => getValueOfObjectFieldInIssue(issue, "epic_link")?._id.toString() === epicInfo?._id.toString()))
                 }}>
-                <Avatar size={15}><span style={{ fontSize: 13, display: 'flex' }}>{issuesBacklog?.filter(issue => issue.epic_link?._id?.toString() === epicInfo?._id?.toString()).length}</span></Avatar> issues in epic
+                <div className='d-flex align-items-center'>
+                  <Avatar size={25}>
+                    {issuesInProject?.filter(issue => getValueOfObjectFieldInIssue(issue, "epic_link")?._id?.toString() === epicInfo?._id?.toString()).length}
+                  </Avatar>
+                  <span className='ml-2'>issues in epic</span>
+                </div>
               </button>
               {processList?.map(process => {
                 return <button
@@ -143,24 +171,63 @@ export default function EpicDetail() {
                   aria-controls={`nav-epic-${process._id.toString()}`}
                   aria-selected="false"
                   onClick={() => {
-                    setDataSource(issuesBacklog?.filter(issue => issue.epic_link?._id.toString() === epicInfo?._id.toString() && issue.issue_type?._id?.toString() === process?._id?.toString()))
+                    setDataSource(issuesInProject?.filter(issue => getValueOfObjectFieldInIssue(issue, "epic_link")?._id.toString() === epicInfo?._id.toString() && getValueOfObjectFieldInIssue(issue, "issue_type")?._id?.toString() === process?._id?.toString()))
                   }}>
-                  <Avatar size={15} style={{ backgroundColor: process.tag_color }}>
-                    <span style={{ fontSize: 13, display: 'flex' }}>
-                      {issuesBacklog?.filter(issue => issue.epic_link?._id?.toString() === epicInfo?._id?.toString() && issue.issue_type?._id?.toString() === process?._id?.toString()).length}
-                    </span>
-                  </Avatar> issues in {process.name_process.toLowerCase()}
+                  <div className='d-flex align-items-center'>
+                    <Avatar size={25} style={{ backgroundColor: process.tag_color }}>
+                      {issuesInProject?.filter(issue => getValueOfObjectFieldInIssue(issue, "epic_link")?._id?.toString() === epicInfo?._id?.toString() && getValueOfObjectFieldInIssue(issue, "issue_type")?._id?.toString() === process?._id?.toString()).length}
+                    </Avatar>
+                    <span className='ml-2'>issues in {process.name_process.toLowerCase()}</span>
+                  </div>
                 </button>
               })}
             </div>
           </nav>
           <div className="tab-content" id="nav-tabContent">
             <div className="tab-pane fade show active" id="nav-epic" role="tabpanel" aria-labelledby="nav-epic-tab">
-              <Table dataSource={dataSource} columns={columns} locale={{ emptyText: (renderAddIssue()) }} />
+              <Table
+                dataSource={dataSource}
+                columns={columns}
+                locale={{ emptyText: (renderAddIssue(processList[0])) }}
+                footer={() => {
+                  if (dataSource.length !== 0) {
+                    return <Button className='mt-3' onClick={() => {
+                      dispatch(displayComponentInModal(<SelectIssuesModal
+                        projectInfo={projectInfo}
+                        processList={processList}
+                        issuesInProject={issuesInProject.filter(issue => getValueOfNumberFieldInIssue(issue, "issue_status") !== 4)}
+                        versionInfo={null}
+                        epicInfo={epicInfo}
+                        userInfo={userInfo}
+                        processInfo={processList[0]} />
+                      ))
+                    }} type='primary'><i className="fa-solid fa-plus mr-2"></i>Add issues</Button>
+                  }
+                  return null
+                }} />
             </div>
             {processList?.map(process => {
               return <div className="tab-pane fade" id={`nav-epic-${process._id.toString()}`} role="tabpanel" aria-labelledby={`nav-epic-${process._id.toString()}-tab`}>
-                <Table dataSource={dataSource} columns={columns} locale={{ emptyText: (renderAddIssue()) }} />
+                <Table
+                  dataSource={dataSource}
+                  columns={columns}
+                  locale={{ emptyText: (renderAddIssue(process)) }}
+                  footer={() => {
+                    if (dataSource.length !== 0) {
+                      return <Button className='mt-3' onClick={() => {
+                        dispatch(displayComponentInModal(<SelectIssuesModal
+                          projectInfo={projectInfo}
+                          processList={processList}
+                          issuesInProject={issuesInProject.filter(issue => getValueOfNumberFieldInIssue(issue, "issue_status") !== 4)}
+                          versionInfo={null}
+                          epicInfo={epicInfo}
+                          userInfo={userInfo}
+                          processInfo={process} />
+                        ))
+                      }} type='primary'><i className="fa-solid fa-plus mr-2"></i>Add issues</Button>
+                    }
+                    return null
+                  }} />
               </div>
             })}
           </div>

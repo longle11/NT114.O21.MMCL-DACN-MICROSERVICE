@@ -1,15 +1,27 @@
 import { Input, Select } from 'antd'
 import React, { useEffect } from 'react'
-import { connect, useDispatch } from 'react-redux';
+import { connect, useDispatch, useSelector } from 'react-redux';
 import { submit_edit_form_action } from '../../../redux/actions/DrawerAction';
 import { createEpic, updateEpic } from '../../../redux/actions/CategoryAction';
 import { withFormik } from 'formik';
 import { showNotificationWithIcon } from '../../../util/NotificationUtil';
 import { issueTypeOptions } from '../../../util/CommonFeatures';
 import './CreateEpic.css'
+import { useParams } from 'react-router-dom';
+import { GetProjectAction } from '../../../redux/actions/ListProjectAction';
 function CreateEpic(props) {
     const { handleChange, handleSubmit } = props
+    const projectInfo = useSelector(state => state.listProject.projectInfo)
     const dispatch = useDispatch()
+    const { id } = useParams()
+
+
+    useEffect(() => {
+        if(id) {
+            dispatch(GetProjectAction(id, null, null))
+        }
+    }, [id])
+
     useEffect(() => {
         // //submit sự kiện để gửi lên form
         dispatch(submit_edit_form_action(handleSubmit))
@@ -43,7 +55,7 @@ function CreateEpic(props) {
                             width: '100%',
                             border: 'none'
                         }}
-                        options={issueTypeOptions}
+                        options={issueTypeOptions(projectInfo?.issue_types_default)}
                         disabled
                     />
                 </div>
@@ -90,8 +102,6 @@ const handleSubmitForm = withFormik({
                     summary: value.summary
                 }))
             } else { //edit
-                console.log("value ", value.currentEpic.id);
-                
                 props.dispatch(updateEpic(value.currentEpic.id, {
                     epic_name: value.epic_name,
                     summary: value.summary

@@ -33,10 +33,6 @@
     font-weight: 500;
 }
 
-span.items-attribute:hover {
-    background-color: #dddd !important;
-}
-
 .modal-info .modal-body .description p:first-child {
     margin-bottom: 5px;
 }
@@ -175,3 +171,18 @@ span.sub-issue-summary:hover > a:hover {
     height: max-content !important;
     background-color: red;
 } */
+
+.item-value_field {
+    padding: 5px 10px
+}
+.item-value_field:hover {
+    background-color: #dddd;
+}
+
+.items-field:hover .field-pinned {
+    display: block;
+}
+
+.field-pinned {
+    display: none;
+}

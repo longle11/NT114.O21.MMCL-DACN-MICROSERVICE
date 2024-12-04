@@ -46,6 +46,6 @@ td.ant-table-cell.ant-table-row-expand-icon-cell {
 }
 
 .ant-table-cell:hover .items-hover {
-    display: block !important;
+    visibility: visible !important;
     cursor: pointer;
 }

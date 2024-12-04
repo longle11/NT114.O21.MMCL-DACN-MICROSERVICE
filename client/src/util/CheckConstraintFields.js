@@ -1,10 +1,10 @@
 export const checkConstraintPermissions = (projectInfo, issueInfo, userInfo, number) => {
-    if(!issueInfo.is_permissions) return true   //means we not turn on permissions so all user can edit it
+    if(!issueInfo?.is_permissions) return true   //means we not turn on permissions so all user can edit it
 
     const getRoleUserIndexInProject = projectInfo?.members?.findIndex(user => user.user_info._id === userInfo?.id)
 
     //check whether this user is belonging to this issue
-    if(userInfo.id === issueInfo?.creator?._id) return true
+    if(userInfo?.id === issueInfo?.creator?._id) return true
 
     if(issueInfo?.assignees?.map(user => user._id).includes(userInfo.id)) {
         return issueInfo?.permissions?.users_belongto_issue?.assignees?.includes(number)

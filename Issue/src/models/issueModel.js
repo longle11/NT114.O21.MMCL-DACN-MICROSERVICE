@@ -13,75 +13,105 @@ const issueSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users'
     },
-    issue_priority: {
-        type: Number,
-        default: 2
+    issue_data_type_number: {
+        type: [
+            {
+                field_key_issue: String,
+                field_name: String,
+                value: Number,
+                pinned: Boolean,
+                is_display: Boolean,
+                position: Number
+            }
+        ],
+        default: []
     },
-    summary: {
-        type: String,
-        default: null
+    issue_data_type_string: {
+        type: [
+            {
+                field_key_issue: String,
+                value: String,
+                field_name: String,
+                pinned: Boolean,
+                is_display: Boolean,
+                position: Number
+            }
+        ],
+        default: [
+            { field_key_issue: 'summary', value: null, pinned: false, is_display: true },
+            { field_key_issue: 'description', value: null, pinned: false, is_display: true },
+            { field_key_issue: 'start_date', value: null, pinned: false, is_display: true },
+            { field_key_issue: 'end_date', value: null, pinned: false, is_display: true },
+            { field_key_issue: 'actual_start', value: null, pinned: false, is_display: true },
+            { field_key_issue: 'actual_end', value: null, pinned: false, is_display: true },
+        ]
     },
-    description: {
-        type: String,
-        default: null
+    issue_data_type_array: {
+        type: [
+            {
+                field_key_issue: String,
+                value: Array,
+                field_name: String,
+                pinned: Boolean,
+                is_display: Boolean,
+                position: Number
+            }
+        ],
+        default: [
+            { field_key_issue: 'label', value: null, pinned: false, is_display: true },
+            { field_key_issue: 'change_risk', value: null, pinned: false, is_display: true },
+            { field_key_issue: 'change_reason', value: null, pinned: false, is_display: true },
+            { field_key_issue: 'change_type', value: null, pinned: false, is_display: true },
+            { field_key_issue: 'impact', value: null, pinned: false, is_display: true },
+        ]
     },
-    issue_type: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'issueProcesses',
-        default: null
+    issue_data_type_object: {
+        type: [
+            {
+                field_key_issue: String,
+                field_name: String,
+                propertyModel: {
+                    type: String,
+                    required: true,
+                    enum: ['issueProcesses', 'users', 'sprints', 'issues', 'versions', 'epics'],
+                },
+                value: { type: mongoose.Schema.Types.ObjectId, ref: subdoc => subdoc.propertyModel },
+                pinned: Boolean,
+                is_display: Boolean,
+                position: Number
+            }
+        ],
+        default: [
+            { field_key_issue: 'current_sprint', value: null, propertyModel: 'sprints', pinned: false, is_display: true },
+            { field_key_issue: 'issue_type', value: null, propertyModel: 'issueProcesses', pinned: false, is_display: true },
+            { field_key_issue: 'reporter', value: null, propertyModel: 'users', pinned: false, is_display: true },
+            { field_key_issue: 'epic_link', value: null, propertyModel: 'epics', pinned: false, is_display: true },
+            { field_key_issue: 'fix_version', value: null, propertyModel: 'versions', pinned: false, is_display: true }
+        ]
     },
-    issue_status: {
-        type: Number,
-        default: 0
+    issue_data_type_array_object: {
+        type: [
+            {
+                field_key_issue: String,
+                field_name: String,
+                propertyModel: {
+                    type: String,
+                    required: true,
+                    enum: ['issueProcesses', 'users', 'sprints', 'issues', 'versions', 'epics', 'components'],
+                },
+                value: [{ type: mongoose.Schema.Types.ObjectId, ref: subdoc => subdoc.propertyModel }],
+                pinned: Boolean,
+                is_display: Boolean,
+                position: Number
+            }
+        ],
+        default: [
+            { field_key_issue: 'assignees', value: null, propertyModel: 'users', pinned: false, is_display: true },
+            { field_key_issue: 'old_sprint', value: null, propertyModel: 'sprints', pinned: false, is_display: true },
+            { field_key_issue: 'approvers', value: null, propertyModel: 'users', pinned: false, is_display: true },
+        ]
     },
-    assignees: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'users'
-        }
-    ],
-    epic_link: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'epics',
-        default: null
-    },
-    story_point: {
-        type: Number,
-        default: null
-    },
-    fix_version: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'versions',
-        default: null
-    },
-    current_sprint: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'sprints',
-        default: null
-    },
-    old_sprint: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'sprints',
-            default: null
-        }
-    ],
-    timeSpent: {
-        type: Number,
-        default: 0
-    },
-    timeOriginalEstimate: {
-        type: Number,
-        default: 0
-    },
-    createAt: {
-        type: Date,
-        default: Date.now
-    },
-    updateAt: {
-        type: Date,
-        default: Date.now
-    },
+
     isCompleted: {
         type: Boolean,
         default: false
@@ -92,10 +122,6 @@ const issueSchema = new mongoose.Schema({
             ref: 'issues'
         }
     ],
-    parent: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'issues'
-    },
     voted: [
         {
             type: mongoose.Schema.Types.ObjectId,
@@ -115,19 +141,19 @@ const issueSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    start_date: {
+    createAt: {
         type: Date,
-        default: null
+        default: Date.now
     },
-    end_date: {
+    updateAt: {
         type: Date,
-        default: null
+        default: Date.now
     },
     permissions: {
         users_belongto_issue: {
             assignees: {
                 type: Array,
-                default: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+                default: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
             }
         },
         users_not_belongto_issue: {
@@ -138,7 +164,7 @@ const issueSchema = new mongoose.Schema({
                 },
                 actions: {
                     type: Array,
-                    default: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+                    default: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
                 }
             },
             members: {
@@ -148,7 +174,7 @@ const issueSchema = new mongoose.Schema({
                 },
                 actions: {
                     type: Array,
-                    default: [14, 19, 20, 21, 22]
+                    default: [8, 9, 10, 11, 12]
                 }
             },
             viewers: {
@@ -158,23 +184,13 @@ const issueSchema = new mongoose.Schema({
                 },
                 actions: {
                     type: Array,
-                    default: [14, 20]
+                    default: [8, 9, 12]
                 }
             }
         }
     }
 })
-issueSchema.virtual('issuesRefSubIssueList', {
-    ref: 'issues',
-    foreignField: '_id',
-    localField: 'sub_issue_list'
-})
-issueSchema.virtual('issuesRefParent', {
-    ref: 'issues',
-    foreignField: '_id',
-    localField: 'parent'
-})
+
+
 const issueModel = mongoose.model('issues', issueSchema)
-
-
 module.exports = issueModel

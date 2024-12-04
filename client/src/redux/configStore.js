@@ -11,6 +11,7 @@ import ModalReducer from './reducers/ModalReducer'
 import CommentReducer from './reducers/CommentReducer'
 import NotificationReducer from './reducers/NotificationReducer'
 import NodeWorkflowReducer from './reducers/NodeWorkflowReducer'
+import ReportReducer from './reducers/ReportReducer'
 const rootReducer = combineReducers({
     //reducer khai báo ở đây
     categories: CategoryReducer,
@@ -24,6 +25,7 @@ const rootReducer = combineReducers({
     comment: CommentReducer,
     notification: NotificationReducer,
     workflow: NodeWorkflowReducer,
+    report: ReportReducer
 })
 
 const store = createStore(rootReducer, applyMiddleware(thunk))

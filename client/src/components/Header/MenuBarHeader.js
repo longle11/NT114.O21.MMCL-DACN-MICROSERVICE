@@ -12,11 +12,14 @@ import TaskForm from '../Forms/TaskForm'
 import { getNotificationByUserIdAction, updateNotificationByUserIdAction } from '../../redux/actions/NotificationAction'
 import { convertTime } from '../../validations/TimeValidation'
 import htmlParser from 'html-react-parser'
+import { userLoggedoutAction } from '../../redux/actions/UserAction'
 
 export default function MenuBarHeader() {
     const userInfo = useSelector(state => state.user.userInfo)
     const showModalInputToken = useSelector(state => state.user.showModalInputToken)
     const listProject = useSelector(state => state.listProject.listProject)
+    const projectInfo = useSelector(state => state.listProject.projectInfo)
+
     const notificationList = useSelector(state => state.notification.notificationList)
     const [currentPassowrd, setCurrentPassowrd] = useState('')
     const [newPassword, setNewPassword] = useState('')
@@ -90,6 +93,7 @@ export default function MenuBarHeader() {
             <span>You haven't received any recent notifications</span>
         </div>
     }
+
     const renderProjectInfo = () => {
         const getIndex = listProject?.map(project => project._id.toString()).findIndex(projectId => {
             return projectId === userInfo?.project_working
@@ -138,7 +142,7 @@ export default function MenuBarHeader() {
                             </div>
                             <div className="dropdown-divider" />
                             <a className="dropdown-item" style={{ cursor: "pointer", padding: '5px 10px', fontSize: '13px' }} href="/manager">View all projects</a>
-                            <a className="dropdown-item" href="/create" style={{ cursor: "pointer", padding: '5px 10px', fontSize: '13px' }}>Create your project</a>
+                            <a className="dropdown-item" href="/create-project/software-project/templates" style={{ cursor: "pointer", padding: '5px 10px', fontSize: '13px' }}>Create your project</a>
                         </div>
                     </li>
                     <li className={`nav-item mr-2`} style={{ position: 'relative' }}>
@@ -172,7 +176,7 @@ export default function MenuBarHeader() {
                                                 setIsDisplayWorkingOn(false)
                                             }} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center pt-2 pb-2 pl-2 pr-4 ml-0" style={{ border: 'none' }}>
                                                 <div className='d-flex align-items-center'>
-                                                    <span>{iTagForIssueTypes(issue?.issue_id?.issue_status, null, null)}</span>
+                                                    <span>{iTagForIssueTypes(issue?.issue_id?.issue_status, null, null, projectInfo?.issue_types_default)}</span>
                                                     <div className='d-flex flex-column' style={{ width: '100%' }}>
                                                         <span>{issue?.issue_id?.summary}</span>
                                                         <div className='d-flex align-items-center'>
@@ -204,7 +208,7 @@ export default function MenuBarHeader() {
                                                             return <a href={`/projectDetail/${issue?.issue_id?.project_id}/issues/issue-detail/${issue?.issue_id?.id}`} onClick={() => {
                                                                 setIsDisplayWorkingOn(false)
                                                             }} className="list-group-item list-group-item-action d-flex align-items-center pt-2 pb-2 pl-2 pr-4 ml-0" style={{ border: 'none' }}>
-                                                                <span>{iTagForIssueTypes(issue?.issue_id?.issue_status, null, null)}</span>
+                                                                <span>{iTagForIssueTypes(issue?.issue_id?.issue_status, null, null, projectInfo?.issue_types_default)}</span>
                                                                 <div className='d-flex flex-column' style={{ width: '100%' }}>
                                                                     <span>{issue?.issue_id?.summary}</span>
                                                                     <div className='d-flex align-items-center'>
@@ -225,7 +229,7 @@ export default function MenuBarHeader() {
                                                             return <a href={`/projectDetail/${issue?.issue_id?.project_id}/issues/issue-detail/${issue?.issue_id?.issue_id}`} onClick={() => {
                                                                 setIsDisplayWorkingOn(false)
                                                             }} className="list-group-item list-group-item-action d-flex align-items-center pt-2 pb-2 pl-2 pr-4 ml-0" style={{ border: 'none' }}>
-                                                                <span>{iTagForIssueTypes(issue?.issue_id?.issue_status, null, null, null, null)}</span>
+                                                                <span>{iTagForIssueTypes(issue?.issue_id?.issue_status, null, null, projectInfo?.issue_types_default)}</span>
                                                                 <div className='d-flex flex-column' style={{ width: '100%' }}>
                                                                     <span>{issue?.issue_id?.summary}</span>
                                                                     <div className='d-flex align-items-center'>
@@ -282,7 +286,12 @@ export default function MenuBarHeader() {
                                     setIsDisplayNotification(!isDisplayNotification)
                                 }
                             }}>
-                            <i className="fa fa-bell" style={{ fontSize: "20px" }} ></i>
+                            {
+                                renderNotificationList(false)?.length > 0 ? <div style={{ color: 'blue', display: 'flex' }}>
+                                    <i className="fa fa-bell mr-1" style={{ fontSize: "20px" }} ></i>
+                                    <span style={{fontSize: 12}}>({renderNotificationList(false)?.length})</span>
+                                </div> : <i className="fa fa-bell" style={{ fontSize: "20px" }} ></i>
+                            }
                         </NavLink>
                         <div className={`dropdown-menu ${isDisplayNotification ? "show" : ''}`} aria-labelledby="dropdownMenuLinkNotification" style={{ width: 500, left: 'unset', right: 0, padding: 10, minHeight: 500, marginRight: 20 }}>
                             <div className='d-flex align-items-center justify-content-between'>
@@ -338,7 +347,9 @@ export default function MenuBarHeader() {
                                 <i className="fa fa-key" aria-hidden="true"></i>
                             </div>
                             <div className="dropdown-item" style={{ marginTop: '10px', padding: '10px 15px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <NavLink style={{ cursor: "pointer", fontSize: '13px', color: 'black', textDecoration: 'none' }} to={`/recent/${userInfo?.id}`} >Logout</NavLink>
+                                <NavLink onClick={() => {
+                                    dispatch(userLoggedoutAction(navigate))
+                                }} style={{ cursor: "pointer", fontSize: '13px', color: 'black', textDecoration: 'none' }}>Logout</NavLink>
                                 <i className="fa fa-info-circle" aria-hidden="true"></i>
                             </div>
                         </div>

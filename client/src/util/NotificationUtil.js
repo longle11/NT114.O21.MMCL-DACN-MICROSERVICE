@@ -1,21 +1,63 @@
 import { notification } from 'antd';
 import { createNotificationAction } from '../redux/actions/NotificationAction';
 import { delay } from './Delay';
+import { getValueOfArrayObjectFieldInIssue, getValueOfNumberFieldInIssue } from './IssueFilter';
 export const showNotificationWithIcon = (type, message, description) => {
-    if(type === "success") {
+    if (type === "success") {
         notification.success({
             message: message,
             description: description,
             duration: 1
         });
-    }else if(type === "error") {
+    } else if (type === "error") {
         notification.error({
             message: message,
             description: description,
             duration: 1
         });
     }
-};
+}
+
+const renderAssigneesOnlyId = (issues) => {
+    if (issues?.length > 0) {
+        return issues.map(issue => {
+            var tempIssue = { ...issue }
+            const getIndexAssignees = issue.issue_data_type_array_object.findIndex(field => field.field_key_issue === 'assignees')
+            if (getIndexAssignees !== -1) {
+                const value = issue.issue_data_type_array_object[getIndexAssignees].value
+                if (!value) {
+                    return issue
+                }
+                if (value?.length > 0) {
+                    if (Object.keys(value[0]).length > 0) {
+                        tempIssue.issue_data_type_array_object[getIndexAssignees].value = issue.issue_data_type_array_object[getIndexAssignees].value.map(user => user._id.toString())
+                        return tempIssue
+                    }
+                }
+
+                //this case assignees don't reference to any user model
+                return issue
+            }
+            return {}
+        })
+    }
+
+    var tempIssue = { ...issues }
+    const getIndexAssignees = issues.issue_data_type_array_object.findIndex(field => field.field_key_issue === 'assignees')
+    if (getIndexAssignees !== -1) {
+        const value = issues.issue_data_type_array_object[getIndexAssignees].value
+        if (!value) {
+            return issues
+        }
+        if (Object.keys(value).length > 0) {
+            tempIssue.issue_data_type_array_object[getIndexAssignees].value = issues.issue_data_type_array_object[getIndexAssignees].value.map(user => user._id.toString())
+            return tempIssue
+        }
+
+        return issues
+    }
+    return {}
+}
 
 export const users_notifications = [
     {
@@ -59,49 +101,51 @@ export const users_notifications = [
 const renderValidUsers = (types_user, issueInfo, userInfo, projectInfo) => {
     const getAllValidUsers = []
 
-    // if(types_user.includes(0)) {    
-    //     projectInfo?.members?.filter(user => user.user_info._id !== userInfo.id)?.forEach(user => getAllValidUsers.push(user.user_info._id.toString()))
-    // }
+    if (types_user.includes(0)) {
+        projectInfo?.members
+            ?.filter(user => user.user_info._id !== userInfo.id)
+            ?.forEach(user => {
+                console.log("user ", user);
+                
+                getAllValidUsers.push(user.user_info._id.toString())
+            })
+    }
 
-    if(types_user.includes(1)) {
-        issueInfo?.assignees?.forEach(user => {
-            if(!getAllValidUsers.includes(user.toString())) {
+    if (types_user.includes(1)) {
+        getValueOfArrayObjectFieldInIssue(issueInfo, "assignees")?.forEach(user => {
+            if (!getAllValidUsers.includes(user.toString())) {
                 getAllValidUsers.push(user.toString())
             }
         })
     }
-    if(types_user.includes(2)) {
-        if(!getAllValidUsers.includes(userInfo.id.toString())) {
+    if (types_user.includes(2)) {
+        if (!getAllValidUsers.includes(userInfo.id.toString())) {
             getAllValidUsers.push(userInfo.id.toString())
         }
     }
-    console.log("types_user ", types_user);
-    
+
     //administrator
-    if(types_user.includes(5)) {
-        console.log("chay thang so 5");
-        
+    if (types_user.includes(5)) {
         projectInfo?.members?.forEach(ele => {
-        console.log("gia tri thoa man hay khong ", ele, "void", ele.user_role === 0 && !getAllValidUsers.includes(ele.user_info._id.toString()));
-            if(ele.user_role === 0 && !getAllValidUsers.includes(ele.user_info._id.toString())) {
+            if (ele.user_role === 0 && !getAllValidUsers.includes(ele.user_info._id.toString())) {
                 getAllValidUsers.push(ele.user_info._id.toString())
             }
         })
     }
-    
+
     //member
-    if(types_user.includes(6)) {
+    if (types_user.includes(6)) {
         projectInfo?.members?.forEach(ele => {
-            if(ele.user_role === 1 && !getAllValidUsers.includes(ele.user_info._id.toString())) {
+            if (ele.user_role === 1 && !getAllValidUsers.includes(ele.user_info._id.toString())) {
                 getAllValidUsers.push(ele.user_info._id.toString())
             }
         })
     }
 
     //viewer
-    if(types_user.includes(7)) {
+    if (types_user.includes(7)) {
         projectInfo?.members?.forEach(ele => {
-            if(ele.user_role === 2 && !getAllValidUsers.includes(ele.user_info._id.toString())) {
+            if (ele.user_role === 2 && !getAllValidUsers.includes(ele.user_info._id.toString())) {
                 getAllValidUsers.push(ele.user_info._id.toString())
             }
         })
@@ -115,24 +159,20 @@ export const sendNotificationToValidUserWithCreatingIssues = async (projectInfo,
     const getIndex = projectInfo?.notification_config?.findIndex(notification => {
         return notification.notification_id === 0 && notification.is_activated
     })
+    if (getIndex !== -1) {
 
-    if(getIndex !== -1) { 
-
-        const types_user = projectInfo.notification_config[getIndex].user_types_is_received_notifications
-
+        const types_user = projectInfo?.notification_config[getIndex].user_types_is_received_notifications
         const getAllValidUsers = renderValidUsers(types_user, issueInfo, userInfo, projectInfo)
-
-        for(let index = 0; index < getAllValidUsers.length; index++) {
+        for (let index = 0; index < getAllValidUsers.length; index++) {
             const link = `/projectDetail/${projectInfo?._id.toString()}/issues/issue-detail/${issueInfo._id.toString()}`
             dispatch(createNotificationAction({
                 project_id: projectInfo?._id.toString(),
                 send_from: creator_history,
                 send_to: getAllValidUsers[index],
                 link_url: link,
-                content: `<span>Created new ${issueInfo.issue_status !== 4 ? "issue" : "sub-issue"} in <NavLink className="edit-navlink-notification ml-1 mr-1" to={${link}}>WD-${issueInfo.ordinal_number}</NavLink> issue </span>`,
+                content: `<span>Created new ${getValueOfNumberFieldInIssue(issueInfo, "issue_status") !== 4 ? "issue" : "sub-issue"} in <NavLink className="edit-navlink-notification ml-1 mr-1" to={${link}}>WD-${issueInfo.ordinal_number}</NavLink> issue </span>`,
                 action_type: "issue:created"
             }))
-
             await delay(200)
         }
     }
@@ -146,13 +186,13 @@ export const sendNotificationToValidUserWithEditingIssues = async (projectInfo, 
         return notification.notification_id === 1 && notification.is_activated
     })
 
-    if(getIndex !== -1) { 
+    if (getIndex !== -1) {
 
         const types_user = projectInfo.notification_config[getIndex].user_types_is_received_notifications
 
         const getAllValidUsers = renderValidUsers(types_user, issueInfo, userInfo, projectInfo)
 
-        for(let index = 0; index < getAllValidUsers.length; index++) {
+        for (let index = 0; index < getAllValidUsers.length; index++) {
             const link = `/projectDetail/${projectInfo?._id.toString()}/issues/issue-detail/${issueInfo._id.toString()}`
             dispatch(createNotificationAction({
                 project_id: projectInfo?._id.toString(),
@@ -176,13 +216,13 @@ export const sendNotificationToValidUserWithAssigningToIssue = async (projectInf
         return notification.notification_id === 1 && notification.is_activated
     })
 
-    if(getIndex !== -1) { 
+    if (getIndex !== -1) {
 
         const types_user = projectInfo.notification_config[getIndex].user_types_is_received_notifications
 
         const getAllValidUsers = renderValidUsers(types_user, issueInfo, userInfo, projectInfo)
 
-        for(let index = 0; index < getAllValidUsers.length; index++) {
+        for (let index = 0; index < getAllValidUsers.length; index++) {
             const link = `/projectDetail/${projectInfo?._id.toString()}/issues/issue-detail/${issueInfo._id.toString()}`
             dispatch(createNotificationAction({
                 project_id: projectInfo?._id.toString(),
@@ -206,14 +246,13 @@ export const sendNotificationToValidUserWithSomeoneMadesComments = async (projec
         return notification.notification_id === 5 && notification.is_activated
     })
 
-    if(getIndex !== -1) { 
+    if (getIndex !== -1) {
 
         const types_user = projectInfo.notification_config[getIndex].user_types_is_received_notifications
-        const adjustAssignees = {...issueInfo, assignees: issueInfo.assignees.map(user => user._id.toString())}
+        const adjustAssignees = renderAssigneesOnlyId(issueInfo)
         const getAllValidUsers = renderValidUsers(types_user, adjustAssignees, userInfo, projectInfo)
-        console.log("getAllValidUsers ", getAllValidUsers);
-        
-        for(let index = 0; index < getAllValidUsers.length; index++) {
+
+        for (let index = 0; index < getAllValidUsers.length; index++) {
             const link = `/projectDetail/${projectInfo?._id.toString()}/issues/issue-detail/${issueInfo._id.toString()}`
             dispatch(createNotificationAction({
                 project_id: projectInfo?._id.toString(),
@@ -236,13 +275,13 @@ export const sendNotificationToValidUserWithSomeoneModifyTheirComments = async (
         return notification.notification_id === 6 && notification.is_activated
     })
 
-    if(getIndex !== -1) { 
+    if (getIndex !== -1) {
 
         const types_user = projectInfo.notification_config[getIndex].user_types_is_received_notifications
-        const adjustAssignees = {...issueInfo, assignees: issueInfo.assignees.map(user => user._id.toString())}
+        const adjustAssignees = renderAssigneesOnlyId(issueInfo)
         const getAllValidUsers = renderValidUsers(types_user, adjustAssignees, userInfo, projectInfo)
-        
-        for(let index = 0; index < getAllValidUsers.length; index++) {
+
+        for (let index = 0; index < getAllValidUsers.length; index++) {
             const link = `/projectDetail/${projectInfo?._id.toString()}/issues/issue-detail/${issueInfo._id.toString()}`
             dispatch(createNotificationAction({
                 project_id: projectInfo?._id.toString(),
@@ -266,13 +305,13 @@ export const sendNotificationToValidUserWithSomeoneDeletesTheirComments = async 
         return notification.notification_id === 7 && notification.is_activated
     })
 
-    if(getIndex !== -1) { 
+    if (getIndex !== -1) {
 
         const types_user = projectInfo.notification_config[getIndex].user_types_is_received_notifications
-        const adjustAssignees = {...issueInfo, assignees: issueInfo.assignees.map(user => user._id.toString())}
+        const adjustAssignees = renderAssigneesOnlyId(issueInfo)
         const getAllValidUsers = renderValidUsers(types_user, adjustAssignees, userInfo, projectInfo)
-        
-        for(let index = 0; index < getAllValidUsers.length; index++) {
+
+        for (let index = 0; index < getAllValidUsers.length; index++) {
             const link = `/projectDetail/${projectInfo?._id.toString()}/issues/issue-detail/${issueInfo._id.toString()}`
             dispatch(createNotificationAction({
                 project_id: projectInfo?._id.toString(),
@@ -296,13 +335,13 @@ export const sendNotificationToValidUserWithSomeoneWriteTheirWorklog = async (pr
         return notification.notification_id === 8 && notification.is_activated
     })
 
-    if(getIndex !== -1) { 
+    if (getIndex !== -1) {
 
         const types_user = projectInfo.notification_config[getIndex].user_types_is_received_notifications
-        const adjustAssignees = {...issueInfo, assignees: issueInfo.assignees.map(user => user._id.toString())}
+        const adjustAssignees = renderAssigneesOnlyId(issueInfo)
         const getAllValidUsers = renderValidUsers(types_user, adjustAssignees, userInfo, projectInfo)
-        
-        for(let index = 0; index < getAllValidUsers.length; index++) {
+
+        for (let index = 0; index < getAllValidUsers.length; index++) {
             const link = `/projectDetail/${projectInfo?._id.toString()}/issues/issue-detail/${issueInfo._id.toString()}`
             dispatch(createNotificationAction({
                 project_id: projectInfo?._id.toString(),
@@ -318,3 +357,72 @@ export const sendNotificationToValidUserWithSomeoneWriteTheirWorklog = async (pr
     }
     return null //don't create any notification and send to valid users
 }
+
+
+// check condition for sending notification to valid users => notification_id = 13
+export const sendNotificationToValidUserWithSprintStarted = async (projectInfo, userInfo, sprintInfo, dispatch) => {
+    const getIndex = projectInfo?.notification_config?.findIndex(notification => {
+        return notification.notification_id === 13 && notification.is_activated
+    })
+
+    if (getIndex !== -1) {
+        const types_user = projectInfo.notification_config[getIndex].user_types_is_received_notifications
+        const adjustAssignees = renderAssigneesOnlyId(sprintInfo?.issue_list)
+        const getAllValidUsers = []
+
+        adjustAssignees?.forEach(issue => {
+            const users = renderValidUsers(types_user, issue, userInfo, projectInfo)
+            users.forEach(user => {
+                if(!getAllValidUsers.includes(user)) {
+                    getAllValidUsers.push(user)
+                }
+            })
+        })
+        for (let index = 0; index < getAllValidUsers.length; index++) {
+            const link = `/projectDetail/${projectInfo?._id.toString()}/board/${sprintInfo?._id}`
+            dispatch(createNotificationAction({
+                project_id: projectInfo?._id.toString(),
+                send_from: userInfo.id,
+                send_to: getAllValidUsers[index],
+                link_url: link,
+                content: `<span>Sprint <NavLink className="edit-navlink-notification ml-1 mr-1" to={${link}}>${sprintInfo?.sprint_name}</NavLink> is started</span>`,
+                action_type: "issue-worklog:created"
+            }))
+
+            await delay(200)
+        }
+    }
+    return null //don't create any notification and send to valid users
+}
+
+// check condition for sending notification to valid users => notification_id = 16
+export const sendNotificationToValidUserWithSprintCreated = async (projectInfo, userInfo, dispatch, sprintInfo) => {
+    const getIndex = projectInfo?.notification_config?.findIndex(notification => {
+        return notification.notification_id === 16 && notification.is_activated
+    })
+
+    if (getIndex !== -1) {
+        const types_user = projectInfo.notification_config[getIndex].user_types_is_received_notifications
+        console.log("types_user ", types_user);
+        
+        const getAllValidUsers = renderValidUsers(types_user, null, userInfo, projectInfo)
+        console.log("getAllValidUsers ", getAllValidUsers);
+        
+
+        for (let index = 0; index < getAllValidUsers.length; index++) {
+            const link = `/projectDetail/${projectInfo?._id.toString()}/backlog`
+            dispatch(createNotificationAction({
+                project_id: projectInfo?._id.toString(),
+                send_from: userInfo.id,
+                send_to: getAllValidUsers[index],
+                link_url: link,
+                content: `<span>Sprint <NavLink className="edit-navlink-notification ml-1 mr-1" to={${link}}>${sprintInfo?.sprint_name}</NavLink> is created</span>`,
+                action_type: "issue-worklog:created"
+            }))
+
+            await delay(200)
+        }
+    }
+    return null //don't create any notification and send to valid users
+}
+

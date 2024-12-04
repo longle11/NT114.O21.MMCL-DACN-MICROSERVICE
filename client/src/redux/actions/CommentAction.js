@@ -61,7 +61,7 @@ export const getCommentAction = (issue_id, sort) => {
                     status: false,
                     userInfo: null
                 })
-                window.location.reload();
+                // window.location.reload();
             }
         }
     }

@@ -1,8 +1,8 @@
 import { Avatar, Breadcrumb, Button, DatePicker, Form, Input, InputNumber, Select, Space, Switch, Table, Tag } from 'antd'
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { issueTypeOptions, issueTypeWithoutOptions, iTagForIssueTypes, priorityTypeOptions, renderAssignees, renderEpicList, renderIssueType, renderSprintList, renderVersionList } from '../../../util/CommonFeatures'
-import { createIssue, getIssuesBacklog, getIssuesInProject, updateInfoIssue } from '../../../redux/actions/IssueAction'
+import { defaultForIssueType, issueTypeOptions, issueTypeWithoutOptions, iTagForIssueTypes, priorityTypeOptions, renderAssignees, renderEpicList, renderIssueType, renderSprintList, renderVersionList } from '../../../util/CommonFeatures'
+import { createIssue, getIssuesInProject, updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { useParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import './IssuesList.css'
@@ -27,9 +27,12 @@ import { getEpicList, getVersionList } from '../../../redux/actions/CategoryActi
 import { showNotificationWithIcon } from '../../../util/NotificationUtil'
 import { calculateTimeAfterSplitted, checkDeadlineIsComing, convertMinuteToFormat, convertTime, validateOriginalTime } from '../../../validations/TimeValidation'
 import MemberProject from '../../../child-components/Member-Project/MemberProject'
+import { getValueOfArrayFieldInIssue, getValueOfArrayObjectFieldInIssue, getValueOfNumberFieldInIssue, getValueOfObjectFieldInIssue, getValueOfStringFieldInIssue } from '../../../util/IssueFilter'
+import { attributesFiltering } from '../../../util/IssueAttributesCreating'
 
 export default function IssuesList() {
   const listProject = useSelector(state => state.listProject.listProject)
+  const workflowList = useSelector(state => state.listProject.workflowList)
   const issuesInProject = useSelector(state => state.issue.issuesInProject)
   const projectInfo = useSelector(state => state.listProject.projectInfo)
   const epicList = useSelector(state => state.categories.epicList)
@@ -105,83 +108,79 @@ export default function IssuesList() {
     const save = async (record) => {
       try {
         const values = await form.validateFields();
-        console.log("vale ", values);
         if (Object.keys(values).includes('epic_link')) {
           const getEpicIndex = epicList?.findIndex(epic => epic._id?.toString() === setValueChanged.current)
           if (getEpicIndex !== -1) {
-            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { epic_link: setValueChanged.current }, record?.epic_link ? record?.epic_link?.epic_name : "None", epicList[getEpicIndex].epic_name, userInfo.id, "updated", "epic"))
+            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { epic_link: setValueChanged.current }, getValueOfObjectFieldInIssue(record, "epic_link") ? getValueOfObjectFieldInIssue(record, "epic_link")?.epic_name : "None", epicList[getEpicIndex].epic_name, userInfo.id, "updated", "epic", projectInfo, userInfo))
           }
         }
         if (Object.keys(values).includes('current_sprint')) {
           const getSprintIndex = sprintList?.findIndex(sprint => sprint._id?.toString() === setValueChanged.current)
           if (getSprintIndex !== -1) {
-            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { current_sprint: setValueChanged.current }, record?.current_sprint ? record?.current_sprint?.sprint_name : "None", sprintList[getSprintIndex].sprint_name, userInfo.id, "updated", "sprint"))
+            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { current_sprint: setValueChanged.current }, getValueOfObjectFieldInIssue(record, "current_sprint") ? getValueOfObjectFieldInIssue(record, "current_sprint")?.sprint_name : "None", sprintList[getSprintIndex].sprint_name, userInfo.id, "updated", "sprint", projectInfo, userInfo))
           }
         }
         if (Object.keys(values).includes('issue_priority')) {
           if (Number.isInteger(parseInt(setValueChanged.current))) {
-            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { issue_priority: parseInt(setValueChanged.current) }, record?.issue_priority.toString(), setValueChanged.current, userInfo.id, "updated", "priority"))
+            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { issue_priority: parseInt(setValueChanged.current) }, getValueOfNumberFieldInIssue(record, "issue_priority").toString(), setValueChanged.current, userInfo.id, "updated", "priority", projectInfo, userInfo))
           }
         }
         if (Object.keys(values).includes('fix_version')) {
           const fix_version = versionList?.findIndex(version => version._id?.toString() === setValueChanged.current)
           if (fix_version !== -1) {
-            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { fix_version: setValueChanged.current }, record?.fix_version ? record?.fix_version?.version_name : "None", versionList[fix_version].version_name, userInfo.id, "updated", "version"))
+            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { fix_version: setValueChanged.current }, getValueOfObjectFieldInIssue(record, "fix_version") ? getValueOfObjectFieldInIssue(record, "fix_version")?.version_name : "None", versionList[fix_version].version_name, userInfo.id, "updated", "version", projectInfo, userInfo))
           }
         }
         if (Object.keys(values).includes('issue_status')) {
           if (Number.isInteger(parseInt(setValueChanged.current))) {
-            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { issue_status: parseInt(setValueChanged.current) }, record?.issue_status.toString(), parseInt(setValueChanged.current).toString(), userInfo.id, "updated", "issue status"))
+            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { issue_status: parseInt(setValueChanged.current) }, getValueOfObjectFieldInIssue(record, "issue_status").toString(), parseInt(setValueChanged.current).toString(), userInfo.id, "updated", "issue status", projectInfo, userInfo))
           }
         }
 
         if (Object.keys(values).includes('issue_type')) {
           const getProcessIndex = processList?.findIndex(process => process._id?.toString() === setValueChanged.current)
           if (typeof setValueChanged.current === "string" && getProcessIndex !== -1) {
-            console.log(record?._id, record?.project_id?._id, { issue_type: setValueChanged.current }, record?.issue_type.name_process, processList[getProcessIndex].name_process, userInfo.id, "updated", "issue type");
-
-            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { issue_type: setValueChanged.current }, record?.issue_type.name_process, processList[getProcessIndex].name_process, userInfo.id, "updated", "issue type"))
+            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { issue_type: setValueChanged.current }, getValueOfObjectFieldInIssue(record, "issue_type").name_process, processList[getProcessIndex].name_process, userInfo.id, "updated", "issue type", projectInfo, userInfo))
           }
         }
 
         if (Object.keys(values).includes('start_date')) {
-          console.log("setValueChanged.current ", setValueChanged.current);
           if (typeof setValueChanged.current === "string") {
 
-            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { start_date: setValueChanged.current }, convertTime(record?.start_date, true), convertTime(setValueChanged.current, true), userInfo.id, "updated", "start time"))
+            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { start_date: setValueChanged.current }, convertTime(getValueOfStringFieldInIssue(record, "start_date"), true), convertTime(setValueChanged.current, true), userInfo.id, "updated", "start time", projectInfo, userInfo))
           }
         }
 
         if (Object.keys(values).includes('end_date')) {
           if (typeof setValueChanged.current === "string") {
-            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { end_date: setValueChanged.current }, convertTime(record?.end_date, true), convertTime(setValueChanged.current, true), userInfo.id, "updated", "end time"))
+            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { end_date: setValueChanged.current }, convertTime(getValueOfStringFieldInIssue(record, "end_date"), true), convertTime(setValueChanged.current, true), userInfo.id, "updated", "end time", projectInfo, userInfo))
           }
         }
 
         if (Object.keys(values).includes('summary')) {
           if (typeof values?.summary === "string") {
-            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { summary: values?.summary }, null, null, userInfo.id, "updated", "summary"))
+            dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { summary: values?.summary }, null, null, userInfo.id, "updated", "summary", projectInfo, userInfo))
           }
         }
 
         if (values?.story_point && Number.isInteger(parseInt(values?.story_point))) {
-          dispatch(updateInfoIssue(record?._id, projectInfo?._id, { story_point: parseInt(values?.story_point) }, record?.story_point ? record?.story_point.toString() : "None", values?.story_point, userInfo.id, "updated", "story point"))
+          dispatch(updateInfoIssue(record?._id, projectInfo?._id, { story_point: parseInt(values?.story_point) }, getValueOfNumberFieldInIssue(record, "story_point") ? getValueOfNumberFieldInIssue(record, "story_point").toString() : "None", values?.story_point, userInfo.id, "updated", "story point", projectInfo, userInfo))
         }
 
         if (values?.assignees) {
           if (typeof setValueChanged.current === 'string') {
             const getUserIndex = projectInfo?.members?.findIndex(user => user?.user_info?._id?.toString() === setValueChanged.current)
             if (getUserIndex !== -1) {
-              dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { assignees: setValueChanged.current }, null, projectInfo?.members[getUserIndex].user_info.avatar, userInfo.id, "added", "assignees"))
+              dispatch(updateInfoIssue(record?._id, record?.project_id?._id, { assignees: setValueChanged.current }, null, projectInfo?.members[getUserIndex].user_info.avatar, userInfo.id, "added", "assignees", projectInfo, userInfo))
             }
           }
         }
         if (values?.timeOriginalEstimate) {
           if (validateOriginalTime(values.timeOriginalEstimate)) {
-            const oldValue = calculateTimeAfterSplitted(record.timeOriginalEstimate ? record.timeOriginalEstimate : 0)
+            const oldValue = calculateTimeAfterSplitted(getValueOfNumberFieldInIssue(record, "timeOriginalEstimate") ? getValueOfNumberFieldInIssue(record, "timeOriginalEstimate") : 0)
             const newValue = calculateTimeAfterSplitted(values.timeOriginalEstimate)
 
-            dispatch(updateInfoIssue(record?._id, projectInfo?._id, { timeOriginalEstimate: newValue }, oldValue, newValue, userInfo.id, "updated", "time original estimate"))
+            dispatch(updateInfoIssue(record?._id, projectInfo?._id, { timeOriginalEstimate: newValue }, oldValue, newValue, userInfo.id, "updated", "time original estimate", projectInfo, userInfo))
             showNotificationWithIcon('success', '', "Truong du lieu hop le")
           } else {
             showNotificationWithIcon('error', '', "Truong du lieu nhap vao khong hop le")
@@ -189,10 +188,9 @@ export default function IssuesList() {
         }
         if (values?.timeSpent) {
           if (validateOriginalTime(values.timeSpent)) {
-            const oldValue = calculateTimeAfterSplitted(record.timeSpent ? record.timeSpent : 0)
+            const oldValue = calculateTimeAfterSplitted(getValueOfNumberFieldInIssue(record, "timeSpent") ? getValueOfNumberFieldInIssue(record, "timeSpent") : 0)
             const newValue = calculateTimeAfterSplitted(values.timeSpent)
-
-            dispatch(updateInfoIssue(record?._id, projectInfo?._id, { timeSpent: newValue }, oldValue, newValue, userInfo.id, "updated", "time spent"))
+            dispatch(updateInfoIssue(record?._id, projectInfo?._id, { timeSpent: newValue }, oldValue, newValue, userInfo.id, "updated", "time spent", projectInfo, userInfo))
             showNotificationWithIcon('success', '', "Truong du lieu hop le")
           } else {
             showNotificationWithIcon('error', '', "Truong du lieu nhap vao khong hop le")
@@ -302,6 +300,7 @@ export default function IssuesList() {
       <Button onClick={(e) => { save(null) }}><i className="fa fa-times"></i></Button>
     </div>
   }
+
   const renderEditingCellsInRow = (ref, dataIndex, save, record) => {
     if (dataIndex === 'summary') {
       return <div style={{ position: 'relative' }}>
@@ -311,7 +310,7 @@ export default function IssuesList() {
     }
     else if (dataIndex === 'issue_status') {
       return <div style={{ position: 'relative' }}>
-        <Select ref={ref} options={issueTypeWithoutOptions} onSelect={(value) => setValueChanged.current = value} />
+        <Select ref={ref} options={issueTypeWithoutOptions(projectInfo?.issue_types_default)} onSelect={(value) => setValueChanged.current = value} />
         {renderSubmit(save, record)}
       </div>
     }
@@ -324,7 +323,7 @@ export default function IssuesList() {
     else if (dataIndex === 'issue_type') {
       const renderOptions = renderIssueType(processList, id)
       return <div style={{ position: 'relative' }}>
-        <Select style={{ width: 200 }} ref={ref} options={renderOptions.filter(option => option.value !== record.issue_type._id)} onSelect={(value) => setValueChanged.current = value} />
+        <Select style={{ width: 200 }} ref={ref} options={renderOptions.filter(option => option.value !== getValueOfObjectFieldInIssue(record, "issue_type")?._id)} onSelect={(value) => setValueChanged.current = value} />
         {renderSubmit(save, record)}
       </div>
     }
@@ -355,11 +354,10 @@ export default function IssuesList() {
       </div>
     }
     else if (dataIndex === 'current_sprint') {
-      return <div style={{ position: 'relative' }}>
+      return <div style={{ position: 'relative', width: 200 }}>
         <Select ref={ref} options={renderSprintList(sprintList, id)} onSelect={(value) => setValueChanged.current = value} />
         {renderSubmit(save, record)}
       </div>
-
     }
     else if (dataIndex === 'timeOriginalEstimate') {
       return <div style={{ position: 'relative' }}>
@@ -375,7 +373,7 @@ export default function IssuesList() {
     else if (dataIndex === 'epic_link') {
       const renderOptions = renderEpicList(epicList, id)
       return <div style={{ position: 'relative' }}>
-        <Select ref={ref} options={renderOptions.filter(option => option.value !== record.epic_link?._id)} onSelect={(value) => setValueChanged.current = value} />
+        <Select ref={ref} options={renderOptions.filter(option => option.value !== getValueOfObjectFieldInIssue(record, "epic_link")?._id)} onSelect={(value) => setValueChanged.current = value} />
         {renderSubmit(save, record)}
       </div>
 
@@ -383,7 +381,7 @@ export default function IssuesList() {
     else if (dataIndex === 'fix_version') {
       const renderOptions = renderVersionList(versionList, id)
       return <div style={{ position: 'relative' }}>
-        <Select ref={ref} options={renderOptions.filter(option => option.value !== record.fix_version?._id)} onSelect={(value) => setValueChanged.current = value} />
+        <Select ref={ref} options={renderOptions.filter(option => option.value !== getValueOfObjectFieldInIssue(record, "fix_version")?._id)} onSelect={(value) => setValueChanged.current = value} />
         {renderSubmit(save, record)}
       </div>
     }
@@ -431,27 +429,28 @@ export default function IssuesList() {
   }
 
   const renderValueColumns = (text, record, index, key) => {
-    const style = { marginLeft: record?.parent && record?.issue_status === 4 ? 30 : 0 }
+    const checkDone = processList?.findIndex(process => process._id.toString() === getValueOfObjectFieldInIssue(record, 'issue_type')?._id?.toString() && process.type_process === 'done')
+    const style = { marginLeft: getValueOfObjectFieldInIssue(record, "parent") && getValueOfNumberFieldInIssue(record, "issue_status") === 4 ? 30 : 0 }
     if (key === 'ordinal_number') {
       return <span style={style} className='font-weight-bold'>{projectInfo?.key_name}-{record?.ordinal_number}</span>
     }
     else if (key === 'issue_status') {
-      return <div style={style}>{iTagForIssueTypes(record?.issue_status, null, null)}</div>
+      return <div style={style}>{iTagForIssueTypes(getValueOfNumberFieldInIssue(record, "issue_status"), null, null, projectInfo?.issue_types_default)}</div>
     }
     else if (key === 'summary') {
-      return <span style={style}>{record?.summary}</span>
+      return <span style={{ ...style, textDecoration: checkDone !== -1 ? 'line-through' : 'none' }}>{getValueOfStringFieldInIssue(record, "summary")}</span>
     }
     else if (key === 'issue_type') {
-      return <Tag style={style} color={record.issue_type?.tag_color}>{record.issue_type?.name_process}</Tag>
+      return <Tag style={style} color={getValueOfObjectFieldInIssue(record, "issue_type")?.tag_color}>{getValueOfObjectFieldInIssue(record, "issue_type")?.name_process}</Tag>
     }
     else if (key === 'issue_priority') {
-      return <span style={style}>{priorityTypeOptions[record.issue_priority]?.label}</span>
+      return <span style={style}>{priorityTypeOptions[getValueOfNumberFieldInIssue(record, "issue_priority")]?.label}</span>
     }
     else if (key === 'assignees') {
-      if (record?.assignees?.length === 0) {
+      if (getValueOfArrayObjectFieldInIssue(record, "assignees")?.length === 0) {
         return <span style={style} className='d-flex align-items-center'><Avatar icon={<UserOutlined />} size={30} /> <span className='ml-2'>Unassignee</span></span>
       } else {
-        return record?.assignees?.map(user => {
+        return getValueOfArrayObjectFieldInIssue(record, "assignees")?.map(user => {
           return <span style={style} className='mr-1'><Avatar src={user.avatar} size={30} /></span>
         })
       }
@@ -460,15 +459,15 @@ export default function IssuesList() {
       return <span style={style}><Avatar src={record.creator?.avatar} className='mr-2' />{record.creator?.username}</span>
     }
     else if (key === 'start_date') {
-      if (!record?.start_date) return <span className='mr-1 items-hover d-none'><i className="fa fa-plus"></i> Add start date</span>
-      return <span style={style}><Tag color={checkDeadlineIsComing(record?.start_date, record.end_date).tag_color}>
-        <span style={{ color: checkDeadlineIsComing(record?.start_date, record.end_date).text_color }}>{convertTime(record?.start_date, true)}</span>
+      if (!getValueOfStringFieldInIssue(record, "start_date")) return <span className='mr-1 items-hover invisible'><i className="fa fa-plus"></i> Add start date</span>
+      return <span style={style}><Tag color={checkDeadlineIsComing(getValueOfStringFieldInIssue(record, "start_date"), getValueOfStringFieldInIssue(record, "end_date")).tag_color}>
+        <span style={{ color: checkDeadlineIsComing(getValueOfStringFieldInIssue(record, "start_date"), getValueOfStringFieldInIssue(record, "end_date")).text_color }}>{convertTime(getValueOfStringFieldInIssue(record, "start_date"), true)}</span>
       </Tag></span>
     }
     else if (key === 'end_date') {
-      if (!record?.end_date) return <span className='mr-1 items-hover d-none'><i className="fa fa-plus"></i> Add end date</span>
-      return <span style={style}><Tag color={checkDeadlineIsComing(record?.start_date, record.end_date).tag_color}>
-        <span style={{ color: checkDeadlineIsComing(record?.start_date, record.end_date).text_color }}>{convertTime(record?.end_date, true)}</span>
+      if (!getValueOfStringFieldInIssue(record, "end_date")) return <span className='mr-1 items-hover invisible'><i className="fa fa-plus"></i> Add end date</span>
+      return <span style={style}><Tag color={checkDeadlineIsComing(getValueOfStringFieldInIssue(record, "start_date"), getValueOfStringFieldInIssue(record, "end_date")).tag_color}>
+        <span style={{ color: checkDeadlineIsComing(getValueOfStringFieldInIssue(record, "start_date"), getValueOfStringFieldInIssue(record, "end_date")).text_color }}>{convertTime(getValueOfStringFieldInIssue(record, "end_date"), true)}</span>
       </Tag></span>
     }
     else if (key === 'createAt') {
@@ -478,53 +477,54 @@ export default function IssuesList() {
       return <Tag style={style} color="#2db7f5">{dayjs(record.updateAt).format("DD/MM/YYYY")}</Tag>
     }
     else if (key === 'epic_link') {
-      if (!record.epic_link) return <span className='mr-1 items-hover d-none'><i className="fa fa-plus"></i> Add epic</span>
-      return <Tag style={style} color={record.epic_link?.tag_color}>{record.epic_link?.epic_name}</Tag>
+      if (!getValueOfObjectFieldInIssue(record, "epic_link")) return <span className='mr-1 items-hover invisible'><i className="fa fa-plus"></i> Add epic</span>
+      return <Tag style={style} color={getValueOfObjectFieldInIssue(record, "epic_link")?.tag_color}>{getValueOfObjectFieldInIssue(record, "epic_link")?.epic_name}</Tag>
     }
     else if (key === 'parent') {
-      if (record.parent) {
+      if (getValueOfObjectFieldInIssue(record, "parent")) {
         return <div style={style} className='d-flex align-items-center'>
-          <span className='mr-1'>{iTagForIssueTypes(record.parent?.issue_status, null, null)}</span>
-          <span className='mr-1'>{projectInfo?.key_name}-{record.parent?.ordinal_number}</span>
+          <span className='mr-1'>{iTagForIssueTypes(getValueOfObjectFieldInIssue(record, "parent")?.issue_status, null, null, projectInfo?.issue_types_default)}</span>
+          <span className='mr-1'>{projectInfo?.key_name}-{getValueOfObjectFieldInIssue(record, "parent")?.ordinal_number}</span>
         </div>
       }
       return null
     }
     else if (key === 'fix_version') {
-      if (!record.fix_version) return <span className='mr-1 items-hover d-none'><i className="fa fa-plus"></i> Add version</span>
-      return <Tag style={style} color={record.fix_version?.tag_color}>{record.fix_version?.version_name}</Tag>
+      if (!getValueOfObjectFieldInIssue(record, "fix_version")) return <span className='mr-1 items-hover invisible'><i className="fa fa-plus"></i> Add version</span>
+      return <Tag style={style} color={getValueOfObjectFieldInIssue(record, "fix_version")?.tag_color}>{getValueOfObjectFieldInIssue(record, "fix_version")?.version_name}</Tag>
     }
     else if (key === 'timeOriginalEstimate') {
-      if (record.timeOriginalEstimate !== 0) {
-        return <span style={style}>{convertMinuteToFormat(record.timeOriginalEstimate)}</span>
+      const time = getValueOfNumberFieldInIssue(record, "timeOriginalEstimate")
+      if (typeof time === "number") {
+        return <span style={style}>{time !== null ? convertMinuteToFormat(time) : null}</span>
       } else {
-        return <span className='mr-1 items-hover d-none'><i className="fa fa-plus"></i> Add time estimate</span>
+        return <span className='mr-1 items-hover invisible'><i className="fa fa-plus"></i> Add time estimate</span>
       }
     }
     else if (key === 'timeSpent') {
-      if (typeof record?.timeSpent !== "string")
-        return <span className='mr-1 items-hover d-none'><i className="fa fa-plus"></i> Add time spent</span>
-      return <span style={style}>{convertMinuteToFormat(record.timeSpent)}</span>
+      if (typeof getValueOfNumberFieldInIssue(record, "timeSpent") !== "number")
+        return <span className='mr-1 items-hover invisible'><i className="fa fa-plus"></i> Add time spent</span>
+      return <span style={style}>{convertMinuteToFormat(getValueOfNumberFieldInIssue(record, "timeSpent"))}</span>
     }
     else if (key === 'timeRemaining') {
-      return <span style={style}>{Number.isInteger(record?.timeSpent) && Number.isInteger(record.timeOriginalEstimate) ? convertMinuteToFormat(record.timeOriginalEstimate - record?.timeSpent) : "None"}</span>
+      return <span style={style}>{Number.isInteger(getValueOfNumberFieldInIssue(record, "timeSpent")) && Number.isInteger(getValueOfNumberFieldInIssue(record, "timeOriginalEstimate")) ? convertMinuteToFormat(getValueOfNumberFieldInIssue(record, "timeOriginalEstimate") - getValueOfNumberFieldInIssue(record, "timeSpent")) : "None"}</span>
     }
     else if (key === 'current_sprint') {
-      if (record?.current_sprint) {
-        return <Tag style={style}>{record.current_sprint?.sprint_name}</Tag>
+      if (getValueOfObjectFieldInIssue(record, "current_sprint")) {
+        return <Tag style={style}>{getValueOfObjectFieldInIssue(record, "current_sprint")?.sprint_name}</Tag>
       }
-      return <span className='mr-1 items-hover d-none'><i className="fa fa-plus"></i> Add sprint</span>
+      return <span className='mr-1 items-hover invisible'><i className="fa fa-plus"></i> Add sprint</span>
     }
     else if (key === 'old_sprint') {
       return <div className='d-flex'>
-        {record.old_sprint?.filter((sprint, index) => record.old_sprint.map(sprint => sprint._id).indexOf(sprint._id) === index).map((sprint) => {
+        {getValueOfArrayFieldInIssue(record, "old_sprint")?.filter((sprint, index) => getValueOfArrayFieldInIssue(record, "old_sprint").map(sprint => sprint._id).indexOf(sprint._id) === index).map((sprint) => {
           return <Tag style={style} key={sprint._id}>{sprint.sprint_name}</Tag>
         })}
       </div>
     }
     else if (key === 'story_point') {
-      if (typeof record.story_point !== 'number') return <span style={{ width: 'max-content' }} className='mr-1 items-hover d-none'><i className="fa fa-plus"></i> Add story point</span>
-      return <span style={style}>{record.story_point}</span>
+      if (typeof getValueOfNumberFieldInIssue(record, "story_point") !== 'number') return <span style={{ width: 'max-content' }} className='mr-1 items-hover invisible'><i className="fa fa-plus"></i> Add story point</span>
+      return <span style={style}>{getValueOfNumberFieldInIssue(record, "story_point")}</span>
     }
   }
 
@@ -538,64 +538,64 @@ export default function IssuesList() {
       }
 
       //set icon
-      if(["createAt", "updateAt", "start_date", "end_date"].includes(col.key)) {
+      if (["createAt", "updateAt", "start_date", "end_date"].includes(col.key)) {
         icon = <i className="fa fa-calendar-alt"></i>
       }
-      if(col.key === "ordinal_number") {
+      if (col.key === "ordinal_number") {
         icon = <i className="fa-solid fa-hashtag"></i>
       }
-      if(col.key === "summary") {
+      if (col.key === "summary") {
         icon = <i className="fa fa-stream"></i>
       }
-      if(["issue_status", "issue_type"].includes(col.key)) {
+      if ("issue_status" === col.key) {
         icon = <i className="fa fa-arrow-circle-right"></i>
       }
-      if(col.key === "assignees") {
+      if ("issue_type" === col.key) {
+        icon = <i className="fa fa-arrow-right"></i>
+      }
+      if (col.key === "assignees") {
         icon = <i className="fa-solid fa-people-group"></i>
       }
-      if(["timeSpent", "timeOriginalEstimate", "timeRemaining"].includes(col.key)) {
+      if (["timeSpent", "timeOriginalEstimate", "timeRemaining"].includes(col.key)) {
         icon = <i className="fa-solid fa-clock"></i>
       }
-      if("parent" === col.key) {
+      if ("parent" === col.key) {
         icon = <i className="fa fa-code-branch"></i>
       }
-      if("fix_version" === col.key) {
+      if ("fix_version" === col.key) {
         icon = <i className="fa-solid fa-folder-open"></i>
       }
-      if("issue_priority" === col.key) {
+      if ("issue_priority" === col.key) {
         icon = <i className="fa fa-arrow-alt-circle-down"></i>
       }
-      if("epic_link" === col.key) {
+      if ("epic_link" === col.key) {
         icon = <i className="fa fa-bolt"></i>
       }
-      if(["current_sprint", "old_sprint"].includes(col.key)) {
+      if (["current_sprint", "old_sprint"].includes(col.key)) {
         icon = <i className="fab fa-viadeo"></i>
       }
-      if("creator" === col.key) {
+      if ("creator" === col.key) {
         icon = <i className="fa-solid fa-person"></i>
       }
-      if("story_point" === col.key) {
+      if ("story_point" === col.key) {
         icon = <i className="fa-solid fa-list-ol"></i>
       }
 
-      var setWidth = 250
-      if (["summary", "assignees", "issue_type", "creator"].includes(col.key)) {
-        setWidth = 'max-content'
-      }
-     
-      if (["issue_status", "issue_priority"].includes(col.key)) {
-        setWidth = 100
+      var setWidth = 'max-content'
+
+      if (["parent", "old_sprint", "timeRemaining", "component"].includes(col.key)) {
+        setWidth = 200
       }
 
-      if(["story_point", "ordinal_number"].includes(col.key)) {
-        setWidth = 150
+      if (["timeOriginalEstimate"].includes(col.key)) {
+        setWidth = 250
       }
 
       if (["issue_status", "issue_priority", "story_point", "fix_version", "epic_link", "createAt", "updateAt"].includes(col.key)) {
         align = "center"
       }
       return {
-        title: <span style={{color: "#626F86", display: 'flex', alignItems: 'center'}}>{icon} <span className='ml-2' style={{width: 'max-content'}}>{col.title}</span></span>,
+        title: <span style={{ color: "#626F86", display: 'flex', alignItems: 'center' }}>{icon} <span className='ml-2' style={{ width: 'max-content' }}>{col.title}</span></span>,
         dataIndex: col.key,
         key: col.key,
         editable: allowEdit,
@@ -672,7 +672,7 @@ export default function IssuesList() {
   };
 
   const renderDataSource = () => {
-    return issuesInProject?.filter(issue => issue.issue_status !== 4).map(issue => {
+    return issuesInProject?.filter(issue => getValueOfNumberFieldInIssue(issue, "issue_status") !== 4).map(issue => {
       if (issue.sub_issue_list.length === 0) {
         return {
           key: issue._id,
@@ -705,7 +705,7 @@ export default function IssuesList() {
       <div className='d-flex align-items-center mb-4 justify-content-between'>
         <MemberProject typeInterface="issue list" projectInfo={projectInfo} id={id} userInfo={userInfo} allIssues={issuesInProject} epicList={epicList} versionList={versionList} handleSearchIssue={handleSearchIssue} searchIssue={searchIssue} />
         <div>
-          <Button className='mr-2' tyle={{ fontSize: 13 }}><i className="fa-duotone fa-solid fa-comments"></i> Give feedback</Button>
+          <Button className='mr-2' tyle={{ fontSize: 13 }}><i className="fa-duotone fa-solid fa-comments mr-2"></i> Give feedback</Button>
           <Button onClick={() => {
             setDisplaySetting(!displaySetting)
           }}><span><i className="fa-solid fa-sliders mr-2"></i> View Settings</span></Button>
@@ -732,33 +732,41 @@ export default function IssuesList() {
                     style={{ width: '100%' }}
                     scroll={{
                       x: issuesInProject?.length > 0 ? 'max-content' : 0,
-                      y: issuesInProject?.length > 0 ? 450 : null 
+                      y: issuesInProject?.length > 0 ? 450 : null
                     }}
                     components={components}
                     rowKey="key"
                     expandable={{
-                      expandedRowRender: (record) => (
-                        <div style={{ width: 1000, backgroundColor: '#ffff', padding: '5px 20px', border: '2px solid #4BADE8' }}>
+                      expandedRowRender: (record) => {
+                        return <div style={{ width: 1000, backgroundColor: '#ffff', padding: '5px 20px', border: '2px solid #4BADE8' }}>
                           <div style={{ width: '100%' }} className='d-flex justify-content-between'>
                             <div className='d-flex align-items-center' style={{ marginLeft: 100, width: '100%' }}>
-                              <span>{iTagForIssueTypes(0, 'ml-1', 16)}</span>
+                              <span>{iTagForIssueTypes(0, 'ml-1', 16, projectInfo?.issue_types_default)}</span>
                               <Input onChange={(e) => {
                                 addSubSummaryIssue.current = e.target.value
                               }} className='edit-input-issue-list' style={{ border: 'none', borderRadius: 0, width: 500 }} placeholder='What needs to be done?' />
                             </div>
                             <div className='d-flex align-items-center'>
-                              <Select className='mr-2' defaultValue={issueTypeOptions[4]?.value} options={issueTypeOptions} disabled />
-                              <Button style={{padding: '0 10px'}} type='primary' onClick={() => {
+                              <Select className='mr-2' defaultValue={issueTypeOptions(projectInfo?.issue_types_default)[4]?.value} options={issueTypeOptions(projectInfo?.issue_types_default)} disabled />
+                              <Button style={{ padding: '0 10px' }} type='primary' onClick={() => {
                                 if (addSubSummaryIssue.current?.trim() !== "") {
-                                  dispatch(createIssue({ 
-                                    summary: addSubSummaryIssue.current, 
-                                    creator: userInfo.id, 
-                                    issue_status: 4, 
-                                    issue_priority: 2, 
-                                    issue_type: processList[0]._id, 
+                                  dispatch(createIssue(attributesFiltering(projectInfo, {
+                                    project_id: id,
+                                    issue_status: 4,
+                                    issue_priority: 2,
+                                    summary: addSubSummaryIssue.current,
+                                    issue_type: defaultForIssueType(issueStatus, workflowList, processList),
+                                    current_sprint: null,
                                     parent: record?._id,
-                                     project_id: id 
-                                    }, id, userInfo.id, record?.current_sprint?._id, record?._id, projectInfo, userInfo))
+                                    creator: userInfo.id,
+                                  }),
+                                    id,
+                                    userInfo.id,
+                                    getValueOfObjectFieldInIssue(record, "current_sprint")?._id,
+                                    record?._id,
+                                    projectInfo,
+                                    userInfo
+                                  ))
                                 } else {
                                   showNotificationWithIcon('error', '', 'Summary can\'t not left blank')
                                 }
@@ -767,8 +775,8 @@ export default function IssuesList() {
                             </div>
                           </div>
                         </div>
-                      ),
-                      rowExpandable: (record) => !record.parent && record.issue_status !== 4,
+                      },
+                      rowExpandable: (record) => !getValueOfObjectFieldInIssue(record, "parent") && getValueOfNumberFieldInIssue(record, "issue_status") !== 4,
                     }}
                     footer={() => {
                       return !openCreatingBacklog ? <button className='btn btn-transparent btn-create-issue' style={{ fontSize: '14px', color: '#ddd' }} onClick={() => {
@@ -778,18 +786,23 @@ export default function IssuesList() {
                         Create issue
                       </button> : <div className='d-flex' style={{ border: '2px solid #4BADE8' }}>
                         <Select style={{ border: 'none', borderRadius: 0 }}
-                          defaultValue={issueTypeWithoutOptions[0].value}
+                          defaultValue={issueTypeWithoutOptions(projectInfo?.issue_types_default)[0]?.value}
                           onChange={(value, option) => {
                             setIssueStatus(value)
                           }}
                           value={issueStatus}
                           className='edit-select-issue-list'
-                          options={issueTypeWithoutOptions.filter(status => [0, 1, 2].includes(parseInt(status.value)))}
+                          options={issueTypeWithoutOptions(projectInfo?.issue_types_default)?.filter(status => [0, 1, 2].includes(parseInt(status.value)))}
                         />
                         <Input
                           placeholder="What need to be done?"
                           onChange={(e) => {
                             summaryValue.current = e.target.value
+                          }}
+                          onBlur={(e) => {
+                            setOpenCreatingBacklog(false)
+                            setIssueStatus(0)
+                            summaryValue.current = ""
                           }}
                           defaultValue={summaryValue.current}
                           className='edit-input-issue-list'
@@ -797,14 +810,21 @@ export default function IssuesList() {
                           onKeyUp={((e) => {
                             if (e.key === "Enter") {
                               if (summaryValue.current.trim() !== "") {
-                                dispatch(createIssue({
+                                dispatch(createIssue(attributesFiltering(projectInfo, {
                                   project_id: id,
                                   issue_status: issueStatus,
                                   summary: summaryValue.current,
-                                  creator: userInfo.id,
                                   issue_type: processList.length === 0 ? null : processList[0]._id,
-                                  current_sprint: null
-                                }, id, userInfo.id, null, projectInfo, userInfo))
+                                  current_sprint: null,
+                                  creator: userInfo.id,
+                                }),
+                                  id,
+                                  userInfo.id,
+                                  null,
+                                  null,
+                                  projectInfo,
+                                  userInfo
+                                ))
                                 //set default is 0 which means story
                               }
                               setOpenCreatingBacklog(false)

@@ -1,17 +1,20 @@
 import React, { useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { updateInfoIssue, updateIssueFromBacklog } from '../../redux/actions/IssueAction'
-import { updateUserInfo } from '../../redux/actions/UserAction'
-import { CopyLinkButton, iTagForIssueTypes, iTagForPriorities, priorityTypeOptions } from '../../util/CommonFeatures'
+import { CopyLinkButton, issueTypeWithoutOptions, iTagForIssueTypes, iTagForPriorities, priorityTypeOptions } from '../../util/CommonFeatures'
 import { Avatar, Button, Divider, Input, InputNumber, Select, Space, Tag, Tooltip } from 'antd'
 import { UserOutlined } from '@ant-design/icons';
 import { NavLink, useParams } from 'react-router-dom'
 import './IssueTag.css'
-import { LightenDarkenColor } from '../../util/HandleColor'
 import { displayComponentInModalInfo } from '../../redux/actions/ModalAction'
 import InfoModal from '../../components/Modal/InfoModal/InfoModal'
 import { updateSprintAction } from '../../redux/actions/CreateProjectAction'
 import domainName from '../../util/Config'
+import { getValueOfStringFieldInIssue, getValueOfNumberFieldInIssue, getValueOfArrayObjectFieldInIssue, getValueOfObjectFieldInIssue } from '../../util/IssueFilter';
+import { delay } from '../../util/Delay'
+import { DISPLAY_LOADING, HIDE_LOADING } from '../../redux/constants/constant'
+import { updateUserInfo } from '../../redux/actions/UserAction'
+
 export default function IssueTag(props) {
     const dispatch = useDispatch()
     const [editSummary, setEditSummary] = useState({
@@ -71,9 +74,10 @@ export default function IssueTag(props) {
     const versionList = props.versionList
     const type = props.type
 
+
     const renderAssigneeOptions = () => {
         return projectInfo?.members.filter(user => {
-            if (!(user.user_info._id === issue.creator._id || issue.assignees.map(assignee => assignee._id).includes(user.user_info._id))) {
+            if (!(user.user_info._id === issue.creator._id || getValueOfArrayObjectFieldInIssue(issue, "assignees")?.map(assignee => assignee._id).includes(user.user_info._id))) {
                 return user
             }
         }).map(user => {
@@ -93,7 +97,7 @@ export default function IssueTag(props) {
 
     const renderAssignees = () => {
         return <div>
-            {editAssignees.open !== issue._id ? (issue.assignees?.length === 0 ? <Avatar size="medium" onClick={(e) => {
+            {editAssignees.open !== issue._id ? (getValueOfArrayObjectFieldInIssue(issue, "assignees")?.length === 0 ? <Avatar size="medium" onClick={(e) => {
                 e.stopPropagation()
                 setEditAssignees({
                     ...editAssignees,
@@ -101,7 +105,7 @@ export default function IssueTag(props) {
                 })
             }} icon={<UserOutlined />} /> : <div>
                 <Avatar.Group>
-                    {issue.assignees.map((user) => {
+                    {getValueOfArrayObjectFieldInIssue(issue, "assignees")?.map((user) => {
                         return <Avatar size={"medium"} onClick={(e) => {
                             e.stopPropagation()
                             setEditAssignees({
@@ -159,24 +163,35 @@ export default function IssueTag(props) {
     const renderStoryPoint = () => {
         return <span className='ml-2'>
             {
-                editStoryPoint.open !== issue._id ? (issue.story_point !== null ? <Avatar size={20}><span className='d-flex' style={{ fontSize: 10 }}>{issue?.story_point}</span></Avatar> : <Avatar onClick={(e) => {
+                editStoryPoint.open !== issue._id ? <Avatar onClick={(e) => {
                     e.stopPropagation()
                     setEditStoryPoint({
                         ...editStoryPoint,
                         open: issue._id
                     })
-                }} size={20}>-</Avatar>) :
+                }} size={20}>{typeof getValueOfNumberFieldInIssue(issue, "story_point") === "number" ? <span className='d-flex' style={{ fontSize: 10 }}>{getValueOfNumberFieldInIssue(issue, "story_point")}</span> : '-'}</Avatar> :
                     <div style={{ position: 'relative' }}>
                         <InputNumber
                             min={1}
                             max={1000}
-                            defaultValue={issue.story_point ? parseInt(issue.story_point) : null}
+                            defaultValue={getValueOfNumberFieldInIssue(issue, "story_point") ? parseInt(getValueOfNumberFieldInIssue(issue, "story_point")) : null}
                             onClick={(e) => {
                                 e.stopPropagation()
                             }}
                             onBlur={(value) => {
-                                if (editStoryPoint.value !== parseInt(issue.story_point)) {
-                                    dispatch(updateInfoIssue(issue._id, issue.project_id._id, { story_point: editStoryPoint.value }, issue.story_point ? issue.story_point.toString() : "None", editStoryPoint.value.toString(), userInfo.id, "updated", "story point"))
+                                if (editStoryPoint.value !== parseInt(getValueOfNumberFieldInIssue(issue, "story_point"))) {
+                                    dispatch(updateInfoIssue(
+                                        issue._id,
+                                        issue.project_id._id,
+                                        { story_point: editStoryPoint.value },
+                                        getValueOfNumberFieldInIssue(issue, "story_point") ? getValueOfNumberFieldInIssue(issue, "story_point")?.toString() : "None",
+                                        editStoryPoint.value.toString(),
+                                        userInfo.id,
+                                        "updated",
+                                        "story point",
+                                        projectInfo,
+                                        userInfo
+                                    ))
                                 }
                                 setEditStoryPoint({
                                     open: '',
@@ -192,8 +207,19 @@ export default function IssueTag(props) {
                         <div style={{ position: 'absolute', zIndex: 10000000, right: 0, display: 'flex' }}>
                             <Button onClick={(e) => {
                                 e.stopPropagation()
-                                if (editStoryPoint.value !== parseInt(issue.story_point)) {
-                                    dispatch(updateInfoIssue(issue._id, issue.project_id._id, { story_point: editStoryPoint.value }, issue.story_point ? issue.story_point.toString() : "None", editStoryPoint.value.toString(), userInfo.id, "updated", "story point"))
+                                if (editStoryPoint.value !== parseInt(getValueOfNumberFieldInIssue(issue, "story_point"))) {
+                                    dispatch(updateInfoIssue(
+                                        issue._id,
+                                        issue.project_id._id,
+                                        { story_point: editStoryPoint.value },
+                                        getValueOfNumberFieldInIssue(issue, "story_point") ? getValueOfNumberFieldInIssue(issue, "story_point").toString() : "None",
+                                        editStoryPoint.value.toString(),
+                                        userInfo.id,
+                                        "updated",
+                                        "story point",
+                                        projectInfo,
+                                        userInfo
+                                    ))
                                 }
                                 setEditStoryPoint({
                                     open: '',
@@ -214,7 +240,7 @@ export default function IssueTag(props) {
     }
 
     const renderIssueTypeOptions = () => {
-        return processList.filter(process => process._id !== issue.issue_type._id).map(process => {
+        return processList.filter(process => process._id !== getValueOfObjectFieldInIssue(issue, "issue_type")?._id).map(process => {
             return {
                 label: process.name_process,
                 value: process._id
@@ -223,20 +249,20 @@ export default function IssueTag(props) {
     }
 
     const renderIssueType = () => {
-        return issue.issue_type !== null ? <div>
+        return getValueOfObjectFieldInIssue(issue, "issue_type") !== null ? <div>
             {editIssueType.open !== issue._id ? <Tag onClick={(e) => {
                 e.stopPropagation()
                 setEditIssueType({
                     ...editIssueType,
                     open: issue._id
                 })
-            }} className='ml-2' color={LightenDarkenColor(issue?.issue_type?.tag_color, 100)}><span style={{ color: LightenDarkenColor(issue?.issue_type?.tag_color, -100) }}>{issue?.issue_type?.name_process}</span></Tag> : <div style={{ position: 'relative' }}>
+            }} className='ml-2' color={getValueOfObjectFieldInIssue(issue, "issue_type")?.tag_colo}><span>{getValueOfObjectFieldInIssue(issue, "issue_type")?.name_process}</span></Tag> : <div style={{ position: 'relative' }}>
                 <Select
                     style={{
                         width: 200,
                     }}
                     onClick={(e) => e.stopPropagation()}
-                    defaultValue={issue.issue_type?.name_process}
+                    defaultValue={getValueOfObjectFieldInIssue(issue, "issue_type")?.name_process}
                     onSelect={(value, option) => {
                         setEditIssueType({
                             ...editIssueType,
@@ -244,8 +270,26 @@ export default function IssueTag(props) {
                         })
                     }}
                     onBlur={() => {
-                        if (editIssueType.value.value !== issue.issue_type?._id) {
-                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { issue_type: editIssueType.value.value }, issue.issue_type.name_process, editIssueType.value.label, userInfo.id, "Updated", "type"))
+                        if (editIssueType.value.value !== getValueOfObjectFieldInIssue(issue, "issue_type")?._id) {
+                            var issueCompleted = false
+                            if (processList[processList.length - 1]._id?.toString() === editIssueType.value.value) {
+                                issueCompleted = true
+                            }
+                            dispatch(updateInfoIssue(
+                                issue._id,
+                                issue.project_id._id,
+                                {
+                                    issue_type: editIssueType.value.value,
+                                    isCompleted: issueCompleted
+                                },
+                                getValueOfObjectFieldInIssue(issue, "issue_type")?.name_process,
+                                editIssueType.value.label,
+                                userInfo.id,
+                                "Updated",
+                                "type",
+                                projectInfo,
+                                userInfo
+                            ))
                         }
                         setEditIssueType({
                             value: {},
@@ -270,8 +314,26 @@ export default function IssueTag(props) {
                 <div style={{ position: 'absolute', zIndex: 99999999, top: 0, left: '-50%' }}>
                     <Button onClick={(e) => {
                         e.stopPropagation()
-                        if (editIssueType.value.value !== issue.issue_type?._id) {
-                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { issue_type: editIssueType.value.value }, issue.issue_type.name_process, editIssueType.value.label, userInfo.id, "Updated", "type"))
+                        if (editIssueType.value.value !== getValueOfObjectFieldInIssue(issue, "issue_type")?._id) {
+                            var issueCompleted = false
+                            if (processList[processList.length - 1]._id?.toString() === editIssueType.value.value) {
+                                issueCompleted = true
+                            }
+                            dispatch(updateInfoIssue(
+                                issue._id,
+                                issue.project_id._id,
+                                {
+                                    issue_type: editIssueType.value.value,
+                                    isCompleted: issueCompleted
+                                },
+                                getValueOfObjectFieldInIssue(issue, "issue_type").name_process,
+                                editIssueType.value.label,
+                                userInfo.id,
+                                "Updated",
+                                "type",
+                                projectInfo,
+                                userInfo
+                            ))
                         }
                         setEditIssueType({
                             value: {},
@@ -293,7 +355,7 @@ export default function IssueTag(props) {
     const renderSummary = () => {
         return editSummary.open === issue?._id ? <div style={{ position: 'relative' }}>
             <Input
-                defaultValue={issue.summary}
+                defaultValue={getValueOfStringFieldInIssue(issue, "summary")}
                 onKeyDown={(e) => {
                     e.stopPropagation()
                 }}
@@ -311,8 +373,19 @@ export default function IssueTag(props) {
                     })
                 }}
                 onBlur={(e) => {
-                    if (editSummary.value.trim() !== issue.summary.trim()) {
-                        dispatch(updateInfoIssue(issue._id, issue.project_id._id, { summary: editSummary.value }, issue.summary, editSummary.value.trim(), userInfo.id, "updated", "summary"))
+                    if (editSummary.value.trim() !== getValueOfStringFieldInIssue(issue, "summary")?.trim()) {
+                        dispatch(updateInfoIssue(
+                            issue._id,
+                            issue.project_id._id,
+                            { summary: editSummary.value },
+                            getValueOfStringFieldInIssue(issue, "summary"),
+                            editSummary.value.trim(),
+                            userInfo.id,
+                            "updated",
+                            "summary",
+                            projectInfo,
+                            userInfo
+                        ))
                         setEditSummary({
                             open: '',
                             value: ''
@@ -322,8 +395,19 @@ export default function IssueTag(props) {
             <div style={{ position: 'absolute', zIndex: 10000000, right: 0 }}>
                 <Button onClick={(e) => {
                     e.stopPropagation()
-                    if (editSummary.value.trim() !== issue.summary.trim()) {
-                        dispatch(updateInfoIssue(issue._id, issue.project_id._id, { summary: editSummary.value }, issue.summary, editSummary.value.trim(), userInfo.id, "updated", "summary"))
+                    if (editSummary.value.trim() !== getValueOfStringFieldInIssue(issue, "summary")?.trim()) {
+                        dispatch(updateInfoIssue(
+                            issue._id,
+                            issue.project_id._id,
+                            { summary: editSummary.value },
+                            getValueOfStringFieldInIssue(issue, "summary"),
+                            editSummary.value.trim(),
+                            userInfo.id,
+                            "updated",
+                            "summary",
+                            projectInfo,
+                            userInfo
+                        ))
                         setEditSummary({
                             open: '',
                             value: ''
@@ -343,7 +427,7 @@ export default function IssueTag(props) {
                 }}><i className="fa fa-times"></i></Button>
             </div>
         </div> : <div>
-            <span>{issue?.summary}</span>
+            <span style={{ textDecoration: getValueOfObjectFieldInIssue(issue, 'issue_type')?.type_process === 'done' ? 'line-through' : 'none' }}>{getValueOfStringFieldInIssue(issue, "summary")}</span>
             <button onClick={(e) => {
                 e.stopPropagation()
                 setEditSummary({
@@ -356,7 +440,7 @@ export default function IssueTag(props) {
     }
 
     const renderEpicListOption = () => {
-        return epicList?.filter(epic => epic._id !== issue.epic_link._id).map(epic => {
+        return epicList?.filter(epic => epic._id !== getValueOfObjectFieldInIssue(issue, "epic_link")._id).map(epic => {
             return {
                 label: epic.epic_name,
                 value: epic._id
@@ -365,14 +449,14 @@ export default function IssueTag(props) {
     }
 
     const renderEpicLink = () => {
-        return issue.epic_link !== null ? <div>
+        return getValueOfObjectFieldInIssue(issue, "epic_link") !== null ? <div>
             {editEpicLink.open !== issue._id ? <Tag onClick={(e) => {
                 e.stopPropagation()
                 setEditEpicLink({
                     ...editEpicLink,
                     open: issue._id
                 })
-            }} color={LightenDarkenColor(issue.epic_link.tag_color, 50)}><span style={{ color: LightenDarkenColor(issue.epic_link.tag_color, -100) }}>{issue.epic_link.epic_name}</span></Tag> : <div style={{ position: 'relative' }}>
+            }} color={getValueOfObjectFieldInIssue(issue, "epic_link").tag_color}><span style={{ color: 'black' }}>{getValueOfObjectFieldInIssue(issue, "epic_link").epic_name}</span></Tag> : <div style={{ position: 'relative' }}>
                 <Select
                     style={{
                         minWidth: 150,
@@ -381,8 +465,19 @@ export default function IssueTag(props) {
                     onClick={(e) => e.stopPropagation()}
                     onBlur={(e) => {
                         e.stopPropagation()
-                        if (editEpicLink.value.value !== issue.epic_link?._id) {
-                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { epic_link: editEpicLink.value.value }, issue.epic_link ? issue.epic_link.epic_name : "None", editEpicLink.value.label, userInfo.id, "Updated", "epic"))
+                        if (editEpicLink.value.value !== getValueOfObjectFieldInIssue(issue, "epic_link")?._id) {
+                            dispatch(updateInfoIssue(
+                                issue._id,
+                                issue.project_id._id,
+                                { epic_link: editEpicLink.value.value },
+                                getValueOfObjectFieldInIssue(issue, "epic_link") ? getValueOfObjectFieldInIssue(issue, "epic_link").epic_name : "None",
+                                editEpicLink.value.label,
+                                userInfo.id,
+                                "Updated",
+                                "epic",
+                                projectInfo,
+                                userInfo
+                            ))
                         }
                         setEditEpicLink({
                             value: {},
@@ -395,14 +490,25 @@ export default function IssueTag(props) {
                             value: option
                         })
                     }}
-                    defaultValue={issue.epic_link?.epic_name}
+                    defaultValue={getValueOfObjectFieldInIssue(issue, "epic_link")?.epic_name}
                     options={renderEpicListOption()}
                 />
                 <div style={{ position: 'absolute', zIndex: 99999999, top: 0, left: '-65%' }}>
                     <Button onClick={(e) => {
                         e.stopPropagation()
-                        if (editEpicLink.value.value !== issue.epic_link?._id) {
-                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { epic_link: editEpicLink.value.value }, issue.epic_link ? issue.epic_link.epic_name : "None", editEpicLink.value.label, userInfo.id, "Updated", "epic"))
+                        if (editEpicLink.value.value !== getValueOfObjectFieldInIssue(issue, "epic_link")?._id) {
+                            dispatch(updateInfoIssue(
+                                issue._id,
+                                issue.project_id._id,
+                                { epic_link: editEpicLink.value.value },
+                                getValueOfObjectFieldInIssue(issue, "epic_link") ? getValueOfObjectFieldInIssue(issue, "epic_link").epic_name : "None",
+                                editEpicLink.value.label,
+                                userInfo.id,
+                                "Updated",
+                                "epic",
+                                projectInfo,
+                                userInfo
+                            ))
                         }
                         setEditEpicLink({
                             value: {},
@@ -411,7 +517,6 @@ export default function IssueTag(props) {
                     }} type='primary' className='mr-1'><i className="fa fa-check"></i></Button>
                     <Button onClick={(e) => {
                         e.stopPropagation()
-
                         setEditEpicLink({
                             value: {},
                             open: ''
@@ -423,7 +528,7 @@ export default function IssueTag(props) {
     }
 
     const renderVersionListOption = () => {
-        return versionList?.filter(version => version?._id !== issue?.fix_version?._id).map(version => {
+        return versionList?.filter(version => version?._id !== getValueOfObjectFieldInIssue(issue, "fix_version")?._id).map(version => {
             return {
                 label: version.version_name,
                 value: version._id
@@ -432,14 +537,14 @@ export default function IssueTag(props) {
     }
 
     const renderFixVersion = () => {
-        return issue?.fix_version !== null ? <div>
+        return getValueOfObjectFieldInIssue(issue, "fix_version") !== null ? <div>
             {editFixVersion.open !== issue?._id ? <Tag onClick={(e) => {
                 e.stopPropagation()
                 setEditFixVersion({
                     ...editFixVersion,
                     open: issue?._id
                 })
-            }} color={LightenDarkenColor(issue?.fix_version?.tag_color, 50)}><span style={{ color: LightenDarkenColor(issue?.fix_version?.tag_color, -100) }}>{issue?.fix_version?.version_name}</span></Tag> : <div style={{ position: 'relative' }}>
+            }} color={getValueOfObjectFieldInIssue(issue, "fix_version")?.tag_color}><span style={{ color: 'black' }}>{getValueOfObjectFieldInIssue(issue, "fix_version")?.version_name}</span></Tag> : <div style={{ position: 'relative' }}>
                 <Select
                     style={{
                         minWidth: 150,
@@ -454,8 +559,19 @@ export default function IssueTag(props) {
                     }}
                     onBlur={(e) => {
                         e.stopPropagation()
-                        if (editFixVersion.value.value !== issue?.fix_version?._id) {
-                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { fix_version: editFixVersion?.value?.value }, issue?.fix_version ? issue?.fix_version?.version_name : "None", editFixVersion.value.label, userInfo.id, "Updated", "version"))
+                        if (editFixVersion.value.value !== getValueOfObjectFieldInIssue(issue, "fix_version")?._id) {
+                            dispatch(updateInfoIssue(
+                                issue._id,
+                                issue.project_id._id,
+                                { fix_version: editFixVersion },
+                                getValueOfObjectFieldInIssue(issue, "fix_version") ? getValueOfObjectFieldInIssue(issue, "fix_version")?.version_name : "None",
+                                editFixVersion.value.label,
+                                userInfo.id,
+                                "Updated",
+                                "version",
+                                projectInfo,
+                                userInfo
+                            ))
                         }
                         setEditFixVersion({
                             value: {},
@@ -463,14 +579,25 @@ export default function IssueTag(props) {
                         })
                     }}
 
-                    defaultValue={issue?.fix_version?.version_name}
+                    defaultValue={getValueOfObjectFieldInIssue(issue, "fix_version")?.version_name}
                     options={renderVersionListOption()}
                 />
                 <div style={{ position: 'absolute', zIndex: 99999999, top: 0, left: '-65%' }}>
                     <Button onClick={(e) => {
                         e.stopPropagation()
-                        if (editFixVersion.value.value !== issue?.fix_version?._id) {
-                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { fix_version: editFixVersion.value.value }, issue?.fix_version ? issue?.fix_version.version_name : "None", editFixVersion.value.label, userInfo.id, "Updated", "version"))
+                        if (editFixVersion.value.value !== getValueOfObjectFieldInIssue(issue, "fix_version")?._id) {
+                            dispatch(updateInfoIssue(
+                                issue._id,
+                                issue.project_id._id,
+                                { fix_version: editFixVersion.value.value },
+                                getValueOfObjectFieldInIssue(issue, "fix_version") ? getValueOfObjectFieldInIssue(issue, "fix_version").version_name : "None",
+                                editFixVersion.value.label,
+                                userInfo.id,
+                                "Updated",
+                                "version",
+                                projectInfo,
+                                userInfo
+                            ))
                         }
                         setEditFixVersion({
                             value: {},
@@ -497,7 +624,7 @@ export default function IssueTag(props) {
                     ...editIssuePriority,
                     open: issue._id
                 })
-            }}>{iTagForPriorities(issue.issue_priority)}</span> : <div style={{ position: 'relative' }}>
+            }}>{iTagForPriorities(getValueOfNumberFieldInIssue(issue, "issue_priority"))}</span> : <div style={{ position: 'relative' }}>
                 <Select
                     style={{
                         minWidth: 150,
@@ -512,22 +639,44 @@ export default function IssueTag(props) {
                     }}
                     onBlur={(e) => {
                         e.stopPropagation()
-                        if (editIssuePriority.value !== issue.issue_priority) {
-                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { issue_priority: editIssuePriority.value }, issue.issue_priority, editIssuePriority.value, userInfo.id, "Updated", "priority"))
+                        if (editIssuePriority.value !== getValueOfNumberFieldInIssue(issue, "issue_priority")) {
+                            dispatch(updateInfoIssue(
+                                issue._id,
+                                issue.project_id._id,
+                                { issue_priority: editIssuePriority.value },
+                                getValueOfNumberFieldInIssue(issue, "issue_priority"),
+                                editIssuePriority.value,
+                                userInfo.id,
+                                "Updated",
+                                "priority",
+                                projectInfo,
+                                userInfo
+                            ))
                         }
                         setEditIssuePriority({
                             value: 0,
                             open: ''
                         })
                     }}
-                    options={priorityTypeOptions.filter(priority => priority.value != issue.issue_priority)}
+                    options={priorityTypeOptions.filter(priority => priority.value != getValueOfNumberFieldInIssue(issue, "issue_priority"))}
                 />
                 <div style={{ position: 'absolute', zIndex: 99999999, top: 0, left: '-65%' }}>
 
                     <Button onClick={(e) => {
                         e.stopPropagation()
-                        if (editIssuePriority.value !== issue.issue_priority) {
-                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { issue_priority: editIssuePriority.value }, issue.issue_priority, editIssuePriority.value, userInfo.id, "Updated", "priority"))
+                        if (editIssuePriority.value !== getValueOfNumberFieldInIssue(issue, "issue_priority")) {
+                            dispatch(updateInfoIssue(
+                                issue._id,
+                                issue.project_id._id,
+                                { issue_priority: editIssuePriority.value },
+                                getValueOfNumberFieldInIssue(issue, "issue_priority"),
+                                editIssuePriority.value,
+                                userInfo.id,
+                                "Updated",
+                                "priority",
+                                projectInfo,
+                                userInfo
+                            ))
                         }
                         setEditIssuePriority({
                             value: 0,
@@ -555,12 +704,14 @@ export default function IssueTag(props) {
                     ...editIssueStatus,
                     open: issue._id
                 })
-            }}>{iTagForIssueTypes(issue?.issue_status, null, null)}</span> : <div style={{ position: 'relative' }}>
+            }}>{iTagForIssueTypes(getValueOfNumberFieldInIssue(issue, "issue_status"), null, null, projectInfo?.issue_types_default)}</span> : <div style={{ position: 'relative' }}>
+                {console.log("projectInfo?.issue_types_default ", issueTypeWithoutOptions(projectInfo?.issue_types_default))}
                 <Select
                     style={{
-                        minWidth: 150,
+                        minWidth: 100,
                         width: 'max-content'
                     }}
+                    defaultValue={issueTypeWithoutOptions(projectInfo?.issue_types_default)[getValueOfNumberFieldInIssue(issue, "issue_status")]}
                     onClick={(e) => e.stopPropagation()}
                     onSelect={(value, option) => {
                         setEditIssueStatus({
@@ -570,22 +721,44 @@ export default function IssueTag(props) {
                     }}
                     onBlur={(e) => {
                         e.stopPropagation()
-                        if (editIssueStatus.value !== issue.issue_status) {
-                            dispatch(updateInfoIssue(issue?._id, issue?.project_id?._id, { issue_status: editIssueStatus.value }, issue.issue_status, editIssueStatus.value, userInfo.id, "Updated", "status"))
+                        if (editIssueStatus.value !== getValueOfNumberFieldInIssue(issue, "issue_status")) {
+                            dispatch(updateInfoIssue(
+                                issue?._id,
+                                issue?.project_id?._id,
+                                { issue_status: editIssueStatus.value },
+                                getValueOfNumberFieldInIssue(issue, "issue_status"),
+                                editIssueStatus.value,
+                                userInfo.id,
+                                "Updated",
+                                "status",
+                                projectInfo,
+                                userInfo
+                            ))
                         }
                         setEditIssueStatus({
                             value: 0,
                             open: ''
                         })
                     }}
-                    options={priorityTypeOptions.filter(priority => priority.value != issue.issue_status)}
+                    options={issueTypeWithoutOptions(projectInfo?.issue_types_default)}
                 />
                 <div style={{ position: 'absolute', zIndex: 99999999, right: 0 }}>
 
                     <Button onClick={(e) => {
                         e.stopPropagation()
-                        if (editIssueStatus.value !== issue.issue_status) {
-                            dispatch(updateInfoIssue(issue._id, issue.project_id._id, { issue_status: editIssueStatus.value }, issue.issue_status, editIssueStatus.value, userInfo.id, "Updated", "status"))
+                        if (editIssueStatus.value !== getValueOfNumberFieldInIssue(issue, "issue_status")) {
+                            dispatch(updateInfoIssue(
+                                issue._id,
+                                issue.project_id._id,
+                                { issue_status: editIssueStatus.value },
+                                getValueOfNumberFieldInIssue(issue, "issue_status"),
+                                editIssueStatus.value,
+                                userInfo.id,
+                                "Updated",
+                                "status",
+                                projectInfo,
+                                userInfo
+                            ))
                         }
                         setEditIssueStatus({
                             value: 0,
@@ -605,14 +778,13 @@ export default function IssueTag(props) {
         </div>
     }
 
-
     const displayMoveUpBtn = () => {
         var checkValid = false
-        if (issue.current_sprint === null && index === issuesBacklog?.length - 1) {
+        if (getValueOfStringFieldInIssue(issue, "current_sprint") === null && index === issuesBacklog?.length - 1) {
             checkValid = true
         }
-        if (issue.current_sprint !== null) {
-            const getSprintIndex = sprintList?.findIndex(sprint => sprint._id === issue.current_sprint)
+        if (getValueOfStringFieldInIssue(issue, "current_sprint") !== null) {
+            const getSprintIndex = sprintList?.findIndex(sprint => sprint._id === getValueOfStringFieldInIssue(issue, "current_sprint"))
             if (getSprintIndex !== -1 && sprintList[getSprintIndex]?.issue_list?.length - 1 === index) {
                 checkValid = true
             }
@@ -621,7 +793,7 @@ export default function IssueTag(props) {
         return <li onClick={(e) => {
             e.stopPropagation()
             //if this is an issue in the sprint
-            if (issue.current_sprint !== null) {
+            if (getValueOfStringFieldInIssue(issue, "current_sprint") !== null) {
                 dispatch(updateSprintAction(id, { issue_id: issue._id, issue_source_index: index, dest_source_index: index + 1 }))   //add issue to backlog
             }
             else { //inbacklog
@@ -632,17 +804,17 @@ export default function IssueTag(props) {
 
     const displayMoveDownBtn = () => {
         var checkValid = false
-        if (issue.current_sprint === null && index === 0) {
+        if (getValueOfStringFieldInIssue(issue, "current_sprint") === null && index === 0) {
             checkValid = true
         }
-        if (issue.current_sprint !== null && index === 0) {
+        if (getValueOfStringFieldInIssue(issue, "current_sprint") !== null && index === 0) {
             checkValid = true
         }
         if (checkValid) return <></>
         return <li onClick={(e) => {
             e.stopPropagation()
             //if this is an issue in the sprint
-            if (issue.current_sprint !== null) {
+            if (getValueOfStringFieldInIssue(issue, "current_sprint") !== null) {
                 dispatch(updateSprintAction(id, { issue_id: issue._id, issue_source_index: index, dest_source_index: index - 1 }))
             }
             else { //inbacklog
@@ -659,23 +831,27 @@ export default function IssueTag(props) {
             {...provided.draggableProps}
             key={`${issue?._id?.toString()}`}
             onClick={async (e) => {
-                console.log("gia tri e tu click", e.target);
                 if (!((e.target.tagName === "I" && e.target.className.includes("fa-bars")) || ((e.target.tagName === "BUTTON" && e.target.className.includes("setting-issue"))))) {
-                    dispatch(displayComponentInModalInfo(<InfoModal userInfo={userInfo} issueIdForIssueDetail={null} issueInfo={issue} displayNumberCharacterInSummarySubIssue={10} />, 1100))
+                    dispatch({
+                        type: DISPLAY_LOADING
+                    })
+                    dispatch(displayComponentInModalInfo(<InfoModal
+                        userInfo={userInfo}
+                        colLeft={8}
+                        colRight={4}
+                        height={630}
+                        issueIdForIssueDetail={issue._id}
+                        displayNumberCharacterInSummarySubIssue={10}
+                    />, 1100))
+
                     //dispatch event to update viewed issue in auth service
                     dispatch(updateUserInfo(userInfo?.id, { viewed_issue: issue._id }))
+                    await delay(500)
+
+                    dispatch({
+                        type: HIDE_LOADING
+                    })
                 }
-
-
-                // dispatch({
-                //     type: DISPLAY_LOADING
-                // })
-                // dispatch(getInfoIssue(issue._id.toString()))
-                // await delay(200)
-                // dispatch({
-                //     type: HIDE_LOADING
-                // })
-
             }}
             className="issues-detail issue-info p-0 issue-info-items">
             <div className={`${issue?.isFlagged ? "isFlagged" : ""}`} style={{ cursor: 'pointer', backgroundColor: issue?.isFlagged ? "#F1CA45" : "#ffff", padding: '5px 5px 5px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -686,8 +862,8 @@ export default function IssueTag(props) {
                 </div>
                 <div className='attach-issue d-flex align-items-center'>
                     {issue?.isFlagged ? <i style={{ fontSize: 15, color: '#FF5630' }} className="fa fa-flag mr-2"></i> : <></>}
-                    {issue?.issue_type?._id === processList[processList?.length - 1]?._id ? <i style={{ fontSize: 15, color: 'green' }} className="fa fa-check mr-2"></i> : <></>}
-                    {onChangeParent ? (issue?.sub_issue_list?.length > 0 ? <Tooltip title={`${issue?.sub_issue_list?.filter(issue => issue?.issue_type?._id === processList[processList?.length - 1]?._id).length} of ${issue?.sub_issue_list?.length} child issues completed`}><i style={{ padding: 5 }} className='fa-solid fa-sitemap icon-options mr-3'></i></Tooltip> : <></>) : <></>}
+                    {getValueOfObjectFieldInIssue(issue, "issue_type")?.type_process === 'done' ? <i style={{ fontSize: 15, color: 'green' }} className="fa fa-check mr-2"></i> : <></>}
+                    {onChangeParent ? (issue?.sub_issue_list?.length > 0 ? <Tooltip title={`${issue?.sub_issue_list?.filter(issue => getValueOfObjectFieldInIssue(issue, "issue_type")?._id === processList[processList?.length - 1]?._id).length} of ${issue?.sub_issue_list?.length} child issues completed`}><i style={{ padding: 5 }} className='fa-solid fa-sitemap icon-options mr-3'></i></Tooltip> : <></>) : <></>}
                     {/* specify which components does issue belong to? */}
                     {onChangeVersions ? renderFixVersion() : <></>}
                     {/* specify which epics does issue belong to? */}
@@ -695,9 +871,7 @@ export default function IssueTag(props) {
                     {/* issue type */}
                     {onChangeIssueType ? renderIssueType() : <></>}
                     {/* Assigness */}
-                    {onChangeAssignees ? <div className='ml-2'>
-                        {renderAssignees()}
-                    </div> : <></>}
+                    {onChangeAssignees ? <div className='ml-2'> {renderAssignees()} </div> : <></>}
                     {/* priority */}
                     {onChangeIssuePriority ? <span>{renderIssuePriority()}</span> : <></>}
                     {/* Story points for issue */}
@@ -728,15 +902,24 @@ export default function IssueTag(props) {
                                 {sprintList?.filter(sprint => sprint._id !== type).map(sprint => {
                                     return <li onClick={(e) => {
                                         e.stopPropagation()
-                                        console.log("gia tri issue ", issue);
                                         var getSprintName = ""
-                                        const getSprintNameIndex = sprintList?.findIndex(currentSprint => currentSprint._id.toString() === issue.current_sprint)
+                                        const getSprintNameIndex = sprintList?.findIndex(currentSprint => currentSprint._id.toString() === getValueOfStringFieldInIssue(issue, "current_sprint"))
                                         if (getSprintNameIndex !== -1) {
                                             getSprintName = sprintList[getSprintNameIndex].sprint_name
                                         }
-                                        dispatch(updateInfoIssue(issue._id, id, { current_sprint: sprint._id }, issue.current_sprint !== null ? getSprintName : "Backlog", sprint.sprint_name, userInfo.id, "updated", "sprint", projectInfo, userInfo))
-                                        if (issue.current_sprint !== null) {
-                                            dispatch(updateSprintAction(issue.current_sprint, { issue_id: issue._id, inserted_index: 0 }))  //delete issue in old sprint
+                                        dispatch(updateInfoIssue(
+                                            issue._id, id,
+                                            { current_sprint: sprint._id },
+                                            getValueOfStringFieldInIssue(issue, "current_sprint") !== null ? getSprintName : "Backlog",
+                                            sprint.sprint_name,
+                                            userInfo.id,
+                                            "updated",
+                                            "sprint",
+                                            projectInfo,
+                                            userInfo
+                                        ))
+                                        if (getValueOfStringFieldInIssue(issue, "current_sprint") !== null) {
+                                            dispatch(updateSprintAction(getValueOfStringFieldInIssue(issue, "current_sprint"), { issue_id: issue._id, inserted_index: 0 }))  //delete issue in old sprint
                                         } else {
                                             dispatch(updateIssueFromBacklog(id, { issue_id: issue._id, inserted_index: -1 }))   //delete issue from backlog
                                         }
@@ -746,25 +929,45 @@ export default function IssueTag(props) {
                                 {type !== "0" ? <li onClick={(e) => {
                                     e.stopPropagation()
                                     var getSprintName = ""
-                                    const getSprintNameIndex = sprintList?.findIndex(currentSprint => currentSprint._id.toString() === issue.current_sprint)
+                                    const getSprintNameIndex = sprintList?.findIndex(currentSprint => currentSprint._id.toString() === getValueOfStringFieldInIssue(issue, "current_sprint"))
                                     if (getSprintNameIndex !== -1) {
                                         getSprintName = sprintList[getSprintNameIndex].sprint_name
-                                        dispatch(updateInfoIssue(issue._id, id, { current_sprint: null }, getSprintName, "Backlog", userInfo.id, "updated", "sprint", projectInfo, userInfo))
-                                        dispatch(updateSprintAction(issue.current_sprint, { issue_id: issue._id, inserted_index: 0 }))  //delete issue in old sprint
+                                        dispatch(updateInfoIssue(
+                                            issue._id, id,
+                                            { current_sprint: null },
+                                            getSprintName,
+                                            "Backlog",
+                                            userInfo.id,
+                                            "updated",
+                                            "sprint",
+                                            projectInfo,
+                                            userInfo
+                                        ))
+                                        dispatch(updateSprintAction(getValueOfStringFieldInIssue(issue, "current_sprint"), { issue_id: issue._id, inserted_index: 0 }))  //delete issue in old sprint
                                         dispatch(updateIssueFromBacklog(id, { issue_id: issue._id }))   //add issue to backlog
                                     }
                                 }} className='dropdown-items-setting' style={{ padding: '5px 15px' }}>Backlog</li> : <></>}
-                                { 
-                                    (issue.current_sprint === null && sprintList?.length > 0) || (issue.current_sprint !== null) ? <hr style={{ margin: '2px 0' }} /> : <></>
+                                {
+                                    (getValueOfStringFieldInIssue(issue, "current_sprint") === null && sprintList?.length > 0) || (getValueOfStringFieldInIssue(issue, "current_sprint") !== null) ? <hr style={{ margin: '2px 0' }} /> : <></>
                                 }
                                 <li onClick={(e) => {
                                     e.stopPropagation()
                                     //if this is an issue in the sprint
-                                    if (issue.current_sprint !== null) {
-                                        const getSprintNameIndex = sprintList?.findIndex(currentSprint => currentSprint._id.toString() === issue.current_sprint)
+                                    if (getValueOfStringFieldInIssue(issue, "current_sprint") !== null) {
+                                        const getSprintNameIndex = sprintList?.findIndex(currentSprint => currentSprint._id.toString() === getValueOfStringFieldInIssue(issue, "current_sprint"))
                                         if (getSprintNameIndex !== -1) {
-                                            dispatch(updateSprintAction(issue.current_sprint, { issue_id: issue._id, inserted_index: 0 }))  //delete issue in old sprint
-                                            dispatch(updateInfoIssue(issue._id, id, { current_sprint: null }, sprintList[getSprintNameIndex].sprint_name, "Backlog", userInfo.id, "updated", "sprint", projectInfo, userInfo))
+                                            dispatch(updateSprintAction(getValueOfStringFieldInIssue(issue, "current_sprint"), { issue_id: issue._id, inserted_index: 0 }))  //delete issue in old sprint
+                                            dispatch(updateInfoIssue(
+                                                issue._id, id,
+                                                { current_sprint: null },
+                                                sprintList[getSprintNameIndex].sprint_name,
+                                                "Backlog",
+                                                userInfo.id,
+                                                "updated",
+                                                "sprint",
+                                                projectInfo,
+                                                userInfo
+                                            ))
                                             dispatch(updateIssueFromBacklog(id, { issue_id: issue._id, inserted_index: 0 }))   //add issue to backlog
                                         }
                                     } else { //inbacklog
@@ -775,15 +978,25 @@ export default function IssueTag(props) {
                                 {displayMoveUpBtn()}
 
                                 {displayMoveDownBtn()}
-                                
+
                                 <li onClick={(e) => {
                                     e.stopPropagation()
                                     //if this is an issue in the sprint
-                                    if (issue.current_sprint !== null) {
-                                        const getSprintNameIndex = sprintList?.findIndex(currentSprint => currentSprint._id.toString() === issue.current_sprint)
+                                    if (getValueOfStringFieldInIssue(issue, "current_sprint") !== null) {
+                                        const getSprintNameIndex = sprintList?.findIndex(currentSprint => currentSprint._id.toString() === getValueOfStringFieldInIssue(issue, "current_sprint"))
                                         if (getSprintNameIndex !== -1) {
-                                            dispatch(updateSprintAction(issue.current_sprint, { issue_id: issue._id, inserted_index: 0 }))  //delete issue in old sprint
-                                            dispatch(updateInfoIssue(issue._id, id, { current_sprint: null }, sprintList[getSprintNameIndex].sprint_name, "Backlog", userInfo.id, "updated", "sprint", projectInfo, userInfo))
+                                            dispatch(updateSprintAction(getValueOfStringFieldInIssue(issue, "current_sprint"), { issue_id: issue._id, inserted_index: 0 }))  //delete issue in old sprint
+                                            dispatch(updateInfoIssue(
+                                                issue._id, id,
+                                                { current_sprint: null },
+                                                sprintList[getSprintNameIndex].sprint_name,
+                                                "Backlog",
+                                                userInfo.id,
+                                                "updated",
+                                                "sprint",
+                                                projectInfo,
+                                                userInfo
+                                            ))
                                             dispatch(updateIssueFromBacklog(id, { issue_id: issue._id, inserted_index: issuesBacklog?.length }))   //add issue to backlog
                                         }
                                     } else { //inbacklog

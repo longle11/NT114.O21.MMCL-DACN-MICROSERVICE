@@ -9,6 +9,7 @@ import Axios from 'axios'
 import domainName from '../../../util/Config'
 import { delay } from '../../../util/Delay'
 import { useNavigate } from 'react-router-dom'
+import { getValueOfObjectFieldInIssue } from '../../../util/IssueFilter'
 
 export default function CompleteSprintModal(props) {
     const sprintInfo = props.sprintInfo
@@ -128,7 +129,7 @@ export default function CompleteSprintModal(props) {
             <ul>
                 {
                     processList?.filter(process => process.name_process.toLowerCase() !== "done").map(process => {
-                        const countIssues = sprintInfo?.issue_list?.filter(issue => issue.issue_type._id === process._id).length
+                        const countIssues = sprintInfo?.issue_list?.filter(issue =>  getValueOfObjectFieldInIssue(issue, "issue_type")?._id === process._id).length
                         return <li>{countIssues} issues for <span style={{ fontWeight: 'bold' }}>{process?.name_process?.toLowerCase()}</span></li>
                     })
                 }
@@ -137,7 +138,7 @@ export default function CompleteSprintModal(props) {
             <ul>
                 {
                     processList?.filter(process => process.name_process.toLowerCase() === "done").map(process => {
-                        const countIssues = sprintInfo?.issue_list?.filter(issue => issue.issue_type._id === process._id).length
+                        const countIssues = sprintInfo?.issue_list?.filter(issue => getValueOfObjectFieldInIssue(issue, "issue_type")?._id === process._id).length
                         return <li>{countIssues} issues for <span style={{ fontWeight: 'bold' }}>{process?.name_process?.toLowerCase()}</span></li>
                     })
                 }

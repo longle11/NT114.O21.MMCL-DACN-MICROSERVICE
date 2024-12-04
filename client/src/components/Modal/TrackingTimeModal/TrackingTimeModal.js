@@ -5,6 +5,7 @@ import { DatePicker, Input } from 'antd'
 import { useDispatch } from 'react-redux'
 import { handleClickOk, openModal } from '../../../redux/actions/ModalAction'
 import { createWorklogHistory, updateInfoIssue } from '../../../redux/actions/IssueAction'
+import { getValueOfNumberFieldInIssue } from '../../../util/IssueFilter'
 
 export default function TrackingTimeModal(props) {
     const issueInfo = props.issueInfo
@@ -22,27 +23,31 @@ export default function TrackingTimeModal(props) {
     }, [formData])
 
     const handleClickOK = () => {
-        dispatch(openModal(false))
-        
-        dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id._id.toString(), { timeSpent: formData.timeSpent }, issueInfo.timeSpent.toString(), formData.timeSpent.toString(), userInfo.id, "updated", "time spent"))
-        dispatch(createWorklogHistory({
-            issue_id: issueInfo._id.toString(),
-            creator: userInfo.id,
-            working_date: formData.dateWorking,
-            description: formData.description,
-            timeSpent: convertMinuteToFormat(formData.timeSpent)
-        }, projectInfo, userInfo, issueInfo))
+        if (typeof getValueOfNumberFieldInIssue(issueInfo, "timeOriginalEstimate") === "number") {
+            dispatch(openModal(false))
+
+            dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id?._id?.toString(), { timeSpent: formData.timeSpent }, getValueOfNumberFieldInIssue(issueInfo, "timeSpent")?.toString(), formData.timeSpent?.toString(), userInfo.id, "updated", "time spent"))
+            dispatch(createWorklogHistory({
+                issue_id: issueInfo._id.toString(),
+                creator: userInfo.id,
+                working_date: formData.dateWorking,
+                description: formData.description,
+                timeSpent: convertMinuteToFormat(formData.timeSpent)
+            }, projectInfo, userInfo, issueInfo))
+        }else {
+            showNotificationWithIcon('error', "", "Please input time original estimate before tracking")
+        }
     }
     const compareTimeSpentWithTimeOriginal = (timeSpent) => {
-        return issueInfo.timeOriginalEstimate >= calculateTimeAfterSplitted(timeSpent)
+        return getValueOfNumberFieldInIssue(issueInfo, "timeOriginalEstimate") >= calculateTimeAfterSplitted(timeSpent)
     }
     const [openDatePicker, setOpenDatePicker] = useState(false)
 
     return (
         <div>
             <div>
-                {issueInfo.timeOriginalEstimate !== 0 ? <p className='m-0 mb-1'>Time original estimate: <span className='text-danger'>{convertMinuteToFormat(issueInfo.timeOriginalEstimate)}</span></p> : <></>}
-                {issueInfo.timeSpent !== 0 ? <p className='m-0 mb-1'>Time spent recorded: <span className='text-danger'>{convertMinuteToFormat(issueInfo.timeSpent)}</span></p> : <></>}
+                {typeof getValueOfNumberFieldInIssue(issueInfo, "timeOriginalEstimate") === 'number' ? <p className='m-0 mb-1'>Time original estimate: <span className='text-danger'>{convertMinuteToFormat(getValueOfNumberFieldInIssue(issueInfo, "timeOriginalEstimate"))}</span></p> : <></>}
+                {typeof getValueOfNumberFieldInIssue(issueInfo, "timeSpent") === "number" ? <p className='m-0 mb-1'>Time spent recorded: <span className='text-danger'>{convertMinuteToFormat(getValueOfNumberFieldInIssue(issueInfo, "timeSpent"))}</span></p> : <></>}
             </div>
             <div className='d-flex'>
                 <div className='p-0 pr-2'>
@@ -50,10 +55,10 @@ export default function TrackingTimeModal(props) {
                     <Input name="timeSpent" onBlur={(e) => {
                         //tien hanh so sanh gia tri hien tai voi gia tri original
                         if (validateOriginalTime(e.target.value)) {
-                            const timeOri = issueInfo.timeOriginalEstimate
+                            const timeOri = getValueOfNumberFieldInIssue(issueInfo, "timeOriginalEstimate")
                             const currentTime = calculateTimeAfterSplitted(e.target.value)
-                            const timeSpe = currentTime + issueInfo.timeSpent
-                            if(timeSpe > timeOri) {
+                            const timeSpe = currentTime + getValueOfNumberFieldInIssue(issueInfo, "timeSpent")
+                            if (timeSpe > timeOri) {
                                 showNotificationWithIcon('error', '', 'Time spent phai nho hon time original')
                                 return
                             }
@@ -115,9 +120,7 @@ export default function TrackingTimeModal(props) {
                 <div className='description'>
                     <label htmlFor='workDescription'>Work description <span className='text-danger'>*</span></label>
                     <textarea name="workDescription" style={{ width: '100%', height: '100px' }} onChange={(e) => {
-                        console.log("gia tri value ", e.target.value);
-                        
-                         setFormData({
+                        setFormData({
                             ...formData,
                             description: e.target.value
                         })

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { getVersionById, getVersionList, updateVersion } from '../../../../redux/actions/CategoryAction'
-import { useParams } from 'react-router-dom'
+import { NavLink, useParams } from 'react-router-dom'
 import { Avatar, Breadcrumb, Button, Progress, Table, Tag } from 'antd'
 import { GetProcessListAction, GetProjectAction } from '../../../../redux/actions/ListProjectAction'
-import { getIssuesBacklog, updateInfoIssue } from '../../../../redux/actions/IssueAction'
+import { getIssuesInProject, updateInfoIssue } from '../../../../redux/actions/IssueAction'
 import { iTagForIssueTypes, iTagForPriorities } from '../../../../util/CommonFeatures'
 import { UserOutlined } from '@ant-design/icons';
 import { drawer_edit_form_action } from '../../../../redux/actions/DrawerAction'
@@ -14,28 +14,41 @@ import dayjs from 'dayjs'
 import { displayComponentInModal } from '../../../../redux/actions/ModalAction'
 import SelectIssuesModal from '../../../Modal/SelectIssuesModal/SelectIssuesModal'
 import ReleaseVersionModal from '../../../Modal/ReleaseVersionModal/ReleaseVersionModal'
+import { getValueOfArrayObjectFieldInIssue, getValueOfNumberFieldInIssue, getValueOfObjectFieldInIssue, getValueOfStringFieldInIssue } from '../../../../util/IssueFilter'
+import { showNotificationWithIcon } from '../../../../util/NotificationUtil'
 export default function ReleaseDetail() {
     const versionInfo = useSelector(state => state.categories.versionInfo)
     const { versionId, id } = useParams()
     const processList = useSelector(state => state.listProject.processList)
     const versionList = useSelector(state => state.categories.versionList)
     const projectInfo = useSelector(state => state.listProject.projectInfo)
-    const issuesBacklog = useSelector(state => state.issue.issuesBacklog)
+    const issuesInProject = useSelector(state => state.issue.issuesInProject)
     const userInfo = useSelector(state => state.user.userInfo)
+
     const dispatch = useDispatch()
     useEffect(() => {
         dispatch(getVersionById(versionId))
         dispatch(GetProcessListAction(id))
-        dispatch(getIssuesBacklog(id))
+        dispatch(getIssuesInProject(id))
         dispatch(getVersionList(id))
         dispatch(GetProjectAction(id, null, null))
     }, [])
 
     useEffect(() => {
-        setDataSource(issuesBacklog?.filter(issue => issue.fix_version?._id?.toString() === versionInfo?._id?.toString() && issue.issue_status !== 4 && issue.issue_status !== 4))
-    }, [issuesBacklog])
+        setDataSource(issuesInProject?.filter(issue => getValueOfObjectFieldInIssue(issue, "fix_version")?._id?.toString() === versionInfo?._id?.toString() && getValueOfNumberFieldInIssue(issue, "issue_status") !== 4 && getValueOfNumberFieldInIssue(issue, "issue_status") !== 4))
+    }, [issuesInProject])
+
     const [dataSource, setDataSource] = useState([])
     const columns = [
+        {
+            title: 'Ordinal number',
+            dataIndex: 'ordinal_number',
+            key: 'ordinal_number',
+            width: '150px',
+            render: (text, record) => {
+              return <NavLink to={`/projectDetail/${projectInfo?._id}/issues/issue-detail/${record._id}?typeview=detailview`}>{projectInfo?.key_name}-{record.ordinal_number}</NavLink>
+            }
+          },
         {
             title: 'Issue',
             dataIndex: 'issue',
@@ -43,10 +56,10 @@ export default function ReleaseDetail() {
             key: 'issue',
             render: (text, record) => {
                 return <div className='d-flex align-items-center'>
-                    <span>{iTagForPriorities(record.issue_priority)}</span>
-                    <span className='ml-2'>{iTagForIssueTypes(record.issue_status)}</span>
+                    <span>{iTagForPriorities(getValueOfNumberFieldInIssue(record, "issue_priority"), null, null)}</span>
+                    <span className='ml-2'>{iTagForIssueTypes(getValueOfNumberFieldInIssue(record, "issue_status"), null, null, projectInfo?.issue_types_default)}</span>
                     {/* <span>WD-{record._id.toString()}</span> */}
-                    <span className='ml-2' style={{width: 'fit-content'}}>{record.summary}</span>
+                    <span className='ml-2' style={{ width: 'fit-content' }}>{getValueOfStringFieldInIssue(record, "summary")}</span>
                 </div>
             }
         },
@@ -56,7 +69,7 @@ export default function ReleaseDetail() {
             key: 'assignees',
             width: 'fit-content',
             render: (text, record) => {
-                if (record.assignees.length === 0) {
+                if (getValueOfArrayObjectFieldInIssue(record, "assignees").length === 0) {
                     return <span><Avatar icon={<UserOutlined />} /> <span className='ml-2'>Unassignee</span></span>
                 }
             }
@@ -67,7 +80,7 @@ export default function ReleaseDetail() {
             key: 'issue_status',
             width: 'fit-content',
             render: (text, record) => {
-                return <Tag color={record.issue_type.tag_color}>{record.issue_type.name_process}</Tag>
+                return <Tag color={getValueOfObjectFieldInIssue(record, "issue_type").tag_color}>{getValueOfObjectFieldInIssue(record, "issue_type").name_process}</Tag>
             }
         },
         {
@@ -91,14 +104,24 @@ export default function ReleaseDetail() {
     ];
     const calculatePercentageForProgress = () => {
         return Math.round((versionInfo.issue_list?.filter(issue => {
-            return issue.issue_type === processList[processList.length - 1]?._id
+            return getValueOfObjectFieldInIssue(issue, "issue_type") === processList[processList.length - 1]?._id
         })?.length / versionInfo.issue_list?.length) * 100)
     }
 
     const renderButtonRelease = (versionInfo) => {
         if (versionInfo.version_status === 0) { //if status is unReleased that move to released
             return <Button onClick={() => {
-                dispatch(displayComponentInModal(<ReleaseVersionModal userInfo={userInfo} versionList={versionList} processList={processList} versionInfo={versionInfo} />))
+                if(versionInfo.start_date && versionInfo.end_date) {
+                    dispatch(displayComponentInModal(<ReleaseVersionModal
+                        userInfo={userInfo}
+                        versionList={versionList}
+                        processList={processList}
+                        versionInfo={versionInfo}
+                        projectInfo={projectInfo}
+                    />))
+                } else {
+                    showNotificationWithIcon('error', '', 'Please set start date and end date before releasing')
+                }
             }} className="mr-2">Release <i className="fa fa-check ml-2 text-success"></i></Button>
         } else if (versionInfo.version_status === 1) {
             return <Button onClick={() => { //if status is released that move to unreleased
@@ -111,7 +134,13 @@ export default function ReleaseDetail() {
             <h6>Nothing to see here</h6>
             <p>No issues have been added yet.</p>
             <Button onClick={() => {
-                dispatch(displayComponentInModal(<SelectIssuesModal processList={processList} issuesBacklog={issuesBacklog.filter(issue => issue.issue_status !== 4)} versionInfo={versionInfo} userInfo={userInfo} processInfo={processInfo} />))
+                dispatch(displayComponentInModal(<SelectIssuesModal
+                    projectInfo={projectInfo}
+                    issuesInProject={issuesInProject.filter(issue => getValueOfNumberFieldInIssue(issue, "issue_status") !== 4)}
+                    versionInfo={versionInfo}
+                    epicInfo={null}
+                    userInfo={userInfo}
+                    processInfo={processInfo} />))
             }} type='primary'><i className="fa-solid fa-plus mr-2"></i>Add issues</Button>
         </div>
     }
@@ -128,7 +157,7 @@ export default function ReleaseDetail() {
                             title: <a href={`/projectDetail/${id}/board`}>{projectInfo?.name_project}</a>,
                         },
                         {
-                            title: <a href={`/projectDetail/${id}/releases`}>Release</a>,
+                            title: <a href={`/projectDetail/${id}/releases`}>Release</a>
                         }
                     ]}
                 />
@@ -141,8 +170,8 @@ export default function ReleaseDetail() {
                             <Tag color={versionInfo.tag_color}>{versionInfo.version_status === 0 ? <span className='text-muted font-weight-bold'>Unreleased</span> : <span className='text-muted font-weight-bold'>Released <i className="fa fa-check ml-2 text-success"></i></span>}</Tag>
                         </div>
                         <div className='d-flex'>
-                            <span className='mr-3'><i className="fa fa-calendar-alt mr-2"></i><span><span className='font-weight-bold'>Start:</span> {dayjs(versionInfo.start_date).format("DD/MM/YYYY hh:mm A")}</span></span>
-                            <span><span className='font-weight-bold'>Release:</span> {dayjs(versionInfo?.end_date).format("DD/MM/YYYY hh:mm A")}</span>
+                            <span className='mr-3'><i className="fa fa-calendar-alt mr-2"></i><span><span className='font-weight-bold'>Start:</span> {versionInfo.start_date ? dayjs(versionInfo.start_date).format("DD/MM/YYYY hh:mm A") : "None"}</span></span>
+                            <span><span className='font-weight-bold'>Release:</span> {versionInfo?.end_date ? dayjs(versionInfo?.end_date).format("DD/MM/YYYY hh:mm A") : "None"}</span>
                         </div>
                     </div>
                     <div>
@@ -167,19 +196,22 @@ export default function ReleaseDetail() {
                 <div className='version-title-summary'>
                     <p><span className='font-weight-bold'>Description:</span> {versionInfo?.description ? versionInfo.description : "No description added yet"}</p>
                 </div>
-                <div className='mb-4'>
-                    <span className='mb-2'>{calculateTaskRemainingTime(dayjs(versionInfo?.start_date), dayjs(versionInfo?.end_date))} remaining</span>
-                    <Progress
-                        percent={calculatePercentageForProgress()}
-                        percentPosition={{
-                            align: 'center',
-                            type: 'inner',
-                        }}
-                        size={['100%', 10]}
-                        style={{ widht: '100%' }}
-                        strokeColor="#B7EB8F"
-                    />
-                </div>
+                {
+                    versionInfo?.start_date && versionInfo?.end_date ? <div className='mb-4'>
+                        <span className='mb-2'>{calculateTaskRemainingTime(dayjs(versionInfo?.start_date), dayjs(versionInfo?.end_date))} remaining</span>
+                        <Progress
+                            percent={calculatePercentageForProgress()}
+                            percentPosition={{
+                                align: 'center',
+                                type: 'inner',
+                            }}
+                            size={['100%', 10]}
+                            style={{ widht: '100%' }}
+                            strokeColor="#B7EB8F"
+                        />
+                    </div> : <></>
+                }
+
             </div>
             <div className='version-info'>
                 <div>
@@ -194,9 +226,14 @@ export default function ReleaseDetail() {
                                 aria-controls="nav-version"
                                 aria-selected="true"
                                 onClick={() => {
-                                    setDataSource(issuesBacklog?.filter(issue => issue.fix_version?._id?.toString() === versionInfo?._id?.toString() && issue.issue_status !== 4))
+                                    setDataSource(issuesInProject?.filter(issue => getValueOfObjectFieldInIssue(issue, "fix_version")?._id?.toString() === versionInfo?._id?.toString() && getValueOfNumberFieldInIssue(issue, "issue_status") !== 4))
                                 }}>
-                                <Avatar className='mr-2' size="small" style={{ justifyContent: 'center' }}><span style={{ fontSize: 13 }}>{issuesBacklog?.filter(issue => issue.fix_version?._id?.toString() === versionInfo?._id?.toString() && issue.issue_status !== 4 && issue.issue_status !== 4).length}</span></Avatar> issues in version
+                                <div className='d-flex align-items-center'>
+                                    <Avatar size={25} style={{ justifyContent: 'center' }}>
+                                        {issuesInProject?.filter(issue => getValueOfObjectFieldInIssue(issue, "fix_version")?._id?.toString() === versionInfo?._id?.toString() && getValueOfNumberFieldInIssue(issue, "issue_status") !== 4 && getValueOfNumberFieldInIssue(issue, "issue_status") !== 4).length}
+                                    </Avatar>
+                                    <span className='ml-2'>issues in version</span>
+                                </div>
                             </Button>
                             {processList?.map(process => {
                                 return <Button
@@ -208,13 +245,14 @@ export default function ReleaseDetail() {
                                     aria-controls={`nav-version-${process._id.toString()}`}
                                     aria-selected="false"
                                     onClick={() => {
-                                        setDataSource(issuesBacklog?.filter(issue => issue.fix_version?._id?.toString() === versionInfo?._id?.toString() && issue.issue_status !== 4 && issue.issue_type?._id?.toString() === process?._id?.toString()))
+                                        setDataSource(issuesInProject?.filter(issue => getValueOfObjectFieldInIssue(issue, "fix_version")?._id?.toString() === versionInfo?._id?.toString() && getValueOfNumberFieldInIssue(issue, "issue_status") !== 4 && getValueOfObjectFieldInIssue(issue, "issue_type")?._id?.toString() === process?._id?.toString()))
                                     }}>
-                                    <Avatar className='mr-2' size="small" style={{ backgroundColor: process.tag_color, justifyContent: 'center' }}>
-                                        <span style={{ fontSize: 13 }}>
-                                            {issuesBacklog?.filter(issue => issue.fix_version?._id?.toString() === versionInfo?._id?.toString() && issue.issue_status !== 4 && issue.issue_type?._id?.toString() === process?._id?.toString()).length}
-                                        </span>
-                                    </Avatar> issues in {process.name_process.toLowerCase()}
+                                    <div className='d-flex align-items-center'>
+                                        <Avatar size={25} style={{ backgroundColor: process.tag_color, justifyContent: 'center' }}>
+                                            {issuesInProject?.filter(issue => getValueOfObjectFieldInIssue(issue, "fix_version")?._id?.toString() === versionInfo?._id?.toString() && getValueOfNumberFieldInIssue(issue, "issue_status") !== 4 && getValueOfObjectFieldInIssue(issue, "issue_type")?._id?.toString() === process?._id?.toString()).length}
+                                        </Avatar>
+                                        <span className='ml-2'>issues in {process.name_process.toLowerCase()}</span>
+                                    </div>
                                 </Button>
                             })}
                         </div>
@@ -229,10 +267,17 @@ export default function ReleaseDetail() {
                                 }}
                                 locale={{
                                     emptyText: (renderAddIssue({}))
-                                }} footer={() => {
+                                }}
+                                footer={() => {
                                     if (dataSource.length !== 0) {
-                                        return <Button onClick={() => {
-                                            dispatch(displayComponentInModal(<SelectIssuesModal processList={processList} issuesBacklog={issuesBacklog.filter(issue => issue.issue_status !== 4)} versionInfo={versionInfo} userInfo={userInfo} processInfo={{}} />))
+                                        return <Button className='mt-3' onClick={() => {
+                                            dispatch(displayComponentInModal(<SelectIssuesModal
+                                                projectInfo={projectInfo}
+                                                issuesInProject={issuesInProject.filter(issue => getValueOfNumberFieldInIssue(issue, "issue_status") !== 4)}
+                                                versionInfo={versionInfo}
+                                                userInfo={userInfo}
+                                                epicInfo={null}
+                                                processInfo={processList[0]} />))
                                         }} type='primary'><i className="fa-solid fa-plus mr-2"></i>Add issues</Button>
                                     }
                                     return null
@@ -247,8 +292,15 @@ export default function ReleaseDetail() {
                                     dataSource={dataSource}
                                     footer={() => {
                                         if (dataSource.length !== 0) {
-                                            return <Button onClick={() => {
-                                                dispatch(displayComponentInModal(<SelectIssuesModal processList={processList} issuesBacklog={issuesBacklog.filter(issue => issue.issue_status !== 4)} versionInfo={versionInfo} userInfo={userInfo} processInfo={process} />))
+                                            return <Button className='mt-3' onClick={() => {
+                                                dispatch(displayComponentInModal(<SelectIssuesModal
+                                                    projectInfo={projectInfo}
+                                                    issuesInProject={issuesInProject.filter(issue => getValueOfNumberFieldInIssue(issue, "issue_status") !== 4)}
+                                                    versionInfo={versionInfo}
+                                                    userInfo={userInfo}
+                                                    processInfo={process}
+                                                    epicInfo={process}
+                                                />))
                                             }} type='primary'><i className="fa-solid fa-plus mr-2"></i>Add issues</Button>
                                         }
                                         return null

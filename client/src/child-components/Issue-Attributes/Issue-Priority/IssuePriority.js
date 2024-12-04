@@ -4,6 +4,8 @@ import { Select } from 'antd'
 import { updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { useDispatch } from 'react-redux'
 import { checkConstraintPermissions } from '../../../util/CheckConstraintFields'
+import { getValueOfNumberFieldInIssue } from '../../../util/IssueFilter'
+import { eyeSlashIcon } from '../../../util/icon'
 
 export default function IssuePriority(props) {
     const dispatch = useDispatch()
@@ -11,31 +13,31 @@ export default function IssuePriority(props) {
     const userInfo = props.userInfo
     const projectInfo = props.projectInfo
     return (
-        <div className="row priority d-flex align-items-center mt-2" style={{ marginBottom: 20 }}>
-            <span className='col-4' style={{ fontSize: 14, color: '#42526e', fontWeight: '500' }}>Priority</span>
+        <div className="priority d-flex align-items-center">
             {props.editAttributeTag === 'issue_priority' ? <Select
                 onBlur={() => {
                     props.handleEditAttributeTag('')
                 }}
-                className='col-7 info-item-field'
+                className='info-item-field'
                 style={{ width: '100%', padding: 0 }}
-                placeholder={priorityTypeOptions[issueInfo?.issue_priority]?.label}
-                defaultValue={priorityTypeOptions[issueInfo?.issue_priority]?.value}
+                placeholder={priorityTypeOptions[getValueOfNumberFieldInIssue(issueInfo, "issue_priority")]?.label}
+                defaultValue={priorityTypeOptions[getValueOfNumberFieldInIssue(issueInfo, "issue_priority")]?.value}
                 options={priorityTypeOptions}
                 disabled={issueInfo?.creator._id !== userInfo?.id}
                 onSelect={(value, option) => {
-                    const old_value = `${issueInfo.issue_priority}`
+                    const old_value = `${getValueOfNumberFieldInIssue(issueInfo, 'issue_priority')}`
                     const new_value = `${value}`
                     dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id?._id, { issue_priority: value }, old_value, new_value, userInfo.id, "updated", "priority", projectInfo, userInfo))
                 }}
                 name="priority"
             /> :
                 <span onDoubleClick={() => {
-                    if(checkConstraintPermissions(projectInfo, issueInfo, userInfo, 4)) {
+                    if (checkConstraintPermissions(projectInfo, issueInfo, userInfo, 1)) {
                         props.handleEditAttributeTag('issue_priority')
                     }
-                    
-                }} className='items-attribute col-7' style={{ padding: '10px 10px', width: '100%', color: '#7A869A' }}>{priorityTypeOptions[issueInfo?.issue_priority]?.label}</span>}
+                }} style={{ width: '100%', color: '#7A869A' }}>{
+                        checkConstraintPermissions(projectInfo, issueInfo, userInfo, 9) ? (priorityTypeOptions[getValueOfNumberFieldInIssue(issueInfo, "issue_priority")]?.label) : eyeSlashIcon
+                    }</span>}
         </div>
     )
 }

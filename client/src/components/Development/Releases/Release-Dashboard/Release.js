@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 import './Release.css'
 import { deleteVersion, getVersionList } from '../../../../redux/actions/CategoryAction';
 import { GetProcessListAction } from '../../../../redux/actions/ListProjectAction';
+import { getValueOfObjectFieldInIssue } from '../../../../util/IssueFilter';
 export default function Release() {
     const dispatch = useDispatch()
     const { id } = useParams()
@@ -23,7 +24,9 @@ export default function Release() {
 
     const calculatePercentageForProgress = (record) => {
         return Math.round((record.issue_list?.filter(issue => {
-            return issue.issue_type === processList[processList.length - 1]?._id
+            const index = processList.findIndex(process => process._id.toString() === getValueOfObjectFieldInIssue(issue, 'issue_type')?.toString())
+            if (index !== -1 && processList[index]?.type_process === 'done') return true
+            return false
         })?.length / record.issue_list?.length) * 100)
     }
     const columns = [
@@ -41,7 +44,12 @@ export default function Release() {
             sorter: (a, b) => a.status - b.status,
             with: '10%',
             render: (text, record) => {
-                return <Tag color={record.tag_color}><span style={{color: '#dddd', fontWeight: 'bold'}}>Unrelease</span></Tag>
+                if (record.version_status === 0) {
+                    return <Tag color={record.tag_color}><span style={{ color: '#000', fontWeight: 'bold' }}>Unrelease</span></Tag>
+                } else {
+                    return <Tag color={record.tag_color}><span style={{ color: '#000', fontWeight: 'bold' }}>Release <i className="fa fa-check ml-2 text-success"></i></span></Tag>
+
+                }
             }
         },
         {
@@ -68,7 +76,8 @@ export default function Release() {
             dataIndex: 'startDate',
             width: '15%',
             render: (text, record) => {
-                return <Tag color="#2db7f5">{record.start_date}</Tag>
+                if (!record.start_date) return <></>
+                return <Tag color="#2db7f5">{dayjs(record.start_date).format("DD/MM/YYYY")}</Tag>
             }
         },
         {
@@ -76,7 +85,8 @@ export default function Release() {
             dataIndex: 'end_date',
             width: '15%',
             render: (text, record) => {
-                return <Tag color="#87d068">{record.end_date}</Tag>
+                if (!record.end_date) return <></>
+                return <Tag color="#87d068">{dayjs(record.end_date).format("DD/MM/YYYY")}</Tag>
             }
         },
         {

@@ -1,0 +1,102 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-controller
+  namespace: default
+  annotations:
+    konghq.com/methods: GET,POST,PUT,DELETE
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: kong
+  tls:
+    - hosts:
+        - www.khoaluantotnghiep.click 
+      secretName: ca-ingress-ssl
+  rules:
+    - host: www.khoaluantotnghiep.click 
+      http:
+        paths:
+          - path: /api/users/
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-srv
+                port:
+                  number: 4000
+          - path: /api/comments/
+            pathType: Prefix
+            backend:
+              service:
+                name: comment-srv
+                port:
+                  number: 4001
+          - path: /api/issue/
+            pathType: Prefix
+            backend:
+              service:
+                name: issue-srv
+                port:
+                  number: 4002
+          - path: /api/projectmanagement/
+            pathType: Prefix
+            backend:
+              service:
+                name: projectmanagement-srv
+                port:
+                  number: 4003
+          - path: /api/category/
+            pathType: Prefix
+            backend:
+              service:
+                name: category-srv
+                port:
+                  number: 4004
+          - path: /api/issuehistory/
+            pathType: Prefix
+            backend:
+              service:
+                name: issuehistory-srv
+                port:
+                  number: 4005
+          - path: /api/issueprocess/
+            pathType: Prefix
+            backend:
+              service:
+                name: issueprocess-srv
+                port:
+                  number: 4006
+          - path: /api/sprint/
+            pathType: Prefix
+            backend:
+              service:
+                name: sprint-srv
+                port:
+                  number: 4007
+          - path: /api/files/
+            pathType: Prefix
+            backend:
+              service:
+                name: file-srv
+                port:
+                  number: 4008
+          - path: /api/notification/
+            pathType: Prefix
+            backend:
+              service:
+                name: notification-srv
+                port:
+                  number: 4009
+          - path: /api/report/
+            pathType: Prefix
+            backend:
+              service:
+                name: report-srv
+                port:
+                  number: 4010
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: client-srv
+                port:
+                  number: 3006

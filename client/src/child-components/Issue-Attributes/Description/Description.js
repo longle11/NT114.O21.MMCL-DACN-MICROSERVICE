@@ -6,6 +6,7 @@ import { Editor } from '@tinymce/tinymce-react';
 import { Button } from 'antd';
 import { checkConstraintPermissions } from '../../../util/CheckConstraintFields';
 import { NavLink } from 'react-router-dom';
+import { getValueOfStringFieldInIssue } from '../../../util/IssueFilter';
 
 export default function Description(props) {
     const userInfo = props.userInfo
@@ -18,9 +19,9 @@ export default function Description(props) {
         setDescription(content)
     }
     const renderContentModal = () => {
-        if (issueInfo?.description !== null && issueInfo?.description?.trim() !== '') {
-            if (checkConstraintPermissions(projectInfo, issueInfo, userInfo, 19)) {
-                return Parser(`${issueInfo?.description}`)
+        if (getValueOfStringFieldInIssue(issueInfo, "description") !== null && getValueOfStringFieldInIssue(issueInfo, "description")?.trim() !== '') {
+            if (checkConstraintPermissions(projectInfo, issueInfo, userInfo, 9)) {
+                return Parser(`${getValueOfStringFieldInIssue(issueInfo, "description")}`)
             } else {
                 return <p className='text-danger'>You don't have permissions enough to see description</p>
             }
@@ -29,7 +30,6 @@ export default function Description(props) {
     }
     return (
         <div className="description">
-            <p style={{ fontWeight: 'bold', fontSize: '15px' }}>Description</p>
             {editDescription ? (<p onKeyDown={() => { }} onClick={() => {
                 if (checkConstraintPermissions(projectInfo, issueInfo, userInfo, 1)) {
                     setEditDescription(false)
@@ -51,14 +51,14 @@ export default function Description(props) {
                             ],
                             ai_request: (request, respondWith) => respondWith.string(() => Promise.reject("See docs to implement AI Assistant")),
                         }}
-                        initialValue={issueInfo?.description}
+                        initialValue={getValueOfStringFieldInIssue(issueInfo, "description")}
                         onEditorChange={handlEditorChange}
                     />
 
                     <div className='mt-2'>
                         <Button onClick={() => {
                             setEditDescription(true)
-                            dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id?._id, { description: description }, '', '', userInfo?.id, "update", "description"))
+                            dispatch(updateInfoIssue(issueInfo?._id, issueInfo?.project_id?._id, { description: description }, '', '', userInfo?.id, "update", "description", projectInfo, userInfo))
                         }} type="primary" className='mr-2'>Save</Button>
                         <Button onClick={() => {
                             setEditDescription(true)

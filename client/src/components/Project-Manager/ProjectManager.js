@@ -129,7 +129,7 @@ export default function ProjectManager() {
             width: 'max-content',
             render: (text, record, index) => {
                 if (record?.creator?._id === userInfo?.id || record.members.findIndex(user => user.user_info._id === userInfo?.id && user.status === "approved") !== -1) {
-                    return <NavLink to={`/projectDetail/${record._id}/board`} onClick={() => {
+                    return <NavLink to={`/projectDetail/${record._id}/${record.template_name?.toLowerCase() === 'scrum' ? 'board' : 'kanban-board'}`} onClick={() => {
                         dispatch(GetProjectAction(record._id, null, null))
                         dispatch(updateUserInfo(userInfo?.id, { project_working: record._id }))
                     }} style={{ textDecoration: 'none' }}>
@@ -157,7 +157,7 @@ export default function ProjectManager() {
             width: 'max-content',
 
             render: (text, record, index) => {
-                return <span>{Parser(record?.description)}</span>
+                return <span>{record?.description ? Parser(record?.description) : null}</span>
             }
         },
         {
@@ -203,6 +203,18 @@ export default function ProjectManager() {
 
                 </>
             }
+        },
+        {
+            title: 'Key',
+            dataIndex: 'key_name',
+            key: 'key_name',
+            width: 'max-content'
+        },
+        {
+            title: 'Template',
+            dataIndex: 'template_name',
+            key: 'template_name',
+            width: 'max-content'
         },
         {
             title: 'Action',
@@ -259,7 +271,7 @@ export default function ProjectManager() {
             <div className="project-list-header d-flex justify-content-between mt-3">
                 <h4>Projects</h4>
                 <Button onClick={() => {
-                    navigate('/create')
+                    navigate('/create-project/software-project/templates')
                 }} className="mr-5">Create Project</Button>
             </div>
             <Search

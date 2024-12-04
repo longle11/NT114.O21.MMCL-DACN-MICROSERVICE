@@ -1,6 +1,6 @@
 import { CLOSE_DRAWER, OPEN_DRAWER, OPEN_FORM_EDIT_DRAWER, SUBMIT_FORM_EDIT_DRAWER, UPDATE_TEMP_FILE_DATA } from "../constants/constant"
 /* eslint-disable import/no-anonymous-default-export */
-
+import React from 'react';
 const initialState = {
     visible: false,
     component: <p>Drawer test something</p>,

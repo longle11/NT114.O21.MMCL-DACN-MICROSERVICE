@@ -10,6 +10,12 @@ const sprintDeletedListener = require("./nats/listener/sprint-listener/sprint-de
 const projectManagementCreatedListener = require("./nats/listener/project-listener/projectManagement-created-listener")
 const issueProcessUpdatedListener = require("./nats/listener/issueprocess-listener/issueprocess-updated-listener")
 const issueProcessDeletedListener = require("./nats/listener/issueprocess-listener/issueprocess-deleted-listener")
+const projectManagementTagAddedListener = require("./nats/listener/project-listener/projectManagement-tag-added-listener")
+const projectManagementTagDeletedListener = require("./nats/listener/project-listener/projectManagement-tag-deleted-listener")
+const sprintUpdatedListener = require("./nats/listener/sprint-listener/sprint-updated-listener")
+const componentCreatedListener = require("./nats/listener/component-listener/component-created-listener")
+const epicUpdatedListener = require("./nats/listener/epic-listener/epci_updated_listener")
+const versionUpdatedListener = require("./nats/listener/version-listener/version-updated-listener")
 
 async function connectToNats() {
     try {
@@ -24,13 +30,19 @@ async function connectToNats() {
 
         authCreatedListener()
         versionCreatedListener()
+        versionUpdatedListener()
         epicCreatedListener()
+        epicUpdatedListener()
         sprintCreatedListener()
         sprintDeletedListener()
+        sprintUpdatedListener()
         issueProcessCreatedListener()
         issueProcessUpdatedListener()
         issueProcessDeletedListener()
         projectManagementCreatedListener()
+        projectManagementTagAddedListener()
+        projectManagementTagDeletedListener()
+        componentCreatedListener()
 
         console.log("Successfully connected to nats");
     } catch (error) {

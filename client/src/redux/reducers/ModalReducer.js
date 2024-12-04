@@ -1,6 +1,6 @@
 import { CLOSE_CHILD_MODAL, CLOSE_MODAL, CLOSE_MODAL_INFO, DISPLAY_CHILD_MODAL_WITH_COMPONENT, DISPLAY_MODAL_INFO_WITH_COMPONENT, DISPLAY_MODAL_WITH_COMPONENT, HANDLE_CHILD_CLICK_OK_MODAL, HANDLE_CLICK_OK_MODAL, OPEN_CHILD_MODAL, OPEN_MODAL, OPEN_MODAL_INFO } from "../constants/constant"
 /* eslint-disable import/no-anonymous-default-export */
-
+import React from 'react';
 const initialState = {
     visible: false,
     childVisible: false,

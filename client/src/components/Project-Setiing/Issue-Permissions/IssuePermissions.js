@@ -3,30 +3,33 @@ import React, { useEffect, useRef, useState } from 'react'
 import { executePermissions } from '../../../util/Permissions'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getInfoIssue, getIssuesBacklog, updateInfoIssue } from '../../../redux/actions/IssueAction'
+import { getInfoIssue, getIssuesInProject, updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { iTagForIssueTypes } from '../../../util/CommonFeatures'
 import "./IssuePermissions.css"
 import { showNotificationWithIcon } from '../../../util/NotificationUtil'
+import { getValueOfNumberFieldInIssue, getValueOfStringFieldInIssue } from '../../../util/IssueFilter'
+import { GetProjectAction } from '../../../redux/actions/ListProjectAction'
 export default function IssuePermissions() {
-    const issuesBacklog = useSelector(state => state.issue.issuesBacklog)
+    const issuesInProject = useSelector(state => state.issue.issuesInProject)
     const issueInfo = useSelector(state => state.issue.issueInfo)
     const userInfo = useSelector(state => state.user.userInfo)
     const [editAssigneePermissions, setEditAssigneePermissions] = useState(false)
     const [editMembersPermissions, setEditMembersPermissions] = useState(false)
     const [editViewersPermissions, setEditViewersPermissions] = useState(false)
+    const projectInfo = useSelector(state => state.listProject.projectInfo)
+
     const { id, issueId } = useParams()
     const dispatch = useDispatch()
     useEffect(() => {
         if (id) {
-            dispatch(getIssuesBacklog(id, null))
+            dispatch(getIssuesInProject(id, null))
+            dispatch(GetProjectAction(id, null, null))
         }
         if (issueId !== "issue-permissions") {
             dispatch(getInfoIssue(issueId))
         }
     }, [issueId])
 
-    console.log("issueInfo ", issueInfo);
-    
     const chosePermissionsOnAssignees = useRef([])
     const chosePermissionsOnMembers = useRef([])
     const chosePermissionsOnViewers = useRef([])
@@ -60,12 +63,12 @@ export default function IssuePermissions() {
         return permissions
     }
     const permissionOptions = () => {
-        return issuesBacklog?.filter(issue => issue.issue_status !== 4).map(issue => {
+        return issuesInProject?.filter(issue => getValueOfNumberFieldInIssue(issue, 'issue_status') !== 4).map(issue => {
             return {
                 label: <div className='d-flex align-items-center'>
-                    <span className='mr-1 font-weight-bold'>WD-{issue.ordinal_number}</span>
-                    <span className='mr-1'>{iTagForIssueTypes(issue.issue_status, null, null)}</span>
-                    <span className='mr-1'>{issue.summary}</span>
+                    <span className='mr-1 font-weight-bold'>{projectInfo?.key_name}-{issue.ordinal_number}</span>
+                    <span className='mr-1'>{iTagForIssueTypes(getValueOfNumberFieldInIssue(issue, 'issue_status'), null, null, projectInfo?.issue_types_default)}</span>
+                    <span className='mr-1'>{getValueOfStringFieldInIssue(issue, 'summary')}</span>
                 </div>,
                 value: issue._id
             }
@@ -166,9 +169,9 @@ export default function IssuePermissions() {
     return (
         <div>
             {
-                issuesBacklog?.filter(issue => issue.issue_status !== 4)?.length > 0 ? <div>
+                issuesInProject?.filter(issue => getValueOfNumberFieldInIssue(issue, 'issue_status') !== 4)?.length > 0 ? <div>
                     <div className='d-flex flex-column mb-4 mt-2'>
-                        <label>Select issue which you want to apply permissions</label>
+                        <label>Select issues which you want to apply permissions</label>
                         <Select
                             options={permissionOptions()}
                             style={{ width: '50%' }}

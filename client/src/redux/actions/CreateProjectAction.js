@@ -1,9 +1,9 @@
 import Axios from "axios"
-import { CLOSE_DRAWER, DISPLAY_LOADING, GET_PROCESSES_PROJECT, GET_SPRINT_PROJECT, HIDE_LOADING } from "../constants/constant"
+import { CLOSE_DRAWER, DISPLAY_LOADING, GET_A_SPRINT, GET_PROCESSES_PROJECT, GET_PROJECT_API, GET_SPRINT_PROJECT, HIDE_LOADING } from "../constants/constant"
 import { delay } from "../../util/Delay"
-import { showNotificationWithIcon } from "../../util/NotificationUtil"
+import { sendNotificationToValidUserWithSprintCreated, sendNotificationToValidUserWithSprintStarted, showNotificationWithIcon } from "../../util/NotificationUtil"
 import domainName from '../../util/Config'
-import { GetProcessListAction, GetProjectAction, GetWorkflowListAction } from "./ListProjectAction"
+import { GetProcessListAction, GetProjectAction, GetSprintListAction, GetWorkflowListAction } from "./ListProjectAction"
 import { updateUserInfo } from "./UserAction"
 import { createNotificationAction } from "./NotificationAction"
 export const createProjectAction = (data) => {
@@ -15,20 +15,29 @@ export const createProjectAction = (data) => {
 
             await delay(2000)
             const result = await Axios.post(`${domainName}/api/projectmanagement/create`, data)
-            showNotificationWithIcon('success', '', result.data.message)
+            if (result.status === 201) {
+                showNotificationWithIcon('success', '', result.data.message)
+
+                //sau khi tao xong thi tien hanh tao dashboard mac dinh
+                const getDefaultDashBoard = await Axios.post(`${domainName}/api/issueprocess/create/default/${result.data.data._id.toString()}`, {
+                    workflow_default: data.workflow_default
+                })
+
+                dispatch({
+                    type: GET_PROJECT_API,
+                    projectInfo: result.data.data
+                })
+
+                dispatch({
+                    type: GET_PROCESSES_PROJECT,
+                    processList: getDefaultDashBoard.data.data
+                })
 
 
-            //sau khi tao xong thi tien hanh tao dashboard mac dinh
-            const getDefaultDashBoard = await Axios.post(`${domainName}/api/issueprocess/create/default/${result.data.data._id.toString()}`)
-            dispatch({
-                type: GET_PROCESSES_PROJECT,
-                processList: getDefaultDashBoard.data.data
-            })
-
-
-            dispatch(updateUserInfo(data.creator.toString(), { project_working: result.data.data._id }))
+                dispatch(updateUserInfo(data.creator.toString(), { project_working: result.data.data._id }))
+            }
         } catch (error) {
-            console.log("Gia tri loi cua createProjectAction", error)
+            
         }
         dispatch({
             type: HIDE_LOADING
@@ -40,14 +49,13 @@ export const updateProjectAction = (project_id, props, navigate, send_from) => {
     return async dispatch => {
         try {
             const res = await Axios.put(`${domainName}/api/projectmanagement/update/${project_id}`, props)
-            console.log("gia tri res la ", res);
-            
+
             if (res.status === 200) {
                 dispatch(GetProjectAction(project_id, null, null))
                 //proceed to create notification to add user into the project
-                if(typeof props?.email === "string" && typeof parseInt(props?.user_role) === "number") {
+                if (typeof props?.email === "string" && typeof parseInt(props?.user_role) === "number") {
                     const getUserInfo = await Axios.get(`${domainName}/api/users/findUser?keyword=${props?.email}`)
-                    if(getUserInfo.status === 200) {
+                    if (getUserInfo.status === 200) {
                         dispatch(createNotificationAction({
                             project_id: res.data.data._id,
                             send_from: send_from,
@@ -61,7 +69,7 @@ export const updateProjectAction = (project_id, props, navigate, send_from) => {
 
 
                 //this case is delete user out project
-                if(props?.user_info && !Object.keys(props).includes("user_role")) {
+                if (props?.user_info && !Object.keys(props).includes("user_role")) {
                     dispatch(createNotificationAction({
                         project_id: res.data.data._id,
                         send_from: send_from,
@@ -74,17 +82,68 @@ export const updateProjectAction = (project_id, props, navigate, send_from) => {
 
 
                 if (props.sprint_id !== null) {
-                    if(navigate) {
+                    if (navigate) {
                         navigate(`/projectDetail/${project_id}/board/${props.sprint_id}`)
                     }
                 }
                 showNotificationWithIcon('success', '', res.data.message)
-                window.location.reload()
+                // window.location.reload()
             }
         } catch (error) {
             if (error?.response?.status === 400) {
                 showNotificationWithIcon('error', '', error.response.data.message)
             }
+        }
+    }
+}
+
+export const addNewIssueTagProjectAction = (project_id, props) => {
+    return async dispatch => {
+        try {
+            const res = await Axios.put(`${domainName}/api/projectmanagement/update/add-new-issue-tags/${project_id}`, props)
+            if (res.status === 200) {
+                showNotificationWithIcon('success', '', res.data.message)
+                dispatch({
+                    type: GET_PROJECT_API,
+                    projectInfo: res.data.data
+                })
+            }
+        } catch (errors) {
+            showNotificationWithIcon('error', 'Xóa người dùng', errors.response.data.message)
+        }
+    }
+}
+
+export const updateIssueTagProjectAction = (project_id, props) => {
+    return async dispatch => {
+        try {
+            const res = await Axios.put(`${domainName}/api/projectmanagement/update/modify-issue-tags/${project_id}`, props)
+            if (res.status === 200) {
+                showNotificationWithIcon('success', '', res.data.message)
+                dispatch({
+                    type: GET_PROJECT_API,
+                    projectInfo: res.data.data
+                })
+            }
+        } catch (errors) {
+            showNotificationWithIcon('error', 'Xóa người dùng', errors.response.data.message)
+        }
+    }
+}
+
+export const deleteIssueTagProjectAction = (project_id, props) => {
+    return async dispatch => {
+        try {
+            const res = await Axios.put(`${domainName}/api/projectmanagement/update/delete-issue-tags/${project_id}`, props)
+            if (res.status === 200) {
+                showNotificationWithIcon('success', '', res.data.message)
+                dispatch({
+                    type: GET_PROJECT_API,
+                    projectInfo: res.data.data
+                })
+            }
+        } catch (errors) {
+            showNotificationWithIcon('error', 'Xóa người dùng', errors.response.data.message)
         }
     }
 }
@@ -100,17 +159,14 @@ export const deleteUserInProject = (userId, projectId) => {
     }
 }
 
-export const createSprintAction = (props) => {
+export const createSprintAction = (props, projectInfo, userInfo) => {
     return async dispatch => {
         try {
             const res = await Axios.post(`${domainName}/api/sprint/create`, props)
-
             if (res.status === 201) {
+                sendNotificationToValidUserWithSprintCreated(projectInfo, userInfo, dispatch, res.data.data)
+                dispatch(GetSprintListAction(res.data.data.project_id, null))
                 showNotificationWithIcon('success', '', res.data.message)
-                dispatch({
-                    type: GET_SPRINT_PROJECT,
-                    sprintList: res.data.data
-                })
                 //close modal if success
                 dispatch({
                     type: CLOSE_DRAWER
@@ -130,7 +186,6 @@ export const createWorkflowAction = (props, navigate) => {
             if (res.status === 201) {
                 dispatch(GetWorkflowListAction(props.project_id))
                 showNotificationWithIcon('success', 'Tao moi workflow', res.data.message)
-
                 navigate(`/projectDetail/${props.project_id}/workflows`)
 
                 //removing localstorage for edges and nodes is empty array
@@ -146,9 +201,11 @@ export const createWorkflowAction = (props, navigate) => {
 export const deleteSprintAction = (sprintId, projectId) => {
     return async dispatch => {
         try {
-            const res = await Axios.post(`${domainName}/api/issueprocess/delete/${sprintId}`, { project_id: projectId })
+            const res = await Axios.post(`${domainName}/api/sprint/delete/${sprintId}`, { project_id: projectId })
+            console.log("xoa ", res);
+
             if (res.status === 200) {
-                showNotificationWithIcon('success', 'Xoa', res.data.message)
+                showNotificationWithIcon('success', '', res.data.message)
                 dispatch({
                     type: GET_SPRINT_PROJECT,
                     sprintList: res.data.data
@@ -176,13 +233,17 @@ export const deleteProcessAction = (processId, projectId) => {
     }
 }
 
-export const updateSprintAction = (sprintId, props) => {
+export const updateSprintAction = (sprintId, props, project_id, projectInfo, userInfo, sprintInfo) => {
     return async dispatch => {
         try {
             const res = await Axios.put(`${domainName}/api/sprint/update/${sprintId}`, props)
 
             if (res.status === 200) {
+                if(props?.sprint_status === 'processing') {
+                    sendNotificationToValidUserWithSprintStarted(projectInfo, userInfo, sprintInfo, dispatch)
+                }
                 showNotificationWithIcon('success', '', res.data.message)
+                dispatch(GetSprintListAction(project_id, null))
                 //close modal if success
                 dispatch({
                     type: CLOSE_DRAWER

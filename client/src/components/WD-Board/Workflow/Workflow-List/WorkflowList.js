@@ -8,7 +8,6 @@ import WorkflowView from '../Workflow-View/WorkflowView'
 import { EditOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs'
 import { showNotificationWithIcon } from '../../../../util/NotificationUtil'
-import { delay } from '../../../../util/Delay'
 import { displayComponentInModal } from '../../../../redux/actions/ModalAction'
 import UpdateProcessesOnDashboard from '../../../Modal/UpdateProcessesOnDashboard/UpdateProcessesOnDashboard'
 
@@ -23,6 +22,8 @@ export default function WorkflowList() {
     const sprintList = useSelector(state => state.listProject.sprintList)
     const workflowWorking = useRef({})
 
+    console.log("workflowList ", workflowList);
+    
     const dispatch = useDispatch()
     useEffect(() => {
         dispatch(GetWorkflowListAction(id))
@@ -70,7 +71,7 @@ export default function WorkflowList() {
             align: 'center',
             render: (text, record) => {
                 return <span>{record.issue_statuses.map((status, index) => {
-                    return <span key={index}>{iTagForIssueTypes(status, null, null)}</span>
+                    return <span key={index}>{iTagForIssueTypes(status, null, null, projectInfo?.issue_types_default, projectInfo?.issue_types_default)}</span>
                 })}</span>
             }
         },
@@ -200,7 +201,20 @@ export default function WorkflowList() {
 
                                         })
                                         if (updatedActiveWorkflows.length > 0) {
-                                            dispatch(displayComponentInModal(<UpdateProcessesOnDashboard workflowList={workflowList} flowArrs={[...updatedActiveWorkflows]} currentWorkflowInactive={getCurrentWorkflow} processListTemp={processList} id={id} projectInfo={projectInfo} sprintList={sprintList} processesWorkflow={record} processList={processList} workflowWorking={workflowWorking}/>, 500, 'Update new processes on dashboard'))
+                                            dispatch(displayComponentInModal(<UpdateProcessesOnDashboard 
+                                                workflowList={workflowList} 
+                                                flowArrs={[...updatedActiveWorkflows]} 
+                                                currentWorkflowInactive={getCurrentWorkflow} 
+                                                processListTemp={processList} 
+                                                id={id} 
+                                                projectInfo={projectInfo} 
+                                                sprintList={sprintList} 
+                                                processesWorkflow={record} 
+                                                processList={processList} 
+                                                workflowWorking={workflowWorking}/>, 
+                                                '1024px', 
+                                                'Update new processes on dashboard'
+                                            ))
                                         }
                                     }
                                 }

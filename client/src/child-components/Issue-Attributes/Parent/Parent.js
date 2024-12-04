@@ -2,18 +2,23 @@ import React from 'react'
 import { iTagForIssueTypes } from '../../../util/CommonFeatures'
 import { Tag } from 'antd'
 import { NavLink } from 'react-router-dom'
+import { getValueOfNumberFieldInIssue, getValueOfStringFieldInIssue } from '../../../util/IssueFilter'
+import { checkConstraintPermissions } from '../../../util/CheckConstraintFields'
+import { eyeSlashIcon } from '../../../util/icon'
 
 export default function Parent(props) {
     const issueParentInfo = props.issueParentInfo
+    const projectInfo = props.projectInfo
+    const issueInfo = props.issueInfo
+    const userInfo = props.userInfo
     return (
-        <div className="row priority d-flex align-items-center mt-2 mb-0" style={{ marginBottom: 20 }}>
-            <span className='col-4' style={{ fontSize: 14, color: '#42526e', fontWeight: '500' }}>Priority</span>
-            {issueParentInfo ? <Tag className='items-attribute' style={{ padding: '5px 20px' }}>
-                <span>{iTagForIssueTypes(issueParentInfo?.issue_status, null, null)}</span>
+        <div className="priority d-flex align-items-center mb-0" style={{ marginBottom: 20 }}>
+            {checkConstraintPermissions(projectInfo, issueInfo, userInfo, 9) ? (issueParentInfo ? <Tag className='items-attribute' style={{ padding: '5px 20px' }}>
+                <span>{iTagForIssueTypes(getValueOfNumberFieldInIssue(issueParentInfo, "issue_status"), null, null, projectInfo?.issue_types_default)}</span>
                 <NavLink onClick={() => {
                     window.location.reload()
-                }} to={`/projectDetail/${issueParentInfo?.project_id}/issues/issue-detail/${issueParentInfo?._id}`}>WD-{issueParentInfo?.ordinal_number} {issueParentInfo?.summary}</NavLink>
-            </Tag> : <Tag style={{ padding: '5px 20px' }}>None</Tag>}
+                }} to={`/projectDetail/${issueParentInfo?.project_id}/issues/issue-detail/${issueParentInfo?._id}`}>WD-{issueParentInfo?.ordinal_number} {getValueOfStringFieldInIssue(issueParentInfo, "summary")}</NavLink>
+            </Tag> : <Tag style={{ padding: '5px 20px' }}>None</Tag>) : eyeSlashIcon}
         </div>
     )
 }

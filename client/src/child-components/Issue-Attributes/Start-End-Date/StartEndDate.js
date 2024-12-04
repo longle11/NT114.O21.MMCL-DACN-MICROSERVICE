@@ -3,10 +3,12 @@ import dayjs from 'dayjs'
 import React, { useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { updateInfoIssue } from '../../../redux/actions/IssueAction'
+import { getValueOfStringFieldInIssue } from '../../../util/IssueFilter'
+import { checkConstraintPermissions } from '../../../util/CheckConstraintFields'
+import { eyeSlashIcon } from '../../../util/icon'
 
 export default function StartEndDate(props) {
     const date = props.date
-    const name_date = props.name_date
     const type_date = props.type_date
     const issueInfo = props.issueInfo
     const projectInfo = props.projectInfo
@@ -14,9 +16,8 @@ export default function StartEndDate(props) {
     const [getDate, setGetDate] = useState(dayjs())
     const dispatch = useDispatch()
     return (
-        <div className='row d-flex align-items-center mt-2'>
-            <span className='col-4' style={{ fontSize: 14, color: '#42526e', fontWeight: '500' }}>{name_date}</span>
-            {props.editAttributeTag === type_date ? <div className='col-7' style={{ position: 'relative', padding: 0 }}>
+        <div className='d-flex align-items-center'>
+            {props.editAttributeTag === type_date ? <div style={{ position: 'relative', padding: 0 }}>
                 <DatePicker
                     showTime={true}
                     style={{ borderRadius: 0, width: '100%' }}
@@ -29,9 +30,9 @@ export default function StartEndDate(props) {
                     <Button onClick={(e) => {
                         e.stopPropagation()
                         if (type_date === "start_date") {
-                            dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { start_date: getDate.toISOString() }, issueInfo.start_date ? dayjs(issueInfo.start_date).format('DD/MM/YYYY hh:mm A') : "None", getDate.format('DD/MM/YYYY hh:mm A'), userInfo.id, "updated", "Start Date", projectInfo, userInfo))
+                            dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { start_date: getDate.toISOString() }, getValueOfStringFieldInIssue(issueInfo, "start_date") ? dayjs(getValueOfStringFieldInIssue(issueInfo, "start_date")).format('DD/MM/YYYY hh:mm A') : "None", getDate.format('DD/MM/YYYY hh:mm A'), userInfo.id, "updated", "Start Date", projectInfo, userInfo))
                         } else {
-                            dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { end_date: getDate.toISOString() }, issueInfo.end_date ? dayjs(issueInfo.end_date).format('DD/MM/YYYY hh:mm A') : "None", getDate.format('DD/MM/YYYY hh:mm A'), userInfo.id, "updated", "End Date", projectInfo, userInfo))
+                            dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { end_date: getDate.toISOString() }, getValueOfStringFieldInIssue(issueInfo, "end_date") ? dayjs(getValueOfStringFieldInIssue(issueInfo, "end_date")).format('DD/MM/YYYY hh:mm A') : "None", getDate.format('DD/MM/YYYY hh:mm A'), userInfo.id, "updated", "End Date", projectInfo, userInfo))
                         }
                         props.handleEditAttributeTag("")
 
@@ -45,11 +46,13 @@ export default function StartEndDate(props) {
                 </div>
             </div> :
                 <span onDoubleClick={() => {
-                    // if(checkConstraintPermissions(projectInfo, issueInfo, userInfo, 7)) {
-                    //     props.handleEditAttributeTag('story_point')
-                    // }
+                    if(checkConstraintPermissions(projectInfo, issueInfo, userInfo, 1)) {
+                        props.handleEditAttributeTag('story_point')
+                    }
                     props.handleEditAttributeTag(type_date)
-                }} className='items-attribute col-7' style={{ padding: '10px 10px', width: '100%', color: '#7A869A' }}>{date ? dayjs(date).format("DD/MM/YYYY hh:mm A") : "None"}</span>}
+                }} style={{ color: '#7A869A' }}>{
+                    checkConstraintPermissions(projectInfo, issueInfo, userInfo, 9) ? (typeof date === 'string' ? dayjs(date).format("DD/MM/YYYY hh:mm A") : "None") : eyeSlashIcon
+                }</span>}
         </div>
     )
 }

@@ -54,8 +54,8 @@ const authPublisher = require("../nats/publisher/auth-published")
 // })
 
 const sendTokenToEmail = async (id) => {
+    const currentUser = await userModel.findById(id)
     try {
-        const currentUser = await userModel.findById(id)
         const getToken = await currentUser.generateToken()
         await currentUser.save()
 
@@ -74,9 +74,9 @@ const sendTokenToEmail = async (id) => {
             id: currentUser._id.toString()
         }
     } catch (error) {
-        user.token = null
-        user.tokenExp = null
-        await user.save()
+        currentUser.token = null
+        currentUser.tokenExp = null
+        await currentUser.save()
 
         return {
             message: "Failed to send email, please try again",
@@ -118,12 +118,12 @@ router.post("/signup", async (req, res, next) => {
             const getMessage = await sendTokenToEmail(user._id.toString())
 
             if (getMessage.statusCode === 400) {
-                res.status(400).json({
+                return res.status(400).json({
                     message: getMessage.message,
                     statusCode: 400
                 })
             } else {
-                res.status(200).json({
+                return res.status(200).json({
                     message: getMessage.message,
                     statusCode: 200,
                     data: user._id
@@ -169,7 +169,7 @@ router.post('/token/:id', async (req, res, next) => {
                 }
                 //đăng ký sự kiện publish lên nats
                 authPublisher(data, 'auth:created')
-                res.status(201).json({
+                return res.status(201).json({
                     message: "Successfully registration",
                     sttausCode: 201,
                     data: currentUser

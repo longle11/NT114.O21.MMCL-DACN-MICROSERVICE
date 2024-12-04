@@ -5,6 +5,8 @@ import { updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { useDispatch } from 'react-redux'
 import { UserOutlined } from '@ant-design/icons'
 import { checkConstraintPermissions } from '../../../util/CheckConstraintFields'
+import { getValueOfArrayObjectFieldInIssue } from '../../../util/IssueFilter'
+import { eyeSlashIcon } from '../../../util/icon'
 
 export default function Assignees(props) {
     const issueInfo = props.issueInfo
@@ -16,7 +18,7 @@ export default function Assignees(props) {
     const [addAssignee, setAddAssignee] = useState(true)
     const renderOptionAssignee = () => {
         return projectInfo?.members?.filter((value, index) => {
-            const isExisted = issueInfo?.assignees?.findIndex((user) => {
+            const isExisted = getValueOfArrayObjectFieldInIssue(issueInfo, "assignees")?.findIndex((user) => {
                 return user._id === value.user_info._id
             })
             return !(issueInfo?.creator._id === value.user_info._id || isExisted !== -1)
@@ -29,18 +31,19 @@ export default function Assignees(props) {
     }
     const dispatch = useDispatch()
     return (
-        <div className="assignees mt-3">
-            <span style={{ color: '#42526e', fontWeight: '500', marginBottom: 5, display: 'inline-block' }}>Assignees</span>
+        <div className="assignees mt-2">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)' }}>
-                {issueInfo?.assignees?.length > 0 ? <div className='d-flex'>
-                    {issueInfo?.assignees.map(user => {
+                {
+                    checkConstraintPermissions(projectInfo, issueInfo, userInfo, 9) ? (getValueOfArrayObjectFieldInIssue(issueInfo, "assignees")?.length > 0 ? <div className='d-flex'>
+                    {getValueOfArrayObjectFieldInIssue(issueInfo, "assignees").map(user => {
                         return <span style={{ backgroundColor: '#e9eaf0', padding: '5px 10px', borderRadius: 5, width: 'fit-content', fontSize: 12, marginRight: 5 }} className='d-flex align-items-center font-weight-bold'><Avatar src={user?.avatar} size='small' className='mr-2' />
                             {user?.username}
                         </span>
                     })}
-                </div> : <span style={{ backgroundColor: '#e9eaf0', padding: '5px 10px', borderRadius: 5, width: 'fit-content', fontSize: 12 }} className='d-flex align-items-center font-weight-bold'><Avatar icon={<UserOutlined />} size='small' className='mr-2' /> Unassignee</span>}
+                </div> : <span style={{ backgroundColor: '#e9eaf0', padding: '5px 10px', borderRadius: 5, width: 'fit-content', fontSize: 12 }} className='d-flex align-items-center font-weight-bold'><Avatar icon={<UserOutlined />} size='small' className='mr-2' /> Unassignee</span>) : eyeSlashIcon
+                }
                 {
-                    checkConstraintPermissions(projectInfo, issueInfo, userInfo, 12) ? <div style={{ width: '100%', marginTop: 5 }}>
+                    checkConstraintPermissions(projectInfo, issueInfo, userInfo, 1) ? <div style={{ width: '100%', marginTop: 5 }}>
                         <button onKeyDown={() => { }} className='text-primary mt-2 mb-2 btn bg-transparent ml-2' style={{ width: 'max-content', fontSize: '12px', margin: '0px', cursor: 'pointer', display: addAssignee === false ? 'none' : 'block', padding: 0, textAlign: 'left' }} onClick={() => {
                             setAddAssignee(false)
                         }} >

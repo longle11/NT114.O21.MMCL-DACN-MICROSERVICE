@@ -5,17 +5,19 @@ import { Editor } from '@tinymce/tinymce-react'
 import { iTagForIssueTypes } from '../../../util/CommonFeatures'
 import { updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { createCommentAction } from '../../../redux/actions/CommentAction'
+import { getValueOfNumberFieldInIssue, getValueOfStringFieldInIssue } from '../../../util/IssueFilter'
 
 export default function AddFlagModal(props) {
     const editCurrentIssue = props.editCurrentIssue
     const userInfo = props.userInfo
+    const projectInfo = props.projectInfo
     const dispatch = useDispatch()
     const [editDescriptionFlagged, setEditDescriptionFlagged] = useState('')
     useEffect(() => {
         dispatch(handleClickOk(handleSelectIssueOk))
     }, [editDescriptionFlagged])
     const handleSelectIssueOk = () => {
-        dispatch(updateInfoIssue(editCurrentIssue._id, editCurrentIssue.project_id._id, { isFlagged: true }, null, null, userInfo.id, "added", "flag"))
+        dispatch(updateInfoIssue(editCurrentIssue._id, editCurrentIssue.project_id._id, { isFlagged: true }, null, null, userInfo.id, "added", "flag", projectInfo, userInfo))
 
         if (editDescriptionFlagged.trim() !== '') {
             //create comment to emphasize that is the flag added into the issue
@@ -26,7 +28,7 @@ export default function AddFlagModal(props) {
     }
     return (
         <div>
-            <span className='mb-2 d-flex align-items-center'><span className='font-weight-bold mr-2'>Issue</span> {iTagForIssueTypes(editCurrentIssue?.issue_status, 'mr-1', null)} <span style={{ color: '#626F86' }}>WD-{editCurrentIssue?.ordinal_number} {editCurrentIssue?.summary}</span></span>
+            <span className='mb-2 d-flex align-items-center'><span className='font-weight-bold mr-2'>Issue</span> {iTagForIssueTypes(getValueOfNumberFieldInIssue(editCurrentIssue, 'issue_status'), 'mr-1', null, projectInfo?.issue_types_default)} <span style={{ color: '#626F86' }}>WD-{editCurrentIssue?.ordinal_number} {getValueOfStringFieldInIssue(editCurrentIssue, 'summary')}</span></span>
             <Editor name='description'
                 apiKey='golyll15gk3kpiy6p2fkqowoismjya59a44ly52bt1pf82oe'
                 init={{

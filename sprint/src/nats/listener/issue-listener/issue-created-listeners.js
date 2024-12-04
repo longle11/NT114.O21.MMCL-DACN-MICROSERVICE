@@ -12,24 +12,19 @@ const issueCreatedListener = () => {
             if (typeof msg.getData() === 'string') {
                 console.log(`Received event issue:created ${msg.getSequence()}`);
                 const parseData = JSON.parse(msg.getData())
+                //tien hanh luu vao database sau khi lay du lieu thanh cong
                 const getIssueInfo = {
                     _id: parseData._id,
-                    issue_priority: parseData.issue_priority,
-                    summary: parseData.summary,
-                    issue_status: parseData.issue_status,
-                    assignees: parseData.assignees,
-                    creator: parseData.creator,
-                    epic_link: parseData.epic_link,
-                    fix_version: parseData.fix_version,
-                    issue_type: parseData.issue_type,
                     ordinal_number: parseData.ordinal_number,
-                    sub_issue_list: parseData.sub_issue_list,
-                    current_sprint: parseData.current_sprint,
-                    parent: parseData.parent
+                    creator: parseData.creator,
+                    issue_data_type_string: parseData.issue_data_type_string,
+                    issue_data_type_number: parseData.issue_data_type_number,
+                    issue_data_type_array: parseData.issue_data_type_array,
+                    issue_data_type_object: parseData.issue_data_type_object,
+                    issue_data_type_array_object: parseData.issue_data_type_array_object,
                 }
                 //tien hanh luu vao database sau khi lay du lieu thanh cong
                 await issueModel.create(getIssueInfo)
-                console.log("Du lieu nhan duoc: ", getIssueInfo);
                 msg.ack()
             }
         })

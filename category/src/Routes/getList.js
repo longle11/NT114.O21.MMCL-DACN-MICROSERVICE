@@ -3,9 +3,11 @@ const categoryModel = require('../models/category')
 const epicModel = require("../models/epicModel")
 const versionModel = require("../models/versionModel")
 const BadRequestError = require("../errors/Bad-Request-Error")
+const componentModel = require("../models/componentModel")
+const issueModel = require("../models/issueModel")
 const router = express.Router()
 router.get('/list', async (req, res) => {
-    const listCategories = await categoryModel.find({})
+    const listCategories = await issueModel.find({})
     res.status(200).json({
         message: "Danh sach danh muc",
         data: listCategories
@@ -21,7 +23,6 @@ router.get('/epic-list/:projectId', async (req, res, next) => {
             .populate({
                 path: 'issue_list'
             })
-        console.log("gia tri lay ra duoc getEpics ", );
         
         if (getEpics.length > 0) {
             return res.status(200).json({
@@ -33,6 +34,36 @@ router.get('/epic-list/:projectId', async (req, res, next) => {
     } catch (error) {
         console.log("error /epic-list/:projectId", error);
         
+        next(error)
+    }
+})
+
+router.get('/component-list/:projectId', async (req, res, next) => {
+    try {
+        const getComponents = await componentModel.find({ project_id: req.params.projectId })
+            .populate({
+                path: 'creator'
+            })
+            .populate({
+                path: 'issue_list'
+            })
+            .populate({
+                path: 'component_lead'
+            })
+        console.log("getComponents ", getComponents);
+        
+        if (getComponents.length > 0) {
+            return res.status(200).json({
+                message: "Successfully get component list",
+                data: getComponents
+            })
+        } else {
+            return res.status(200).json({
+                message: "Successfully get component list",
+                data: []
+            })
+        }
+    } catch (error) {
         next(error)
     }
 })

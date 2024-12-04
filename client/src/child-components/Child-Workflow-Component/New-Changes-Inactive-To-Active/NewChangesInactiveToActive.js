@@ -3,6 +3,7 @@ import { iTagForIssueTypes } from '../../../util/CommonFeatures'
 
 export default function NewChangesInactiveToActive(props) {
     const workflowList = props.workflowList
+    const projectInfo = props.projectInfo
     const flowArrs = props.flowArrs
     const currentWorkflowInactive = props.currentWorkflowInactive
     return (
@@ -16,11 +17,11 @@ export default function NewChangesInactiveToActive(props) {
                             <span className='font-weight-bold mr-3'>{workflowList[getFlowIndex].name_workflow}:</span>
                             {
                                 flow.issue_statuses.length > 0 ? <span className='d-flex align-items-center'>
-                                    <span className='d-flex align-items-center'>{workflowList[getFlowIndex].issue_statuses.map(status => iTagForIssueTypes(status, null, null))}</span>
+                                    <span className='d-flex align-items-center'>{workflowList[getFlowIndex].issue_statuses.map(status => iTagForIssueTypes(status, null, null, projectInfo?.issue_types_default))}</span>
                                     <span><i className="fa fa-long-arrow-alt-right ml-2 mr-2"></i></span>
-                                    <span className='d-flex align-items-center'>{flow.issue_statuses.map(status => iTagForIssueTypes(status, null, null))}</span>
+                                    <span className='d-flex align-items-center'>{flow.issue_statuses.map(status => iTagForIssueTypes(status, null, null, projectInfo?.issue_types_default))}</span>
                                 </span> : <span className='d-flex align-items-center'>
-                                    <span className='d-flex align-items-center'><span className='mr-2'>Active</span> {workflowList[getFlowIndex].issue_statuses.map(status => iTagForIssueTypes(status, null, null))}</span>
+                                    <span className='d-flex align-items-center'><span className='mr-2'>Active</span> {workflowList[getFlowIndex].issue_statuses.map(status => iTagForIssueTypes(status, null, null, projectInfo?.issue_types_default))}</span>
                                     <span><i className="fa fa-long-arrow-alt-right ml-2 mr-2"></i></span>
                                     <span>Inactive</span>
                                 </span>

@@ -1,29 +1,19 @@
 import { Avatar } from "antd"
 import { showNotificationWithIcon } from "./NotificationUtil"
+import { getValueOfNumberFieldInIssue, getValueOfObjectFieldInIssue, getValueOfStringFieldInIssue } from "./IssueFilter"
+import React from 'react';
 
 
-export const iTagForIssueTypes = (type, marginRight, fontSize) => {
+
+export const iTagForIssueTypes = (type, marginRight, fontSize, issue_status_default) => {
     if (fontSize === null) fontSize = 18
     if (marginRight === null) marginRight = "mr-2"
-    //0 la story
-    if (type == 0) {
-        return <i className={`fa-solid fa-bookmark ${marginRight}`} style={{ color: '#65ba43', fontSize: fontSize }} ></i>
+    const issue_status_arrs = issue_status_default?.map(status => {
+        return <i className={`fa-solid ${status.icon_type} ${marginRight}`} style={{ color: status.icon_color, fontSize: fontSize }} ></i>
+    })
+    if (issue_status_arrs?.length > 0) {
+        return issue_status_arrs[type]
     }
-    //1 la task
-    if (type == 1) {
-        return <i className={`fa-solid fa-square-check ${marginRight}`} style={{ color: '#4fade6', fontSize: fontSize }} ></i>
-    }
-    //2 la bug
-    if (type == 2) {
-        return <i className={`fa-solid fa-circle-exclamation ${marginRight}`} style={{ color: '#cd1317', fontSize: fontSize }} ></i>
-    }
-    if (type == 3) {
-        return <i className={`fa-solid fa-bolt ${marginRight}`} style={{ color: 'purple', fontSize: fontSize }} ></i>
-    }
-    if (type == 4) {
-        return <i className={`fa-solid fa-list-check ${marginRight}`} style={{ color: '#e97f33', fontSize: fontSize }} ></i>
-    }
-
     return null
 }
 
@@ -65,21 +55,22 @@ export const priorityTypeWithouOptions = [
     { label: <span className="align-items-center d-flex">{iTagForPriorities(4, "m-0", 20)}</span>, value: 4 }
 ]
 
-export const issueTypeOptions = [
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(0, null, null)} Story</span>, value: 0 },
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(1, null, null)} Task</span>, value: 1 },
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(2, null, null)} Bug</span>, value: 2 },
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(3, null, null)} Epic</span>, value: 3 },
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(4, null, null)} Subtask</span>, value: 4 }
-
-]
-export const issueTypeWithoutOptions = [
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(0, null, null)} </span>, value: 0 },
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(1, null, null)} </span>, value: 1 },
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(2, null, null)} </span>, value: 2 },
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(3, null, null)} </span>, value: 3 },
-    { label: <span className="align-items-center d-flex">{iTagForIssueTypes(4, null, null)} </span>, value: 4 },
-]
+export const issueTypeOptions = (issue_status_default) => {
+    if (issue_status_default?.length > 0) {
+        return issue_status_default?.map(status => {
+            return { label: <span className="align-items-center d-flex">{iTagForIssueTypes(status.icon_id, null, null, issue_status_default)} {status.icon_name}</span>, value: status.icon_id }
+        })
+    }
+    return []
+}
+export const issueTypeWithoutOptions = (issue_status_default) => {
+    if (issue_status_default?.length > 0) {
+        return issue_status_default?.map(status => {
+            return { label: <span className="align-items-center d-flex">{iTagForIssueTypes(status.icon_id, null, null, issue_status_default)}</span>, value: status.icon_id }
+        })
+    }
+    return []
+}
 
 export const userPermissions = [
     {
@@ -116,6 +107,16 @@ export const renderEpicList = (epicList, project_id) => {
         return {
             label: epic.epic_name,
             value: epic._id
+        }
+    })
+}
+
+export const renderComponentList = (componentList, project_id) => {
+    if (!componentList) return []
+    return componentList.filter(component => component.project_id === project_id).map(component => {
+        return {
+            label: component.component_name,
+            value: component._id
         }
     })
 }
@@ -171,13 +172,15 @@ export const renderAssignees = (listProject, project_id, userInfo) => {
     return []
 }
 
-export const renderSubIssueOptions = (issuesBacklog) => {
-    return issuesBacklog?.filter(issue => issue.issue_status === 4 && issue.parent === null).map(subIssue => {
+export const renderSubIssueOptions = (issuesInProject) => {
+    console.log("issuesInProject ",issuesInProject?.filter(issue => getValueOfNumberFieldInIssue(issue, 'issue_status') === 4 && getValueOfObjectFieldInIssue(issue, 'parent') === null));
+    
+    return issuesInProject?.filter(issue => getValueOfNumberFieldInIssue(issue, 'issue_status') === 4 && getValueOfObjectFieldInIssue(issue, 'parent') === null).map(subIssue => {
         return {
             label: <div className='d-flex align-items-center'>
-                <span className='mr-1'>{iTagForIssueTypes(subIssue.issue_status, null, 20)}</span>
+                <span className='mr-1'>{iTagForIssueTypes(getValueOfNumberFieldInIssue(subIssue, 'issue_status'), null, 20)}</span>
                 <span className='mr-2'>WD-{subIssue.ordinal_number}</span>
-                <span>{subIssue.summary}</span>
+                <span>{getValueOfStringFieldInIssue(subIssue, 'summary')}</span>
             </div>,
             value: subIssue._id
         }

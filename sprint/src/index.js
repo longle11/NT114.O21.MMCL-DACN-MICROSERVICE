@@ -13,6 +13,10 @@ const issueProcessCreatedListener = require('./nats/listener/issueprocess-listen
 const issueProcessUpdatedListener = require('./nats/listener/issueprocess-listener/issueprocess-updated-listener')
 const issueManyUpdatedListener = require('./nats/listener/issue-listener/issue-many-updated-listener')
 const issueProcessDeletedListener = require('./nats/listener/issueprocess-listener/issueprocess-deleted-listener')
+const issueSprintUpdatedListener = require('./nats/listener/issue-listener/issue-sprint-updated-listener')
+const componentCreatedListener = require('./nats/listener/component-listener/component-created-listener')
+const epicUpdatedListener = require('./nats/listener/epic-listener/epci_updated_listener')
+const versionUpdatedListener = require('./nats/listener/version-listener/version-updated-listener')
 const app = express()
 app.use(cors())
 app.use(bodyParser.json())
@@ -38,9 +42,13 @@ async function connectToNats() {
         process.on('SIGINT', () => {natsWrapper.client.close()})
         process.on('SIGTERM', () => {natsWrapper.client.close()})
 
+
+        issueSprintUpdatedListener()
         authCreatedListener()
         versionCreatedListener()
+        versionUpdatedListener()
         epicCreatedListener()
+        epicUpdatedListener()
         issueCreatedListener()
         issueUpdatedListener()
         issueManyUpdatedListener()
@@ -48,6 +56,7 @@ async function connectToNats() {
         issueProcessCreatedListener()
         issueProcessUpdatedListener()
         issueProcessDeletedListener()
+        componentCreatedListener()
 
         console.log("Connected successfully to nats");
     }catch(err) {

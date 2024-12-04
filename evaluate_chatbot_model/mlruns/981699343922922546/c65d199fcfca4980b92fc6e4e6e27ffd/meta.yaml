@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/longle/Documents/Project/NT114.O21.MMCL-DACN-MICROSERVICE/evaluate_chatbot_model/mlruns/981699343922922546/c65d199fcfca4980b92fc6e4e6e27ffd/artifacts
+end_time: 1732352282807
+entry_point_name: ''
+experiment_id: '981699343922922546'
+lifecycle_stage: active
+run_id: c65d199fcfca4980b92fc6e4e6e27ffd
+run_name: rare-squid-608
+run_uuid: c65d199fcfca4980b92fc6e4e6e27ffd
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1732352282798
+status: 4
+tags: []
+user_id: admin

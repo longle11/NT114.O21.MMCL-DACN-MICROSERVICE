@@ -10,7 +10,6 @@ import AddNotificationModal from '../../Modal/AddNotificationModal/AddNotificati
 export default function Notification() {
     const { id } = useParams()
     const projectInfo = useSelector(state => state.listProject.projectInfo)
-    console.log("projectInfo ", projectInfo);
     const dispatch = useDispatch()
     useEffect(() => {
         if(id) {

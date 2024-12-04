@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: report-mongo-depl
+spec: 
+  replicas: 1
+  selector:
+    matchLabels:
+      app: report-mongo
+  template: 
+    metadata:
+      labels: 
+        app: report-mongo
+    spec: 
+      containers: 
+        - name: db
+          image: mongo
+          volumeMounts:
+            - name: report-persistent-storage
+              mountPath: /data/db
+      volumes:
+        - name: report-persistent-storage
+          persistentVolumeClaim:
+            claimName: ebs-report-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: report-mongo-srv
+spec:
+  selector: 
+    app: report-mongo
+  ports:  
+    - name: report-db
+      protocol: TCP
+      port: 27017
+      targetPort: 27017

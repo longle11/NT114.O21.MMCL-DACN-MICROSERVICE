@@ -3,8 +3,6 @@ import domainName from "../../util/Config"
 import { GET_NOTIFICATION_LIST } from "../constants/constant"
 
 export const createNotificationAction = (props) => {
-    console.log('tien hanh chay thang nay createNotificationAction');
-    
     return async dispatch => {
         try {
             const res = await Axios.post(`${domainName}/api/notification/create`, props)

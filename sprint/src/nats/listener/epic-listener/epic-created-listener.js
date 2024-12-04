@@ -12,12 +12,9 @@ const epicCreatedListener = () => {
 
             if (typeof msg.getData() === 'string') {
                 console.log(`Received event epic:created with sequence number: ${msg.getSequence()}`);
-
                 const parseData = JSON.parse(msg.getData())
-
                 //tiến hành lưu vào epic db
                 await epicModel.create(parseData)
-                console.log("Du lieu nhan duoc: ", parseData);
                 msg.ack()
             }
         })

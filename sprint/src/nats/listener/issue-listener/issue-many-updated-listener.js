@@ -13,10 +13,9 @@ const issueManyUpdatedListener = () => {
                 console.log(`Received event issue-many:updated ${msg.getSequence()}`);
                 const parseData = JSON.parse(msg.getData())
                 //tien hanh luu vao database sau khi lay du lieu thanh cong
-                console.log("du lieu parse data ", parseData);
-                
-                await issueModel.updateMany({ _id: { $in: parseData.issue_list } }, { $set: { issue_type: parseData.issue_type } })
-                console.log("Du lieu nhan duoc: ", parseData);
+                for (let index = 0; index < parseData.issue_list.length; index++) {
+                    await issueModel.findByIdAndUpdate(parseData.issue_list[index], { $set: { issue_data_type_object: parseData.issue_data_type_object[index] } })
+                }
                 msg.ack()
             }
         })

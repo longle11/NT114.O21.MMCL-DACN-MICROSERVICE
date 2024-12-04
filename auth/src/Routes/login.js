@@ -17,7 +17,8 @@ router.post("/login", async (req, res, next) => {
                         const userId = currentUser.id
                         //khởi tạo jwt
                         const userJwt = jwt.sign({
-                            id: userId
+                            id: userId,
+                            project_working: currentUser.project_working
                         }, process.env.JWT_KEY, { expiresIn: '3h' })
 
                         //luu tru jwt trong cookie
@@ -42,7 +43,8 @@ router.post("/login", async (req, res, next) => {
                     const userId = currentUser.id
                     //khởi tạo jwt
                     const userJwt = jwt.sign({
-                        id: userId
+                        id: userId,
+                        project_working: currentUser.project_working
                     }, process.env.JWT_KEY, { expiresIn: '3h' })
 
                     //luu tru jwt trong cookie

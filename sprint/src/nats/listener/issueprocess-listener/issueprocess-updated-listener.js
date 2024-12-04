@@ -17,9 +17,8 @@ const issueProcessUpdatedListener = () => {
 
                 const getIssueProcess = await issueProcessModel.findById(parseData.process_id)
                 if (getIssueProcess) {
-                    await issueProcessModel.updateOne({ _id: parseData.process_id }, { $set: { name_process: parseData.name_process } })
+                    await issueProcessModel.updateOne({ _id: parseData.process_id }, { $set: { name_process: parseData.name_process, type_process: parseData.type_process } })
                 }
-                console.log("da nhan duoc trong issueProcessUpdatedListener");
                 msg.ack()
             }
         })

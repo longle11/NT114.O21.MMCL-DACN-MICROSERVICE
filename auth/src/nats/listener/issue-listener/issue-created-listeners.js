@@ -13,18 +13,15 @@ const issueCreatedListener = () => {
                 console.log(`Received event issue:created ${msg.getSequence()}`);
                 const parseData = JSON.parse(msg.getData())
                 //tien hanh luu vao database sau khi lay du lieu thanh cong
-                console.log("parseData ", parseData);
-                
                 const getIssueInfo = {
                     project_id: parseData.project_id,
                     _id: parseData._id,
-                    summary: parseData.summary,
-                    issue_status: parseData.issue_status,
-                    ordinal_number: parseData.ordinal_number,
                     creator: parseData.creator,
+                    ordinal_number: parseData.ordinal_number,
+                    issue_data_type_string: parseData.issue_data_type_string,
+                    issue_data_type_number: parseData.issue_data_type_number
                 }
                 await issueModel.create(getIssueInfo)
-                console.log("Du lieu nhan duoc: ", getIssueInfo);
                 msg.ack()
             }
         })

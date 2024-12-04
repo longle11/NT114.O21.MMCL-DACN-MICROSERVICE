@@ -14,9 +14,8 @@ const issueUpdatedListener = () => {
                 const parseData = JSON.parse(msg.getData())
                 //tien hanh luu vao database sau khi lay du lieu thanh cong
                 await issueModel.updateOne({ _id: parseData._id.toString() }, { $set: parseData })
-                console.log("Du lieu nhan duoc: ", parseData);
-                msg.ack()
             }
+            msg.ack()
         })
     } catch (error) {
         console.log(error);

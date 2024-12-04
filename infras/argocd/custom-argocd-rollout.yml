@@ -1,0 +1,194 @@
+USER-SUPPLIED VALUES:
+apiVersionOverrides:
+  ingress: ""
+clusterInstall: true
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  seccompProfile:
+    type: RuntimeDefault
+controller:
+  affinity: {}
+  component: rollouts-controller
+  containerPorts:
+    healthz: 8080
+    metrics: 8090
+  createClusterRole: true
+  deploymentAnnotations: {}
+  deploymentLabels: {}
+  extraArgs: []
+  extraContainers: []
+  extraEnv: []
+  image:
+    pullPolicy: IfNotPresent
+    registry: quay.io
+    repository: argoproj/argo-rollouts
+    tag: ""
+  initContainers: []
+  livenessProbe:
+    failureThreshold: 3
+    httpGet:
+      path: /healthz
+      port: healthz
+    initialDelaySeconds: 30
+    periodSeconds: 20
+    successThreshold: 1
+    timeoutSeconds: 10
+  logging:
+    format: text
+    kloglevel: "0"
+    level: info
+  metricProviderPlugins: []
+  metrics:
+    enabled: true
+    service:
+      annotations: {}
+      port: 8090
+      portName: metrics
+    serviceMonitor:
+      additionalAnnotations: {}
+      additionalLabels: {}
+      enabled: true
+      metricRelabelings: []
+      namespace: ""
+      relabelings: []
+  nodeSelector: {}
+  pdb:
+    annotations: {}
+    enabled: false
+    labels: {}
+    maxUnavailable: null
+    minAvailable: null
+  podAnnotations: {}
+  podLabels: {}
+  priorityClassName: ""
+  readinessProbe:
+    failureThreshold: 3
+    httpGet:
+      path: /metrics
+      port: metrics
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    successThreshold: 1
+    timeoutSeconds: 4
+  replicas: 2
+  resources: {}
+  tolerations: []
+  topologySpreadConstraints: []
+  trafficRouterPlugins: []
+  volumeMounts: []
+  volumes: []
+crdAnnotations: {}
+createClusterAggregateRoles: true
+dashboard:
+  affinity: {}
+  component: rollouts-dashboard
+  containerSecurityContext: {}
+  createClusterRole: true
+  deploymentAnnotations: {}
+  deploymentLabels: {}
+  enabled: true
+  extraArgs: []
+  extraEnv: []
+  image:
+    pullPolicy: IfNotPresent
+    registry: quay.io
+    repository: argoproj/kubectl-argo-rollouts
+    tag: ""
+  ingress:
+    annotations: {}
+    enabled: false
+    extraPaths: []
+    hosts: []
+    ingressClassName: ""
+    labels: {}
+    pathType: Prefix
+    paths:
+    - /
+    tls: []
+  logging:
+    kloglevel: "0"
+    level: info
+  nodeSelector: {}
+  pdb:
+    annotations: {}
+    enabled: false
+    labels: {}
+    maxUnavailable: null
+    minAvailable: null
+  podAnnotations: {}
+  podLabels: {}
+  podSecurityContext:
+    runAsNonRoot: true
+  priorityClassName: ""
+  readonly: false
+  replicas: 1
+  resources: {}
+  service:
+    annotations: {}
+    externalIPs: []
+    labels: {}
+    loadBalancerClass: ""
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    nodePort: null
+    port: 3100
+    portName: dashboard
+    targetPort: 3100
+    type: ClusterIP
+  serviceAccount:
+    annotations: {}
+    create: true
+    name: ""
+  tolerations: []
+  topologySpreadConstraints: []
+  volumeMounts: []
+  volumes: []
+extraObjects: []
+fullnameOverride: null
+global:
+  deploymentAnnotations: {}
+  deploymentLabels: {}
+  revisionHistoryLimit: 10
+imagePullSecrets: []
+installCRDs: true
+keepCRDs: true
+kubeVersionOverride: ""
+nameOverride: null
+notifications:
+  configmap:
+    create: true
+  notifiers: {}
+  secret:
+    annotations: {}
+    create: false
+    items: {}
+  subscriptions: []
+  templates: {}
+  triggers: {}
+podAnnotations: {}
+podLabels: {}
+podSecurityContext:
+  runAsNonRoot: true
+providerRBAC:
+  additionalRules: []
+  enabled: true
+  providers:
+    ambassador: true
+    apisix: true
+    awsAppMesh: true
+    awsLoadBalancerController: true
+    contour: true
+    gatewayAPI: true
+    glooPlatform: true
+    istio: true
+    smi: true
+    traefik: true
+serviceAccount:
+  annotations: {}
+  create: true
+  name: ""
+serviceAnnotations: {}

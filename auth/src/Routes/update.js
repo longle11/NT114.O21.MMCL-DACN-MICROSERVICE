@@ -9,13 +9,12 @@ router.post('/update/:id', async (req, res, next) => {
             currentUser.project_working = req.body.project_working
         }
         if (req.body?.working_issue) {
-            const index = currentUser.working_issues.findIndex(issue => issue.issue_id.toString() === req.body?.viewed_issue.toString())
-
+            const index = currentUser.working_issues.findIndex(issue => issue.issue_id.toString() === req.body?.working_issue.toString())
             if (index === -1) {
                 currentUser.working_issues.push({ issue_id: req.body?.working_issue, createAt: new Date(), action: req.body.issue_action })
             } else {
                 currentUser.working_issues[index].createAt = new Date()
-                currentUser.working_issues[index].issue_action = req.body.issue_action
+                currentUser.working_issues[index].action = req.body.issue_action
             }
             req.body.working_issue = null
             req.body.issue_action = null
@@ -23,13 +22,14 @@ router.post('/update/:id', async (req, res, next) => {
 
         if (req.body?.viewed_issue) {
             const index = currentUser.viewed_issues.findIndex(issue => issue.issue_id.toString() === req.body?.viewed_issue.toString())
-
             if (index === -1) {
                 currentUser.viewed_issues.push({ issue_id: req.body?.viewed_issue, createAt: new Date() })
             } else {
                 currentUser.viewed_issues[index].createAt = new Date()
                 const workingIndex = currentUser.working_issues.findIndex(issue => issue.issue_id.toString() === req.body?.viewed_issue.toString())
-                currentUser.working_issues[workingIndex].createAt = new Date()
+                if (workingIndex !== -1) {
+                    currentUser.working_issues[workingIndex].createAt = new Date()
+                }
             }
             req.body.viewed_issue = null
         }

@@ -7,7 +7,6 @@ import { createCommentAction, deleteCommentAction, getCommentAction, updateComme
 import { iTagForIssueTypes, iTagForPriorities } from '../../../util/CommonFeatures'
 import { convertMinuteToFormat, convertTime } from '../../../validations/TimeValidation'
 import Summary from '../../Issue-Attributes/Summary/Summary'
-import Description from '../../Issue-Attributes/Description/Description'
 import TextArea from 'antd/es/input/TextArea'
 import { NavLink } from 'react-router-dom'
 import './LeftIssueInfo.css'
@@ -15,16 +14,23 @@ import Parser from 'html-react-parser'
 import { deleteFileAction, getAllFilesAction } from '../../../redux/actions/CategoryAction'
 import domainName from '../../../util/Config'
 import { checkConstraintPermissions } from '../../../util/CheckConstraintFields'
-export default function LeftIssueInfo(props) {
+import { renderFieldArrayIssue, renderFieldArrayObjectIssue, renderFieldNumberIssue, renderFieldObjectIssue, renderFieldStringIssue } from '../../../util/IssueAttributesCreating'
 
+export default function LeftIssueInfo(props) {
     const issueInfo = props.issueInfo
     const userInfo = props.userInfo
     const historyList = props.historyList
     const worklogList = props.worklogList
     const projectInfo = props.projectInfo
     const commentList = props.commentList
+    const sprintList = props.sprintList
+    const epicList = props.epicList
+    const versionList = props.versionList
+    const componentList = props.componentList
+    const id = props.id
     const fileList = useSelector(state => state.categories.fileList)
     const issueIdForIssueDetail = props.issueIdForIssueDetail
+
     const [type, setType] = useState(false)
     const dispatch = useDispatch()
     const [buttonActive, setButtonActive] = useState(1)
@@ -55,6 +61,7 @@ export default function LeftIssueInfo(props) {
     const [commentSort, setCommentSort] = useState(false)
     const [historySort, setHistorySort] = useState(false)
     const [currentIssueId, setCurrentIssueId] = useState('')
+
     const renderComments = () => {
         let listComments = commentList?.map((value, index) => {
             return (<li className='comment d-flex' key={value._id}>
@@ -76,7 +83,17 @@ export default function LeftIssueInfo(props) {
                                 <Button onClick={() => {
                                     setEditComment('')
                                     //gửi lên sự kiện cập nhật comment
-                                    dispatch(updateCommentAction({ commentId: value._id.toString(), content: editContentComment, issueId: issueInfo?._id.toString(), timeStamp: new Date() }, projectInfo, userInfo, issueInfo))
+                                    dispatch(updateCommentAction(
+                                        {
+                                            commentId: value._id.toString(),
+                                            content: editContentComment,
+                                            issueId: issueInfo?._id.toString(),
+                                            timeStamp: new Date()
+                                        },
+                                        projectInfo,
+                                        userInfo,
+                                        issueInfo
+                                    ))
                                 }} type="primary" className='mt-2 mr-2'>Save</Button>
                                 <Button onClick={() => {
                                     setEditComment('')
@@ -108,7 +125,7 @@ export default function LeftIssueInfo(props) {
             </li>)
         })
 
-        if (checkConstraintPermissions(projectInfo, issueInfo, userInfo, 20)) {
+        if (checkConstraintPermissions(projectInfo, issueInfo, userInfo, 12)) {
             return listComments
         } else {
             return <span className='text-danger'>You don't have permissions enough to see comments</span>
@@ -123,8 +140,6 @@ export default function LeftIssueInfo(props) {
         if (fileType?.toLowerCase() === "pdf") {
             return <i style={{ fontSize: '2rem' }} className="fa-sharp fa-regular fa-file-pdf text-danger"></i>
         } else if (['jpeg', 'jpg', 'gif', 'png'].includes(fileType?.toLowerCase())) {
-            console.log("filePath ", filePath);
-
             return <img style={{ height: '100%', width: '100%', objectFit: 'cover' }} src={filePath} alt='avt img' />
         } else if (fileType?.toLowerCase() === "docx") {
             return <i style={{ fontSize: '2rem' }} className="fa fa-file-alt text-primary"></i>
@@ -146,10 +161,11 @@ export default function LeftIssueInfo(props) {
     const renderFileUploading = (imagePathFile, fileName, fileTimeCreateAt, isUploading, file_id, filePath, originalFileName) => {
         return <div className="card file-card mt-1" style={{ width: '200px', position: 'relative', marginRight: 5, display: 'inline-block' }}>
             <div className='file-btns' style={{ position: 'absolute', right: 5, top: 5, display: 'none', alignItems: 'center', zIndex: 9999 }}>
-                {!isUploading && checkConstraintPermissions(projectInfo, issueInfo, userInfo, 18) ? <Button onClick={() => {
+                {!isUploading && checkConstraintPermissions(projectInfo, issueInfo, userInfo, 7) ? <Button onClick={() => {
                     downloadFileWithUrl(filePath, originalFileName)
                 }} style={{ padding: '0 8px', marginRight: 5 }}><i className="fa fa-cloud-download-alt"></i></Button> : <></>}
-                {!isUploading && checkConstraintPermissions(projectInfo, issueInfo, userInfo, 17) ? <Button onClick={() => {
+
+                {!isUploading && checkConstraintPermissions(projectInfo, issueInfo, userInfo, 6) ? <Button onClick={() => {
                     setFileInfo({})
                     dispatch(deleteFileAction(file_id))
                     dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { uploaded_file_id: file_id }, null, null, userInfo.id, "remove", "file", projectInfo, userInfo))
@@ -188,9 +204,11 @@ export default function LeftIssueInfo(props) {
             </div>
         </div>
     }
+
     const renderShortFileName = (fileName) => {
-        return fileName.length > 30 ? fileName.substring(0, 10) + "..." + fileName.substring(fileName.length - 10) : fileName
+        return fileName.length > 25 ? fileName.substring(0, 10) + "..." + fileName.substring(fileName.length - 2) : fileName
     }
+
     const getAllFiles = () => {
         if (fileList?.length > 0 && issueInfo?.file_uploaded?.length > 0) {
             return issueInfo?.file_uploaded?.map(file => {
@@ -214,7 +232,7 @@ export default function LeftIssueInfo(props) {
         if (name_status?.toLowerCase() === "priority") {
             return <div>{iTagForPriorities(old_status, null, null)} <i className="fa-solid fa-arrow-right-long ml-3 mr-3"></i> {iTagForPriorities(new_status, null, null)}</div>
         } else if (name_status?.toLowerCase() === "status") {
-            return <div>{iTagForIssueTypes(old_status, null, null)} <i className="fa-solid fa-arrow-right-long ml-3 mr-3"></i>  {iTagForIssueTypes(new_status, null, null)}</div>
+            return <div>{iTagForIssueTypes(old_status, null, null, projectInfo?.issue_types_default)} <i className="fa-solid fa-arrow-right-long ml-3 mr-3"></i>  {iTagForIssueTypes(new_status, null, null, projectInfo?.issue_types_default)}</div>
         } else if (name_status?.toLowerCase() === "assignees") {
             const getAvatar = new_status?.indexOf("=")
             return <div><span style={{ fontWeight: 'bold' }}>Assignees</span> <i className="fa-solid fa-arrow-left-long ml-3 mr-3"></i>  <Avatar src={new_status} /> {new_status?.substring(getAvatar + 1)}</div>
@@ -250,7 +268,7 @@ export default function LeftIssueInfo(props) {
         })
 
         return <div className='history-list-detail'>
-            {checkConstraintPermissions(projectInfo, issueInfo, userInfo, 21) ? customHistoriesList : <span className='text-danger'>You don't have permissions enough to see histories</span>}
+            {checkConstraintPermissions(projectInfo, issueInfo, userInfo, 10) ? customHistoriesList : <span className='text-danger'>You don't have permissions enough to see histories</span>}
         </div>
     }
 
@@ -272,7 +290,7 @@ export default function LeftIssueInfo(props) {
         })
 
         return <div className='worklog-list-detail'>
-            {checkConstraintPermissions(projectInfo, issueInfo, userInfo, 22) ? customWorklogsList : <span className='text-danger'>You don't have enough permission to read this infomation</span>}
+            {checkConstraintPermissions(projectInfo, issueInfo, userInfo, 11) ? customWorklogsList : <span className='text-danger'>You don't have enough permission to read this infomation</span>}
         </div>
     }
 
@@ -280,11 +298,11 @@ export default function LeftIssueInfo(props) {
         return <div>
             <div style={{ width: '100%', display: 'flex', justifyContent: 'end' }}>
                 {!commentSort ? <Button className='mb-2' onClick={() => {
-                    setCommentSort(true)
+                    setCommentSort(prev => true)
                     dispatch(getCommentAction(issueInfo._id, 1))
                 }}>Newest first <i className="fa fa-sort-alpha-down ml-2"></i></Button> :
                     <Button className='mb-2' onClick={() => {
-                        setCommentSort(false)
+                        setCommentSort(prev => false)
                         dispatch(getCommentAction(issueInfo._id, -1))
                     }}>Oldest first <i className="fa fa-sort-alpha-up ml-2"></i></Button>
                 }
@@ -293,7 +311,7 @@ export default function LeftIssueInfo(props) {
             {/* Kiểm tra xem nếu người đó thuộc về issue thì mới có thể đăng bình luận */}
             <div className="block-comment" style={{ display: 'flex', flexDirection: 'column' }}>
                 {
-                    checkConstraintPermissions(projectInfo, issueInfo, userInfo, 14) ? <div className="input-comment d-flex">
+                    checkConstraintPermissions(projectInfo, issueInfo, userInfo, 3) ? <div className="input-comment d-flex">
                         <div className="avatar">
                             <Avatar src={userInfo?.avatar} size={35} />
                         </div>
@@ -355,6 +373,7 @@ export default function LeftIssueInfo(props) {
             </div>
         }
     }
+
     const uploadFileProps = {
         name: 'file',
         action: 'http://localhost/api/files/upload',
@@ -371,14 +390,14 @@ export default function LeftIssueInfo(props) {
                 setCurrentIssueId('')
                 dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { uploaded_file_id: info.file.response.data._id }, null, null, userInfo.id, "uploaded", "file", projectInfo, userInfo))
                 dispatch(getAllFilesAction())
-                message.success(`${info.file.name} file uploaded successfully`);
+                message.success(`${info.file.name} file uploaded successfully`)
             } else if (info.file.status === 'error') {
                 setFileInfo({})
                 setCurrentIssueId('')
-                message.error(`${info.file.name} file upload failed.`);
+                message.error(`${info.file.name} file upload failed.`)
             }
         }
-    };
+    }
 
     const renderAllFilesWithTripView = () => {
         return <div style={{ overflowX: 'auto', scrollbarWidth: 'thin' }}>
@@ -386,6 +405,7 @@ export default function LeftIssueInfo(props) {
             {getAllFiles()}
         </div>
     }
+
     const formatBytes = (bytes) => {
         if (!bytes) return '0 Bytes';
 
@@ -395,6 +415,7 @@ export default function LeftIssueInfo(props) {
 
         return `${formatted} ${sizes[i]}`;
     }
+
     const fileColumns = () => {
         return [
             {
@@ -444,10 +465,10 @@ export default function LeftIssueInfo(props) {
                 key: 'action',
                 render: (text, record) => {
                     return <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        {!record?.isUploading && checkConstraintPermissions(projectInfo, issueInfo, userInfo, 18) ? <Button onClick={() => {
+                        {!record?.isUploading && checkConstraintPermissions(projectInfo, issueInfo, userInfo, 7) ? <Button onClick={() => {
                             downloadFileWithUrl(record?.url, record?.fileName)
                         }} style={{ padding: '0 8px', marginRight: 5 }}><i className="fa fa-cloud-download-alt"></i></Button> : <></>}
-                        {!record?.isUploading && checkConstraintPermissions(projectInfo, issueInfo, userInfo, 17) ? <Button onClick={() => {
+                        {!record?.isUploading && checkConstraintPermissions(projectInfo, issueInfo, userInfo, 6) ? <Button onClick={() => {
                             setFileInfo({})
                             dispatch(deleteFileAction(record?._id))
                             dispatch(updateInfoIssue(issueInfo._id, issueInfo.project_id._id, { uploaded_file_id: record?._id }, null, null, userInfo.id, "remove", "file", projectInfo, userInfo))
@@ -459,6 +480,7 @@ export default function LeftIssueInfo(props) {
             }
         ]
     }
+
     const renderAllFilesWithListView = () => {
         var convertFile = {}
         if (Object.keys(fileInfo).length > 0 && issueIdForIssueDetail !== null && issueIdForIssueDetail === currentIssueId) {
@@ -500,13 +522,63 @@ export default function LeftIssueInfo(props) {
             dataSource={allFiles}
         />
     }
+
+    const renderFiles = () => {
+        return issueInfo?.file_uploaded?.length > 0 ? <div className='mt-2 mb-2'>
+            <div className='d-flex justify-content-between align-items-center mb-1'>
+                <h6>Attachments <Avatar className='ml-1' style={{ width: 15, height: 15 }}><span style={{ fontSize: 11, display: 'flex', alignItems: 'center' }}>{issueInfo?.file_uploaded?.length}</span></Avatar></h6>
+                <div className='d-flex'>
+                    <div className="dropdown">
+                        <Button className='btns-hover' id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style={{ border: 'none', backgroundColor: 'transparent', padding: '0 5px 0 10px', marginRight: 5 }}><i style={{ fontSize: 13 }} className="fa fa-ellipsis-h mr-1"></i></Button>
+                        <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a onClick={() => {
+                                setSwitchToListView(!switchToListView)
+                            }} className="dropdown-item" style={{ fontSize: 15 }} href="##">{switchToListView ? "Switch to strip view" : "Switch to list view"}</a>
+                            {
+                                checkConstraintPermissions(projectInfo, issueInfo, userInfo, 7) ? <a className="dropdown-item d-flex justify-content-between align-items-center" style={{ fontSize: 15 }} href="##">
+                                    <NavLink onClick={() => {
+                                        issueInfo?.file_uploaded?.map(file => {
+                                            const getFileIndex = fileList.findIndex(currentFile => currentFile._id === file.toString())
+                                            if (getFileIndex !== -1) {
+                                                const fileNameOriginal = fileList[getFileIndex].originalname
+                                                const filePath = `${domainName}/api/files/uploads/${fileList[getFileIndex].fileName}`
+                                                downloadFileWithUrl(filePath, fileNameOriginal)
+                                            }
+                                        })
+                                    }} style={{ textDecoration: 'none', color: '#000' }}>Download all</NavLink>
+                                    <Avatar className='ml-1' style={{ width: 15, height: 15 }}><span style={{ fontSize: 11, display: 'flex', alignItems: 'center' }}>{issueInfo?.file_uploaded?.length}</span></Avatar>
+                                </a> : <></>
+                            }
+                            {
+                                checkConstraintPermissions(projectInfo, issueInfo, userInfo, 6) ? <a className="dropdown-item" style={{ fontSize: 15 }} href="##">Delete all</a> : <></>
+                            }
+                        </div>
+                    </div>
+                    {
+                        checkConstraintPermissions(projectInfo, issueInfo, userInfo, 5) ? <Upload accept=".png, .jpg, .jpeg, .docx, .xlsx, .pdf" {...uploadFileProps} beforeUpload={() => {
+                            setCurrentIssueId(issueInfo?._id)
+                        }} showUploadList={false}>
+                            {currentIssueId === "" ? <Button style={{ padding: '0 10px', border: 'none', backgroundColor: 'transparent' }}><i style={{ fontSize: 13 }} className="fa fa-plus btns-hover"></i></Button> :
+                                <Button disabled style={{ padding: '0 10px', border: 'none', backgroundColor: 'transparent' }}><i style={{ fontSize: 13 }} className="fa fa-plus btns-hover"></i></Button>}
+                        </Upload> : <></>
+                    }
+                </div>
+            </div>
+            {
+                checkConstraintPermissions(projectInfo, issueInfo, userInfo, 8) ?
+                    (!switchToListView ? renderAllFilesWithTripView() : renderAllFilesWithListView()) : <span className='text-danger'>You don't have permissions enough to see files</span>
+            }
+        </div> : <></>
+    }
+
     return (
-        <div className="col-8"
-            style={{ overflowY: 'auto', height: '90%', scrollbarWidth: 'none' }}>
+        <div style={{ overflowY: 'auto', height: '90%', scrollbarWidth: 'none' }}>
             <div className='d-flex align-items-center'>
-                {checkConstraintPermissions(projectInfo, issueInfo, userInfo, 16) ? <Upload accept=".png, .jpg, .jpeg, .docx, .xlsx, .pdf" {...uploadFileProps} beforeUpload={() => {
-                    setCurrentIssueId(issueInfo?._id)
-                }} showUploadList={false}>
+                {checkConstraintPermissions(projectInfo, issueInfo, userInfo, 5) ? <Upload  {...uploadFileProps}
+                    beforeUpload={() => { //accept=".png, .jpg, .jpeg, .docx, .xlsx, .pdf"
+                        setCurrentIssueId(issueInfo?._id)
+                    }}
+                    showUploadList={false}>
                     {currentIssueId === "" ? <i type="button" style={{ fontSize: 20, marginRight: 10, backgroundColor: 'rgba(9, 30, 66, 0.04)', padding: '8px' }} className="fa-solid fa-paperclip icon-options"></i> :
                         <i onClick={(e) => {
                             e.stopPropagation()
@@ -515,7 +587,7 @@ export default function LeftIssueInfo(props) {
                 </Upload> : <></>}
 
                 {
-                    checkConstraintPermissions(projectInfo, issueInfo, userInfo, 13) ? <i onClick={() => {
+                    checkConstraintPermissions(projectInfo, issueInfo, userInfo, 2) ? <i onClick={() => {
                         props.hanleClickDisplayAddSubIssue(true)
                         props.hanleClickEditSummaryInSubIssue('')
                         // setShowAddSubIssue(true)
@@ -524,53 +596,15 @@ export default function LeftIssueInfo(props) {
                 }
             </div>
             <Summary projectInfo={projectInfo} issueInfo={issueInfo} userInfo={userInfo} />
-            <Description projectInfo={projectInfo} issueInfo={issueInfo} userInfo={userInfo} />
-            {
-                issueInfo?.file_uploaded?.length > 0 ? <div className='mt-2 mb-2'>
-                    <div className='d-flex justify-content-between align-items-center mb-1'>
-                        <h6>Attachments <Avatar className='ml-1' style={{ width: 15, height: 15 }}><span style={{ fontSize: 11, display: 'flex', alignItems: 'center' }}>{issueInfo?.file_uploaded?.length}</span></Avatar></h6>
-                        <div className='d-flex'>
-                            <div className="dropdown">
-                                <Button className='btns-hover' id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style={{ border: 'none', backgroundColor: 'transparent', padding: '0 5px 0 10px', marginRight: 5 }}><i style={{ fontSize: 13 }} className="fa fa-ellipsis-h mr-1"></i></Button>
-                                <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                    <a onClick={() => {
-                                        setSwitchToListView(!switchToListView)
-                                    }} className="dropdown-item" style={{ fontSize: 15 }} href="##">{switchToListView ? "Switch to strip view" : "Switch to list view"}</a>
-                                    {
-                                        checkConstraintPermissions(projectInfo, issueInfo, userInfo, 18) ? <a className="dropdown-item d-flex justify-content-between align-items-center" style={{ fontSize: 15 }} href="##">
-                                            <NavLink onClick={() => {
-                                                issueInfo?.file_uploaded?.map(file => {
-                                                    const getFileIndex = fileList.findIndex(currentFile => currentFile._id === file.toString())
-                                                    if (getFileIndex !== -1) {
-                                                        const fileNameOriginal = fileList[getFileIndex].originalname
-                                                        const filePath = `${domainName}/api/files/uploads/${fileList[getFileIndex].fileName}`
-                                                        downloadFileWithUrl(filePath, fileNameOriginal)
-                                                    }
-                                                })
-                                            }} style={{ textDecoration: 'none', color: '#000' }}>Download all</NavLink>
-                                            <Avatar className='ml-1' style={{ width: 15, height: 15 }}><span style={{ fontSize: 11, display: 'flex', alignItems: 'center' }}>{issueInfo?.file_uploaded?.length}</span></Avatar>
-                                        </a> : <></>
-                                    }
-                                    {
-                                        checkConstraintPermissions(projectInfo, issueInfo, userInfo, 17) ? <a className="dropdown-item" style={{ fontSize: 15 }} href="##">Delete all</a> : <></>
-                                    }
-                                </div>
-                            </div>
-                            {
-                                checkConstraintPermissions(projectInfo, issueInfo, userInfo, 16) ? <Upload accept=".png, .jpg, .jpeg, .docx, .xlsx, .pdf" {...uploadFileProps} beforeUpload={() => {
-                                    setCurrentIssueId(issueInfo?._id)
-                                }} showUploadList={false}>
-                                    {currentIssueId === "" ? <Button style={{ padding: '0 10px', border: 'none', backgroundColor: 'transparent' }}><i style={{ fontSize: 13 }} className="fa fa-plus btns-hover"></i></Button> :
-                                        <Button disabled style={{ padding: '0 10px', border: 'none', backgroundColor: 'transparent' }}><i style={{ fontSize: 13 }} className="fa fa-plus btns-hover"></i></Button>}
-                                </Upload> : <></>
-                            }
-                        </div>
-                    </div>
-                    {!switchToListView ? renderAllFilesWithTripView() : renderAllFilesWithListView()}
-                </div> : <div className='mb-2'>
-                    {issueIdForIssueDetail !== null && issueIdForIssueDetail === currentIssueId ? (Object.keys(fileInfo).length > 0 ? renderFileUploading(renderImageForFileType(fileInfo?.name?.substring(fileInfo?.name?.lastIndexOf('.') + 1), null), renderShortFileName(fileInfo?.name), fileInfo?.lastModified, true, null, null, null) : <></>) : <></>}
-                </div>
-            }
+            {renderFieldStringIssue(issueInfo, 0, dispatch, projectInfo, userInfo, props.handleEditAttributeTag, props.editAttributeTag, sprintList, id, epicList, versionList)}
+            {renderFieldNumberIssue(issueInfo, 0, dispatch, projectInfo, userInfo, props.handleEditAttributeTag, props.editAttributeTag, sprintList, id, epicList, versionList)}
+            {renderFieldObjectIssue(issueInfo, 0, dispatch, projectInfo, userInfo, props.handleEditAttributeTag, props.editAttributeTag, sprintList, id, epicList, versionList)}
+            {renderFieldArrayIssue(issueInfo, 0, dispatch, projectInfo, userInfo, props.handleEditAttributeTag, props.editAttributeTag, sprintList, id, epicList, versionList)}
+            {renderFieldArrayObjectIssue(issueInfo, 0, dispatch, projectInfo, userInfo, props.handleEditAttributeTag, props.editAttributeTag, sprintList, id, epicList, versionList, componentList)}
+
+
+            {renderFiles()}
+
             <div className='activities'>
                 <h5>Activity</h5>
                 <div>
@@ -578,7 +612,7 @@ export default function LeftIssueInfo(props) {
                     <button className='btn btn-light ml-3 mr-2' onClick={() => { setButtonActive(0) }} style={{ padding: '0 10px', fontSize: '14px', fontWeight: '600', backgroundColor: buttonActive === 0 ? "#e9f2ff " : "#091e420f", color: buttonActive === 0 ? '#0c66e4' : "#44546f" }}>All</button>
                     <button className='btn btn-light mr-2' onClick={() => { setButtonActive(1) }} style={{ padding: '0 10px', fontSize: '14px', fontWeight: '600', backgroundColor: buttonActive === 1 ? "#e9f2ff " : "#091e420f", color: buttonActive === 1 ? '#0c66e4' : "#44546f" }}>Comments</button>
                     <button className='btn btn-light mr-2' onClick={() => { setButtonActive(2); dispatch(getIssueHistoriesList(issueInfo?._id.toString(), -1)) }} style={{ padding: '0 10px', fontSize: '14px', fontWeight: '600', backgroundColor: buttonActive === 2 ? "#e9f2ff " : "#091e420f", color: buttonActive === 2 ? '#0c66e4' : "#44546f" }}>History</button>
-                    <button className='btn btn-light' onClick={() => { setButtonActive(3); dispatch(getWorklogHistoriesList(issueInfo?._id.toString(), -1)) }} style={{ padding: '0 10px', fontSize: '14px', fontWeight: '600', backgroundColor: buttonActive === 3 ? "#e9f2ff " : "#091e420f", color: buttonActive === 3 ? '#0c66e4' : "#44546f" }}>Work log</button>
+                    <button className='btn btn-light' onClick={() => { setButtonActive(3); dispatch(getWorklogHistoriesList(issueInfo?._id.toString())) }} style={{ padding: '0 10px', fontSize: '14px', fontWeight: '600', backgroundColor: buttonActive === 3 ? "#e9f2ff " : "#091e420f", color: buttonActive === 3 ? '#0c66e4' : "#44546f" }}>Work log</button>
                 </div>
             </div>
             {renderActivities()}

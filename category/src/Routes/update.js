@@ -1,11 +1,11 @@
 const express = require("express")
 const epicModel = require("../models/epicModel")
 const versionModel = require("../models/versionModel")
+const componentModel = require("../models/componentModel")
+const servicePublisher = require("../nats/publisher/service-publisher")
 const router = express.Router()
-router.put('/update/:epicId', async (req, res) => {
+router.put('/epic-update/:epicId', async (req, res) => {
     const getEpic = await epicModel.findById(req.params.epicId)
-    console.log("params lay ra ", req.body);
-
     if (getEpic) {
         if (req.body.issue_id) {
             if (getEpic.issue_list.length === 0) {
@@ -17,8 +17,8 @@ router.put('/update/:epicId', async (req, res) => {
                 }
             }
             req.body.issue_list = getEpic.issue_list
-
         }
+
         if (req.body.epic_id) {
             const deleteIssueEpic = await epicModel.findById(req.body.epic_id)
             if (deleteIssueEpic) {
@@ -35,6 +35,7 @@ router.put('/update/:epicId', async (req, res) => {
 
         await epicModel.findByIdAndUpdate(req.params.epicId, { $set: { ...req.body } })
 
+        servicePublisher({ ...req.body, epic_id: req.params.epicId }, 'epic:updated')
 
         return res.status(200).json({
             message: "Successfully updated an epic",
@@ -45,7 +46,6 @@ router.put('/update/:epicId', async (req, res) => {
 
 router.put('/version-update/:versionId', async (req, res) => {
     const getVersion = await versionModel.findById(req.params.versionId)
-    console.log("req.body", req.body);
 
     if (getVersion) {
 
@@ -63,19 +63,11 @@ router.put('/version-update/:versionId', async (req, res) => {
                 const getVersionIndex = getVersion.issue_list.findIndex(issue => issue?._id.toString() === req.body.issue_id)
                 if (getVersionIndex === -1) {  //neu chua ton tai
                     getVersion.issue_list.push(req.body.issue_id)
+                } else {
+                    getVersion.issue_list.splice(index, 1)
                 }
             }
             req.body.issue_list = getVersion.issue_list
-        }
-        if (req.body?.version_id) {
-            const deleteIssueVersion = await versionModel.findById(req.params.versionId)
-            if (deleteIssueVersion) {
-                const index = deleteIssueVersion.issue_list.findIndex(issue => issue._id.toString() === req.body.issue_id)
-                if (index !== -1) {
-                    deleteIssueVersion.issue_list.splice(index, 1)
-                    await versionModel.findByIdAndUpdate(req.params.versionId, { $set: { issue_list: deleteIssueVersion.issue_list } })
-                }
-            }
         }
 
         if (req.body?.remove_issue_list) {
@@ -89,14 +81,57 @@ router.put('/version-update/:versionId', async (req, res) => {
         req.body.version_id = null
 
         await versionModel.findByIdAndUpdate(req.params.versionId, { $set: { ...req.body } })
-
-        console.log("xuong tan duoi nay roi ne");
-
-
+        servicePublisher({ ...req.body, version_id: req.params.versionId  }, 'version:updated')
         return res.status(200).json({
             message: "Successfully updated an epic",
             data: getVersion
         })
+    }
+})
+
+router.put('/component-update/:componentId', async (req, res) => {
+    try {
+        const getComponent = await componentModel.findById(req.params.componentId)
+
+        if (getComponent) {
+            if (req.body?.issue_list) {
+                if (getComponent) {
+                    req.body.issue_list = getComponent.issue_list.concat(req.body.issue_list)
+                }
+            }
+
+            if (req.body.issue_id) {
+                if (getComponent.issue_list.length === 0) {
+                    getComponent.issue_list.push(req.body.issue_id)
+                } else {
+                    const getComponentIndex = getComponent.issue_list.findIndex(issue => issue?._id.toString() === req.body.issue_id)
+                    if (getComponentIndex === -1) {  //neu chua ton tai
+                        getComponent.issue_list.push(req.body.issue_id)
+                    } else {
+                        getComponent.issue_list.splice(index, 1)
+                    }
+                }
+                req.body.issue_list = getComponent.issue_list
+            }
+
+            if (req.body?.remove_issue_list) {
+                req.body.issue_list = getComponent.issue_list.filter(issue => !req.body.remove_issue_list.includes(issue.toString()))
+                req.body.remove_issue_list = null
+            }
+
+
+            delete req.body['issue_id']
+
+            const data = await componentModel.findByIdAndUpdate(req.params.componentId, { $set: { ...req.body } })
+
+            return res.status(200).json({
+                message: "Successfully updated an version",
+                data: getComponent
+            })
+        }
+    } catch (error) {
+        console.log("error ", error);
+
     }
 })
 

@@ -6,8 +6,6 @@ export const ListProjectAction = () => {
     return async dispatch => {
         try {
             const res = await Axios.get(`${domainName}/api/projectmanagement/list`)
-            console.log("ListProjectAction ListProjectActionListProjectActionListProjectAction", res);
-
             dispatch({
                 type: GET_LIST_PROJECT_API,
                 data: res.data.data
@@ -26,15 +24,15 @@ export const GetProjectAction = (id, keyword, navigate) => {
             if (res.status === 200) {
                 if (res.data.data?.sprint_id) {
                     dispatch(GetSprintAction(res.data.data.sprint_id))
-                    if(navigate !== null) {
+                    if (navigate !== null) {
                         navigate(`/projectDetail/${id}/board/${res.data.data.sprint_id}`)
                     }
                 } else {
-                    if(navigate !== null) {
+                    if (navigate !== null) {
                         navigate(`/projectDetail/${id}/board`)
                     }
                 }
-                
+
                 dispatch({
                     type: GET_PROJECT_API,
                     projectInfo: res.data.data
@@ -43,7 +41,7 @@ export const GetProjectAction = (id, keyword, navigate) => {
 
         } catch (errors) {
             console.log(errors);
-            
+
         }
     }
 }
@@ -52,11 +50,12 @@ export const GetProcessListAction = (project_id) => {
     return async dispatch => {
         try {
             const res = await Axios.get(`${domainName}/api/issueprocess/${project_id}`)
-
-            dispatch({
-                type: GET_PROCESSES_PROJECT,
-                processList: res.data.data
-            })
+            if(res.status === 200) {
+                dispatch({
+                    type: GET_PROCESSES_PROJECT,
+                    processList: res.data.data
+                })
+            }
         } catch (errors) {
 
         }
@@ -79,13 +78,26 @@ export const CreateProcessACtion = (props) => {
     }
 }
 
+export const updateManyProcessesAction = (project_id, props) => {
+    return async dispatch => {
+        try {
+            const res = await Axios.put(`${domainName}/api/issueprocess/processes/${project_id}`, props)
+
+            if (res.status === 200) {
+                dispatch(GetProcessListAction(project_id))
+                showNotificationWithIcon('success', '', res.data.message)
+            }
+        } catch (errors) {
+            console.log("error updateManyProcessesAction", errors);
+        }
+    }
+}
 
 export const UpdateProcessAction = (process_id, project_id, props) => {
     return async dispatch => {
         try {
             const res = await Axios.put(`${domainName}/api/issueprocess/process/${process_id}`, props)
-            console.log("res trong UpdateProcessAction", res);
-            
+
             if (res.status === 200) {
                 dispatch(GetProcessListAction(project_id))
                 showNotificationWithIcon('success', '', res.data.message)
@@ -113,12 +125,13 @@ export const GetSprintAction = (sprint_id) => {
     return async dispatch => {
         try {
             const res = await Axios.get(`${domainName}/api/sprint/getsprint/${sprint_id}`)
-            console.log("res in GetSprintAction", res);
-
-            dispatch({
-                type: GET_A_SPRINT,
-                sprintInfo: res.data.data
-            })
+            if (res.status === 200) {
+                console.log("lay ra ket qua ", res);
+                dispatch({
+                    type: GET_A_SPRINT,
+                    sprintInfo: res.data.data
+                })
+            }
         } catch (errors) {
 
         }
@@ -158,7 +171,7 @@ export const DeleteWorkflowAction = (workflow_id, project_id) => {
         try {
             const res = await Axios.delete(`${domainName}/api/issueprocess/workflow/delete/${workflow_id}`)
             console.log("ket qua tra ve sau khi xoa DeleteWorkflowAction", res);
-            
+
             if (res.status === 200) {
                 showNotificationWithIcon('success', '', res.data.message)
                 dispatch(GetWorkflowListAction(project_id))

@@ -1,0 +1,171 @@
+variables:
+  SCA_SCAN_FILE: "${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}__snyk_file"
+  IMAGE_NAME: "longle2003/issuehistory"
+  IMAGE_VERSION: "${CI_REGISTRY}/taskscheduler/${IMAGE_NAME}:v${CI_COMMIT_SHORT_SHA}"
+  TRIVY_IMAGE_REPORT: "${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}__trivy_image_scan"
+  TRIVY_FS_REPORT: "${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}_trivyfs_scan"
+  ARACHNI_IMAGE_SCANNING: "longle2003/arachni:v1.4-0.5.10"
+  SCAN_DAST_FILE_NAME: "${CI_PROJECT_NAME}-${CI_COMMIT_SHORT_SHA}_arachni_file"
+
+stages:
+  - test source
+  - test sast
+  - test sca
+  - build and scan image
+  - push image
+  - update image
+  - test dast
+  - deploy production
+  
+test source code:
+  stage: test source
+  variables:
+    GIT_STRATEGY: clone
+  before_script:
+    - npm install
+  script:
+    - npm run test:coverage
+  artifacts:
+    paths:
+      - coverage/lcov.info
+      - issuehistory-test-report.xml
+    expire_in: "7 days"
+  tags:
+    - taskscheduler-runner-scanning-shell
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"
+    # - if: $CI_PIPELINE_SOURCE == "push"
+    - when: never
+
+sonarqube scan:
+  stage: test sast
+  variables:
+    GIT_STRATEGY: clone
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+    GIT_DEPTH: "0"
+  script:
+    - docker run --network="host" --rm -v "$(pwd):/usr/src" sonarsource/sonar-scanner-cli:5.0.0 -Dsonar.host.url="${SONAR_HOST_URL}" -Dsonar.token="${SONAR_TOKEN}"
+  tags:
+    - taskscheduler-runner-scanning-shell  
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"
+    - when: never
+
+snyk scan:
+  stage: test sca
+  variables:
+    GIT_STRATEGY: none
+  before_script:
+    - sudo npm install snyk -g
+    - sudo npm install snyk-to-html -g
+  script:
+    - snyk auth ${SNYK_TOKEN} && snyk test --json | snyk-to-html -o ${SCA_SCAN_FILE}.html || true
+    - ls -lra
+    - curl -X PUT -u ${ARTIFACT_USERNAME}:${ARTIFACT_PASS} -T ${SCA_SCAN_FILE}.html ${ARTIFACT_URL}/${SCA_SCAN_FILE}.html
+  tags:
+    - taskscheduler-runner-scanning-shell
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"
+    - when: never
+
+trivy scan:
+  stage: test sca
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - docker run --rm -v $(pwd):/${CI_PROJECT_NAME} -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.57.1 clean --all
+    - docker run --rm -v $PWD:/${CI_PROJECT_NAME} -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.57.1 fs /${CI_PROJECT_NAME} --severity HIGH,CRITICAL --format template --template "@contrib/html.tpl" --output /${CI_PROJECT_NAME}/${TRIVY_FS_REPORT}.html
+    - curl -X PUT -u ${ARTIFACT_USERNAME}:${ARTIFACT_PASS} -T ${TRIVY_FS_REPORT}.html ${ARTIFACT_URL}/${TRIVY_FS_REPORT}.html
+  tags:
+    - taskscheduler-runner-scanning-shell
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"
+    - when: never
+
+build and scan image:
+  stage: build and scan image
+  variables:
+    GIT_STRATEGY: none
+  before_script:
+    - whoami
+    - docker build -t ${IMAGE_VERSION} -f Dockerfile .
+  script:
+    - docker run --rm -v $(pwd):/${CI_PROJECT_NAME} -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.57.1 clean --all
+    - docker run --rm -v $(pwd):/${CI_PROJECT_NAME} -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.57.1 --timeout 20m --scanners vuln i --format template --template "@contrib/html.tpl" --output /${CI_PROJECT_NAME}/${TRIVY_IMAGE_REPORT}.html ${IMAGE_VERSION}
+    - sudo chown $(USER):$(USER) ${TRIVY_IMAGE_REPORT}.html
+    - ls -lra
+    - curl -X PUT -u ${ARTIFACT_USERNAME}:${ARTIFACT_PASS} -T ${TRIVY_IMAGE_REPORT}.html ${ARTIFACT_URL}/${TRIVY_IMAGE_REPORT}.html
+    - echo "thanh cong"
+  tags:
+    - taskscheduler-runner-scanning-shell
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"
+    - when: never
+
+push image:
+  stage: push image
+  variables:
+    GIT_STRATEGY: none
+  before_script:
+    - docker login $CI_REGISTRY -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASS
+  script:
+    - echo ${IMAGE_VERSION}
+    - docker push ${IMAGE_VERSION}
+  after_script:
+    - docker logout $CI_REGISTRY
+  tags:
+    - taskscheduler-runner-scanning-shell
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"
+    - when: never
+
+update image on artifact:
+  stage: update image
+  variables:
+    GIT_STRATEGY: none
+  before_script:
+    - git clone http://longle:${ACCESS_TOKEN}@gitlab.taskscheduler.com/manifests/taskscheduler-backend-issuehistory.git
+    - git config --global user.name "le long"
+    - git config --global user.email "ltphilong2001@gmail.com"
+  script:
+    - cd taskscheduler-backend-issuehistory 
+    - ls -lra
+    - sed -i "s#^\(\s*image:\s*\).*#\1${IMAGE_VERSION}#g" issuehistory-depl.yml
+    - cat issuehistory-depl.yml
+    - git status
+    - git remote set-url origin http://longle:${ACCESS_TOKEN}@gitlab.taskscheduler.com/manifests/taskscheduler-backend-issuehistory.git
+    - git remote -v
+    - git add issuehistory-depl.yml
+    - git commit -m "change image version ${CI_COMMIT_SHORT_SHA} on issuehistory-depl"
+    - git push origin main
+  after_script: 
+    - docker rmi ${IMAGE_VERSION}
+  tags:
+    - taskscheduler-runner-scanning-shell
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"
+    - when: never
+
+test dast: 
+  stage: test dast
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - docker run --rm -v /tmp/:/tmp/ ${DOCKER_IMAGE} bin/arachni --output-verbose --scope-include-subdomains ${DOMAIN_NAME} --report-save-path=/tmp/${SCAN_DAST_FILE_NAME}.aft > /dev/null 2>&1
+    - docker run --rm -v /tmp/:/tmp/ ${DOCKER_IMAGE} bin/arachni_reporter /tmp/${SCAN_DAST_FILE_NAME}.aft --reporter=html:outfile=/tmp/${SCAN_DAST_FILE_NAME}.html.zip
+    - sudo chmod 777 /tmp/${SCAN_DAST_FILE_NAME}.html.zip
+    - curl -X PUT -u ${ARTIFACT_USER}:${ARTIFACT_PASS} -T ${SCAN_DAST_FILE_NAME}.html.zip "${ARTIFACT_DAST_URL}/${SCAN_DAST_FILE_NAME}.html.zip"
+  tags:
+    - taskscheduler-runner-scanning-shell
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "staging" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == "development"
+
+
+deploy production:
+  stage: deploy production
+  variables:
+    GIT_STRATEGY: none
+  script: 
+    - echo "Successfully merge code to production"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "production" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ /^staging-.*/'

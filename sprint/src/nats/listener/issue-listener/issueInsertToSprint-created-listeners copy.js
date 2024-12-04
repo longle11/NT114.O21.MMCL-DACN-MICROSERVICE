@@ -21,7 +21,6 @@ const issueInsertToSprintCreated = () => {
                     const currentSprint = getAllSprint[getIndex]
                     currentSprint.issue_list.push(parseData.issue_id)
                     await sprintModel.updateOne({ _id: parseData.sprint_id }, { $set: { issue_list: currentSprint.issue_list } })
-                    console.log("Du lieu nhan duoc: ", parseData);
                 }
 
                 msg.ack()

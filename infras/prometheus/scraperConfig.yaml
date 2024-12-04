@@ -1,0 +1,10 @@
+# apiVersion: monitoring.coreos.com/v1alpha1
+# kind: ScrapeConfig
+# metadata:
+#   name: argocd-rollout-metrics
+#   namespace: monitoring
+# spec:
+#   metricsPath: /metrics
+#   staticConfigs:
+#     - targets:
+#       - "my-release-argo-rollouts-dashboard.argocd-rollout.svc.cluster.local:3100"

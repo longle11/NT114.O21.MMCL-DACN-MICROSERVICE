@@ -138,7 +138,6 @@ div.tox.tox-tinymce {
     align-items: center;
 }
 
-
 div.content:hover {
     scrollbar-width: thin !important;
 }
@@ -160,4 +159,12 @@ div.list-group:hover a.dashboard-creating-issue:hover {
 }   
 input.dashboard-edit-input-ant.ant-input:focus {
     box-shadow: none !important;
+}
+
+.ant-collapse-item.ant-collapse-item-active {
+    height: 400px !important;
+}
+
+.progress.process-dashboard {
+    height: 15px !important;
 }

@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: issueprocess-mongo-depl
+spec: 
+  replicas: 1
+  selector:
+    matchLabels:
+      app: issueprocess-mongo
+  template: 
+    metadata:
+      labels: 
+        app: issueprocess-mongo
+    spec: 
+      containers: 
+        - name: db
+          image: mongo
+          volumeMounts:
+            - name: issueprocess-mongo-pvc
+              mountPath: /data
+      volumes: 
+        - name: issueprocess-mongo-pvc
+          persistentVolumeClaim:
+            claimName: ebs-issueprocess-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: issueprocess-mongo-srv
+spec:
+  selector: 
+    app: issueprocess-mongo
+  ports:  
+    - name: issueprocess-db
+      protocol: TCP
+      port: 27017
+      targetPort: 27017

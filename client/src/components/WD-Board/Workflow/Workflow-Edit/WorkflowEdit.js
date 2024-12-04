@@ -102,13 +102,13 @@ function WorflowEditView() {
             const getWorkflow = workflowList?.filter(workflow => workflow._id === workflowId)
             if (getWorkflow?.length !== 0) {
                 const arrs = getWorkflow[0].issue_statuses.map(indexStatus => {
-                    return <span>{issueTypeWithoutOptions[indexStatus]?.label}</span>
+                    return <span>{issueTypeWithoutOptions(projectInfo?.issue_types_default)[indexStatus]?.label}</span>
                 })
 
                 return <span className='d-flex align-items-center'>{arrs}</span>
             }
         }
-        return <span className='d-flex align-items-center'> {issueTypeWithoutOptions.map(status => <span>{status.label}</span>)}</span>
+        return <span className='d-flex align-items-center'> {issueTypeWithoutOptions(projectInfo?.issue_types_default)?.map(status => <span>{status.label}</span>)}</span>
     }
 
 
@@ -212,7 +212,17 @@ function WorflowEditView() {
                 </div>
                 <div>
                     {nodes?.length === 1 || edges?.length === 0 ? <Button className='mr-2' disabled style={{ height: 'fit-content' }}>{workflowId ? "Update Workflow" : "Create new workflow"}</Button> : <Button className='btn btn-light mr-2' style={{ height: 'fit-content' }} onClick={() => {
-                        dispatch(displayComponentInModal(<CreateOrUpdateWorkflowModal id={id} workflowId={workflowId} workflowList={workflowList} nodes={nodes} edges={edges} userInfo={userInfo}/>, 500, JSON.parse(localStorage.getItem('workflowInfo')) === null ? "Create workflow" : "Upadte workflow"))
+                        dispatch(displayComponentInModal(<CreateOrUpdateWorkflowModal 
+                            id={id} 
+                            workflowId={workflowId} 
+                            workflowList={workflowList} 
+                            nodes={nodes} 
+                            edges={edges} 
+                            projectInfo={projectInfo}
+                            userInfo={userInfo}/>, 
+                            500, 
+                            JSON.parse(localStorage.getItem('workflowInfo')) === null ? "Create workflow" : "Upadte workflow"
+                        ))
                     }}>{workflowId ? "Update Workflow" : "Create new workflow"}</Button>}
                     <Button className='btn btn-dark' style={{ height: 'fit-content' }} onClick={() => {
                         navigate(`/projectDetail/${id}/workflows`)

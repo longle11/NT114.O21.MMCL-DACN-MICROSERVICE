@@ -8,8 +8,6 @@ import { submit_edit_form_action } from '../../../redux/actions/DrawerAction';
 import { updateSprintAction } from '../../../redux/actions/CreateProjectAction';
 const { TextArea } = Input;
 function CreateSprint(props) {
-    console.log("props ", props);
-    
     const durationOptions = [
         {
             label: '1 week',
@@ -131,8 +129,6 @@ const handleSubmitUpdateSprint = withFormik({
     },
     handleSubmit: (values, { props }) => {
         let checkSubmit = true
-        console.log(values);
-
         if (values.sprint_name.trim() === "") {
             checkSubmit = false
             showNotificationWithIcon('error', 'Update sprint', 'Fields containing (*) can\'t left blank')

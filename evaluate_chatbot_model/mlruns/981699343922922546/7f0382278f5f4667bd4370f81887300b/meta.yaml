@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/longle/Documents/Project/NT114.O21.MMCL-DACN-MICROSERVICE/evaluate_chatbot_model/mlruns/981699343922922546/7f0382278f5f4667bd4370f81887300b/artifacts
+end_time: 1732352542008
+entry_point_name: ''
+experiment_id: '981699343922922546'
+lifecycle_stage: active
+run_id: 7f0382278f5f4667bd4370f81887300b
+run_name: thundering-hog-138
+run_uuid: 7f0382278f5f4667bd4370f81887300b
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1732352443076
+status: 3
+tags: []
+user_id: admin

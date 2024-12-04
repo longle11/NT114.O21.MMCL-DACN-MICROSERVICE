@@ -15,6 +15,7 @@ export default function CreateOrUpdateWorkflowModal(props) {
     const workflowList = props.workflowList
     const nodes = props.nodes
     const edges = props.edges
+    const projectInfo = props.projectInfo
     const userInfo = props.userInfo
     const [workflowName, setWorkflowName] = useState(JSON.parse(localStorage.getItem('workflowInfo')) !== null ? JSON.parse(localStorage.getItem('workflowInfo'))?.name_workflow : '')
     const [statuses, setStatuses] = useState(JSON.parse(localStorage.getItem('workflowInfo')) !== null ? JSON.parse(localStorage.getItem('workflowInfo'))?.issue_statuses : [0, 1, 2, 4])
@@ -142,7 +143,7 @@ export default function CreateOrUpdateWorkflowModal(props) {
                     mode="multiple"
                     placeholder="Please select"
                     defaultValue={statuses}
-                    options={issueTypeOptions.filter(option => option.value !== 3)}
+                    options={issueTypeOptions(projectInfo?.issue_types_default)?.filter(option => option.value !== 3)}
                     onChange={(value) => {
                         setStatuses(value)
                     }}

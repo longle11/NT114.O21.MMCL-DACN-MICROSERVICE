@@ -2,8 +2,7 @@ import { useSelector } from 'react-redux';
 import Login from '../components/Login/Login';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
-
+import React, { useEffect } from 'react';
 export const UserLoginTemplate = ({ Component }) => {
     const userInfo = useSelector(state => state.user.userInfo)
     const navigate = useNavigate()

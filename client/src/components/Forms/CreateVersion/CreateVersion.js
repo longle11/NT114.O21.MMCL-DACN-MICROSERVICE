@@ -7,7 +7,6 @@ import dayjs from 'dayjs';
 import { createVersion, updateVersion } from '../../../redux/actions/CategoryAction';
 import { showNotificationWithIcon } from '../../../util/NotificationUtil';
 function CreateVersion(props) {
-
     const dispatch = useDispatch()
     useEffect(() => {
         // //submit sự kiện để gửi lên form

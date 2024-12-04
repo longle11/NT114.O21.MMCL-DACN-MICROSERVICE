@@ -8,6 +8,13 @@ const issueProcessSchema = mongoose.Schema({
     tag_color: {
         type: String,
         default: '#ddd'
+    },
+    project_id: {
+        type: mongoose.Schema.Types.ObjectId,
+    },
+    type_process: {
+        type: String,
+        default: 'normal'
     }
 })
 

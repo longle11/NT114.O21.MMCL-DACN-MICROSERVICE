@@ -23,7 +23,7 @@ const sprintSchema = new mongoose.Schema({
     },
     createAt: {
         type: Date,
-        default: null
+        default: Date.now(),
     },
     issue_list: [
         { 

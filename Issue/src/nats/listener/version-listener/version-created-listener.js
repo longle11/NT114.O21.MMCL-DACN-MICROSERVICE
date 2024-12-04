@@ -16,7 +16,6 @@ const versionCreatedListener = () => {
 
                 //tiến hành lưu vào version db
                 await versionModel.create(parseData)
-                console.log("Du lieu nhan duoc: ", parseData);
                 msg.ack()
             }
         })

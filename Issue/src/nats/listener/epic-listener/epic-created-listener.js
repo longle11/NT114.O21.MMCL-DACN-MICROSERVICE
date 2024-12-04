@@ -17,7 +17,6 @@ const epicCreatedListener = () => {
 
                 //tiến hành lưu vào epic db
                 await epicModel.create(parseData)
-                console.log("Du lieu nhan duoc: ", parseData);
                 msg.ack()
             }
         })

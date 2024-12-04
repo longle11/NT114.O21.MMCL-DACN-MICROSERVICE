@@ -5,6 +5,27 @@ const projectSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    template_name: {
+        type: String
+    },
+    issue_types_default: {
+        type: [
+            {
+                icon_id: Number,
+                icon_type: String,
+                icon_color: String,
+                icon_name: String
+            }
+        ]
+    },
+    workflow_default: {
+        type: [
+            {
+                process_name: String,
+                process_color: String
+            }
+        ]
+    },
     description: {
         type: String,
         default: null
@@ -75,7 +96,7 @@ const projectSchema = new mongoose.Schema({
             { title: 'End date', key: 'end_date', til_index: 17, isShowed: false },
             { title: 'Time Original Estimate', key: 'timeOriginalEstimate', til_index: 18, isShowed: false },
             { title: 'Time Spent', key: 'timeSpent', til_index: 19, isShowed: false },
-            { title: 'Time Remaining', key: 'timeRemaining', til_index: 20, isShowed: false },
+            { title: 'Time Remaining', key: 'timeRemaining', til_index: 20, isShowed: false }
         ]
     },
     notification_config: {
@@ -102,6 +123,10 @@ const projectSchema = new mongoose.Schema({
             { event_name: "A restriction in the issue is applied", user_types_is_received_notifications: [0, 1, 2], notification_id: 11, is_activated: false },
             { event_name: "Someone who likes the issue", user_types_is_received_notifications: [0, 1, 2], notification_id: 12, is_activated: false },
             { event_name: "A user is removed from project", user_types_is_received_notifications: [0, 1, 2], notification_id: 13, is_activated: true },
+            { event_name: "A sprint is started", user_types_is_received_notifications: [0], notification_id: 13, is_activated: true },
+            { event_name: "A sprint is completed", user_types_is_received_notifications: [0], notification_id: 14, is_activated: true },
+            { event_name: "A sprint is edited", user_types_is_received_notifications: [0], notification_id: 15, is_activated: true },
+            { event_name: "A sprint is created", user_types_is_received_notifications: [0], notification_id: 16, is_activated: true },
         ]
     },
     issue_config: {
@@ -119,9 +144,33 @@ const projectSchema = new mongoose.Schema({
             story_point_field: true,
             parent_field: true,
         }
+    },
+    issue_fields_config: {
+        type: [
+            {
+                icon_field_type: String,
+                field_description: String,
+                field_name: String,
+                field_key_issue: String,
+                field_type_in_issue: String,
+                field_position_display: {
+                    type: [
+                        {
+                            position: Number,
+                            issue_status: Number
+                        }
+                    ],
+                },  //0 la hien thi o man hinh ben trai, 1 la hien thi context field -> ben phai, 2 la hien thi more field => ben phai
+                is_field_required: Boolean,
+                field_is_edited: Boolean,
+                field_type: Number,  //0 text, 1 paragraph, 2 date, 3 number, 4 timestamp, 5 label, 6 dropdown, 7 checkbox, 8 single user, 9 multi users, 10 url, 11 others
+                field_is_deleted: Boolean, //mo ta rang truong nay la truong duoc tao moi, truong mac dinh la khong the xoa,
+                is_required: Boolean,
+                default_value: mongoose.Schema.Types.Mixed
+            },
+        ]
     }
 })
-
 const projectModel = mongoose.model('projects', projectSchema)
 
 module.exports = projectModel

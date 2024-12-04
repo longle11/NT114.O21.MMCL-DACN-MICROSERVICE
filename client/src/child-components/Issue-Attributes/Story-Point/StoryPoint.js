@@ -4,6 +4,8 @@ import { updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { showNotificationWithIcon } from '../../../util/NotificationUtil'
 import { useDispatch } from 'react-redux'
 import { checkConstraintPermissions } from '../../../util/CheckConstraintFields'
+import { getValueOfNumberFieldInIssue } from '../../../util/IssueFilter'
+import { eyeSlashIcon } from '../../../util/icon'
 
 export default function StoryPoint(props) {
     const issueInfo = props.issueInfo
@@ -11,26 +13,27 @@ export default function StoryPoint(props) {
     const projectInfo = props.projectInfo
     const dispatch = useDispatch()
     return (
-        <div className='row d-flex align-items-center mt-2'>
-            <span className='col-4' style={{ fontSize: 14, color: '#42526e', fontWeight: '500' }}>Story point</span>
+        <div className='d-flex align-items-center'>
             {props.editAttributeTag === 'story_point' ? <InputNumber 
-            className='col-7 info-item-field' min={0} 
+            className='info-item-field' min={0} 
             max={1000} 
-            defaultValue={issueInfo?.story_point} 
-            value={issueInfo?.story_point}
+            defaultValue={getValueOfNumberFieldInIssue(issueInfo, "story_point")} 
+            value={getValueOfNumberFieldInIssue(issueInfo, "story_point")}
             onBlur={(e) => {
                 props.handleEditAttributeTag('')
-                if (e.target.value > 0 && e.target.value <= 1000) {
-                    dispatch(updateInfoIssue(issueInfo?._id.toString(), issueInfo?.project_id?._id?.toString(), { story_point: e.target.value }, issueInfo?.story_point === null ? "None" : issueInfo?.story_point?.toString(), e.target.value, userInfo.id, "updated", "story point", projectInfo, userInfo))
+                if (e.target.value >= 0 && e.target.value <= 1000) {
+                    dispatch(updateInfoIssue(issueInfo?._id.toString(), issueInfo?.project_id?._id?.toString(), { story_point: e.target.value }, getValueOfNumberFieldInIssue(issueInfo, "story_point") === null ? "None" : getValueOfNumberFieldInIssue(issueInfo, "story_point")?.toString(), e.target.value, userInfo.id, "updated", "story point", projectInfo, userInfo))
                 } else {
                     showNotificationWithIcon('error', '', 'Story point\'s value must greater than 0')
                 }
             }} /> :
                 <span onDoubleClick={() => {
-                    if(checkConstraintPermissions(projectInfo, issueInfo, userInfo, 7)) {
+                    if(checkConstraintPermissions(projectInfo, issueInfo, userInfo, 1)) {
                         props.handleEditAttributeTag('story_point')
                     }
-                }} className='items-attribute col-7' style={{ padding: '10px 10px', width: '100%', color: '#7A869A' }}>{Number.isInteger(issueInfo?.story_point) ? issueInfo?.story_point : "None"}</span>}
+                }} style={{ width: '100%', color: '#7A869A' }}>{
+                    checkConstraintPermissions(projectInfo, issueInfo, userInfo, 9) ? (Number.isInteger(getValueOfNumberFieldInIssue(issueInfo, "story_point")) ? getValueOfNumberFieldInIssue(issueInfo, "story_point") : "None") : eyeSlashIcon
+                }</span>}
         </div>
     )
 }

@@ -4,6 +4,7 @@ const projectModel = require('../models/projectModel')
 const BadRequestError = require('../Errors/Bad-Request-Error')
 const UnauthorizedError = require('../Errors/UnAuthorized-Error')
 const servicePublisher = require('../nats/publisher/projectmanagement-publisher')
+const typeProject = require('../utils/issue_config_template')
 
 const router = express.Router()
 
@@ -16,9 +17,12 @@ router.post('/create', currentUserMiddleware, async (req, res, next) => {
             if (listNames.includes(req.body.name_project)) {
                 throw new BadRequestError("Project already existed")
             } else {
-                const newProject = await new projectModel(req.body).save()
+                const temp = { ...req.body }
+                temp['issue_fields_config'] = typeProject(req.body.template_name)
+
+                const newProject = await new projectModel({ ...temp }).save()
                 servicePublisher({ _id: newProject._id, name_project: newProject.name_project, key_name: newProject.key_name }, "projectmanagement:created")
-                res.status(201).json({
+                return res.status(201).json({
                     message: "Initial success project",
                     data: newProject
                 })

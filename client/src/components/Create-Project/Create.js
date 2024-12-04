@@ -4,10 +4,11 @@ import { withFormik } from 'formik';
 import { connect, useDispatch } from 'react-redux';
 import { getListCategories } from '../../redux/actions/CategoryAction';
 import PropTypes from 'prop-types';
-import { Avatar, Breadcrumb, Select } from 'antd';
+import { Avatar, Breadcrumb, Button, Select } from 'antd';
 import * as Yup from "yup";
 import { showNotificationWithIcon } from '../../util/NotificationUtil';
 import { createProjectAction } from '../../redux/actions/CreateProjectAction';
+import { useNavigate, useParams } from 'react-router-dom';
 function Create(props) {
     const { handleSubmit, handleChange, setFieldValue, errors } = props;
     const handlEditorChange = (content, editor) => {
@@ -15,11 +16,53 @@ function Create(props) {
     }
     const [keyName, setKeyName] = useState('')
 
+    const { template_id } = useParams()
+
     const dispatch = useDispatch()
     useEffect(() => {
         dispatch(getListCategories())
         // eslint-disable-next-line
     }, [])
+
+    useEffect(() => {
+        setFieldValue('template_id', template_id)
+    }, [template_id])
+
+    const navigate = useNavigate()
+
+    const renderTemplate = (templateId) => {
+        var imgUrl = ''
+        var template_name = ''
+        var template_description = ''
+
+        if (templateId === '0') { //kanban template
+            imgUrl = "https://taskschedulerproject.atlassian.net/s/-oo8t1n/b/9/d0630ad8e2b33a2fc7347459a3397d94eb3a0393/_/download/resources/com.atlassian.jira.project-templates-plugin:project-templates-next-icons/icons/kanban.svg"
+            template_name = "Kanban"
+            template_description = "Visualize and advance your project forward using issues on a powerful board."
+        } else if (templateId === '1') { //scrum template
+            imgUrl = "https://taskschedulerproject.atlassian.net/s/-oo8t1n/b/9/d0630ad8e2b33a2fc7347459a3397d94eb3a0393/_/download/resources/com.atlassian.jira.project-templates-plugin:project-templates-next-icons/icons/scrum.svg"
+            template_name = "Srum"
+            template_description = "Sprint toward your project goals with a board, backlog, and timeline."
+        }
+
+        return <div>
+            <div className='d-flex justify-content-between align-items-center'>
+                <span>Template</span>
+                <Button onClick={(e) => {
+                    navigate('/create-project/software-project/templates')
+                }}>Change template</Button>
+            </div>
+            <div className="card mt-3 mb-3 d-flex flex-row align-items-center" style={{ width: 'max-content' }}>
+                <div>
+                    <img src={imgUrl} />
+                </div>
+                <div className='mr-3'>
+                    <h5 className="card-title">{template_name}</h5>
+                    <p className="card-text">{template_description}</p>
+                </div>
+            </div>
+        </div>
+    }
 
     return (
         <div style={{ height: '100%', overflowY: 'auto', scrollbarWidth: 'thin' }}>
@@ -38,6 +81,9 @@ function Create(props) {
             </div>
             <div className="info d-flex justify-content-center">
                 <form onSubmit={handleSubmit} style={{ width: '50%' }}>
+                    {
+                        renderTemplate(template_id)
+                    }
                     <div className='form-group'>
                         <label htmlFor='name_project'>Name <span style={{ color: 'red' }}>(*)</span></label>
                         <input onChange={handleChange} className='form-control' name='name_project' />
@@ -97,7 +143,16 @@ Create.propTypes = {
 const handleCreateProject = withFormik({
     enableReinitialize: true,
     mapPropsToValues: (props) => {
-        return { name_project: '', description: '', key_name: '', project_lead: props.userInfo.id }
+        return { 
+            name_project: '', 
+            description: '', 
+            key_name: '', 
+            template_id: '', 
+            project_lead: props.userInfo.id,
+            template_name: '',
+            issue_types_default: [],
+            workflow_default: []
+        }
     },
     validationSchema: Yup.object().shape({
         name_project: Yup.string()
@@ -113,6 +168,62 @@ const handleCreateProject = withFormik({
     }),
     handleSubmit: (values, { props, setSubmitting }) => {
         if (props.userInfo) {
+            if(values.template_id === '0' || values.template_id === '1') {
+                if(values.template_id === '0') {
+                    values.template_name = 'Kanban'
+                } else {
+                      values.template_name = 'Scrum'
+                }
+                values.issue_types_default = [
+                    {
+                        icon_id: 0,
+                        icon_type: 'fa-bookmark',
+                        icon_color: '#65ba43',
+                        icon_name: 'Story'
+                    },
+                    {
+                        icon_id: 1,
+                        icon_type: 'fa-square-check',
+                        icon_color: '#4fade6',
+                        icon_name: 'Task'
+                    },
+                    {
+                        icon_id: 2,
+                        icon_type: 'fa-circle-exclamation',
+                        icon_color: '#cd1317',
+                        icon_name: 'Bug'
+                    },
+                    {
+                        icon_id: 3,
+                        icon_type: 'fa-bolt',
+                        icon_color: 'purple',
+                        icon_name: 'Epic'
+                    },
+                    {
+                        icon_id: 4,
+                        icon_type: 'fa-list-check',
+                        icon_color: '#e97f33',
+                        icon_name: 'Subtask'
+                    }
+                ]
+                values.workflow_default = [
+                    {
+                        process_name: 'To Do',
+                        process_color: '#ddd',
+                        type_process: 'normal'
+                    },
+                    {
+                        process_name: 'In Progress',
+                        process_color: '#1d7afc',
+                        type_process: 'normal'
+                    },
+                    {
+                        process_name: 'Done',
+                        process_color: '#22a06b',
+                        type_process: 'done'
+                    }
+                ]
+            }
             values.creator = props.userInfo.id
             props.dispatch(createProjectAction({ ...values, members: [{ user_info: props.userInfo.id, user_role: 0, status: 'approved' }], sprint_id: null }))
         } else {

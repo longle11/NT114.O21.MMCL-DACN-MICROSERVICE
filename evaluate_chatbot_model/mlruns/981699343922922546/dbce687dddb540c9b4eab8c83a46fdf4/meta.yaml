@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/longle/Documents/Project/NT114.O21.MMCL-DACN-MICROSERVICE/evaluate_chatbot_model/mlruns/981699343922922546/dbce687dddb540c9b4eab8c83a46fdf4/artifacts
+end_time: 1732352422303
+entry_point_name: ''
+experiment_id: '981699343922922546'
+lifecycle_stage: active
+run_id: dbce687dddb540c9b4eab8c83a46fdf4
+run_name: wistful-moose-816
+run_uuid: dbce687dddb540c9b4eab8c83a46fdf4
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1732352422275
+status: 4
+tags: []
+user_id: admin

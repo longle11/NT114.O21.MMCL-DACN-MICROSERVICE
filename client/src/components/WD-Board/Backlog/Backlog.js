@@ -1,5 +1,4 @@
-import { Button, Avatar, Col, Switch, Checkbox, Row, Input, Select, Tooltip, Modal, Breadcrumb } from 'antd'
-import Search from 'antd/es/input/Search'
+import { Button, Avatar, Switch, Input, Select, Tooltip, Modal, Breadcrumb } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { useDispatch, useSelector } from 'react-redux';
@@ -14,7 +13,7 @@ import { GetProcessListAction, GetProjectAction, GetSprintListAction } from '../
 import { createSprintAction, deleteSprintAction, updateProjectAction, updateSprintAction } from '../../../redux/actions/CreateProjectAction';
 import CreateSprint from '../../Forms/CreateSprint/CreateSprint';
 import dayjs from 'dayjs';
-import { GET_SPRINT_PROJECT } from '../../../redux/constants/constant';
+import { DISPLAY_LOADING, GET_SPRINT_PROJECT, HIDE_LOADING } from '../../../redux/constants/constant';
 import Axios from 'axios';
 import domainName from '../../../util/Config';
 import CreateVersion from '../../Forms/CreateVersion/CreateVersion';
@@ -23,10 +22,17 @@ import { delay } from '../../../util/Delay';
 import { displayComponentInModal } from '../../../redux/actions/ModalAction';
 import CompleteSprintModal from '../../Modal/CompleteSprintModal/CompleteSprintModal';
 import IssueTag from '../../../child-components/IssueTag/IssueTag';
+import { getValueOfNumberFieldInIssue, getValueOfObjectFieldInIssue, renderIssuesWithMyIssues } from '../../../util/IssueFilter';
+import { attributesFiltering } from '../../../util/IssueAttributesCreating';
+import MemberProject from '../../../child-components/Member-Project/MemberProject';
+import { searchingIssuesValidConditions } from '../../../util/searchingAttributesInIssues';
+
 export default function Backlog() {
 
     const issuesInProject = useSelector(state => state.issue.issuesInProject)
+
     const issuesBacklog = useSelector(state => state.issue.issuesBacklog)
+
 
     const processList = useSelector(state => state.listProject.processList)
     const sprintList = useSelector(state => state.listProject.sprintList)
@@ -34,16 +40,16 @@ export default function Backlog() {
     const projectInfo = useSelector(state => state.listProject.projectInfo)
     const workflowList = useSelector(state => state.listProject.workflowList)
     const epicList = useSelector(state => state.categories.epicList)
-    const [searchIssue, setSearchIssue] = useState({
-        epics: [],
-        versions: []
-    })
 
     const [showCollapseBacklog, setShowCollapseBacklog] = useState(true)
     const [onChangeSettings, setOnChangeSettings] = useState(false)
+
+    const epicPanel = projectInfo?.issue_config?.epic_panel
+    const versionPanel = projectInfo?.issue_config?.version_panel
+
     // distinguish with choose open epic and version panel
-    const [onChangeVersion, setOnChangeVersion] = useState(true)
-    const [onChangeEpic, setOnChangeEpic] = useState(true)
+    const [onChangeVersion, setOnChangeVersion] = useState(versionPanel)
+    const [onChangeEpic, setOnChangeEpic] = useState(epicPanel)
 
     //set display epic and version fields
     const [onChangeEpics, setOnChangeEpics] = useState(true)
@@ -59,6 +65,17 @@ export default function Backlog() {
     const [onChangeParent, setOnChangeParent] = useState(true)
 
 
+    const [searchIssue, setSearchIssue] = useState({
+        versions: [],
+        epics: [],
+        types: [],
+        statuses: []
+    })
+
+    const handleSearchIssue = (versions, epics, types, statuses) => {
+        setSearchIssue({ ...searchIssue, versions: versions, epics: epics, types: types, statuses: statuses })
+    }
+
     const [showCollapseSprint, setShowCollapseSprint] = useState({
         sprintArrs: [],
         curentSprintClicked: ''
@@ -68,8 +85,6 @@ export default function Backlog() {
     const [showEpic, setShowEpic] = useState(null)
     const [showVersion, setShowVersion] = useState(null)
 
-    const [countEpic, setCountEpic] = useState(0)
-    const [countVersion, setCountVersion] = useState(0)
     const userInfo = useSelector(state => state.user.userInfo)
     const { id } = useParams()
     const [issueStatus, setIssueStatus] = useState(0)
@@ -86,21 +101,26 @@ export default function Backlog() {
     }
 
     const updateIssueConfig = (epic_panel, version_panel, issue_status_field, key_field, issue_type_field, epic_field, version_field, issue_priority_field, assignees_field, story_point_field, parent_field) => {
-        dispatch(updateProjectAction(id, {
-            issue_config: {
-                epic_panel: epic_panel,
-                version_panel: version_panel,
-                issue_status_field: issue_status_field,
-                key_field: key_field,
-                issue_type_field: issue_type_field,
-                epic_field: epic_field,
-                version_field: version_field,
-                issue_priority_field: issue_priority_field,
-                assignees_field: assignees_field,
-                story_point_field: story_point_field,
-                parent_field: parent_field,
-            }
-        }, null))
+        dispatch(updateProjectAction(
+            id,
+            {
+                issue_config: {
+                    epic_panel: epic_panel,
+                    version_panel: version_panel,
+                    issue_status_field: issue_status_field,
+                    key_field: key_field,
+                    issue_type_field: issue_type_field,
+                    epic_field: epic_field,
+                    version_field: version_field,
+                    issue_priority_field: issue_priority_field,
+                    assignees_field: assignees_field,
+                    story_point_field: story_point_field,
+                    parent_field: parent_field,
+                }
+            },
+            null,
+            null
+        ))
     }
 
     const dispatch = useDispatch()
@@ -112,17 +132,11 @@ export default function Backlog() {
             dispatch(getIssuesBacklog(id))
             dispatch(GetProjectAction(id, null, null))
             dispatch(GetSprintListAction(id, null))
-            dispatch(getIssuesInProject(id, {
-                user_id: searchMyIssue,
-                epics: searchIssue.epics,
-                versions: searchIssue.versions
-            }))
+            dispatch(getIssuesInProject(id, null))
         }
-    }, [searchIssue, searchMyIssue])
+    }, [searchIssue])
 
     useEffect(() => {
-        setOnChangeEpic(projectInfo?.issue_config?.epic_panel)
-        setOnChangeVersion(projectInfo?.issue_config?.version_panel)
 
         setOnChangeEpics(projectInfo?.issue_config?.epic_field)
         setOnChangeVersions(projectInfo?.issue_config?.version_field)
@@ -134,22 +148,26 @@ export default function Backlog() {
         setOnChangeParent(projectInfo?.issue_config?.parent_field)
         setOnChangeAssignees(projectInfo?.issue_config?.assignees_field)
     }, [projectInfo])
+
+
+
     const [chooseEpic, setChooseEpic] = useState([])
     const [chooseVersion, setChooseVersion] = useState([])
-    const [currentSprint, setCurrentSprint] = useState({})
     const [open, setOpen] = useState(false);
     const navigate = useNavigate()
 
+
     //handle when deleting a sprint to move issues to other places
     const [getIssueToOtherPlaces, setGetIssueToOtherPlaces] = useState({
-        old_stored_place: null,
+        old_stored_place: {},
         new_stored_place: 0 //mac dinh se luu tru vao backlog
     })
+
 
     const renderIssuesInCurrentSprint = (issue_list) => {
         return issue_list?.filter(issue => {
             //find the issue belongs to issues in backlog
-            if (issuesInProject?.map(currentIssue => currentIssue?._id).includes(issue?._id) && issue.issue_status !== 4 && !issue.isCompleted) {
+            if (issuesInProject?.map(currentIssue => currentIssue?._id).includes(issue?._id) && getValueOfNumberFieldInIssue(issue, "issue_status") !== 4 && !issue.isCompleted) {
                 return true
             }
             return false
@@ -159,77 +177,122 @@ export default function Backlog() {
 
     //thanh phan chung voi dashboard trong complete sprint => se gom lai sau
     const handleOk = async () => {
-        if (getIssueToOtherPlaces.old_stored_place !== null) {
-            if (getIssueToOtherPlaces.new_stored_place === 0) {
-                const getIssueListInCurrentSprint = getIssueToOtherPlaces.old_stored_place.issue_list
-                // proceed update current_sprint field to backlog in Issue service
-                for (let index = 0; index < getIssueListInCurrentSprint.length; index++) {
-                    dispatch(updateInfoIssue(
-                        getIssueListInCurrentSprint[index]._id.toString(), 
-                        id, 
-                        { current_sprint: null }, 
-                        getIssueToOtherPlaces.old_stored_place.sprint_name, 
-                        "backlog", 
-                        userInfo.id, 
-                        "updated", 
-                        "sprint", projectInfo, userInfo
-                    ))
-                }
-                //proceed delete all issues in current sprint
-                dispatch(deleteSprintAction(getIssueToOtherPlaces.old_stored_place._id.toString(), id))
-            } else if (getIssueToOtherPlaces.new_stored_place === 1) {
-                const old_sprint_list = sprintList.map(sprint => sprint._id.toString())
-                const old_sprint_name = getIssueToOtherPlaces.old_stored_place.sprint_name
-                //proceed delete all issues in current sprint
-                dispatch(deleteSprintAction(getIssueToOtherPlaces.old_stored_place._id.toString(), id))
-                //proceed create new sprint and insert all issue from old sprint to new sprint
-                const res = await Axios.post(`${domainName}/api/sprint/create`, { issue_list: getIssueToOtherPlaces.old_stored_place.issue_list, project_id: id })
-                if (res.status === 201) {
-                    dispatch({
-                        type: GET_SPRINT_PROJECT,
-                        sprintList: res.data.data
-                    })
+        try {
+            if (getIssueToOtherPlaces.old_stored_place !== null) {
+                dispatch({
+                    type: DISPLAY_LOADING
+                })
+                if (getIssueToOtherPlaces.new_stored_place === 0) {
+                    const getIssueListInCurrentSprint = getIssueToOtherPlaces.old_stored_place.issue_list
+                    // proceed update current_sprint field to backlog in Issue service
+                    for (let index = 0; index < getIssueListInCurrentSprint.length; index++) {
+                        dispatch(updateInfoIssue(
+                            getIssueListInCurrentSprint[index]._id.toString(),
+                            id,
+                            { current_sprint: null },
+                            getIssueToOtherPlaces.old_stored_place.sprint_name,
+                            "backlog",
+                            userInfo.id,
+                            "updated",
+                            "sprint",
+                            projectInfo,
+                            userInfo
+                        ))
 
-                    //get index of new sprint just created to update current_issue field in backlog
-                    const getIndexOfNewSprint = res.data.data.findIndex(sprint => {
-                        return !old_sprint_list.includes(sprint._id.toString())
-                    })
+                        await delay(400)
+                    }
 
-                    if (getIndexOfNewSprint !== -1) {
-                        for (let index = 0; index < res.data.data[getIndexOfNewSprint].issue_list.length; index++) {
-                            const newSprint = res.data.data[getIndexOfNewSprint]
-                            dispatch(updateInfoIssue(newSprint.issue_list[index]._id.toString(), id, { current_sprint: newSprint._id.toString() }, old_sprint_name, newSprint.sprint_name, userInfo.id, "updated", "sprint", projectInfo, userInfo))
+                    //proceed delete all issues in current sprint
+                    dispatch(deleteSprintAction(getIssueToOtherPlaces.old_stored_place._id.toString(), id))
+                } else if (getIssueToOtherPlaces.new_stored_place === 1) {
+                    const old_sprint_list = sprintList.map(sprint => sprint._id.toString())
+                    const old_sprint_name = getIssueToOtherPlaces.old_stored_place.sprint_name
+                    //proceed delete all issues in current sprint
+                    dispatch(deleteSprintAction(getIssueToOtherPlaces.old_stored_place._id.toString(), id))
+                    //proceed create new sprint and insert all issue from old sprint to new sprint
+                    const res1 = await Axios.post(`${domainName}/api/sprint/create`, { issue_list: getIssueToOtherPlaces.old_stored_place.issue_list, project_id: id })
+                    if (res1.status === 201) {
+                        const res = await Axios.post(`${domainName}/api/sprint/${id}`)
+                        if (res.status === 200) {
+                            dispatch({
+                                type: GET_SPRINT_PROJECT,
+                                sprintList: res.data.data
+                            })
+
+
+
+                            //get index of new sprint just created to update current_issue field in backlog
+                            const getIndexOfNewSprint = res.data.data.findIndex(sprint => {
+                                return !old_sprint_list.includes(sprint._id.toString())
+                            })
+
+                            if (getIndexOfNewSprint !== -1) {
+                                for (let index = 0; index < res.data.data[getIndexOfNewSprint].issue_list.length; index++) {
+                                    const newSprint = res.data.data[getIndexOfNewSprint]
+                                    dispatch(updateInfoIssue(newSprint.issue_list[index]._id.toString(), id, { current_sprint: newSprint._id.toString() }, old_sprint_name, newSprint.sprint_name, userInfo.id, "updated", "sprint", projectInfo, userInfo))
+                                }
+                            }
                         }
                     }
+
+                } else {    //move to other sprints
+                    const getIssueListInCurrentSprint = getIssueToOtherPlaces.old_stored_place.issue_list
+                    //proceed update current_sprint field to other sprints in Issue service
+                    const getNewSprintInfo = sprintList?.filter(sprint => sprint._id === getIssueToOtherPlaces.new_stored_place)
+                    for (let index = 0; index < getIssueListInCurrentSprint.length; index++) {
+                        await delay(100)
+                        dispatch(updateSprintAction(
+                            getIssueToOtherPlaces.new_stored_place,
+                            { issue_id: getIssueListInCurrentSprint[index]._id.toString(), inserted_index: 0 },
+                            id,
+                            projectInfo,
+                            userInfo,
+                            getNewSprintInfo
+                        ))
+                    }
+                    for (let index = 0; index < getIssueListInCurrentSprint.length; index++) {
+                        dispatch(updateInfoIssue(
+                            getIssueListInCurrentSprint[index]._id.toString(),
+                            id, { current_sprint: getIssueToOtherPlaces.new_stored_place },
+                            getIssueToOtherPlaces.old_stored_place.sprint_name,
+                            getNewSprintInfo[0].sprint_name,
+                            userInfo.id,
+                            "updated",
+                            "sprint",
+                            projectInfo,
+                            userInfo
+                        ))
+
+                        await delay(400)
+                    }
+
+                    //proceed delete all issues in current sprint
+                    dispatch(deleteSprintAction(getIssueToOtherPlaces.old_stored_place._id.toString(), id))
                 }
 
-            } else {    //move to other sprints
-                const getIssueListInCurrentSprint = getIssueToOtherPlaces.old_stored_place.issue_list
-                //proceed update current_sprint field to other sprints in Issue service
-                const getNewSprintInfo = sprintList.filter(sprint => sprint._id === getIssueToOtherPlaces.new_stored_place)
-                for (let index = 0; index < getIssueListInCurrentSprint.length; index++) {
-                    await delay(100)
-                    dispatch(updateSprintAction(getIssueToOtherPlaces.new_stored_place, { issue_id: getIssueListInCurrentSprint[index]._id.toString() }))
-                }
-                for (let index = 0; index < getIssueListInCurrentSprint.length; index++) {
-                    dispatch(updateInfoIssue(getIssueListInCurrentSprint[index]._id.toString(), id, { current_sprint: getIssueToOtherPlaces.new_stored_place }, getIssueToOtherPlaces.old_stored_place.sprint_name, getNewSprintInfo[0].sprint_name, userInfo.id, "updated", "sprint", projectInfo, userInfo))
-                }
-
-                // //proceed delete all issues in current sprint
-                dispatch(deleteSprintAction(getIssueToOtherPlaces.old_stored_place._id.toString(), id))
+                dispatch({
+                    type: HIDE_LOADING
+                })
             }
-        }
 
-        setGetIssueToOtherPlaces({
-            old_stored_place: null,
-            new_stored_place: 0
-        })
-    };
+            setGetIssueToOtherPlaces({
+                old_stored_place: {},
+                new_stored_place: 0
+            })
+        } catch (error) {
+            dispatch({
+                type: HIDE_LOADING
+            })
+        }
+    }
 
     const handleCancel = () => {
         setOpen(false);
-        setCurrentSprint({})
-    };
+        setGetIssueToOtherPlaces({
+            old_stored_place: {},
+            new_stored_place: 0 //mac dinh se luu tru vao backlog
+        })
+    }
 
     const renderStoredIssuePlace = (currentSprintId) => {
         var storedOptions = [
@@ -252,175 +315,204 @@ export default function Backlog() {
         return storedOptions
     }
 
-
-
-
     const handleDragEnd = (result) => {
-        const source = result.source
-        const dest = result.destination
-        if (dest === null) {
-            return
-        }
-        console.log("source ", source);
-        console.log("dest ", dest);
-        if (source.droppableId === dest.droppableId) {
-            if (source.index !== dest.index) {
-                //check whether name is backlog or sprint
-                if (dest.droppableId.indexOf('-') === -1) { //this is backlog
-                    dispatch(updateIssueFromBacklog(id, { issue_source_index: source.index, issue_dest_index: dest.index }))
+        try {
+            const source = result.source
+            const dest = result.destination
+            if (dest === null) {
+                return
+            }
+            console.log("source ", source);
+            console.log("dest ", dest);
+            if (source.droppableId === dest.droppableId) {
+                if (source.index !== dest.index) {
+                    //check whether name is backlog or sprint
+                    if (dest.droppableId.indexOf('-') === -1) { //this is backlog
+                        dispatch(updateIssueFromBacklog(id, { issue_source_index: source.index, issue_dest_index: dest.index }))
+                    } else {
+                        const getSprintId = source.droppableId.substring(source.droppableId.indexOf('-') + 1)
+                        const getSprintInfoIndex = sprintList?.findIndex(sprint => sprint._id.toString() === getSprintId)
+                        if (typeof getSprintId === "string") {
+                            //proceed to swap position between two issues in current sprint
+                            dispatch(updateSprintAction(
+                                getSprintId,
+                                { issue_source_index: source.index, issue_dest_index: dest.index },
+                                id,
+                                projectInfo,
+                                userInfo,
+                                sprintList[getSprintInfoIndex]
+                            ))
+                        }
+                    }
                 } else {
-                    const getSprintId = source.droppableId.substring(source.droppableId.indexOf('-') + 1)
-                    if (typeof getSprintId === "string") {
-                        //proceed to swap position between two issues in current sprint
-                        dispatch(updateSprintAction(getSprintId, { issue_source_index: source.index, issue_dest_index: dest.index }))
+                    return null
+                }
+            }
+            else if (source.droppableId.includes("backlog") && dest.droppableId.includes("sprint")) {
+                //lay ra sprint hien tai 
+                const getSprintId = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
+                const getIndexSprint = sprintList.findIndex(sprint => sprint._id.toString() === getSprintId)
+                if (getIndexSprint !== -1) {
+                    const issue_id = issuesBacklog[source.index]?._id?.toString()
+                    if (typeof issue_id === "string" && typeof getSprintId === "string") {
+                        dispatch(updateInfoIssue(issue_id, id, { current_sprint: getSprintId }, "None", sprintList[getIndexSprint].sprint_name, userInfo.id, "updated", "sprint", projectInfo, userInfo))
+                        //proceed to delete current issue in backlog 
+                        dispatch(updateIssueFromBacklog(id, { issue_id: issue_id, inserted_index: -1 }))
+                        dispatch(updateSprintAction(
+                            getSprintId,
+                            { issue_id: issue_id, project_id: id, inserted_index: dest.index },
+                            id,
+                            projectInfo,
+                            userInfo,
+                            sprintList[getIndexSprint]
+                        ))
                     }
                 }
-            }else {
-                return null
-            }
-        }
-        else if (source.droppableId.includes("backlog") && dest.droppableId.includes("sprint")) {
-            //lay ra sprint hien tai 
-            const getSprintId = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
-            const getIndexSprint = sprintList.findIndex(sprint => sprint._id.toString() === getSprintId)
-            if (getIndexSprint !== -1) {
-                const issue_id = issuesBacklog[source.index]?._id?.toString()
-                if (typeof issue_id === "string" && typeof getSprintId === "string") {
-                    dispatch(updateInfoIssue(issue_id, id, { current_sprint: getSprintId }, "None", sprintList[getIndexSprint].sprint_name, userInfo.id, "updated", "sprint", projectInfo, userInfo))
-                    //proceed to delete current issue in backlog 
-                    dispatch(updateIssueFromBacklog(id, { issue_id: issue_id, inserted_index: -1 }))
-                    dispatch(updateSprintAction(getSprintId, { issue_id: issue_id, project_id: id, inserted_index: dest.index }))
+            } else if (source.droppableId.includes("sprint") && dest.droppableId.includes("backlog")) {
+                //get current sprint by cutting sprint text and only get id
+                const getSprintId = source.droppableId.substring(source.droppableId.indexOf('-') + 1)
+
+                //get the current position of sprint in the list
+                const getIndexSprint = sprintList.findIndex(sprint => sprint._id.toString() === getSprintId)
+
+                if (getIndexSprint !== -1) {
+                    const issue_id = sprintList[getIndexSprint].issue_list[source.index]._id.toString()
+                    dispatch(updateInfoIssue(issue_id, id, { current_sprint: null }, sprintList[getIndexSprint].sprint_name, "None", userInfo.id, "updated", "sprint", projectInfo, userInfo))
+                    dispatch(updateSprintAction(
+                        getSprintId,
+                        { issue_id: issue_id, project_id: id, inserted_index: 0 },
+                        id,
+                        projectInfo,
+                        userInfo,
+                        sprintList[getIndexSprint]
+                    ))    //this inserted_index is meaningless, only for satisfying the condition 
+
+                    dispatch(updateIssueFromBacklog(id, { inserted_index: dest.index, issue_id: issue_id }))
+                }
+            } else if (source.droppableId.includes("sprint") && dest.droppableId.includes("sprint") && source.droppableId !== dest.droppableId) {
+                const getSprintIdSource = source.droppableId.substring(source.droppableId.indexOf('-') + 1)
+                const getSprintIdDest = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
+
+                //get the current position of sprint in the list
+                const getIndexSprintSource = sprintList.findIndex(sprint => sprint._id.toString() === getSprintIdSource)
+                const getIndexSprintDest = sprintList.findIndex(sprint => sprint._id.toString() === getSprintIdDest)
+
+                if (getIndexSprintSource !== -1 && getIndexSprintDest !== -1) {
+                    const issueSource_id = sprintList[getIndexSprintSource].issue_list[source.index]._id.toString()
+                    dispatch(updateSprintAction(getSprintIdSource, { issue_id: issueSource_id, project_id: id, inserted_index: source.index }, id, null, null, null)) //this case for delete issue from current sprint, //this inserted_index is meaningless, only for satisfying the condition 
+                    dispatch(updateSprintAction(getSprintIdDest, { issue_id: issueSource_id, project_id: id, inserted_index: dest.index }, id, null, null, null)) //this case for add issue to new sprint
+                }
+            } else if (dest.droppableId.includes("epic") && source.droppableId.includes("backlog")) {
+                const getEpicId = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
+                const getIndexEpic = epicList.findIndex(epic => epic._id.toString() === getEpicId)
+                if (getIndexEpic !== -1) {
+                    const getCurrentIssue = issuesBacklog[source.index]
+
+                    const gotEpicInfo = getValueOfObjectFieldInIssue(getCurrentIssue, "epic_link")
+
+                    const getEpicIdInIssue = gotEpicInfo?._id?.toString()
+                    const getEpicNameInIssue = gotEpicInfo !== null ? gotEpicInfo.epic_name : "None"
+                    //tien hanh them issue vao epic
+                    dispatch(updateEpic(epicList[getIndexEpic]._id.toString(), { issue_id: getCurrentIssue._id.toString(), epic_id: getEpicIdInIssue ? getEpicIdInIssue : null }, id))
+                    //tien hanh them id cua epic vao epic link trong issue
+                    dispatch(updateInfoIssue(getCurrentIssue._id.toString(), id, { epic_link: epicList[getIndexEpic]._id.toString() }, getEpicNameInIssue, epicList[getIndexEpic].epic_name, userInfo.id, "updated", "epic", projectInfo, userInfo))
+                }
+            } else if (dest.droppableId.includes("epic") && source.droppableId.includes("sprint")) {
+                const getSprintIdSource = source.droppableId.substring(source.droppableId.indexOf('-') + 1)
+                const getEpicID = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
+                const getIndexSprintSource = sprintList.findIndex(sprint => sprint._id.toString() === getSprintIdSource)
+
+                const getIndexEpic = epicList.findIndex(epic => epic._id.toString() === getEpicID)
+
+                if (getIndexSprintSource !== -1 && getIndexEpic !== -1) {
+                    const getCurrentIssue = renderIssuesInCurrentSprint(sprintList[getIndexSprintSource].issue_list)[source.index]
+                    const getEpicInfo = getValueOfObjectFieldInIssue(getCurrentIssue, "epic_link")
+                    const getEpicIdInIssue = getEpicInfo?._id.toString()
+
+                    const getEpicNameInIssue = getEpicInfo !== null ? getEpicInfo.epic_name : "None"
+
+                    //tien hanh them issue vao epic
+                    dispatch(updateEpic(epicList[getIndexSprintSource]._id.toString(), { issue_id: getCurrentIssue?._id?.toString(), epic_id: getEpicIdInIssue ? getEpicIdInIssue : null }, id))
+                    //tien hanh them id cua epic vao epic link trong issue
+                    dispatch(updateInfoIssue(getCurrentIssue._id.toString(), id, { epic_link: epicList[getIndexEpic]?._id?.toString() }, getEpicNameInIssue, epicList[getIndexEpic].epic_name, userInfo.id, "updated", "epic", projectInfo, userInfo))
+                }
+            } else if (dest.droppableId.includes("version") && source.droppableId.includes("backlog")) {
+                const getVersionId = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
+                const getIndexVersion = versionList.findIndex(version => version._id.toString() === getVersionId)
+                if (getIndexVersion !== -1) {
+                    const getCurrentIssue = issuesBacklog[source.index]
+                    const getVersionInfo = getValueOfObjectFieldInIssue(getCurrentIssue, "fix_version")
+
+                    const getVersionIdInIssue = getVersionInfo?._id.toString()
+                    const getVersionNameInIssue = getVersionInfo !== null ? getVersionInfo.version_name : "None"
+                    //tien hanh them issue vao version
+                    dispatch(updateVersion(versionList[getIndexVersion]._id.toString(), { issue_id: getCurrentIssue._id.toString(), version_id: getVersionIdInIssue ? getVersionIdInIssue : null }, id))
+                    //tien hanh them id cua version vao version link trong issue
+                    dispatch(updateInfoIssue(getCurrentIssue._id.toString(), id, { fix_version: versionList[getIndexVersion]._id.toString() }, getVersionNameInIssue, versionList[getIndexVersion].version_name, userInfo.id, "updated", "version", projectInfo, userInfo))
+                }
+            } else if (dest.droppableId.includes("version") && source.droppableId.includes("sprint")) {
+                const getSprintIdSource = source.droppableId.substring(source.droppableId.indexOf('-') + 1)
+                const getVersionId = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
+                const getIndexSprintSource = sprintList.findIndex(sprint => sprint._id.toString() === getSprintIdSource)
+                const getIndexVersion = versionList.findIndex(version => version._id.toString() === getVersionId)
+
+                if (getIndexSprintSource !== -1 && getIndexVersion !== -1) {
+                    const getAllIssuesInBacklogFromCurrentSprint = renderIssuesInCurrentSprint(sprintList[getIndexSprintSource].issue_list)
+                    const getCurrentIssue = getAllIssuesInBacklogFromCurrentSprint[source.index]
+                    const getVersionInfo = getValueOfObjectFieldInIssue(getCurrentIssue, "fix_version")
+                    const getVersionIdInIssue = getVersionInfo?._id.toString() //get current version in issue to send to backend for updating new fix version
+                    const getVersionNameInIssue = getVersionInfo !== null ? getVersionInfo.version_name : "None"
+                    dispatch(updateVersion(versionList[getIndexVersion]?._id.toString(), { issue_id: getCurrentIssue?._id.toString(), version_id: getVersionIdInIssue ? getVersionIdInIssue : null }, id))
+                    //tien hanh them id cua version vao version link trong issue
+                    dispatch(updateInfoIssue(getCurrentIssue?._id.toString(), id, { fix_version: versionList[getIndexVersion]?._id.toString() }, getVersionNameInIssue, versionList[getIndexVersion].version_name, userInfo.id, "updated", "epic", projectInfo, userInfo))
                 }
             }
-        } else if (source.droppableId.includes("sprint") && dest.droppableId.includes("backlog")) {
-            //get current sprint by cutting sprint text and only get id
-            const getSprintId = source.droppableId.substring(source.droppableId.indexOf('-') + 1)
-
-            //get the current position of sprint in the list
-            const getIndexSprint = sprintList.findIndex(sprint => sprint._id.toString() === getSprintId)
-
-            if (getIndexSprint !== -1) {
-                const issue_id = sprintList[getIndexSprint].issue_list[source.index]._id.toString()
-                dispatch(updateInfoIssue(issue_id, id, { current_sprint: null }, sprintList[getIndexSprint].sprint_name, "None", userInfo.id, "updated", "sprint", projectInfo, userInfo))
-                dispatch(updateSprintAction(getSprintId, { issue_id: issue_id, project_id: id, inserted_index: 0 }))    //this inserted_index is meaningless, only for satisfying the condition 
-
-                dispatch(updateIssueFromBacklog(id, { inserted_index: dest.index, issue_id: issue_id }))
+            if (id) {
+                dispatch(GetSprintListAction(id, null))
+                dispatch(getIssuesBacklog(id))
             }
-        } else if (source.droppableId.includes("sprint") && dest.droppableId.includes("sprint") && source.droppableId !== dest.droppableId) {
-            const getSprintIdSource = source.droppableId.substring(source.droppableId.indexOf('-') + 1)
-            const getSprintIdDest = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
-
-            //get the current position of sprint in the list
-            const getIndexSprintSource = sprintList.findIndex(sprint => sprint._id.toString() === getSprintIdSource)
-            const getIndexSprintDest = sprintList.findIndex(sprint => sprint._id.toString() === getSprintIdDest)
-
-            if (getIndexSprintSource !== -1 && getIndexSprintDest !== -1) {
-                const issueSource_id = sprintList[getIndexSprintSource].issue_list[source.index]._id.toString()
-                dispatch(updateSprintAction(getSprintIdSource, { issue_id: issueSource_id, project_id: id, inserted_index: source.index })) //this case for delete issue from current sprint, //this inserted_index is meaningless, only for satisfying the condition 
-                dispatch(updateSprintAction(getSprintIdDest, { issue_id: issueSource_id, project_id: id, inserted_index: dest.index })) //this case for add issue to new sprint
-            }
-        } else if (dest.droppableId.includes("epic") && source.droppableId.includes("backlog")) {
-            const getEpicId = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
-            const getIndexEpic = epicList.findIndex(epic => epic._id.toString() === getEpicId)
-            if (getIndexEpic !== -1) {
-                const getCurrentIssue = issuesInProject[source.index]
-                const getEpicIdInIssue = getCurrentIssue.epic_link?._id.toString()
-                const getEpicNameInIssue = getCurrentIssue.epic_link !== null ? getCurrentIssue.epic_link.epic_name : "None"
-                //tien hanh them issue vao epic
-                dispatch(updateEpic(epicList[getIndexEpic]._id.toString(), { issue_id: getCurrentIssue._id.toString(), epic_id: getEpicIdInIssue ? getEpicIdInIssue : null }, id))
-                //tien hanh them id cua epic vao epic link trong issue
-                dispatch(updateInfoIssue(getCurrentIssue._id.toString(), id, { epic_link: epicList[getIndexEpic]._id.toString() }, getEpicNameInIssue, epicList[getIndexEpic].epic_name, userInfo.id, "updated", "epic", projectInfo, userInfo))
-            }
-        } else if (dest.droppableId.includes("epic") && source.droppableId.includes("sprint")) {
-            const getSprintIdSource = source.droppableId.substring(source.droppableId.indexOf('-') + 1)
-            const getEpicID = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
-            const getIndexSprintSource = sprintList.findIndex(sprint => sprint._id.toString() === getSprintIdSource)
-
-            const getIndexEpic = epicList.findIndex(epic => epic._id.toString() === getEpicID)
-
-            if (getIndexSprintSource !== -1 && getIndexEpic !== -1) {
-                const getCurrentIssue = renderIssuesInCurrentSprint(sprintList[getIndexSprintSource].issue_list)[source.index]
-                const getEpicIdInIssue = getCurrentIssue.epic_link?._id.toString()
-
-                const getEpicNameInIssue = getCurrentIssue.epic_link !== null ? getCurrentIssue.epic_link.epic_name : "None"
-
-                //tien hanh them issue vao epic
-                dispatch(updateEpic(epicList[getIndexSprintSource]._id.toString(), { issue_id: getCurrentIssue?._id?.toString(), epic_id: getEpicIdInIssue ? getEpicIdInIssue : null }, id))
-                //tien hanh them id cua epic vao epic link trong issue
-                dispatch(updateInfoIssue(getCurrentIssue._id.toString(), id, { epic_link: epicList[getIndexEpic]?._id?.toString() }, getEpicNameInIssue, epicList[getIndexEpic].epic_name, userInfo.id, "updated", "epic", projectInfo, userInfo))
-            }
-        } else if (dest.droppableId.includes("version") && source.droppableId.includes("backlog")) {
-            const getVersionId = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
-            const getIndexVersion = versionList.findIndex(version => version._id.toString() === getVersionId)
-
-            if (getIndexVersion !== -1) {
-                const getCurrentIssue = issuesInProject[source.index]
-
-                const getVersionIdInIssue = getCurrentIssue.fix_version?._id.toString()
-                const getVersionNameInIssue = getCurrentIssue.fix_version !== null ? getCurrentIssue.fix_version.version_name : "None"
-                //tien hanh them issue vao version
-                dispatch(updateVersion(versionList[getIndexVersion]._id.toString(), { issue_id: getCurrentIssue._id.toString(), version_id: getVersionIdInIssue ? getVersionIdInIssue : null }, id))
-                //tien hanh them id cua version vao version link trong issue
-                dispatch(updateInfoIssue(getCurrentIssue._id.toString(), id, { fix_version: versionList[getIndexVersion]._id.toString() }, getVersionNameInIssue, versionList[getIndexVersion].version_name, userInfo.id, "updated", "version", projectInfo, userInfo))
-            }
-        } else if (dest.droppableId.includes("version") && source.droppableId.includes("sprint")) {
-            const getSprintIdSource = source.droppableId.substring(source.droppableId.indexOf('-') + 1)
-            const getVersionId = dest.droppableId.substring(dest.droppableId.indexOf('-') + 1)
-            const getIndexSprintSource = sprintList.findIndex(sprint => sprint._id.toString() === getSprintIdSource)
-            const getIndexVersion = versionList.findIndex(version => version._id.toString() === getVersionId)
-
-            if (getIndexSprintSource !== -1 && getIndexVersion !== -1) {
-                const getAllIssuesInBacklogFromCurrentSprint = renderIssuesInCurrentSprint(sprintList[getIndexSprintSource].issue_list)
-                const getCurrentIssue = getAllIssuesInBacklogFromCurrentSprint[source.index]
-                const getVersionIdInIssue = getCurrentIssue.fix_version?._id.toString() //get current version in issue to send to backend for updating new fix version
-                const getVersionNameInIssue = getCurrentIssue.fix_version !== null ? getCurrentIssue.fix_version.version_name : "None"
-                dispatch(updateVersion(versionList[getIndexVersion]?._id.toString(), { issue_id: getCurrentIssue?._id.toString(), version_id: getVersionIdInIssue ? getVersionIdInIssue : null }, id))
-                //tien hanh them id cua version vao version link trong issue
-                dispatch(updateInfoIssue(getCurrentIssue?._id.toString(), id, { fix_version: versionList[getIndexVersion]?._id.toString() }, getVersionNameInIssue, versionList[getIndexVersion].version_name, userInfo.id, "updated", "epic", projectInfo, userInfo))
-            }
+        } catch (error) {
+            console.log("error ", error);
         }
+    }
 
-        if (id) {
-            dispatch(GetSprintListAction(id))
-            dispatch(getIssuesBacklog(id))
-        }
-    };
     const renderIssuesBacklog = () => {
-        const issuesInBacklog = issuesBacklog?.map((issue, index) => {
-            return <Draggable draggableId={`${issue._id.toString()}`} key={`${issue?._id?.toString()}`} index={index}>
-                {(provided) => {
-                    return <IssueTag
-                        onChangeAssignees={onChangeAssignees}
-                        onChangeStoryPoint={onChangeStoryPoint}
-                        onChangeParent={onChangeParent}
-                        onChangeIssueType={onChangeIssueType}
-                        onChangeKey={onChangeKey}
-                        onChangeIssuePriority={onChangeIssuePriority}
-                        onChangeIssueStatus={onChangeIssueStatus}
-                        onChangeVersions={onChangeVersions}
-                        issuesBacklog={issuesBacklog}
-                        onChangeEpics={onChangeEpics}
-                        issue={issue}
-                        index={index}
-                        type="0"
-                        sprintList={sprintList}
-                        userInfo={userInfo}
-                        provided={provided}
-                        projectInfo={projectInfo}
-                        processList={processList}
-                        epicList={epicList}
-                        versionList={versionList}
-                    />
-                }}
-            </Draggable>
-        })
+        const issuesInBacklog = renderIssuesWithMyIssues(searchingIssuesValidConditions(searchIssue, issuesBacklog), searchMyIssue)
+            ?.map((issue, index) => {
+                return <Draggable draggableId={`${issue._id?.toString()}`} key={`${issue?._id?.toString()}`} index={index}>
+                    {(provided) => {
+                        return <IssueTag
+                            onChangeAssignees={onChangeAssignees}
+                            onChangeStoryPoint={onChangeStoryPoint}
+                            onChangeParent={onChangeParent}
+                            onChangeIssueType={onChangeIssueType}
+                            onChangeKey={onChangeKey}
+                            onChangeIssuePriority={onChangeIssuePriority}
+                            onChangeIssueStatus={onChangeIssueStatus}
+                            onChangeVersions={onChangeVersions}
+                            issuesBacklog={issuesBacklog}
+                            onChangeEpics={onChangeEpics}
+                            issue={issue}
+                            index={index}
+                            type="0"
+                            sprintList={sprintList}
+                            userInfo={userInfo}
+                            provided={provided}
+                            projectInfo={projectInfo}
+                            processList={processList}
+                            epicList={epicList}
+                            versionList={versionList}
+                        />
+                    }}
+                </Draggable>
+            })
         if (issuesInBacklog.length !== 0) {
             return <Droppable droppableId="issues_backlog dropup">
                 {(provided) => {
                     return <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        style={{ listStyle: 'none', zIndex: 1, padding: 0, height: 'fit-content', maxHeight: '197px', overflowY: 'auto', scrollbarWidth: 'none' }}>
+                        style={{ maxHeight: 370, listStyle: 'none', zIndex: 1, padding: 0, height: 'fit-content', overflowY: 'auto', scrollbarWidth: 'none' }}>
                         {issuesInBacklog}
                         {provided.placeholder}
                     </div>
@@ -463,11 +555,12 @@ export default function Backlog() {
     const isShowedOrNot = (sprint) => {
         return sprint.issue_list.length === 0 ? 'show' : showCollapseSprint.sprintArrs.includes(sprint._id) === sprint._id ? 'show' : ''
     }
+
     const renderSprintList = () => {
         if (!sprintList) {
             return <></>
         }
-        const newSprintList = sprintList?.filter(sprint => sprint.sprint_status === 'pending' || sprint.sprint_status === 'processing').map(sprint => {
+        const newSprintList = sprintList?.filter(sprint => sprint.sprint_status === 'pending' || sprint.sprint_status === 'processing')?.map(sprint => {
             return {
                 ...sprint, issue_list: renderIssuesInCurrentSprint(sprint.issue_list)
             }
@@ -504,13 +597,13 @@ export default function Backlog() {
                         <button style={{ fontSize: '13px', margin: '0 5px' }} className="btn btn-transparent p-0" onClick={() => {
                             dispatch(drawer_edit_form_action(<CreateSprint currentSprint={sprint} />, 'Save', '700px'))
                         }}><i className="fa fa-pen ml-2"></i> Edit sprint</button>
-                        <span className='ml-2' style={{ lineHeight: '26px' }}>{sprint.issue_list?.length} issues</span>
+                        <span className='ml-2' style={{ lineHeight: '26px' }}>{renderIssuesWithMyIssues(searchingIssuesValidConditions(searchIssue, sprint.issue_list), searchMyIssue)?.length} issues</span>
                     </div>
                     <div className='d-flex align-items-center'>
                         <div className='mr-2'>
                             {processList?.map((process) => {
-                                const countIssueProcess = sprint.issue_list?.filter(issue => {
-                                    return issue?.issue_type?._id?.toString() === process._id?.toString()
+                                const countIssueProcess = renderIssuesWithMyIssues(searchingIssuesValidConditions(searchIssue, sprint.issue_list), searchMyIssue)?.filter(issue => {
+                                    return getValueOfObjectFieldInIssue(issue, 'issue_type')?._id?.toString() === process._id?.toString()
                                 }).length
                                 return <Tooltip placement="bottom" title={`${process.name_process[0] + process.name_process.toLowerCase().substring(1)} ${countIssueProcess} of ${sprint.issue_list.length} (issue count)`}>
                                     <Avatar size={'small'} style={{ backgroundColor: process.tag_color }}>{countIssueProcess}</Avatar>
@@ -518,13 +611,21 @@ export default function Backlog() {
                             })}
                         </div>
                         {projectInfo?.sprint_id === sprint._id ? <button onClick={() => {
-                            dispatch(displayComponentInModal(<CompleteSprintModal sprintInfo={sprint} processList={processList} projectInfo={projectInfo} sprintList={sprintList} userInfo={userInfo} id={id} />))
+                            dispatch(displayComponentInModal(<CompleteSprintModal 
+                                sprintInfo={sprint} 
+                                processList={processList} 
+                                projectInfo={projectInfo} 
+                                sprintList={sprintList} 
+                                userInfo={userInfo}
+                                id={id} />))
                         }} className='btn btn-primary'>Complete sprint</button> : (projectInfo?.sprint_id === null && sprint.issue_list.length > 0 ? <button className='btn btn-primary' onClick={() => {
                             //allow to start sprint if no sprints are started and only when a sprint has start and end date
                             //with start date greater than or equal current day
-                            if (projectInfo?.sprint_id === null && sprint.start_date !== null && ((dayjs(sprint.start_date).isBefore(dayjs(new Date()))) || (dayjs(sprint.start_date).isSame(dayjs(new Date()))))) {
+                            if (projectInfo?.sprint_id === null
+                                && sprint.start_date !== null
+                                && ((dayjs(sprint.start_date).isBefore(dayjs(new Date()))) || (dayjs(sprint.start_date).isSame(dayjs(new Date()))))) {
                                 dispatch(updateProjectAction(id, { sprint_id: sprint._id }, navigate))
-                                dispatch(updateSprintAction(sprint._id, { sprint_status: 'processing' }))
+                                dispatch(updateSprintAction(sprint._id, { sprint_status: 'processing' }, id, projectInfo, userInfo, sprint))
                             } else {
                                 showNotificationWithIcon('error', '', 'Information is invalid, please checking again')
                             }
@@ -547,8 +648,8 @@ export default function Backlog() {
                                     if (sprint.issue_list.length === 0) {
                                         dispatch(deleteSprintAction(sprint._id.toString(), sprint.project_id.toString()))
                                     } else {
-                                        setCurrentSprint(sprint)
-                                        setOpen(true)
+                                        setGetIssueToOtherPlaces(prev => ({ ...prev, old_stored_place: { ...sprint } }))
+                                        setOpen(pre => true)
                                     }
                                 }}>Delete Sprint</button>
                             </div>
@@ -573,35 +674,37 @@ export default function Backlog() {
                                 </div> : <div>
                                     {sprint.issue_list.length === 0 ? <div className='description-sprint d-flex align-items-center' style={{ padding: 0, border: '2px dashed #ddd', height: 50, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                         <span>Plan a sprint by dragging the sprint footer down below some issues, or by dragging issues here</span>
-                                    </div> : <div className='issues-list-sprint' style={{ maxHeight: '197px', overflowY: 'auto', height: 'fit-content', scrollbarWidth: 'none' }}>
-                                        {sprint.issue_list !== null ? sprint.issue_list?.map((issue, index) => {
-                                            return <Draggable draggableId={`${issue._id.toString()}`} key={`${issue?._id?.toString()}`} index={index}>
-                                                {(provided) => {
-                                                    return <IssueTag
-                                                        onChangeAssignees={onChangeAssignees}
-                                                        onChangeStoryPoint={onChangeStoryPoint}
-                                                        onChangeParent={onChangeParent}
-                                                        onChangeIssuePriority={onChangeIssuePriority}
-                                                        onChangeIssueType={onChangeIssueType}
-                                                        index={index}
-                                                        issuesBacklog={issuesBacklog}
-                                                        onChangeKey={onChangeKey}
-                                                        type={sprint?._id}
-                                                        onChangeIssueStatus={onChangeIssueStatus}
-                                                        onChangeVersions={onChangeVersions}
-                                                        onChangeEpics={onChangeEpics}
-                                                        issue={issue}
-                                                        sprintList={sprintList}
-                                                        userInfo={userInfo}
-                                                        provided={provided}
-                                                        projectInfo={projectInfo}
-                                                        processList={processList}
-                                                        epicList={epicList}
-                                                        versionList={versionList}
-                                                    />
-                                                }}
-                                            </Draggable>
-                                        }) : <></>}
+                                    </div> : <div className='issues-list-sprint' style={{ overflowY: 'auto', height: 'fit-content', scrollbarWidth: 'none' }}>
+                                        {sprint.issue_list !== null ? renderIssuesWithMyIssues(searchingIssuesValidConditions(searchIssue, sprint.issue_list), searchMyIssue)
+                                            ?.map((issue, index) => {
+                                                const getIsueIndex = issuesInProject?.findIndex(currentIssue => currentIssue._id === issue._id)
+                                                return <Draggable draggableId={`${issue._id.toString()}`} key={`${issue?._id?.toString()}`} index={index}>
+                                                    {(provided) => {
+                                                        return <IssueTag
+                                                            onChangeAssignees={onChangeAssignees}
+                                                            onChangeStoryPoint={onChangeStoryPoint}
+                                                            onChangeParent={onChangeParent}
+                                                            onChangeIssuePriority={onChangeIssuePriority}
+                                                            onChangeIssueType={onChangeIssueType}
+                                                            index={index}
+                                                            issuesBacklog={issuesBacklog}
+                                                            onChangeKey={onChangeKey}
+                                                            type={sprint?._id}
+                                                            onChangeIssueStatus={onChangeIssueStatus}
+                                                            onChangeVersions={onChangeVersions}
+                                                            onChangeEpics={onChangeEpics}
+                                                            issue={issuesInProject[getIsueIndex]}
+                                                            sprintList={sprintList}
+                                                            userInfo={userInfo}
+                                                            provided={provided}
+                                                            projectInfo={projectInfo}
+                                                            processList={processList}
+                                                            epicList={epicList}
+                                                            versionList={versionList}
+                                                        />
+                                                    }}
+                                                </Draggable>
+                                            }) : <></>}
                                     </div>}
                                 </div>}
                                 {provided.placeholder}
@@ -620,13 +723,13 @@ export default function Backlog() {
                     {
                         openCreatingSprint === sprint._id ? <div className='d-flex' style={{ display: openCreatingSprint ? 'block' : 'none', border: '2px solid #2684FF' }}>
                             <Select className='edit-select-issue-backlog' style={{ border: 'none', borderRadius: 0 }}
-                                defaultValue={issueTypeWithoutOptions[0].value}
+                                defaultValue={issueTypeWithoutOptions(projectInfo?.issue_types_default)[0]?.value}
                                 onChange={(value, option) => {
                                     setIssueStatus(value)
                                 }}
                                 onClick={(e) => e.stopPropagation()}
 
-                                options={issueTypeWithoutOptions.filter(index => [0, 1, 2].includes(index.value))} />
+                                options={issueTypeWithoutOptions(projectInfo?.issue_types_default)?.filter(index => [0, 1, 2].includes(index.value))} />
                             <Input className='edit-input-issue-backlog' value={summary} defaultValue={summary} placeholder="What needs to be done?"
                                 onChange={(e) => {
                                     setSummary(e.target.value)
@@ -637,14 +740,20 @@ export default function Backlog() {
                                             const tempSummary = summary
                                             //set value for summary to ''
                                             setSummary('')
-                                            dispatch(createIssue({
-                                                project_id: id,
-                                                issue_status: issueStatus,
-                                                summary: tempSummary,
-                                                creator: userInfo.id,
-                                                issue_type: defaultForIssueType(issueStatus, workflowList, processList),
-                                                current_sprint: sprint._id
-                                            }, id, userInfo.id, sprint._id, null, projectInfo, userInfo))
+                                            dispatch(createIssue(
+                                                attributesFiltering(projectInfo, {
+                                                    project_id: id,
+                                                    issue_status: issueStatus,
+                                                    summary: tempSummary,
+                                                    creator: userInfo.id,
+                                                    issue_type: defaultForIssueType(issueStatus, workflowList, processList),
+                                                    current_sprint: sprint._id
+                                                }),
+                                                id,
+                                                userInfo.id,
+                                                sprint._id, null,
+                                                projectInfo,
+                                                userInfo))
                                             //set default is 0 which means story
                                             setIssueStatus(0)
                                         }
@@ -812,7 +921,7 @@ export default function Backlog() {
                                 }}
                                 aria-expanded="false" >
                                 <i className="fa-solid fa-caret-down mr-3"></i>
-                            </a><span>{iTagForIssueTypes(3, null, null)}</span> {epic.epic_name}
+                            </a><span>{iTagForIssueTypes(3, null, null, projectInfo?.issue_types_default)}</span> {epic.epic_name}
                         </button>
                         <div className={`collapse card-body ${showEpic === epic._id ? "show" : ""}`} id={epicTag} style={{ padding: '5px 10px' }}>
                             <div className='d-flex flex-column'>
@@ -878,116 +987,28 @@ export default function Backlog() {
                 </div>
             </div>
             <div className="search-info-backlogs d-flex">
-                <div className="search-block">
-                    <Search
-                        placeholder="Search issues"
-                        style={{ width: 200 }}
-                        onSearch={value => {
-
-                        }}
-                    />
-                </div>
-                <div className="avatar-group d-flex">
-                    {/* {projectInfo?.members?.map((value, index) => {
-                        const table = <Table cols={memberCols} rowKey={value._id} dataSource={projectInfo?.members} />
-                        return renderAvatarMembers(value, table)
-                    })} */}
-                </div>
-                <Button type={`${searchMyIssue === null ? "primary" : "default"}`} onClick={() => {
-                    if (searchMyIssue !== null) {
-                        setSearchMyIssue(null)
-                    }
-                }} className=' ml-2 mr-2 d-flex justify-content-center'>All issues {searchMyIssue === null ? <span>({issuesInProject?.filter(issue => !issue?.isCompleted && issue?.issue_status !== 4)?.length})</span> : <></>}</Button>
-                <Button type={`${searchMyIssue !== null ? "primary" : "default"}`} onClick={() => {
-                    if (searchMyIssue === null) {
-                        setSearchMyIssue(userInfo.id)
-                    } else {
-                        setSearchMyIssue(null)
-                    }
-                }}>
-                    Only my issues {searchMyIssue !== null ? <span>({issuesInProject?.filter(issue => (issue?.creator?._id === userInfo.id || issue.assignees.map(currentIssue => currentIssue._id).includes(userInfo.id))).length})</span> : <></>}
-                </Button>
-                <div>
-                    <Button className="mr-2 ml-2" id="dropdownVersionButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Versions {countVersion !== 0 ? <span className='ml-1 mr-2' style={{ color: 'blue' }}>({countVersion})</span> : <></>} <i className="fa fa-angle-down ml-2"></i>
-                    </Button>
-                    <div className="dropdown-menu" aria-labelledby="dropdownVersionButton">
-                        {versionList !== null && versionList?.length > 0 ? <Checkbox.Group defaultValue={searchIssue.versions} value={searchIssue.versions} style={{ width: '100%' }} onChange={(value) => {
-                            setSearchIssue({
-                                ...searchIssue,
-                                versions: [...value]
-                            })
-                            setCountVersion(value.length)
-                        }}>
-                            <Row>
-                                <Col span={16} style={{ padding: '5px 10px' }}>
-                                    <Checkbox value={null}>Issue without epics</Checkbox>
-                                </Col>
-                                {versionList?.map(version => {
-                                    return <Col span={16} style={{ padding: '5px 10px' }}>
-                                        <Checkbox value={version._id}>{version.version_name}</Checkbox>
-                                    </Col>
-                                })}
-                            </Row>
-                        </Checkbox.Group> : <p style={{ padding: '5px 20px' }}>Unreleased versions in this project</p>}
-                        <hr />
-                        <div className='d-flex align-items-center' style={{ padding: '5px 20px' }}>
-                            <Switch onChange={() => {
-                                setOnChangeVersion(!onChangeVersion)
-                            }} value={onChangeVersion} />
-                            <span className='ml-3'>Show version panel</span>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <Button id="dropdownEpicButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Epics {countEpic !== 0 ? <span className='ml-1 mr-2' style={{ color: 'blue' }}>({countEpic})</span> : <></>} <i className="fa fa-angle-down ml-2"></i>
-                    </Button>
-                    <div className="dropdown-menu" aria-labelledby="dropdownEpicButton" style={{ width: 'fit-content' }}>
-                        {
-                            epicList !== null && epicList?.length > 0 ? <Checkbox.Group defaultValue={searchIssue.epics} value={searchIssue.epics} style={{ width: '100%' }} onChange={(value) => {
-                                setSearchIssue({
-                                    ...searchIssue,
-                                    epics: [...value]
-                                })
-                                setCountEpic(value.length)
-                            }}>
-                                <Row>
-                                    <Col span={16} style={{ padding: '5px 10px' }}>
-                                        <Checkbox value={null}>Issue without versions</Checkbox>
-                                    </Col>
-                                    {epicList?.map(epic => {
-                                        return <Col span={16} style={{ padding: '5px 10px' }}>
-                                            <Checkbox style={{ width: 'max-content' }} value={epic._id}>{epic.epic_name}</Checkbox>
-                                        </Col>
-                                    })}
-                                </Row>
-                            </Checkbox.Group> : <span className='d-flex justify-content-center'>No epics recently</span>
-                        }
-                        <hr />
-                        <div className='d-flex align-items-center' style={{ padding: '0 10px' }}>
-                            <Switch onChange={() => {
-                                setOnChangeEpic(!onChangeEpic)
-                            }} value={onChangeEpic} />
-                            <span className='ml-3'>Show epic panel</span>
-                        </div>
-                    </div>
-                </div>
-                <div className='ml-2'>
-                    <Button onClick={() => {
-                        setSearchIssue({
-                            epics: [],
-                            versions: []
-                        })
-                        setCountEpic(0)
-                        setCountVersion(0)
-                        setSearchMyIssue(null)
-                        setChooseEpic([])
-                        setChooseVersion([])
-                    }}>Clear all searches</Button>
-                </div>
+                <MemberProject
+                    projectInfo={projectInfo}
+                    id={id}
+                    processList={processList}
+                    userInfo={userInfo}
+                    setSearchDashboard={null}
+                    searchDashboard={null}
+                    searchMyIssue={searchMyIssue}
+                    setSearchMyIssue={setSearchMyIssue}
+                    allIssues={issuesInProject}
+                    setOnChangeVersion={setOnChangeVersion}
+                    setOnChangeEpic={setOnChangeEpic}
+                    onChangeVersion={onChangeVersion}
+                    onChangeEpic={onChangeEpic}
+                    epicList={epicList}
+                    versionList={versionList}
+                    typeInterface="backlog"
+                    handleSearchIssue={handleSearchIssue}
+                    searchIssue={searchIssue}
+                />
             </div>
-            <div>
+            <div style={{ height: '80vh', overflowY: 'auto', scrollbarWidth: 'none' }}>
                 <div className='main-info-backlog' style={{ minHeight: '200px', display: onChangeEpic || onChangeVersion || onChangeSettings ? 'flex' : 'block' }}>
                     <DragDropContext onDragEnd={(result) => {
                         handleDragEnd(result)
@@ -1131,7 +1152,7 @@ export default function Backlog() {
                         </div>
 
                         {/* Card for backlog and sprint */}
-                        <div className='d-flex flex-column mt-2 mb-2 ' style={{ width: '100%', overflowY: 'auto', height: '75vh' }}>
+                        <div className='d-flex flex-column mt-2 mb-2 ' style={{ width: '100%' }}>
                             {renderSprintList()}
                             <div className='issues-info-backlog mt-1' style={{ backgroundColor: '#f7f8f9' }}>
                                 <div
@@ -1143,13 +1164,14 @@ export default function Backlog() {
                                     aria-expanded="false"
                                     aria-controls="issueBacklogCollapse"
                                     style={{ margin: '10px', padding: '5px 10px' }}>
-                                    <h6 className='m-0'><span className='mr-2' style={{ fontSize: 13 }}>{showCollapseBacklog ? <i className="fa fa-angle-down"></i> : <i className="fa fa-angle-right"></i>}</span>Backlog <span style={{ fontSize: 14, fontWeight: 500 }}>{issuesInProject?.filter(issue => issue.current_sprint === null && issue.issue_status !== 4 && !issue?.isCompleted).length} issues</span></h6>
+                                    <h6 className='m-0'><span className='mr-2' style={{ fontSize: 13 }}>{showCollapseBacklog ? <i className="fa fa-angle-down"></i> : <i className="fa fa-angle-right"></i>}</span>Backlog <span style={{ fontSize: 14, fontWeight: 500 }}>{renderIssuesWithMyIssues(searchingIssuesValidConditions(searchIssue, issuesBacklog), searchMyIssue)?.length} issues</span></h6>
                                     <div className='d-flex align-items-center'>
                                         <div className='mr-2'>
                                             {processList?.map((process) => {
-                                                const countIssueProcess = issuesInProject?.filter(issue => issue.current_sprint === null).filter(issue => {
-                                                    return issue?.issue_type?._id?.toString() === process?._id?.toString() && issue.issue_status !== 4 && !issue?.isCompleted
-                                                }).length
+                                                const countIssueProcess = renderIssuesWithMyIssues(searchingIssuesValidConditions(searchIssue, issuesBacklog), searchMyIssue)
+                                                    ?.filter(issue => getValueOfNumberFieldInIssue(issue, 'current_sprint') === null).filter(issue => {
+                                                        return getValueOfObjectFieldInIssue(issue, 'issue_type')?._id?.toString() === process?._id?.toString() && getValueOfNumberFieldInIssue(issue, 'issue_status') !== 4
+                                                    })?.length
                                                 return <Tooltip placement="bottom" title={`${process.name_process[0] + process.name_process.toLowerCase().substring(1)} ${countIssueProcess} of ${issuesInProject.length} (issue count)`}>
                                                     <Avatar size={'small'} style={{ backgroundColor: process.tag_color }}>{countIssueProcess}</Avatar>
                                                 </Tooltip>
@@ -1160,7 +1182,9 @@ export default function Backlog() {
                                             dispatch(createSprintAction({
                                                 project_id: id,
                                                 sprint_name: null
-                                            }))
+                                            },
+                                                projectInfo,
+                                                userInfo))
                                         }}>Create sprint</button>
                                     </div>
 
@@ -1178,11 +1202,11 @@ export default function Backlog() {
                                     {
                                         openCreatingSprint === '0' ? <div className='d-flex' style={{ border: '2px solid #2684FF' }}>
                                             <Select className='edit-select-issue-backlog' style={{ border: 'none', borderRadius: 0 }}
-                                                defaultValue={issueTypeWithoutOptions[0].value}
+                                                defaultValue={issueTypeWithoutOptions(projectInfo?.issue_types_default)[0].value}
                                                 onChange={(value, option) => {
                                                     setIssueStatus(value)
                                                 }}
-                                                options={issueTypeWithoutOptions.filter(index => [0, 1, 2].includes(index.value))}
+                                                options={issueTypeWithoutOptions(projectInfo?.issue_types_default)?.filter(index => [0, 1, 2].includes(index.value))}
                                             />
                                             <Input
                                                 className='edit-input-issue-backlog'
@@ -1200,14 +1224,22 @@ export default function Backlog() {
                                                             //set default is 0 which means story
 
                                                             if (tempSummary.trim() !== "") {
-                                                                dispatch(createIssue({
-                                                                    project_id: id,
-                                                                    issue_status: issueStatus,
-                                                                    summary: tempSummary,
-                                                                    creator: userInfo.id,
-                                                                    issue_type: defaultForIssueType(issueStatus, workflowList, processList),
-                                                                    current_sprint: null
-                                                                }, id, userInfo.id, null, null, projectInfo, userInfo))
+                                                                dispatch(createIssue(
+                                                                    attributesFiltering(projectInfo, {
+                                                                        project_id: id,
+                                                                        issue_status: issueStatus,
+                                                                        summary: tempSummary,
+                                                                        issue_type: defaultForIssueType(issueStatus, workflowList, processList),
+                                                                        current_sprint: null,
+                                                                        creator: userInfo.id,
+                                                                    }),
+                                                                    id,
+                                                                    userInfo.id,
+                                                                    null,
+                                                                    null,
+                                                                    projectInfo,
+                                                                    userInfo
+                                                                ))
                                                             }
                                                             setIssueStatus(0)
                                                             setSummary('')
@@ -1272,7 +1304,7 @@ export default function Backlog() {
                                 <div className='row ml-2 mb-2'>
                                     <span className='col-8'>Epic</span>
                                     <Switch className='col-1' onChange={() => {
-                                        updateIssueConfig(onChangeEpic, onChangeVersion, !onChangeIssueStatus, onChangeKey, onChangeIssueType, !onChangeEpics, onChangeVersions, onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, onChangeParent)
+                                        updateIssueConfig(onChangeEpic, onChangeVersion, onChangeIssueStatus, onChangeKey, onChangeIssueType, !onChangeEpics, onChangeVersions, onChangeIssuePriority, onChangeAssignees, onChangeStoryPoint, onChangeParent)
 
                                         setOnChangeEpics(!onChangeEpics)
                                     }} value={onChangeEpics} />
@@ -1326,13 +1358,13 @@ export default function Backlog() {
             >
                 <div className='d-flex'>
                     <i className="glyphicon glyphicon-alert"></i>
-                    <span style={{ fontSize: '16px', fontWeight: 'bold' }}>Move issues from {currentSprint?.sprint_name}</span>
+                    <span style={{ fontSize: '16px', fontWeight: 'bold' }}>Move issues from {getIssueToOtherPlaces.old_stored_place?.sprint_name}</span>
                 </div>
-                <p>Select a new home for any issues with the <span>{currentSprint?.sprint_name}</span> other sprints, including work in the backlog.</p>
+                <p>Select a new home for any issues with the <span>{getIssueToOtherPlaces.old_stored_place?.sprint_name}</span> other sprints, including work in the backlog.</p>
                 <div className='d-flex justify-content-between align-items-center'>
                     <div className='d-flex flex-column'>
                         <label htmlFor='currentProcess'>This status will be deleted:</label>
-                        <div style={{ textDecoration: 'line-through', isplay: 'inline' }}>{currentSprint?.sprint_name}</div>
+                        <div style={{ textDecoration: 'line-through', isplay: 'inline' }}>{getIssueToOtherPlaces.old_stored_place?.sprint_name}</div>
                     </div>
                     <i className="fa fa-long-arrow-alt-right"></i>
                     <div className='d-flex flex-column'>
@@ -1342,18 +1374,16 @@ export default function Backlog() {
                             optionFilterProp="label"
                             onChange={(value) => {
                                 setGetIssueToOtherPlaces({
-                                    old_stored_place: currentSprint,
+                                    old_stored_place: getIssueToOtherPlaces.old_stored_place,
                                     new_stored_place: value
                                 })
                             }}
-                            options={renderStoredIssuePlace(currentSprint?._id?.toString())}
-                            defaultValue={renderStoredIssuePlace(currentSprint?._id?.toString())[0].value}
+                            options={renderStoredIssuePlace(getIssueToOtherPlaces.old_stored_place?._id?.toString())}
+                            value={getIssueToOtherPlaces.new_stored_place}
                         />
                     </div>
                 </div>
             </Modal>
-
-
         </div>
     )
 }

@@ -5,17 +5,21 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { createIssue, updateInfoIssue } from '../../redux/actions/IssueAction'
 import { issueTypeOptions, iTagForIssueTypes, iTagForPriorities, priorityTypeOptions, renderIssueType, renderSubIssueOptions } from '../../util/CommonFeatures'
 import { UserOutlined } from '@ant-design/icons'
+import { getValueOfNumberFieldInIssue, getValueOfObjectFieldInIssue, getValueOfStringFieldInIssue } from '../../util/IssueFilter'
+import { attributesFiltering } from '../../util/IssueAttributesCreating'
 
 export default function SubIssueComponent(props) {
     const issueInfo = props.issueInfo
     const processList = props.processList
     const userInfo = props.userInfo
-    const issuesBacklog = props.issuesBacklog
+    const issuesInProject = props.issuesInProject
     const projectInfo = props.projectInfo
     const id = props.id
     const showAddSubIssue = props.showAddSubIssue
     const subIssueSummary = props.subIssueSummary
-    
+
+    const [getSubIssueInfo, setGetSubIssueInfo] = useState(null)
+
     const displayNumberCharacterInSummarySubIssue = props.displayNumberCharacterInSummarySubIssue
     const navigate = useNavigate()
     const dispatch = useDispatch()
@@ -66,7 +70,7 @@ export default function SubIssueComponent(props) {
                 </div>
                 <div className='d-flex'>
                     <Progress
-                        percent={Math.round(((issueInfo?.sub_issue_list?.filter(subIssue => subIssue?.issue_type?._id === processList[processList?.length - 1]?._id)?.length) / (issueInfo?.sub_issue_list?.length)) * 100)}
+                        percent={Math.round(((issueInfo?.sub_issue_list?.filter(subIssue => getValueOfObjectFieldInIssue(subIssue, "issue_type")?._id === processList[processList?.length - 1]?._id)?.length) / (issueInfo?.sub_issue_list?.length)) * 100)}
                         percentPosition={{
                             align: 'center',
                             type: 'inner',
@@ -80,13 +84,13 @@ export default function SubIssueComponent(props) {
                     {issueInfo?.sub_issue_list.map(subIssue => {
                         return <div key={subIssue?._id} className='d-flex justify-content-between align-items-center subIssue' style={{ padding: '5px 3px', border: '1px solid #dddd' }}>
                             <div className='d-flex align-items-center'>
-                                <span className='mr-1'>{iTagForIssueTypes(subIssue.issue_status, 'mr-0', 13)}</span>
+                                <span className='mr-1'>{iTagForIssueTypes(getValueOfNumberFieldInIssue(subIssue, "issue_status"), 'mr-0', 13, projectInfo?.issue_types_default)}</span>
                                 <NavLink onClick={() => {
                                     navigate(`/projectDetail/${id}/issues/issue-detail/${subIssue._id}`)
                                     window.location.reload()
                                 }} style={{ fontSize: 12 }} className='mr-1'>WD-{subIssue.ordinal_number}</NavLink>
                                 {openEditSubIssueSummary === subIssue._id ? <div style={{ position: 'relative' }}>
-                                    <Input style={{ borderRadius: 0 }} defaultValue={subIssue?.summary} onChange={(e) => {
+                                    <Input style={{ borderRadius: 0 }} defaultValue={getValueOfStringFieldInIssue(subIssue, "summary")} onChange={(e) => {
                                         setEditSubIssueSummary(e.target.value)
                                     }} />
                                     <div className='d-flex' style={{ position: 'absolute', right: 0 }}>
@@ -101,7 +105,7 @@ export default function SubIssueComponent(props) {
                                         }} className='mr-1 d-flex justify-content-center align-items-center' style={{ width: 20, height: 30, zIndex: 9999999 }}><i className="fa-solid fa-xmark"></i></Button>
                                     </div>
                                 </div> : <span className='d-flex justify-content-between align-items-center sub-issue-summary'>
-                                    {subIssue?.summary?.length > displayNumberCharacterInSummarySubIssue ? <span style={{ fontSize: 12 }} className='mr-1'>{subIssue.summary.substring(0, displayNumberCharacterInSummarySubIssue)}...</span> : <span style={{ fontSize: 12 }} className='mr-1'>{subIssue.summary}</span>}
+                                    {getValueOfStringFieldInIssue(subIssue, "summary")?.length > displayNumberCharacterInSummarySubIssue ? <span style={{ fontSize: 12 }} className='mr-1'>{getValueOfStringFieldInIssue(subIssue, 'summary').substring(0, displayNumberCharacterInSummarySubIssue)}...</span> : <span style={{ fontSize: 12 }} className='mr-1'>{getValueOfStringFieldInIssue(subIssue, 'summary')}</span>}
                                     <NavLink onClick={() => {
                                         setOpenSetEditSubIssueSummary(subIssue._id)
                                     }} className="sub-issue-edit-summary" style={{ padding: 5, color: 'black', marginLeft: 5, display: 'none' }}><i className="fa fa-pen"></i></NavLink>
@@ -117,7 +121,7 @@ export default function SubIssueComponent(props) {
                                         }} />
                                         <div className='d-flex' style={{ position: 'absolute', right: 0 }}>
                                             <Button onClick={() => {
-                                                dispatch(updateInfoIssue(subIssue._id, subIssue?.project_id, { issue_priority: editSubIssueIssuePriority }, subIssue.issue_status.toString(), editSubIssueIssuePriority.toString(), userInfo.id, "updated", "priority", projectInfo, userInfo))
+                                                dispatch(updateInfoIssue(subIssue._id, subIssue?.project_id, { issue_priority: editSubIssueIssuePriority }, getValueOfNumberFieldInIssue(subIssue, "issue_status").toString(), editSubIssueIssuePriority.toString(), userInfo.id, "updated", "priority", projectInfo, userInfo))
                                                 setEditSubIssueIssuePriority(2)
                                                 setOpenSetEditSubIssuePriority('')
                                             }} className='mr-1 d-flex justify-content-center align-items-center' type="primary" style={{ width: 20, height: 30, zIndex: 9999999 }}><i style={{ fontSize: 13 }} className="fa fa-check"></i></Button>
@@ -140,7 +144,7 @@ export default function SubIssueComponent(props) {
                                         }} />
                                         <div className='d-flex' style={{ position: 'absolute', right: 0 }}>
                                             <Button onClick={() => {
-                                                dispatch(updateInfoIssue(subIssue._id, subIssue?.project_id, { story_point: editSubIssueIssueStoryPoint }, subIssue.story_point ? subIssue.story_poin.toString() : "None", editSubIssueIssueStoryPoint.toString(), userInfo.id, "updated", "story point"))
+                                                dispatch(updateInfoIssue(subIssue._id, subIssue?.project_id, { story_point: editSubIssueIssueStoryPoint }, getValueOfNumberFieldInIssue(subIssue, "story_point") ? subIssue.story_poin.toString() : "None", editSubIssueIssueStoryPoint.toString(), userInfo.id, "updated", "story point"))
                                                 setEditSubIssueIssueStoryPoint(0)
                                                 setOpenSetEditSubIssueStoryPoint('')
                                             }} className='mr-1 d-flex justify-content-center align-items-center' type="primary" style={{ width: 20, height: 30, zIndex: 9999999 }}><i style={{ fontSize: 13 }} className="fa fa-check"></i></Button>
@@ -152,7 +156,7 @@ export default function SubIssueComponent(props) {
                                     </div>
                                 </div> : <Avatar style={{ cursor: 'pointer', width: 20, height: 20 }} onClick={() => {
                                     setOpenSetEditSubIssueStoryPoint(subIssue._id)
-                                }} className='mr-1' size={'small'}><span className='d-flex'>{subIssue.story_point ? subIssue.story_point : "-"}</span></Avatar>}
+                                }} className='mr-1' size={'small'}><span className='d-flex'>{getValueOfNumberFieldInIssue(subIssue, "story_point") ? getValueOfNumberFieldInIssue(subIssue, "story_point") : "-"}</span></Avatar>}
 
 
                                 {/* For sub issue assignees */}
@@ -177,13 +181,13 @@ export default function SubIssueComponent(props) {
                                 {/* For sub issue type */}
                                 {openEditSubIssueIssueType === subIssue._id ? <div style={{ position: 'absolute' }}>
                                     <div style={{ position: 'relative', right: '10px' }}>
-                                        <Select style={{ width: '100%' }} options={renderIssueType(processList, id)} defaultValue={subIssue.issue_type._id} onChange={(value) => {
+                                        <Select style={{ width: '100%' }} options={renderIssueType(processList, id)} defaultValue={getValueOfObjectFieldInIssue(subIssue, "issue_type")._id} onChange={(value) => {
                                             setEditSubIssueIssueIssueType(value)
                                         }} />
                                         <div className='d-flex' style={{ position: 'absolute', right: 0 }}>
                                             <Button onClick={() => {
                                                 const index = renderIssueType(processList, id).findIndex(process => process.value === editSubIssueIssueIssueType)
-                                                dispatch(updateInfoIssue(subIssue._id, subIssue?.project_id, { issue_type: editSubIssueIssueIssueType }, subIssue.issue_type.name_process, renderIssueType(processList, id)[index].label, userInfo.id, "updated", "type", projectInfo, userInfo))
+                                                dispatch(updateInfoIssue(subIssue._id, subIssue?.project_id, { issue_type: editSubIssueIssueIssueType }, getValueOfObjectFieldInIssue(subIssue, "issue_type").name_process, renderIssueType(processList, id)[index].label, userInfo.id, "updated", "type", projectInfo, userInfo))
                                                 setEditSubIssueIssueAssignees([])
                                                 setOpenSetEditSubIssueIssueType('')
                                             }} className='mr-1 d-flex justify-content-center align-items-center' type="primary" style={{ width: 20, height: 30, zIndex: 9999999 }}><i style={{ fontSize: 13 }} className="fa fa-check"></i></Button>
@@ -195,7 +199,7 @@ export default function SubIssueComponent(props) {
                                     </div>
                                 </div> : <Tag style={{ fontSize: 11 }} onClick={() => {
                                     setOpenSetEditSubIssueIssueType(subIssue?._id)
-                                }} className='mr-1' color={subIssue?.issue_type?.tag_color}>{subIssue?.issue_type?.name_process}</Tag>}
+                                }} className='mr-1' color={getValueOfObjectFieldInIssue(subIssue, "issue_type")?.tag_color}>{getValueOfObjectFieldInIssue(subIssue, "issue_type")?.name_process}</Tag>}
                             </div>
                         </div>
                     })}
@@ -205,7 +209,12 @@ export default function SubIssueComponent(props) {
                 <div className='d-flex align-items-center justify-content-between mt-1'>
                     {chooseExistingSubIssue === false ? <div className='d-flex flex-column' style={{ width: '100%' }}>
                         <div className='d-flex add-sub-isses'>
-                            <Select style={{ border: 0, borderRadius: 0, backgroundColor: '#dddd' }} className='infomodal-edit-select-ant' defaultValue={issueTypeOptions[4]} disabled />
+                            <Select
+                                style={{ border: 0, borderRadius: 0, backgroundColor: '#dddd' }}
+                                className='infomodal-edit-select-ant'
+                                defaultValue={issueTypeOptions(projectInfo?.issue_types_default)[4]}
+                                disabled
+                            />
                             <Input onChange={(e) => {
                                 props.hanleClickEditSummaryInSubIssue(e.target.value)
                             }} style={{ border: '1px solid #7A869A', borderRadius: 0, backgroundColor: 'transparent' }} className='infomodal-edit-input-ant' placeholder='What needs to be done?' />
@@ -218,7 +227,22 @@ export default function SubIssueComponent(props) {
                             <div className='d-flex'>
                                 <Button onClick={() => {
                                     //proceed to create an sub-issue 
-                                    dispatch(createIssue({ summary: subIssueSummary, creator: userInfo.id, issue_status: 4, issue_priority: 2, issue_type: processList[0]._id, parent: issueInfo?._id, project_id: id }, id, userInfo.id, issueInfo?.current_sprint?._id, issueInfo?._id))
+                                    dispatch(createIssue(attributesFiltering(projectInfo, {
+                                        summary: subIssueSummary,
+                                        creator: userInfo.id,
+                                        issue_status: 4,
+                                        issue_priority: 2,
+                                        issue_type: processList[0]._id,
+                                        parent: issueInfo?._id,
+                                        project_id: id
+                                    }),
+                                        id,
+                                        userInfo.id,
+                                        getValueOfObjectFieldInIssue(issueInfo, "current_sprint")?._id,
+                                        issueInfo?._id,
+                                        projectInfo,
+                                        userInfo
+                                    ))
                                     props.hanleClickDisplayAddSubIssue(false)
                                     props.hanleClickEditSummaryInSubIssue('')
                                 }} className='mr-1' type='primary' style={{ borderRadius: 0 }}>Create</Button>
@@ -231,10 +255,32 @@ export default function SubIssueComponent(props) {
 
 
                     </div> : <div className='d-flex flex-column' style={{ width: '100%' }}>
-                        <Select className='infomodal-edit-select-ant-add-issue' style={{ width: '100%', height: 35 }} options={renderSubIssueOptions(issuesBacklog)} />
+                        <Select
+                            className='infomodal-edit-select-ant-add-issue'
+                            style={{ width: '100%', height: 35 }}
+                            options={renderSubIssueOptions(issuesInProject)}
+                            onSelect={(value) => {
+                                const getSubIssue = issuesInProject.find(issue => issue._id === value)
+                                if (getSubIssue) {
+                                    setGetSubIssueInfo(getSubIssue)
+                                }
+                            }}
+                        />
                         <div className='d-flex justify-content-end mt-2'>
                             <Button className='mr-1' onClick={() => {
                                 setChooseExistingSubIssue(false)
+                                if (getSubIssueInfo) {
+                                    const getSubIsueInfoOfParent = getValueOfObjectFieldInIssue(getSubIssueInfo, 'parent')
+                                    //update info of sub issue
+                                    dispatch(updateInfoIssue(getSubIssueInfo._id, id, {
+                                        parent: issueInfo._id
+                                    }, getSubIsueInfoOfParent ? `${projectInfo.key_name}-${getSubIsueInfoOfParent.ordinal_number}` : "None", `${projectInfo.key_name}-${issueInfo.ordinal_number}`, null, userInfo.id, "updated", "parent", projectInfo, userInfo))
+                                    //update info parent of sub issue
+                                    dispatch(updateInfoIssue(issueInfo._id, id, {
+                                        sub_issue_id: getSubIssueInfo
+                                    }, null, `WD-${getSubIssueInfo.ordinal_number}`, userInfo.id, "added", "sub issue", projectInfo, userInfo))
+                                    setGetSubIssueInfo(null)
+                                }
                                 props.hanleClickDisplayAddSubIssue(false)
                             }} type='primary' style={{ borderRadius: 0 }}>Add</Button>
                             <Button onClick={() => {

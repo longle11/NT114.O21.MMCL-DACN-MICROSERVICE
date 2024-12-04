@@ -6,9 +6,10 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "prod": "node src/index.js",
-    "test": "jest --watchAll --detectOpenHandles --no-cache",
+    "test": "jest --watchAll --detectOpenHandles --no-cache --testResultsProcessor jest-sonar-reporter --ci",
     "test:ci": "jest",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "sonar-scanner": "node_modules/sonar-scanner/bin/sonar-scanner"
   },
   "jest": {
     "testEnvironment": "node",
@@ -29,7 +30,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.2.1",
     "node-nats-streaming": "^0.3.2",
-    "nodemailer": "^6.9.14"
+    "nodemailer": "^6.9.14",
+    "sonar-scanner": "^3.1.0"
   },
   "devDependencies": {
     "jest": "^29.7.0",

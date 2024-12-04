@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  namespace: default
+  annotations:
+    # konghq.com/protocols: https
+    konghq.com/methods: GET,POST,PUT,DELETE
+    # konghq.com/plugins: rate-limit, admin-api-auth
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /api/issueprocess/
+            pathType: Prefix
+            backend:
+              service:
+                name: issueprocess-srv
+                port: 
+                  number: 4006

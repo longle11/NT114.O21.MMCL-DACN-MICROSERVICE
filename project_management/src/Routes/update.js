@@ -5,14 +5,13 @@ const BadRequestError = require('../Errors/Bad-Request-Error')
 const UnauthorizedError = require('../Errors/UnAuthorized-Error')
 const { default: mongoose } = require('mongoose')
 const userModel = require('../models/userModel')
+const servicePublisher = require('../nats/publisher/projectmanagement-publisher')
 const router = express.Router()
 
 
 router.put('/update/:id', currentUserMiddleware, async (req, res, next) => {
     try {
         if (req.currentUser) {
-            console.log("gia tri body thu duoc la ", req.body);
-
             const id = req.params.id
             const projects = await projectModel.find({})
             const ids = projects.map(project => project._id.toString());
@@ -115,6 +114,8 @@ router.put('/update/:id', currentUserMiddleware, async (req, res, next) => {
                         delete req.body.is_activated
                     }
                 }
+
+
                 await projectModel.updateOne(
                     { "_id": id },
                     { $set: { ...req.body } }
@@ -129,6 +130,144 @@ router.put('/update/:id', currentUserMiddleware, async (req, res, next) => {
             }
         } else {
 
+            throw new UnauthorizedError("Authentication failed")
+        }
+    } catch (error) {
+        console.log("loi xay ra ", error);
+
+        next(error)
+    }
+})
+
+router.put('/update/modify-issue-tags/:projectId', currentUserMiddleware, (async (req, res, next) => {
+    try {
+        if (req.currentUser) {
+            const id = req.params.projectId
+            const projects = await projectModel.find({})
+            console.log("req.body la ", req.body);
+            
+            const ids = projects.map(project => project._id.toString());
+            if (!ids.includes(id)) {
+                throw new BadRequestError("Project not found")
+            } else {
+                const key_field = req.body?.field_key_issue
+                delete req.body?.field_key_issue
+                //update the position of new issue 
+                if (typeof key_field === "string") {
+                    const getProject = await projectModel.findById(id)
+                    if (getProject) {
+                        const index = getProject.issue_fields_config.findIndex(issue_config => issue_config.field_key_issue === key_field)
+                        if (index !== -1) {
+                            const tempData = [...getProject.issue_fields_config]
+                            tempData[index] = { ...tempData[index]._doc, ...req.body }
+                            if (typeof req.body?.issue_status === "number") {
+                                const tagIndex = tempData[index].field_position_display.findIndex(field => field.issue_status === req.body.issue_status)
+                                if (tagIndex === -1) {
+                                    tempData[index].field_position_display.push({ position: req.body.position_display, issue_status: req.body?.issue_status })
+                                    servicePublisher({ project_id: id, data: tempData[index], issue_status: req.body.issue_status, position: req.body.position_display  }, "projectmanagement-issue-tag:added")
+                                } else {
+                                    if (typeof req.body?.position_display === "number") {    //this field represents for change the position of field not remove
+                                        tempData[index].field_position_display[tagIndex].position = req.body.position_display
+                                    } else { //represents for removing a field
+                                        tempData[index].field_position_display.splice(tagIndex, 1)
+                                        servicePublisher({ project_id: id, data: tempData[index], issue_status: req.body.issue_status }, "projectmanagement-issue-tag:deleted")
+                                    }
+                                }
+                            }
+                            req.body = {}
+                            req.body.issue_fields_config = [...tempData]
+                        }
+                    }
+                }
+
+                await projectModel.updateOne(
+                    { "_id": id },
+                    { $set: { ...req.body } }
+                )
+                const getProjectAfterUpdated = await projectModel.findById(id)
+                return res.status(200).json({
+                    message: "Successfully add a new field to issues of project",
+                    data: getProjectAfterUpdated
+                })
+            }
+        } else {
+
+            throw new UnauthorizedError("Authentication failed")
+        }
+    } catch (error) {
+        next(error)
+    }
+}))
+
+router.put('/update/add-new-issue-tags/:projectId', currentUserMiddleware, async (req, res, next) => {
+    try {
+        if (req.currentUser) {
+            const id = req.params.projectId
+            const projects = await projectModel.find({})
+            
+            const ids = projects.map(project => project._id.toString());
+            if (!ids.includes(id)) {
+                throw new BadRequestError("Project not found")
+            } else {
+                const tempData = await projectModel.findById(id)
+
+                if (tempData) {
+                    const tagConfig = {...req.body.updated_new_tag}
+                    const temp_issue_configs = [...tempData.issue_fields_config]
+                    temp_issue_configs.push(tagConfig)
+                    req.body.issue_fields_config = [...temp_issue_configs]
+                    delete tagConfig
+
+                    await projectModel.updateOne(
+                        { "_id": id },
+                        { $set: { ...req.body } }
+                    )
+                    
+                    servicePublisher({ project_id: id, data: tagConfig, issue_status: tagConfig.field_position_display.issue_status, position: tagConfig.field_position_display.position  }, "projectmanagement-issue-tag:added")
+                    
+                    const getProjectAfterUpdated = await projectModel.findById(id)
+                    return res.status(200).json({
+                        message: "Successfully add a new field to issues of project",
+                        data: getProjectAfterUpdated
+                    })
+                }
+            }
+        } else {
+            throw new UnauthorizedError("Authentication failed")
+        }
+    } catch (error) {
+        next(error)
+    }
+})
+
+router.put('/update/delete-issue-tags/:projectId', currentUserMiddleware, async (req, res, next) => {
+    try {
+        if (req.currentUser) {
+            const id = req.params.projectId
+            const projects = await projectModel.find({})
+            const ids = projects.map(project => project._id.toString());
+            if (!ids.includes(id)) {
+                throw new BadRequestError("Project not found")
+            } else {
+                const tempData = await projectModel.findById(id)
+                if (tempData) {
+                    const index = tempData.issue_fields_config.findIndex(tag => tag.field_key_issue === req.body.field_key_issue)
+                    if (index !== -1) {
+                        const updatedData = [...tempData.issue_fields_config]
+                        updatedData.splice(index, 1)
+                        const data = await projectModel.findByIdAndUpdate(
+                            id,
+                            { $set: { issue_fields_config: updatedData } },
+                            { new: true }
+                        )
+                        return res.status(200).json({
+                            message: "Successfully delete a new field to issues of project",
+                            data: data
+                        })
+                    }
+                }
+            }
+        } else {
             throw new UnauthorizedError("Authentication failed")
         }
     } catch (error) {

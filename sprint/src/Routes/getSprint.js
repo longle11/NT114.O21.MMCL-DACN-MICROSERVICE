@@ -8,25 +8,12 @@ router.post('/:projectId', async (req, res, next) => {
                 path: 'issue_list',
                 populate: [
                     {
-                        path: 'issue_type'
+                        path: "issue_data_type_object",
+                        populate: { path: 'value' }
                     },
                     {
-                        path: 'assignees'
-                    },
-                    {
-                        path: 'fix_version'
-                    },
-                    {
-                        path: 'epic_link'
-                    },
-                    {
-                        path: 'creator'
-                    },
-                    {
-                        path: 'sub_issue_list'
-                    },
-                    {
-                        path: 'parent'
+                        path: "issue_data_type_array_object",
+                        populate: { path: 'value' }
                     }
                 ]
             })
@@ -44,27 +31,17 @@ router.get('/getsprint/:sprintId', async (req, res, next) => {
         const getSprintById = await sprintModel.findById(req.params.sprintId)
             .populate({
                 path: 'issue_list',
-                populate: {
-                    path: 'creator'
-                }
-            })
-            .populate({
-                path: 'issue_list',
-                populate: {
-                    path: 'epic_link'
-                }
-            })
-            .populate({
-                path: 'issue_list',
-                populate: {
-                    path: 'issue_type'
-                }
-            })
-            .populate({
-                path: 'issue_list',
-                populate: {
-                    path: 'assignees'
-                }
+                populate: [
+                    { path: 'creator' },
+                    {
+                        path: "issue_data_type_object",
+                        populate: { path: 'value' }
+                    },
+                    {
+                        path: "issue_data_type_array_object",
+                        populate: { path: 'value' }
+                    }
+                ]
             })
 
         res.status(200).json({

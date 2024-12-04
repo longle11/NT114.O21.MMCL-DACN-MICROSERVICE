@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react'
-import InfoModal from '../components/Modal/InfoModal/InfoModal'
 import '../components/MenuBar/MenuBar.css'
 import '../components/Dashboard/Dashboard.css'
 import '../components/SideBar/SideBar.css'
@@ -7,7 +6,6 @@ import '../components/Modal/InfoModal/InfoModal.css'
 import DrawerHOC from '../HOC/DrawerHOC'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import PropTypes from 'prop-types';
 import MenuBarHeader from '../components/Header/MenuBarHeader'
 import { userLoggedInAction } from '../redux/actions/UserAction'
 import { Layout } from 'antd'
@@ -22,13 +20,10 @@ export default function MainPageTemplate({ Component }) {
     const dispatch = useDispatch()
     const navigate = useNavigate()
     useEffect(() => {
-        dispatch(userLoggedInAction())
+        dispatch(userLoggedInAction(navigate))
         dispatch(ListProjectAction())
     }, [])
 
-    const handleLogin = () => {
-        return navigate("/login")
-    }
     const content = () => {
         if (!isLoading) {
             if (userInfo !== null) {
@@ -42,7 +37,7 @@ export default function MainPageTemplate({ Component }) {
                                 overflowY: 'auto'
                             }}
                         >
-                            { userInfo.project_working !== null ? <MenuBar /> : <></> }
+                            { userInfo?.project_working !== null ? <MenuBar /> : <></> }
                             <DrawerHOC />
                             <ModalHOC />
                             <ModalInfoHOC />
@@ -65,6 +60,3 @@ export default function MainPageTemplate({ Component }) {
     }
     return <>{content()}</>
 }
-MainPageTemplate.propTypes = {
-    Component: PropTypes.elementType.isRequired
-};

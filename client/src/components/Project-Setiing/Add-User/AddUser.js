@@ -52,7 +52,7 @@ export default function AddUser() {
             title: 'Role',
             dataIndex: 'user_role',
             render: (text, record) => {
-                const findIndexUserRole = projectInfo.members.findIndex(user => user.user_info._id.toString() === userInfo.id)
+                const findIndexUserRole = projectInfo.members.findIndex(user => user.user_info._id?.toString() === userInfo.id)
                 if (record.user_info?._id?.toString() === projectInfo?.creator?._id?.toString()) {
                     return <Input style={{ width: 'fit-content' }} defaultValue={userPermissions[record.user_role].label} disabled />
                 } 
@@ -82,7 +82,7 @@ export default function AddUser() {
             title: 'Action',
             dataIndex: 'action',
             render: (text, record) => {
-                const findIndexUserRole = projectInfo.members.findIndex(user => user.user_info._id.toString() === userInfo.id)
+                const findIndexUserRole = projectInfo.members.findIndex(user => user.user_info._id?.toString() === userInfo.id)
                 if (record.user_info?._id?.toString() === projectInfo?.creator?._id?.toString()) {
                     return <></>
                 } else {

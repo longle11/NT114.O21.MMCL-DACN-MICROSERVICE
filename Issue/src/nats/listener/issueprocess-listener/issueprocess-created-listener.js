@@ -14,7 +14,6 @@ const issueProcessCreatedListener = () => {
                 console.log(`Received event issueprocess:created with sequence number: ${msg.getSequence()}`);
 
                 const parseData = JSON.parse(msg.getData())
-
                 if (parseData?.processList) {
                     const processList = parseData?.processList
                     for(let index = 0; index < processList.length; index++) {
@@ -25,7 +24,6 @@ const issueProcessCreatedListener = () => {
                 } else {
                     //tiến hành lưu vào issueProcess db
                     await issueProcessModel.create(parseData)
-                    console.log("Du lieu nhan duoc: ", parseData);
                     msg.ack()
                 }
             }

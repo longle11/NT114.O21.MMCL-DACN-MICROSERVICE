@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: issuehistory-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: issuehistory
+  template:
+    metadata:
+      labels:
+        app: issuehistory
+    spec:
+      imagePullSecrets:
+        - name: authenticate-registry
+      hostAliases:
+        - ip: "192.168.73.101"
+          hostnames:
+          - "gitlab.taskscheduler.com"
+      containers:
+        - name: issuehistory
+          image: longle2003/issue_history
+          env:
+            - name: NATS_URL
+              value: "http://nats-srv:4222"
+            - name: NATS_CLUSTER_ID
+              value: "jiraproject"
+            - name: NATS_CLIENT_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MONGO_URL
+              value: "mongodb://issuehistory-mongo-srv:27017/issuehistory"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: issuehistory-srv
+spec: 
+  selector:
+    app: issuehistory
+  ports:
+    - name: issuehistory
+      protocol: TCP
+      port: 4005
+      targetPort: 4005

@@ -8,9 +8,11 @@ var color = randomColor({ luminosity: 'light' });
 router.post('/create', async (req, res, next) => {
     try {
         const data = req.body
-        const checkExisted = await issueProcessModel.find({ project_id: req.body.project_id,name_process: req.body.name_process })
+        const checkExisted = await issueProcessModel.find({ project_id: req.body.project_id, name_process: req.body.name_process })
         if (checkExisted.length === 0) {
-            const issueProcess = new issueProcessModel({ ...data, tag_color: req.body?.tag_color ? req.body.tag_color : color })
+            //create index_col for current process
+            const maxIndex = await issueProcessModel.find({project_id: req.body.project_id})
+            const issueProcess = new issueProcessModel({ ...data, tag_color: req.body?.tag_color ? req.body.tag_color : color, index_col: maxIndex.length })
             const newIssueProcess = await issueProcess.save()
 
             const issueProcessDataCopy = {
@@ -37,23 +39,16 @@ router.post('/create', async (req, res, next) => {
 
 router.post('/create/default/:id', async (req, res) => {
     try {
-        const templateProcess = [
-            {
+        const { workflow_default } = req.body
+        const newWorkflows = workflow_default.map((flow, index) => {
+            return {
                 project_id: req.params.id,
-                name_process: 'TO DO',
-                tag_color: '#dddd'
-            },
-            {
-                project_id: req.params.id,
-                name_process: 'IN PROGRESS',
-                tag_color: '#1d7afc'
-            },
-            {
-                project_id: req.params.id,
-                name_process: 'DONE',
-                tag_color: '#22a06b'
+                name_process: flow.process_name?.toUpperCase(),
+                index_col: index,
+                tag_color: flow.process_color,
+                type_process: flow.type_process
             }
-        ]
+        })
 
         // const workflowCreate = new workflowModel({
         //     name_workflow: "Default",
@@ -65,7 +60,7 @@ router.post('/create/default/:id', async (req, res) => {
         // var nodes = []
         // var edges = []
         // var x = 200, y = 500
-        for (let process of templateProcess) {
+        for (let process of newWorkflows) {
             const newProcess = new issueProcessModel(process)
             await newProcess.save()
             // if (process.name_process.toLowerCase() === 'to do') {
@@ -114,22 +109,23 @@ router.post('/create/default/:id', async (req, res) => {
             //     })
             //     y += 50
             // }
-
-
-
         }
 
         // await workflowModel.findByIdAndUpdate(workflowCreate._id, { $set: { edges, nodes } })
         //dispatch event to make default id for workflows default in projectModel
         // await servicePublisher({ workflow_id: workflowCreate._id.toString(), project_id: workflowCreate.project_id.toString() }, "workflow:created")
         const processList = await issueProcessModel.find({ project_id: req.params.id })
-        await servicePublisher({ processList: processList.map(process => {
-            return {
-                _id: process._id,
-                name_process: process.name_process,
-                tag_color: process.tag_color
-            }
-        }) }, 'issueprocess:created')
+        await servicePublisher({
+            processList: processList.map(process => {
+                return {
+                    _id: process._id,
+                    name_process: process.name_process,
+                    tag_color: process.tag_color,
+                    project_id: process.project_id,
+                    type_process: process.type_process
+                }
+            })
+        }, 'issueprocess:created')
 
         res.status(201).json({
             message: "Successfully create default template for processes",

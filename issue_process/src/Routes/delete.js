@@ -16,7 +16,6 @@ router.delete('/workflow/delete/:workflowId', async (req, res) => {
         })
     } catch (error) {
         console.log(error);
-
     }
 })
 
@@ -25,10 +24,18 @@ router.delete('/process/:processId', async (req, res) => {
         const getProcess = await issueProcessModel.findById(req.params.processId)
         if (getProcess) {
             const data = await issueProcessModel.findByIdAndDelete(req.params.processId)
+            //proceed to update the index of processes behind current process
+            const getAllProcessesBelongToProject = await issueProcessModel.find({ project_id: data.project_id })
+            const currentIndex = getAllProcessesBelongToProject.findIndex(process => process._id === data._id)
+            if (currentIndex !== -1) {
+                for (let index = currentIndex; index < getAllProcessesBelongToProject.length; index++) {
+                    await issueProcessModel.findByIdAndUpdate(getAllProcessesBelongToProject[index]._id, { $set: { index_col: getAllProcessesBelongToProject[index].index_col - 1 } })
+                }
+            }
             servicePublisher({
                 _id: data._id
             }, "issueprocess:deleted")
-            
+
             return res.status(200).json({
                 message: "Successfully deleted a process",
                 data: data

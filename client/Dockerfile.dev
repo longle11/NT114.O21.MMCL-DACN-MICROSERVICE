@@ -6,6 +6,6 @@ COPY package*.json ./
 RUN npm install --force
 COPY ./ ./
 
-CMD ["npm", "run", "start"]
+CMD ["npm", "start"]
 
-EXPOSE 3006
+EXPOSE 8080

@@ -20,6 +20,10 @@ const worklogHistorySchema = mongoose.Schema({
     timeSpent: {
         type: String,
         default: null
+    },
+    createAt: {
+        type: Date,
+        default: Date.now
     }
 })
 const worklogHistoryModel = new mongoose.model('worklogHistories', worklogHistorySchema)

@@ -1,9 +1,6 @@
 const mongoose = require('mongoose')
 
 const fileSchema = mongoose.Schema({
-    fileName: {
-        type: String
-    },
     size: {
         type: Number
     },

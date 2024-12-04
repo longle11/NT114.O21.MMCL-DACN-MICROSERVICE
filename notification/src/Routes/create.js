@@ -6,8 +6,6 @@ const router = express.Router()
 
 router.post("/create", async (req, res, next) => {
     try {
-        console.log(" nhanduoc thang ", req.body);
-        
         const data = new notifyModel({ ...req.body, createAt: new Date() })
         await data.save()
         res.status(201).json({

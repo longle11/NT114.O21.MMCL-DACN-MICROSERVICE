@@ -8,11 +8,14 @@ import dayjs from 'dayjs'
 import { iTagForIssueTypes } from '../../util/CommonFeatures'
 import { getAllIssue } from '../../redux/actions/IssueAction'
 import { updateUserInfo } from '../../redux/actions/UserAction'
+import { getValueOfNumberFieldInIssue, getValueOfObjectFieldInIssue, getValueOfStringFieldInIssue } from '../../util/IssueFilter'
 
 export default function YourWork() {
     const listProject = useSelector(state => state.listProject.listProject)
     const userInfo = useSelector(state => state.user.userInfo)
     const issueList = useSelector(state => state.issue.issueList)
+    const projectInfo = useSelector(state => state.listProject.projectInfo)
+    
     const processList = useSelector(state => state.listProject.processList)
     const dispatch = useDispatch()
     useEffect(() => {
@@ -23,11 +26,12 @@ export default function YourWork() {
     const navigate = useNavigate()
     const renderIssueItemForWorkedOn = (issues) => {
         return issues.map((issue, index) => {
-            return <a key={index} href={`/projectDetail/${issue?.issue_id?.project_id}/issues/issue-detail/${issue?.issue_id?.issue_id}`} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center" style={{ padding: '5px 20px' }}>
+            const issue_id = issue?.issue_id?._id
+            return <a key={index} href={`/projectDetail/${projectInfo?._id}/issues/issue-detail/${issue_id}?typeview=detailview`} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center" style={{ padding: '5px 20px' }}>
                 <div className='d-flex align-items-center'>
-                    <span>{iTagForIssueTypes(issue?.issue_id?.issue_status, null, null)}</span>
+                    <span>{iTagForIssueTypes(getValueOfNumberFieldInIssue(issue?.issue_id, 'issue_status'), null, null, projectInfo?.issue_types_default)}</span>
                     <div className='d-flex flex-column' style={{ width: '100%' }}>
-                        <span>{issue?.issue_id?.summary}</span>
+                        <span>{getValueOfStringFieldInIssue(issue?.issue_id, 'summary')}</span>
                         <div className='d-flex align-items-center'>
                             <span className='mr-2'>WD-{issue?.issue_id?.ordinal_number}</span>
                             <i className="fa-solid fa-circle mr-2" style={{ fontSize: 5 }} />
@@ -46,11 +50,12 @@ export default function YourWork() {
 
     const renderIssueItemForViewed = (issues) => {
         return issues.map((issue, index) => {
-            return <a key={index} href={`/projectDetail/${issue?.issue_id?.project_id}/issues/issue-detail/${issue?.issue_id?.issue_id}`} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center" style={{ padding: '5px 20px' }}>
+            const issue_id = issue?.issue_id?._id
+            return <a key={index} href={`/projectDetail/${projectInfo?._id}/issues/issue-detail/${issue_id}?typeview=detailview`} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center" style={{ padding: '5px 20px' }}>
                 <div className='d-flex align-items-center'>
-                    <span>{iTagForIssueTypes(issue?.issue_id?.issue_status, null, null)}</span>
+                    <span>{iTagForIssueTypes(getValueOfNumberFieldInIssue(issue?.issue_id, 'issue_status'), null, null, projectInfo?.issue_types_default)}</span>
                     <div className='d-flex flex-column' style={{ width: '100%' }}>
-                        <span>{issue?.issue_id?.summary}</span>
+                        <span>{getValueOfStringFieldInIssue(issue?.issue_id, 'summary')}</span>
                         <div className='d-flex align-items-center'>
                             <span className='mr-2'>WD-{issue?.issue_id?.ordinal_number}</span>
                             <i className="fa-solid fa-circle mr-2" style={{ fontSize: 5 }} />
@@ -191,7 +196,7 @@ export default function YourWork() {
         return assigned_issues.map((issue, index) => {
             return <a key={index} href={`/projectDetail/${issue?.project_id}/issues/issue-detail/${issue?.issue_id}`} className="list-group-item list-group-item-action d-flex justify-content-between align-items-center" style={{ padding: '5px 20px' }}>
                 <div className='d-flex justify-content-between align-items-center'>
-                    <span>{iTagForIssueTypes(issue?.issue_status, null, null)}</span>
+                    <span>{iTagForIssueTypes(issue?.issue_status, null, null, projectInfo?.issue_types_default)}</span>
                     <div className='d-flex flex-column' style={{ width: '100%' }}>
                         <span>{issue?.summary}</span>
                         <div className='d-flex align-items-center'>
@@ -234,7 +239,7 @@ export default function YourWork() {
                                     <div className='d-flex align-items-center'>
                                         <Avatar shape='square' style={{ transform: 'translateX(-50%)' }} src="https://z45letranphilong.atlassian.net/rest/api/2/universal_avatar/view/type/project/avatar/10406?size=medium" />
                                         <div className='d-flex flex-column' style={{ width: 'max-content', marginLeft: '-10px' }}>
-                                            <span style={{ fontWeight: 'bold', width: 'max-content' }}>{project.name_project}</span>
+                                            <span style={{ fontWeight: 'bold', width: 'max-content' }}>{project.name_project} ({project.template_name})</span>
                                             <span style={{ fontSize: 13 }}>Software project</span>
                                         </div>
                                     </div>
@@ -249,7 +254,7 @@ export default function YourWork() {
                                                 <span style={{ fontSize: 11 }}>Done Issues</span>
                                                 <Avatar size={20}><span style={{ fontSize: 13, display: 'flex' }}>{issueList?.filter(issue => {
                                                     const lastProcess = processList.filter(process => process.project_id === project._id)
-                                                    return issue.project_id?._id === project?._id && issue.issue_type?._id === lastProcess[lastProcess.length - 1]
+                                                    return issue.project_id?._id === project?._id && getValueOfObjectFieldInIssue(issue, "issue_type")?._id === lastProcess[lastProcess.length - 1]
                                                 }).length}</span></Avatar>
                                             </div>
                                         </div>

@@ -5,7 +5,6 @@ const issueHistoryModel = require('../models/issueHistoryModels');
 
 router.get('/issuehistory-list/:issueId/:valueSort', async (req, res, next) => {
     try {
-        console.log("gia tri sort lla ", req.params.valueSort);
         const getHistoriesList = await issueHistoryModel.find({ issue_id: req.params.issueId })
             .populate({
                 path: 'histories',
@@ -28,13 +27,13 @@ router.get('/issuehistory-list/:issueId/:valueSort', async (req, res, next) => {
     }
 })
 
-router.get('/worklog-list/:issueId', async (req, res, next) => {
+router.get('/worklog-list/:issueId/', async (req, res, next) => {
     try {
         const getWorklogHistories = await worklogHistoryModel.find({ issue_id: req.params.issueId })
             .populate({
                 path: 'creator'
             })
-        res.status(200).json({
+        return res.status(200).json({
             message: "Successfully got an worklog history list",
             data: getWorklogHistories
         })

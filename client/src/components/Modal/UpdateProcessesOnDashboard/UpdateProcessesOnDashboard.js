@@ -47,7 +47,7 @@ export default function UpdateProcessesOnDashboard(props) {
         }
 
         //proceed create all new processes 
-        newProcesses.current.forEach((data) => {
+        newProcesses.current?.forEach((data) => {
             dispatch(CreateProcessACtion(data))
         })
         //move workflow from inactive to active
@@ -75,8 +75,6 @@ export default function UpdateProcessesOnDashboard(props) {
         return newCreatedProcesses
     }
     const renderNewProcessesOnDashboard = (virtualProcessesDashboard, processesWorkflow) => {
-        console.log("mang nay duoc chay lai ne ", virtualProcessesDashboard);
-
         const data = renderNewProcessesDisplayInWorkflow(virtualProcessesDashboard, processesWorkflow?.nodes)
         const result = data.reduce((total, name, index) => {
             total += name
@@ -90,7 +88,6 @@ export default function UpdateProcessesOnDashboard(props) {
     }
     return (
         <div>
-            {console.log("virtualProcessesDashboard hahah ", virtualProcessesDashboard)}
             <span className='text-danger'>If you want to display processes in workflow to dashboard.<br /> Please drag the processes from workflow and drop into dashboard</span>
             {
                 renderNewProcessesDisplayInWorkflow(virtualProcessesDashboard, processesWorkflow?.nodes).length > 0 ? <div className='mt-2'>
@@ -101,7 +98,11 @@ export default function UpdateProcessesOnDashboard(props) {
                 </div> : <></>
             }
 
-            <NewChangesInactiveToActive flowArrs={flowArrs} workflowList={workflowList} currentWorkflowInactive={currentWorkflowInactive} />
+            <NewChangesInactiveToActive
+                flowArrs={flowArrs}
+                workflowList={workflowList}
+                currentWorkflowInactive={currentWorkflowInactive}
+                projectInfo={projectInfo} />
 
             {/* Display processes in current dashboard */}
             <DragDropContext onDragEnd={(result) => {
@@ -118,7 +119,7 @@ export default function UpdateProcessesOnDashboard(props) {
                         if (projectInfo?.sprint_id !== null) {
                             const sprintInfoIndex = sprintList?.findIndex(sprint => sprint._id === projectInfo?.sprint_id)
                             if (sprintInfoIndex !== -1) {
-                                const checkIssueExisted = sprintList[sprintInfoIndex]?.issue_list?.filter(issue => issue.issue_type._id === virtualProcessesDashboard[source.index]._id)
+                                const checkIssueExisted = sprintList[sprintInfoIndex]?.issue_list?.filter(issue => issue.issue_type?._id === virtualProcessesDashboard[source.index]._id)
                                 if (checkIssueExisted.length > 0) {
                                     dispatch(displayChildComponentInModal(<DeleteProcessModal issue_list={checkIssueExisted.map(issue => issue._id)} processList={processList} sprintInfo={sprintList[sprintInfoIndex]} process={virtualProcessesDashboard[source.index]} />, 500, ''))
                                     return
@@ -157,7 +158,7 @@ export default function UpdateProcessesOnDashboard(props) {
                     <div>
                         <Droppable droppableId='processes-0' direction='horizontal'>
                             {(provided) => {
-                                return <div ref={provided.innerRef} {...provided.droppableProps} name="processesDashboard" style={{ padding: '10px 10px', border: '1px solid black', height: 'max-content', display: 'flex', overflowX: 'auto', scrollbarWidth: 'none' }}>
+                                return <div ref={provided.innerRef} {...provided.droppableProps} name="processesDashboard" style={{ padding: '10px 10px', border: '1px solid black', height: 'max-content', display: 'flex', overflowX: 'auto', scrollbarWidth: 'thin' }}>
                                     {virtualProcessesDashboard?.map((process, index) => {
                                         var color = '#ffff'
                                         if (processesWorkflow?.nodes?.map(currentProcess => currentProcess?.data?.label)?.includes(process.name_process)) {
@@ -182,7 +183,7 @@ export default function UpdateProcessesOnDashboard(props) {
                     <label htmlFor='processesWorkflow'>Processes are displayed in workflow</label>
                     <Droppable droppableId='processes-1' direction='horizontal'>
                         {(provided) => {
-                            return <div ref={provided.innerRef} {...provided.droppableProps} name="processesWorkflow" style={{ padding: '10px 10px', border: '1px solid black', height: 'max-content', display: 'flex', overflowX: 'auto', scrollbarWidth: 'none' }}>
+                            return <div ref={provided.innerRef} {...provided.droppableProps} name="processesWorkflow" style={{ padding: '10px 10px', border: '1px solid black', height: 'max-content', display: 'flex', overflowX: 'auto', scrollbarWidth: 'thin' }}>
                                 {processesWorkflow?.nodes?.map((process, index) => {
                                     return <Draggable key={`process-1-${process.id.toString()}`} draggableId={`process-1-${process.id.toString()}`} index={index}>
                                         {(provided) => {

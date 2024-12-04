@@ -13,14 +13,51 @@ image:
   ## Secrets must be manually created in the namespace.
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
   ##
-  # pullSecrets:
+  # pullSecrets:n
   #   - myRegistrKeySecretName
 
 # Specify Kong admin API service and listener configuration
 # Specify Kong admin API service and listener configuration
+
 env:  
   admin_gui_url: "http://localhost:8002"
   admin_gui_api_url: "http://localhost:8001"
+  KONG_STATUS_LISTEN: "0.0.0.0:8100"
+  KONG_PROMETHEUS_STATUS: "on"
+  database: postgres
+  pg_database: kong
+  pg_ssl: "off"
+  pg_ssl_verify: "off"
+  password:
+    valueFrom:
+      secretKeyRef:
+        key: kong_admin_password
+        name: kong-config-secret
+  pg_host:
+    valueFrom:
+      secretKeyRef:
+        key: pg_host
+        name: kong-config-secret
+  pg_user: kong
+  router_flavor: "traditional"
+  nginx_worker_processes: "2"
+  proxy_access_log: /dev/stdout
+  admin_access_log: /dev/stdout
+  admin_gui_access_log: /dev/stdout
+  portal_api_access_log: /dev/stdout
+  proxy_error_log: /dev/stderr
+  admin_error_log: /dev/stderr
+  admin_gui_error_log: /dev/stderr
+  portal_api_error_log: /dev/stderr
+  prefix: /kong_prefix/
+
+
+migrations:
+  enabled: true
+  postUpgrade: true
+  preUpgrade: true
+namespace: kong
+
 admin:
   # Enable creating a Kubernetes service for the admin API
   # Disabling this is recommended for most ingress controller configurations
@@ -129,3 +166,120 @@ manager:
     pathType: ImplementationSpecific
 enterprise:
   enabled: true
+
+# Specify Kong proxy service configuration
+proxy:
+  # Enable creating a Kubernetes service for the proxy
+  enabled: true
+  type: LoadBalancer
+  loadBalancerClass:
+  # Override proxy Service name
+  nameOverride: ""
+  # To specify annotations or labels for the proxy service, add them to the respective
+  # "annotations" or "labels" dictionaries below.
+  annotations: {}
+  # If terminating TLS at the ELB, the following annotations can be used
+  # "service.beta.kubernetes.io/aws-load-balancer-backend-protocol": "*",
+  # "service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled": "true",
+  # "service.beta.kubernetes.io/aws-load-balancer-ssl-cert": "arn:aws:acm:REGION:ACCOUNT:certificate/XXXXXX-XXXXXXX-XXXXXXX-XXXXXXXX",
+  # "service.beta.kubernetes.io/aws-load-balancer-ssl-ports": "kong-proxy-tls",
+  # "service.beta.kubernetes.io/aws-load-balancer-type": "elb"
+  labels:
+    enable-metrics: "true"
+
+  http:
+    # Enable plaintext HTTP listen for the proxy
+    enabled: true
+    # Set the servicePort: 0 to skip exposing in the service but still
+    # let the port open in container to allow https to http mapping for
+    # tls terminated at LB.
+    servicePort: 8000
+    containerPort: 8000
+    # Set a nodePort which is available if service type is NodePort
+    # nodePort: 32080
+    # Additional listen parameters, e.g. "reuseport", "backlog=16384"
+    parameters: []
+
+  tls:
+    # Enable HTTPS listen for the proxy
+    enabled: true
+    servicePort: 443
+    containerPort: 8443
+    # Set a target port for the TLS port in proxy service
+    # overrideServiceTargetPort: 8000
+    # Set a nodePort which is available if service type is NodePort
+    # nodePort: 32443
+    # Additional listen parameters, e.g. "reuseport", "backlog=16384"
+    parameters:
+    - http2
+
+    # Specify the Service's TLS port's appProtocol. This can be useful when integrating with
+    # external load balancers that require the `appProtocol` field to be set (e.g. GCP).
+    appProtocol: ""
+
+  # Define stream (TCP) listen
+  # To enable, remove "[]", uncomment the section below, and select your desired
+  # ports and parameters. Listens are dynamically named after their containerPort,
+  # e.g. "stream-9000" for the below.
+  # Note: although you can select the protocol here, you cannot set UDP if you
+  # use a LoadBalancer Service due to limitations in current Kubernetes versions.
+  # To proxy both TCP and UDP with LoadBalancers, you must enable the udpProxy Service
+  # in the next section and place all UDP stream listen configuration under it.
+  stream: []
+    #   # Set the container (internal) and service (external) ports for this listen.
+    #   # These values should normally be the same. If your environment requires they
+    #   # differ, note that Kong will match routes based on the containerPort only.
+    # - containerPort: 9000
+    #   servicePort: 9000
+    #   protocol: TCP
+    #   # Optionally set a static nodePort if the service type is NodePort
+    #   # nodePort: 32080
+    #   # Additional listen parameters, e.g. "ssl", "reuseport", "backlog=16384"
+    #   # "ssl" is required for SNI-based routes. It is not supported on versions <2.0
+    #   parameters: []
+
+  # Kong proxy ingress settings.
+  # Note: You need this only if you are using another Ingress Controller
+  # to expose Kong outside the k8s cluster.
+  ingress:
+    # Enable/disable exposure using ingress.
+    enabled: false
+    ingressClassName:
+    # To specify annotations or labels for the ingress, add them to the respective
+    # "annotations" or "labels" dictionaries below.
+    annotations: {}
+    labels: {}
+    # Ingress hostname
+    hostname:
+    # Ingress path (when used with hostname above).
+    path: /
+    # Each path in an Ingress is required to have a corresponding path type (when used with hostname above). (ImplementationSpecific/Exact/Prefix)
+    pathType: ImplementationSpecific
+    # Ingress hosts. Use this instead of or in combination with hostname to specify multiple ingress host configurations
+    hosts: []
+
+postgresql:
+  enabled: true
+  primary:
+    persistence:
+      enabled: true
+      storageClass: "taskscheduler-storage-class"
+      size: "2Gi"
+  auth:
+    username: kong
+    database: kong
+  image:
+    tag: 13.11.0-debian-11-r20
+  service:
+    ports:
+      postgresql: "5432"
+
+extraObjects:
+- apiVersion: configuration.konghq.com/v1
+  kind: KongClusterPlugin
+  metadata:
+    name: prometheus
+  config:
+    per_consumer: false
+  plugin: prometheus
+

@@ -8,21 +8,34 @@ import { updateVersion } from '../../../redux/actions/CategoryAction'
 import { updateInfoIssue } from '../../../redux/actions/IssueAction'
 import { delay } from '../../../util/Delay'
 import { showNotificationWithIcon } from '../../../util/NotificationUtil'
+import { getValueOfObjectFieldInIssue } from '../../../util/IssueFilter'
 
 export default function ReleaseVersionModal(props) {
     const versionInfo = props.versionInfo
     const processList = props.processList
     const versionList = props.versionList
+    const projectInfo = props.projectInfo
     const userInfo = props.userInfo
     const dispatch = useDispatch()
-    const [endDate, setEndDate] = useState(versionInfo.end_date)
-    const issuesUncompleted = versionInfo.issue_list.filter(issue => issue.issue_type !== processList[processList.length - 1])
+    const [endDate, setEndDate] = useState(versionInfo.end_date ? versionInfo.end_date : new Date())
+    const issuesUncompleted = versionInfo.issue_list.filter(issue => {
+        const processIndex = processList?.findIndex(process => process._id.toString() === getValueOfObjectFieldInIssue(issue, 'issue_type')?.toString())
+        if(processIndex !== -1 && processList[processIndex]?.type_process !== 'done') return true
+        return false
+    })
+    
     const [value, setValue] = useState(1);
     const [selectVersion, setSelectVersion] = useState(null);
-    const issuesCompleted =
-        useEffect(() => {
-            dispatch(handleClickOk(handleClickOK))
-        }, [endDate, value, selectVersion])
+    const issuesCompleted = versionInfo.issue_list.filter(issue => {
+        const processIndex = processList?.findIndex(process => process._id.toString() === getValueOfObjectFieldInIssue(issue, 'issue_type')?.toString())
+        if(processIndex !== -1 && processList[processIndex]?.type_process === 'done') return true
+        return false
+    })
+    useEffect(() => {
+        dispatch(handleClickOk(handleClickOK))
+    }, [endDate, value, selectVersion])
+
+
     const handleClickOK = async () => {
         if (endDate && dayjs(endDate).isAfter(versionInfo.start_date)) {
             dispatch(updateVersion(versionInfo._id, { end_date: dayjs(endDate), version_status: 1 }, versionInfo.project_id))
@@ -33,7 +46,6 @@ export default function ReleaseVersionModal(props) {
                         //add all unresolved issues to new version
                         dispatch(updateVersion(value, { issue_list: issuesUncompleted.map(issue => issue._id) }, versionInfo.project_id))
                         newVersionName = versionList.filter(version => version._id === versionInfo._id)[0].version_name
-                        console.log("newVersionName ", newVersionName);
                     } else {
                         showNotificationWithIcon('error', '', 'Please choose other sprints to store')
                         return
@@ -47,12 +59,24 @@ export default function ReleaseVersionModal(props) {
                 //update info for issue
                 for (let index = 0; index < issuesUncompleted.length; index++) {
                     //update info new version for issue 
-                    dispatch(updateInfoIssue(issuesUncompleted[index]._id, issuesUncompleted[index].project_id, { fix_version: selectVersion }, versionInfo.name_version, newVersionName, userInfo.id, "updated", "version"))
+                    dispatch(updateInfoIssue(
+                        issuesUncompleted[index]._id, 
+                        issuesUncompleted[index].project_id, 
+                        { fix_version: selectVersion }, 
+                        versionInfo.name_version, 
+                        newVersionName, 
+                        userInfo.id, 
+                        "updated", 
+                        "version",
+                        projectInfo,
+                        userInfo
+                    ))
                     await delay(300)
                 }
             }
         } else {
             showNotificationWithIcon('error', '', 'The release day is not suitable, please choose the different days')
+            return
         }
         dispatch(openModal(false))
     }
@@ -69,11 +93,14 @@ export default function ReleaseVersionModal(props) {
                 </div>
             </div> : <div>
                 <p>This release contains {issuesUncompleted?.length === 1 ? <NavLink>1 unresolved issue</NavLink> : <NavLink>{issuesUncompleted?.length} unresolved issues</NavLink>}.</p>
-                {issuesCompleted?.length !== 0 ? <div>
+                {issuesUncompleted?.length !== 0 ? <div>
                     <div className='d-flex flex-column'>
                         <span className='text-bold mb-2'>Unresolved issues <span className='text-danger'>*</span></span>
                         <Radio.Group onChange={(value) => {
-                            setValue(value.target.value)
+                            setValue(prev => value.target.value)
+                            if(value.target.value === 2) {
+                                setSelectVersion(prev => null)
+                            }
                         }} defaultValue={null} value={value}>
                             <Space direction="vertical">
                                 <Radio value={1}>
@@ -102,7 +129,7 @@ export default function ReleaseVersionModal(props) {
                         <label htmlFor='release_date'>Release Date</label>
                         <DatePicker style={{ width: '50%' }} name="release_date" onChange={(date, dateString) => {
                             setEndDate(dayjs(dateString, dayjs(dateString)))
-                        }} defaultValue={dayjs(endDate, "DD/MM/YYYY")} value={dayjs(endDate, "DD/MM/YYYY")} />
+                        }} defaultValue={dayjs(endDate)} value={dayjs(endDate)} />
                     </div>
                 </div> : <></>}
             </div>}

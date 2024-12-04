@@ -105,9 +105,7 @@ const handleSubmitForm = withFormik({
         }
     },
     handleSubmit: (values, { props, setSubmitting }) => {
-    },
-
-    displayName: 'BasicForm',
+    }
 })(FormEdit);
 
 const mapStateToProps = (state) => ({

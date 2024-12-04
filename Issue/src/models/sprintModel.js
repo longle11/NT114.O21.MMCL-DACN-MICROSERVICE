@@ -4,6 +4,10 @@ const sprintSchema = mongoose.Schema({
     sprint_name: {
         type: String, 
         default: null
+    },
+    sprint_status: {
+        type: String,
+        default: 'pending'
     }
 })
 

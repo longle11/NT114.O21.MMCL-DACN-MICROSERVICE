@@ -7,6 +7,8 @@ const issueCreatedListener = require('./nats/listener/issue-listener/issue-creat
 const authCreatedListener = require('./nats/listener/auth-listener/auth-created-listener')
 const issueUpdatedListener = require('./nats/listener/issue-listener/issue-updated-listener')
 const issueManyUpdatedListener = require('./nats/listener/issue-listener/issue-many-updated-listener')
+const issueEpicUpdatedListener = require('./nats/listener/issue-listener/issue-epic-updated-listener')
+const issueVersionUpdatedListener = require('./nats/listener/issue-listener/issue-version-updated-listener')
 const app = express()
 
 app.use(bodyParser.json())
@@ -23,7 +25,9 @@ async function connectToNats() {
 
         process.on('SIGINT', () => { natsWrapper.client.close() })
         process.on('SIGTERM', () => { natsWrapper.client.close() })
-
+        
+        issueEpicUpdatedListener()
+        issueVersionUpdatedListener()
         issueCreatedListener()
         issueManyUpdatedListener()
         authCreatedListener()
@@ -52,6 +56,7 @@ app.use('/api/category', require('./Routes/delete'))
 app.use('/api/category', require('./Routes/getList'))
 app.use('/api/category', require('./Routes/epic-create'))
 app.use('/api/category', require('./Routes/version-create'))
+app.use('/api/category', require('./Routes/component-create'))
 app.use('/api/category', require('./Routes/update'))
 
 app.listen(4004, () => {

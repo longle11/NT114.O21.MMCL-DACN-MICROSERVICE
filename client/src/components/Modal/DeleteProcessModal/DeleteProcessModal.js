@@ -1,20 +1,24 @@
 import React, { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
-import { handleChildClickOk, openChildModal } from '../../../redux/actions/ModalAction'
+import { handleClickOk, openChildModal } from '../../../redux/actions/ModalAction'
 import { Select } from 'antd'
 import { updateManyIssueAction } from '../../../redux/actions/IssueAction'
 import { deleteProcessAction } from '../../../redux/actions/CreateProjectAction'
+import { sendNotificationToValidUserWithEditingIssues } from '../../../util/NotificationUtil'
 
 export default function DeleteProcessModal(props) {
     const processList = props.processList
     const sprintInfo = props.sprintInfo
+    const userInfo = props.userInfo
+    const projectInfo = props.projectInfo
     const currentProcess = props.process
+    const issuesInProject = props.issuesInProject
     const issue_list = props.issue_list
     const dispatch = useDispatch()
 
     const [selectNewProcess, setSelectNewProcess] = useState(null)
     useEffect(() => {
-        dispatch(handleChildClickOk(handleSelectIssueOk))
+        dispatch(handleClickOk(handleSelectIssueOk))
     }, [selectNewProcess])
     const renderProcessListOptions = (currentProcessId) => {
         var processListOptions = []
@@ -32,11 +36,18 @@ export default function DeleteProcessModal(props) {
         return processListOptions
     }
     const handleSelectIssueOk = () => {
-        console.log("selectNewProcess ", selectNewProcess);
-        
         if (selectNewProcess !== null) {
             //proceed to update all issues in current process to new process
-            dispatch(updateManyIssueAction(sprintInfo._id, { issue_list: issue_list, new_issue_type: selectNewProcess }))
+            if (sprintInfo) {
+                dispatch(updateManyIssueAction(
+                    sprintInfo._id, 
+                    currentProcess.project_id, 
+                    { issue_list: issue_list, new_issue_type: selectNewProcess }, 
+                    projectInfo, 
+                    userInfo, 
+                    issuesInProject?.filter(issue => issue_list?.map(currentIssue => currentIssue?.toString())?.includes(issue._id.toString()))
+                ))
+            }
             dispatch(deleteProcessAction(currentProcess._id, currentProcess.project_id))
             setSelectNewProcess(null)
         }

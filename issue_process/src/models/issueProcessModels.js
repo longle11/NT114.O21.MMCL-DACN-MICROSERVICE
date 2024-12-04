@@ -9,6 +9,10 @@ const issueProcessSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         default: null
     },
+    index_col: {
+        type: Number,
+        default: 0
+    },
     name_process: {
         type: String,
         default: null
@@ -17,12 +21,6 @@ const issueProcessSchema = new mongoose.Schema({
         type: String,
         default: '#dddd'
     },
-    // issue_list: [
-    //     {
-    //         type: mongoose.Schema.Types.ObjectId,
-    //         ref: 'issues'
-    //     }
-    // ],
     limited_number_issues: {
         type: Number,
         default: null
@@ -30,6 +28,10 @@ const issueProcessSchema = new mongoose.Schema({
     createAt: {
         type: Date,
         default: Date.now
+    },
+    type_process: {
+        type: String,
+        default: 'normal'
     }
 })
 

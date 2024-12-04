@@ -1,6 +1,6 @@
 import Axios from "axios"
 import { DISPLAY_LOADING, GET_USER_BY_KEYWORD_API, HIDE_LOADING, SHOW_MODAL_INPUT_TOKEN, USER_LOGGED_IN } from "../constants/constant"
-import { ListProjectAction } from "./ListProjectAction"
+import { GetProjectAction, ListProjectAction } from "./ListProjectAction"
 import { showNotificationWithIcon } from "../../util/NotificationUtil"
 import domainName from '../../util/Config'
 export const getUserKeyword = (keyword) => {
@@ -39,7 +39,6 @@ export const updateUserInfo = (user_id, props) => {
             }
         } catch (error) {
             console.log("error getUserUpdated updateUserInfo", error);
-
         }
     }
 }
@@ -68,7 +67,7 @@ export const signUpUserAction = (props) => {
                 })
             }
         } catch (errors) {
-            if (errors?.response.status === 400) {
+            if (errors?.response?.status === 400) {
                 showNotificationWithIcon("error", "Notification", errors?.response.data.message)
                 await dispatch({
                     type: SHOW_MODAL_INPUT_TOKEN,
@@ -125,7 +124,7 @@ export const loginWithGoogleAction = (props) => {
 }
 
 export const userLoginAction = (email, password) => {
-    return async (dispatch) => {
+    return async (dispatch) => {        
         try {
             let loggedIn = false
             const res = await Axios.post(`${domainName}/api/users/login`, {
@@ -158,21 +157,21 @@ export const userLoginAction = (email, password) => {
         }
     }
 }
-export const userLoggedInAction = () => {
+
+export const userLoggedInAction = (navigate) => {
     return async dispatch => {
         try {
-            dispatch({
-                type: DISPLAY_LOADING
-            })
             const res = await Axios.get(`${domainName}/api/users/currentuser`)
             if (!res.data.currentUser) {
+                if(navigate) {
+                    navigate("/login")
+                }
                 dispatch({
                     type: USER_LOGGED_IN,
                     userInfo: null
                 })
             } else {
-                console.log("gia tri current user ma thong tin thu thap duoc ", res.data.currentUser);
-                
+                dispatch(GetProjectAction(res.data.currentUser.project_working, null, null))
                 dispatch({
                     type: USER_LOGGED_IN,
                     userInfo: res.data.currentUser
@@ -181,13 +180,10 @@ export const userLoggedInAction = () => {
         } catch (error) {
             console.log(error);
         }
-        dispatch({
-            type: HIDE_LOADING
-        })
     }
 }
 
-export const userLoggedoutAction = () => {
+export const userLoggedoutAction = (navigate) => {
     return async dispatch => {
         await Axios.post(`${domainName}/api/users/logout`)
             .then(res => {
@@ -196,6 +192,7 @@ export const userLoggedoutAction = () => {
                     type: USER_LOGGED_IN,
                     status: false
                 })
+                navigate('/login')
             })
             .catch(err => {
                 console.log("Something went wrong");
